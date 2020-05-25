@@ -27,5 +27,6 @@
     "dist": "parcel build index.html",
     "watch": "parcel watch index.html"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {}
 }
