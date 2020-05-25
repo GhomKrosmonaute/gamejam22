@@ -18,15 +18,20 @@
     "gulp-transform": "^3.0.5",
     "gulp-uglify": "^3.0.0",
     "gulp-useref": "^3.1.5",
-    "parcel": "^1.12.4",
     "pump": "^3.0.0"
   },
   "scripts": {
-    "serve": "parcel serve index.html",
-    "build": "NODE_ENV=development parcel build index.html --no-minify",
-    "dist": "parcel build index.html",
-    "watch": "parcel watch index.html"
+    "serve": "webpack-dev-server --config webpack.dev.js",
+    "build": "webpack --config webpack.dev.js",
+    "dist": "webpack --config webpack.prod.js"
   },
   "license": "MIT",
-  "devDependencies": {}
+  "devDependencies": {
+    "copy-webpack-plugin": "^6.0.1",
+    "html-webpack-plugin": "^4.3.0",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.11.0",
+    "webpack-merge": "^4.2.2"
+  }
 }
