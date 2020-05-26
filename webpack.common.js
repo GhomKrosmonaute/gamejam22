@@ -19,14 +19,14 @@ module.exports = {
      * the js file will generated after webpack build the project, and the js will inserted at index.html automatically.
      * [hash:8] means unique 8 digit hash generated everytime.
      **/
-    filename: "game.[hash:8].js",
+    filename: "game.js",
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         use: "ts-loader",
-        exclude: /node_modules/,
+        // exclude: /node_modules/,
       },
     ],
   },
@@ -50,6 +50,16 @@ module.exports = {
           ),
           to: "booyah/images",
         },
+        // Copy Booyah assets
+        {
+          from: path.resolve(
+            require.resolve("booyah/package.json"),
+            "../fonts"
+          ),
+          to: "booyah/fonts",
+        },
+
+        // Copy CSS
         { from: "*.css" },
       ],
     }),

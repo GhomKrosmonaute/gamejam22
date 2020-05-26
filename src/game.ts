@@ -1,6 +1,22 @@
-import * as fontfaceobserver from "fontfaceobserver";
+// import { FontFaceObserver } from "fontfaceobserver";
+// const FontFaceObserver = require("fontfaceobserver");
 
-import * as booyah from "booyah/dist/booyah.js";
+// // @ts-ignore
+// const FontFaceObserver = require("fontfaceobserver");
+// const font = new FontFaceObserver("fantasy");
+
+// font.load().then(
+//   function () {
+//     console.log("Font is available");
+//   },
+//   function () {
+//     console.log("Font is not available");
+//   }
+// );
+
+// import * as PIXI from "pixi.js";
+
+import * as booyah from "booyah/src/booyah";
 
 // import * as PIXI from 'pixi.js';
 
