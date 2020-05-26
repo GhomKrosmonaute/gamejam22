@@ -1,4 +1,7 @@
+import * as fontfaceobserver from "fontfaceobserver";
+
 import * as booyah from "booyah/dist/booyah.js";
+
 // import * as PIXI from 'pixi.js';
 
 // console.log(new PIXI.Point(1, 2));
