@@ -1,5 +1,6 @@
 const path = require("path");
 const HtmlPlugin = require("html-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 // const ImageminPlugin = require("imagemin-webpack-plugin").default;
 
@@ -27,12 +28,22 @@ module.exports = {
   // target: "web",
 
   plugins: [
-    // //copy all src/assets to dist/assets
-    // new CopyWebpackPlugin([{ from: "assets/", to: "assets/" }], {
-    //   ignore: [],
-    //   debug: "debug",
-    //   copyUnmodified: true,
-    // }),
+    new CleanWebpackPlugin(),
+
+    //copy all src/assets to dist/assets
+    new CopyWebpackPlugin({
+      patterns: [
+        // Copy Booyah assets
+        {
+          from: path.resolve(
+            require.resolve("booyah/package.json"),
+            "../images"
+          ),
+          to: "booyah/images",
+        },
+        { from: "*.css" },
+      ],
+    }),
     // //opimize all image file
     // new ImageminPlugin({
     //   test: /\.(jpe?g|png|gif|svg)$/i,
