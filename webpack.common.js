@@ -2,6 +2,7 @@ const path = require("path");
 const HtmlPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const git = require("git-rev-sync");
 // const ImageminPlugin = require("imagemin-webpack-plugin").default;
 
 module.exports = {
@@ -33,8 +34,6 @@ module.exports = {
   resolve: {
     extensions: [".ts", ".js"],
   },
-
-  // target: "web",
 
   plugins: [
     new CleanWebpackPlugin(),
@@ -80,6 +79,11 @@ module.exports = {
     new HtmlPlugin({
       file: path.join(__dirname, "dist", "index.html"),
       template: "./index.html",
+      templateParameters: {
+        date: new Date(),
+        commit: git.short(),
+        branch: git.branch(),
+      },
     }),
   ],
 };

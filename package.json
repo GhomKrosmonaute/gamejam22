@@ -7,7 +7,6 @@
     "booyah": "2.0.0",
     "csv-parse": "^4.4.1",
     "del": "^4.1.0",
-    "git-rev-sync": "^1.12.0",
     "gulp": "^4.0.0",
     "gulp-cli": "^2.0.1",
     "gulp-concat": "^2.6.1",
@@ -29,6 +28,7 @@
   "devDependencies": {
     "clean-webpack-plugin": "^3.0.0",
     "copy-webpack-plugin": "^6.0.1",
+    "git-rev-sync": "^2.0.0",
     "html-webpack-plugin": "^4.3.0",
     "ts-loader": "^7.0.5",
     "webpack": "^4.43.0",
