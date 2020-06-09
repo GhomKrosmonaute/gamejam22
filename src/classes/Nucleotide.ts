@@ -186,6 +186,8 @@ export default class Nucleotide {
     }
 
     this.graphics.endFill()
+    this.graphics.x = this.x
+    this.graphics.y = this.y
 
     if(!this.matrix.container.children.includes(this.graphics))
       this.matrix.container.addChild(this.graphics)
