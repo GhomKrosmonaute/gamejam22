@@ -3,4 +3,6 @@ node_modules/
 dist/
 script_src/
 .cache
+.idea
+.vscode
 yarn-error.log
