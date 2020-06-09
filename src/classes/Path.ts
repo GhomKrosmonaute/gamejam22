@@ -6,7 +6,7 @@ import {getRandomSequence} from "../utils";
 export default class Path {
 
   public items: Nucleotide[] = []
-  public graphics = new Graphics()
+  public graphics = new Graphics
 
   constructor(
     public matrix: Matrix,
@@ -124,9 +124,7 @@ export default class Path {
 
   slide(){
     if(!this.items[1]) return
-
     const neighborIndex = this.items[0].getNeighborIndex(this.items[1])
-
     this.matrix.slide(neighborIndex)
   }
 }

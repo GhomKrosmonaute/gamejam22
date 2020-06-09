@@ -8,6 +8,7 @@ export default class Nucleotide {
   public state: NucleotideState
   public colorName: ColorName
   public graphics: Graphics
+  public infected = false
 
   constructor(
     public matrix: Matrix,

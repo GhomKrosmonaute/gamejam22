@@ -2,6 +2,7 @@ import { Container, Point, Renderer, interaction } from "pixi.js";
 import Nucleotide from "./Nucleotide"
 import {opposedIndexOf} from "../utils";
 import GridEntity from "../entities/Grid";
+import Path from "./Path";
 
 export default class Matrix {
 
@@ -32,6 +33,11 @@ export default class Matrix {
 
   get mouse(): interaction.InteractionData {
     return this.renderer.plugins.interaction.mouse
+  }
+
+  getHovered(): Nucleotide | null {
+    return this.nucleotides
+      .find( nucleotide => nucleotide.isHovered )
   }
 
   slide( neighborIndex: number ){
@@ -65,6 +71,30 @@ export default class Matrix {
       this.grid.container.addChild(this.container)
   }
 
-  mouseDown(){}
-  mouseUp(){}
+  mouseDown(){
+    const hovered = this.getHovered()
+    if(hovered && (!this.grid.path || !this.grid.path.items.includes(hovered))){
+      if(this.grid.state === "crunch"){
+        if(hovered.state !== "cut")
+          this.grid.path = new Path(this, hovered)
+      }else{
+        this.grid.path = new Path(this, hovered)
+      }
+    }
+  }
+
+  mouseUp(){
+    if(this.mouseButton === "left"){
+      if(this.grid.path){
+        if(this.grid.path.items.length === 1) {
+          const n = this.grid.path.first
+          n.state = n.state === "hole" ? "none" :  "hole"
+          this.grid.path = null
+        }else if(this.grid.state === "slide") {
+          this.grid.path.slide()
+          this.grid.path = null
+        }
+      }
+    }
+  }
 }

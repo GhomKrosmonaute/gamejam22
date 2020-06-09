@@ -32,8 +32,13 @@ export default class GridEntity extends Entity {
       this.cutCount,
       this.nucleotideRadius
     )
+    this.container.interactive = true
     this.container
       .on("mousedown",() => {
+
+        //TODO: listener don't works...
+        console.log("down")
+
         this.matrix.mouseIsDown = true;
         this.matrix.mouseDown();
       })

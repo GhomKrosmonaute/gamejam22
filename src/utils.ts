@@ -1,6 +1,6 @@
 
-export type NucleotideState = 'cut'|'hole'|'bonus'|'none'|'infected'
-export const nucleotideStates: NucleotideState[] = ['cut','hole','bonus','none','infected']
+export type NucleotideState = 'cut'|'hole'|'bonus'|'none'
+export const nucleotideStates: NucleotideState[] = ['cut','hole','bonus','none']
 export function getRandomNucleotideState(): NucleotideState {
   return nucleotideStates[Math.floor(Math.random()*nucleotideStates.length)]
 }
