@@ -21,9 +21,8 @@ export default class Nucleotide extends Entity {
   }
 
   _update() {
-    /* Path update */
-    if (this.isHovered && this.matrix.grid.path && this.matrix.mouseIsDown)
-      this.matrix.grid.path.__update(this);
+    if(this.matrix.party.path.items.length > 0)
+      this.matrix.party.path.calc(this);
   }
 
   _teardown() {

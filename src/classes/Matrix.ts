@@ -7,11 +7,9 @@ import Path from "./Path";
 
 export default class Matrix extends Entity {
   public nucleotides: Nucleotide[] = [];
-  public mouseIsDown: boolean = false;
-  public mouseButton: "right" | "left";
 
   constructor(
-    public grid: Party,
+    public party: Party,
     public colCount: number,
     public rowCount: number,
     public cutCount: number,
@@ -45,7 +43,7 @@ export default class Matrix extends Entity {
   }
 
   get renderer(): Renderer {
-    return this.grid.entityConfig.app.renderer;
+    return this.party.entityConfig.app.renderer;
   }
 
   get mouse(): interaction.InteractionData {
@@ -88,34 +86,5 @@ export default class Matrix extends Entity {
 
   render() {
     for (const nucleotide of this.nucleotides) nucleotide.render();
-  }
-
-  mouseDown() {
-    const hovered = this.getHovered();
-    if (
-      hovered &&
-      (!this.grid.path || !this.grid.path.items.includes(hovered))
-    ) {
-      if (this.grid.state === "crunch") {
-        if (hovered.state !== "cut") this.grid.path = new Path(this, hovered);
-      } else {
-        this.grid.path = new Path(this, hovered);
-      }
-    }
-  }
-
-  mouseUp() {
-    if (this.mouseButton === "left") {
-      if (this.grid.path) {
-        if (this.grid.path.items.length === 1) {
-          const n = this.grid.path.first;
-          n.state = n.state === "hole" ? "none" : "hole";
-          this.grid.path = null;
-        } else if (this.grid.state === "slide") {
-          this.grid.path.slide();
-          this.grid.path = null;
-        }
-      }
-    }
   }
 }

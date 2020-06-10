@@ -2,14 +2,14 @@ import Nucleotide from "./Nucleotide";
 import Matrix from "./Matrix";
 import { Graphics } from "pixi.js";
 import { Entity } from "booyah/src/entity";
+import Party from "../states/Party";
 
 export default class Path extends Entity {
   public items: Nucleotide[] = [];
   public graphics = new Graphics();
 
-  constructor(public matrix: Matrix, start: Nucleotide) {
+  constructor(public party: Party) {
     super();
-    this.items.push(start);
   }
 
   _setup() {}
@@ -34,13 +34,13 @@ export default class Path extends Entity {
     const signature = this.nucleotides.map((n) => n.colorName).join(",");
     return (
       this.cuts.length >= 1 &&
-      (signature === this.matrix.grid.sequence.toString() ||
-        signature === this.matrix.grid.sequence.toString().split(",").reverse().join(","))
+      (signature === this.party.sequence.toString() ||
+        signature === this.party.sequence.toString().split(",").reverse().join(","))
     );
   }
 
   get maxLength(): number {
-    return this.matrix.grid.sequence.length;
+    return this.party.sequence.length;
   }
 
   get first(): Nucleotide | null {
@@ -51,9 +51,16 @@ export default class Path extends Entity {
     return this.items[this.items.length - 1];
   }
 
-  __update(nucleotide: Nucleotide): void {
+  calc(nucleotide: Nucleotide): void {
+    if (!nucleotide.isHovered || !this.party.mouseIsDown) return
+
+    if(this.items.length === 0) {
+      this.items.push(nucleotide);
+      return
+    }
+
     // in crunch path case
-    if (this.matrix.grid.state === "crunch") {
+    if (this.party.state === "crunch") {
       // check if the current nucleotide is a wall/hole/cut
       if (this.length > 0 && nucleotide.state === "hole") return;
       if (this.first.state === "hole") return;
@@ -70,9 +77,8 @@ export default class Path extends Entity {
 
     // check if this path is terminated or not
     if (
-      this.length >= (this.matrix.grid.state === "crunch" ? this.maxLength : 2)
-    )
-      return;
+      this.length >= (this.party.state === "crunch" ? this.maxLength : 2)
+    ) return;
 
     // check if nucleotide is already in this path
     if (this.items.includes(nucleotide)) return;
@@ -81,11 +87,14 @@ export default class Path extends Entity {
     if (
       this.items[this.items.length - 1] &&
       this.items[this.items.length - 1].getNeighborIndex(nucleotide) === -1
-    )
-      return null;
+    ) return null;
 
     // push in this path the checked nucleotide
     this.items.push(nucleotide);
+  }
+
+  remove(){
+    this.items = []
   }
 
   render() {
@@ -118,13 +127,13 @@ export default class Path extends Entity {
   crunch() {
     if (this.isValidSequence) {
       this.items.forEach((n) => (n.state = "hole"));
-      this.matrix.grid.sequence.generate()
+      this.party.sequence.generate()
     }
   }
 
   slide() {
     if (!this.items[1]) return;
     const neighborIndex = this.items[0].getNeighborIndex(this.items[1]);
-    this.matrix.slide(neighborIndex);
+    this.party.matrix.slide(neighborIndex);
   }
 }
