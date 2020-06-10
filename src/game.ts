@@ -1,15 +1,11 @@
 import * as booyah from "booyah/src/booyah";
-import GridEntity from "./entities/Grid";
-
-const grid = new GridEntity()
+import Party from "./states/Party";
 
 const gameStates = {
-  start: grid
+  start: new Party(),
 };
 
-let gameTransitions = {
-
-};
+let gameTransitions = {};
 
 const entityInstallers = [
   // audio.installJukebox,
@@ -22,4 +18,4 @@ booyah.go({
   //@ts-ignore
   transitions: gameTransitions,
   entityInstallers,
-})
+});
