@@ -1,6 +1,6 @@
 import Nucleotide from "./Nucleotide";
 import Matrix from "./Matrix";
-import { Graphics } from "pixi.js";
+import { Graphics, Container } from "pixi.js";
 import { Entity } from "booyah/src/entity";
 import Party from "../states/Party";
 
@@ -12,11 +12,19 @@ export default class Path extends Entity {
     super();
   }
 
-  _setup() {}
+  _setup() {
+    this.container.addChild(this.graphics);
+  }
 
   _update() {}
 
-  _teardown() {}
+  _teardown() {
+    this.container.removeChild(this.graphics);
+  }
+
+  get container(): Container {
+    return this.entityConfig.container;
+  }
 
   get length(): number {
     return this.nucleotides.length;
@@ -35,7 +43,8 @@ export default class Path extends Entity {
     return (
       this.cuts.length >= 1 &&
       (signature === this.party.sequence.toString() ||
-        signature === this.party.sequence.toString().split(",").reverse().join(","))
+        signature ===
+          this.party.sequence.toString().split(",").reverse().join(","))
     );
   }
 
@@ -52,11 +61,11 @@ export default class Path extends Entity {
   }
 
   calc(nucleotide: Nucleotide): void {
-    if (!nucleotide.isHovered || !this.party.mouseIsDown) return
+    if (!nucleotide.isHovered || !this.party.mouseIsDown) return;
 
-    if(this.items.length === 0) {
+    if (this.items.length === 0) {
       this.items.push(nucleotide);
-      return
+      return;
     }
 
     // in crunch path case
@@ -76,9 +85,8 @@ export default class Path extends Entity {
     }
 
     // check if this path is terminated or not
-    if (
-      this.length >= (this.party.state === "crunch" ? this.maxLength : 2)
-    ) return;
+    if (this.length >= (this.party.state === "crunch" ? this.maxLength : 2))
+      return;
 
     // check if nucleotide is already in this path
     if (this.items.includes(nucleotide)) return;
@@ -87,14 +95,15 @@ export default class Path extends Entity {
     if (
       this.items[this.items.length - 1] &&
       this.items[this.items.length - 1].getNeighborIndex(nucleotide) === -1
-    ) return null;
+    )
+      return null;
 
     // push in this path the checked nucleotide
     this.items.push(nucleotide);
   }
 
-  remove(){
-    this.items = []
+  remove() {
+    this.items = [];
   }
 
   render() {
@@ -127,7 +136,7 @@ export default class Path extends Entity {
   crunch() {
     if (this.isValidSequence) {
       this.items.forEach((n) => (n.state = "hole"));
-      this.party.sequence.generate()
+      this.party.sequence.generate();
     }
   }
 

@@ -22,8 +22,8 @@ export default class Party extends Entity {
   }
 
   _setup() {
-    this.sequence = new Sequence(5)
-    this.path = new Path(this)
+    this.sequence = new Sequence(5);
+    this.path = new Path(this);
     this.matrix = new Matrix(
       this,
       this.colCount,
@@ -31,7 +31,11 @@ export default class Party extends Entity {
       this.cutCount,
       this.nucleotideRadius
     );
-    this.container.interactive = true;
+
+    this.container
+      .addChild(this.matrix.container)
+      .addChild(this.path.container)
+      .addChild(this.sequence.container).interactive = true;
 
     // setup listeners
     this._on(this.container, "pointerdown", () => {
@@ -62,13 +66,9 @@ export default class Party extends Entity {
 
   mouseDown() {
     const hovered = this.matrix.getHovered();
-    if (
-      hovered &&
-      (!this.path.items.includes(hovered))
-    ) {
+    if (hovered && !this.path.items.includes(hovered)) {
       if (this.state === "crunch") {
-        if (hovered.state !== "cut")
-          this.path.calc(hovered);
+        if (hovered.state !== "cut") this.path.calc(hovered);
       } else {
         this.path.calc(hovered);
       }
