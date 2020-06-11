@@ -1,10 +1,10 @@
-import { Container, Point } from "pixi.js";
-import { ParallelEntity, extendConfig } from "booyah/src/entity";
+import * as pixi from "pixi.js";
+import * as entity from "booyah/src/entity";
+import * as utils from "../utils";
 import Nucleotide from "./Nucleotide";
-import { opposedIndexOf } from "../utils";
 import Party from "../states/Party";
 
-export default class Matrix extends ParallelEntity {
+export default class Matrix extends entity.ParallelEntity {
   public nucleotides: Nucleotide[] = [];
 
   constructor(
@@ -30,17 +30,17 @@ export default class Matrix extends ParallelEntity {
     }
   }
 
-  get container(): Container {
+  get container(): pixi.Container {
     return this.entityConfig.container;
   }
 
   generate() {
     for (let x = 0; x < this.colCount; x++) {
       for (let y = 0; y < this.rowCount; y++) {
-        const n = new Nucleotide(this, new Point(x, y));
+        const n = new Nucleotide(this, new pixi.Point(x, y));
         this.addEntity(
           n,
-          extendConfig({
+          entity.extendConfig({
             container: this.container,
           })
         );
@@ -56,7 +56,7 @@ export default class Matrix extends ParallelEntity {
   }
 
   slide(neighborIndex: number) {
-    const opposedNeighborIndex = opposedIndexOf(neighborIndex);
+    const opposedNeighborIndex = utils.opposedIndexOf(neighborIndex);
     for (const nucleotide of this.nucleotides)
       if (nucleotide.state === "hole") {
         nucleotide.generate();

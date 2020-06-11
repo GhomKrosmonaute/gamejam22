@@ -1,22 +1,15 @@
-import { Graphics, Point, Container } from "pixi.js";
+import * as pixi from "pixi.js";
+import * as entity from "booyah/src/entity";
+import * as utils from "../utils";
 import Matrix from "./Matrix";
-import {
-  ColorName,
-  getRandomColorName,
-  NucleotideState,
-  getColorByName,
-  dist,
-  degreesToRadians,
-} from "../utils";
-import { Entity } from "booyah/src/entity";
 
-export default class Nucleotide extends Entity {
-  public state: NucleotideState;
-  public colorName: ColorName;
-  public graphics = new Graphics();
+export default class Nucleotide extends entity.Entity {
+  public state: utils.NucleotideState;
+  public colorName: utils.ColorName;
+  public graphics = new pixi.Graphics();
   public infected = false;
 
-  constructor(public matrix: Matrix, public matrixPosition: Point) {
+  constructor(public matrix: Matrix, public matrixPosition: pixi.Point) {
     super();
   }
 
@@ -35,12 +28,12 @@ export default class Nucleotide extends Entity {
     this.container.removeChild(this.graphics);
   }
 
-  get container(): Container {
+  get container(): pixi.Container {
     return this.entityConfig.container;
   }
 
   get color(): number {
-    return getColorByName(this.colorName);
+    return utils.getColorByName(this.colorName);
   }
 
   get evenCol(): boolean {
@@ -59,8 +52,8 @@ export default class Nucleotide extends Entity {
     return Math.sqrt(3) * this.radius;
   }
 
-  get dist(): Point {
-    return new Point(this.width * (3 / 4), this.height);
+  get dist(): pixi.Point {
+    return new pixi.Point(this.width * (3 / 4), this.height);
   }
 
   get x(): number {
@@ -79,7 +72,7 @@ export default class Nucleotide extends Entity {
 
   get isHovered(): boolean {
     return (
-      dist(
+      utils.dist(
         this.x,
         this.y,
         this.matrix.party.mouse.global.x,
@@ -91,7 +84,7 @@ export default class Nucleotide extends Entity {
 
   generate() {
     this.state = "none";
-    this.colorName = getRandomColorName();
+    this.colorName = utils.getRandomColorName();
   }
 
   swap(nucleotide: Nucleotide) {
@@ -157,16 +150,16 @@ export default class Nucleotide extends Entity {
   }
 
   /** @param {number} cornerIndex - from 0 to 5, start on right corner */
-  getCornerPosition(cornerIndex: number): Point {
-    const angle = degreesToRadians(60 * cornerIndex);
-    return new Point(
+  getCornerPosition(cornerIndex: number): pixi.Point {
+    const angle = utils.degreesToRadians(60 * cornerIndex);
+    return new pixi.Point(
       this.x + this.radius * Math.cos(angle),
       this.y + this.radius * Math.sin(angle)
     );
   }
 
   /** @param {number} neighborIndex - from 0 to 5, start on top */
-  getNeighborMatrixPosition(neighborIndex: number): Point {
+  getNeighborMatrixPosition(neighborIndex: number): pixi.Point {
     const matrixPosition = this.matrixPosition.clone();
     switch (neighborIndex) {
       case 0:
@@ -205,12 +198,12 @@ export default class Nucleotide extends Entity {
       .clear()
       .beginFill(this.color)
       .drawPolygon([
-        new Point(-this.radius, 0),
-        new Point(-this.radius / 2, this.height / 2),
-        new Point(this.radius / 2, this.height / 2),
-        new Point(this.radius, 0),
-        new Point(this.radius / 2, -this.height / 2),
-        new Point(-this.radius / 2, -this.height / 2),
+        new pixi.Point(-this.radius, 0),
+        new pixi.Point(-this.radius / 2, this.height / 2),
+        new pixi.Point(this.radius / 2, this.height / 2),
+        new pixi.Point(this.radius, 0),
+        new pixi.Point(this.radius / 2, -this.height / 2),
+        new pixi.Point(-this.radius / 2, -this.height / 2),
       ]);
 
     if (this.state === "cut") {

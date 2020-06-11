@@ -1,11 +1,11 @@
-import { Container, Renderer, interaction } from "pixi.js";
-import { extendConfig, ParallelEntity } from "booyah/src/entity";
+import * as pixi from "pixi.js";
+import * as entity from "booyah/src/entity";
+import * as utils from "../utils";
 import Matrix from "../classes/Matrix";
 import Path from "../classes/Path";
 import Sequence from "../classes/Sequence";
-import { PartyState } from "../utils";
 
-export default class Party extends ParallelEntity {
+export default class Party extends entity.ParallelEntity {
   public colCount = 7;
   public rowCount = 7;
   public cutCount = 9;
@@ -13,19 +13,19 @@ export default class Party extends ParallelEntity {
   public sequence: Sequence;
   public path: Path;
   public matrix: Matrix;
-  public state: PartyState = "crunch";
+  public state: utils.PartyState = "crunch";
   public mouseIsDown: boolean = false;
   public mouseButton: "right" | "left";
 
-  get container(): Container {
+  get container(): pixi.Container {
     return this.entityConfig.container;
   }
 
-  get renderer(): Renderer {
+  get renderer(): pixi.Renderer {
     return this.entityConfig.app.renderer;
   }
 
-  get mouse(): interaction.InteractionData {
+  get mouse(): pixi.interaction.InteractionData {
     return this.renderer.plugins.interaction.mouse;
   }
 
@@ -43,19 +43,19 @@ export default class Party extends ParallelEntity {
 
     this.addEntity(
       this.matrix,
-      extendConfig({
+      entity.extendConfig({
         container: this.container,
       })
     );
     this.addEntity(
       this.path,
-      extendConfig({
+      entity.extendConfig({
         container: this.container,
       })
     );
     this.addEntity(
       this.sequence,
-      extendConfig({
+      entity.extendConfig({
         container: this.container,
       })
     );

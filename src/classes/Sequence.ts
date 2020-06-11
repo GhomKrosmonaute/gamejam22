@@ -1,11 +1,11 @@
 // une sequence que le virus tient (il peut y en avoir plusieurs)
 
-import { Container } from "pixi.js";
-import { Entity } from "booyah/src/entity";
-import { ColorName, getRandomColorName } from "../utils";
+import * as pixi from "pixi.js";
+import * as entity from "booyah/src/entity";
+import * as utils from "../utils";
 
-export default class Sequence extends Entity {
-  public colorNames: ColorName[];
+export default class Sequence extends entity.Entity {
+  public colorNames: utils.ColorName[];
   public length: number;
 
   constructor(public baseLength: number) {
@@ -23,14 +23,14 @@ export default class Sequence extends Entity {
     this.colorNames = null;
   }
 
-  get container(): Container {
+  get container(): pixi.Container {
     return this.entityConfig.container;
   }
 
   generate() {
     this.colorNames = [];
     for (let i = 0; i < this.length; i++)
-      this.colorNames.push(getRandomColorName());
+      this.colorNames.push(utils.getRandomColorName());
   }
 
   toString() {

@@ -1,11 +1,11 @@
+import * as pixi from "pixi.js";
+import * as entity from "booyah/src/entity";
 import Nucleotide from "./Nucleotide";
-import { Graphics, Container } from "pixi.js";
-import { Entity } from "booyah/src/entity";
 import Party from "../states/Party";
 
-export default class Path extends Entity {
+export default class Path extends entity.Entity {
   public items: Nucleotide[] = [];
-  public graphics = new Graphics();
+  public graphics = new pixi.Graphics();
 
   constructor(public party: Party) {
     super();
@@ -21,7 +21,7 @@ export default class Path extends Entity {
     this.container.removeChild(this.graphics);
   }
 
-  get container(): Container {
+  get container(): pixi.Container {
     return this.entityConfig.container;
   }
 
