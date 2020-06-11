@@ -1,5 +1,4 @@
 import Nucleotide from "./Nucleotide";
-import Matrix from "./Matrix";
 import { Graphics, Container } from "pixi.js";
 import { Entity } from "booyah/src/entity";
 import Party from "../states/Party";

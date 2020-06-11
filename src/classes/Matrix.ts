@@ -1,11 +1,10 @@
-import { Container, Point, Renderer, interaction } from "pixi.js";
-import { Entity } from "booyah/src/entity";
+import { Container, Point } from "pixi.js";
+import { ParallelEntity, extendConfig } from "booyah/src/entity";
 import Nucleotide from "./Nucleotide";
 import { opposedIndexOf } from "../utils";
 import Party from "../states/Party";
-import Path from "./Path";
 
-export default class Matrix extends Entity {
+export default class Matrix extends ParallelEntity {
   public nucleotides: Nucleotide[] = [];
 
   constructor(
@@ -21,19 +20,12 @@ export default class Matrix extends Entity {
   _setup() {
     this.generate();
     this.render();
-    for (const nucleotide of this.nucleotides) {
-      nucleotide._setup();
-      this.container.addChild(nucleotide.container);
-    }
   }
 
-  _update() {
-    for (const nucleotide of this.nucleotides) nucleotide._update();
-  }
+  _update() {}
 
   _teardown() {
     for (const nucleotide of this.nucleotides) {
-      nucleotide._teardown();
       this.container.removeChild(nucleotide.container);
     }
   }
@@ -42,18 +34,19 @@ export default class Matrix extends Entity {
     return this.entityConfig.container;
   }
 
-  get renderer(): Renderer {
-    return this.party.entityConfig.app.renderer;
-  }
-
-  get mouse(): interaction.InteractionData {
-    return this.renderer.plugins.interaction.mouse;
-  }
-
   generate() {
-    for (let x = 0; x < this.colCount; x++)
-      for (let y = 0; y < this.rowCount; y++)
-        this.nucleotides.push(new Nucleotide(this, new Point(x, y)));
+    for (let x = 0; x < this.colCount; x++) {
+      for (let y = 0; y < this.rowCount; y++) {
+        const n = new Nucleotide(this, new Point(x, y));
+        this.addEntity(
+          n,
+          extendConfig({
+            container: this.container,
+          })
+        );
+        this.nucleotides.push(n);
+      }
+    }
 
     this.addCuts();
   }

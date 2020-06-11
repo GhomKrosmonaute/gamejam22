@@ -1,11 +1,11 @@
-import { Container } from "pixi.js";
-import { Entity } from "booyah/src/entity";
+import { Container, Renderer, interaction } from "pixi.js";
+import { extendConfig, ParallelEntity } from "booyah/src/entity";
 import Matrix from "../classes/Matrix";
 import Path from "../classes/Path";
 import Sequence from "../classes/Sequence";
 import { PartyState } from "../utils";
 
-export default class Party extends Entity {
+export default class Party extends ParallelEntity {
   public colCount = 7;
   public rowCount = 7;
   public cutCount = 9;
@@ -21,7 +21,16 @@ export default class Party extends Entity {
     return this.entityConfig.container;
   }
 
+  get renderer(): Renderer {
+    return this.entityConfig.app.renderer;
+  }
+
+  get mouse(): interaction.InteractionData {
+    return this.renderer.plugins.interaction.mouse;
+  }
+
   _setup() {
+    this.container.interactive = true;
     this.sequence = new Sequence(5);
     this.path = new Path(this);
     this.matrix = new Matrix(
@@ -32,10 +41,29 @@ export default class Party extends Entity {
       this.nucleotideRadius
     );
 
-    this.container
-      .addChild(this.matrix.container)
-      .addChild(this.path.container)
-      .addChild(this.sequence.container).interactive = true;
+    this.addEntity(
+      this.matrix,
+      extendConfig({
+        container: this.container,
+      })
+    );
+    this.addEntity(
+      this.path,
+      extendConfig({
+        container: this.container,
+      })
+    );
+    this.addEntity(
+      this.sequence,
+      extendConfig({
+        container: this.container,
+      })
+    );
+
+    // this.container
+    //   .addChild(this.matrix.container)
+    //   .addChild(this.path.container)
+    //   .addChild(this.sequence.container).interactive = true;
 
     // setup listeners
     this._on(this.container, "pointerdown", () => {
@@ -60,7 +88,8 @@ export default class Party extends Entity {
   _update() {}
 
   _teardown() {
-    this.container.removeChild(this.matrix.container);
+    this.sequence = null;
+    this.path = null;
     this.matrix = null;
   }
 

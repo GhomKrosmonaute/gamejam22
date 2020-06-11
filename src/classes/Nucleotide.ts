@@ -1,7 +1,13 @@
 import { Graphics, Point, Container } from "pixi.js";
 import Matrix from "./Matrix";
-import { ColorName, getRandomColorName, NucleotideState } from "../utils";
-import { getColorByName, dist, degreesToRadians } from "../utils";
+import {
+  ColorName,
+  getRandomColorName,
+  NucleotideState,
+  getColorByName,
+  dist,
+  degreesToRadians,
+} from "../utils";
 import { Entity } from "booyah/src/entity";
 
 export default class Nucleotide extends Entity {
@@ -76,8 +82,8 @@ export default class Nucleotide extends Entity {
       dist(
         this.x,
         this.y,
-        this.matrix.mouse.global.x,
-        this.matrix.mouse.global.y
+        this.matrix.party.mouse.global.x,
+        this.matrix.party.mouse.global.y
       ) <
       this.radius * 0.86
     );
