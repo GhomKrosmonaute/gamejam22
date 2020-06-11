@@ -74,6 +74,7 @@ export default class Matrix extends entity.ParallelEntity {
         randomIndex = Math.floor(Math.random() * this.nucleotides.length);
       } while (this.nucleotides[randomIndex].state === "cut");
       this.nucleotides[randomIndex].state = "cut";
+      this.nucleotides[randomIndex].render();
     }
   }
 

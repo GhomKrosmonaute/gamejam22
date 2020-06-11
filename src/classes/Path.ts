@@ -64,6 +64,7 @@ export default class Path extends entity.Entity {
 
     if (this.items.length === 0) {
       this.items.push(nucleotide);
+      this.render();
       return;
     }
 
@@ -80,6 +81,7 @@ export default class Path extends entity.Entity {
       this.items[this.items.length - 2] === nucleotide
     ) {
       this.items.pop();
+      this.render();
       return;
     }
 
@@ -99,10 +101,12 @@ export default class Path extends entity.Entity {
 
     // push in this path the checked nucleotide
     this.items.push(nucleotide);
+    this.render();
   }
 
   remove() {
     this.items = [];
+    this.render();
   }
 
   render() {
@@ -118,8 +122,8 @@ export default class Path extends entity.Entity {
         .drawEllipse(
           nucleotide.x,
           nucleotide.y,
-          nucleotide.width * 0.4,
-          nucleotide.height * 0.4
+          nucleotide.width * 0.2,
+          nucleotide.height * 0.2
         );
 
       if (last)
@@ -136,6 +140,7 @@ export default class Path extends entity.Entity {
     if (this.isValidSequence) {
       this.items.forEach((n) => (n.state = "hole"));
       this.party.sequence.generate();
+      this.party.matrix.render();
     }
   }
 

@@ -17,6 +17,8 @@ export default class Party extends entity.ParallelEntity {
   public mouseIsDown: boolean = false;
   public mouseButton: "right" | "left";
 
+  private validationButton: pixi.Text;
+
   get container(): pixi.Container {
     return this.entityConfig.container;
   }
@@ -60,16 +62,8 @@ export default class Party extends entity.ParallelEntity {
       })
     );
 
-    // this.container
-    //   .addChild(this.matrix.container)
-    //   .addChild(this.path.container)
-    //   .addChild(this.sequence.container).interactive = true;
-
     // setup listeners
     this._on(this.container, "pointerdown", () => {
-      //TODO: listener don't works...
-      console.log("down");
-
       this.mouseIsDown = true;
       this.mouseDown();
     });
@@ -77,20 +71,33 @@ export default class Party extends entity.ParallelEntity {
       this.mouseIsDown = false;
       this.mouseUp();
     });
-    this._on(this.container, "rightdown", () => {
-      this.mouseButton = "right";
+
+    // add validation button
+    this.validationButton = new pixi.Text("valider", { fill: "#FFFFFF" });
+    this.validationButton.buttonMode = true;
+    this.validationButton.interactive = true;
+    this.validationButton.anchor.set(0.5);
+    this.validationButton.x = 800;
+    this.validationButton.y = 250;
+    this.validationButton.on("pointerdown", () => {
+      if (this.state === "crunch") {
+        if (this.path) {
+          this.path.crunch();
+          this.path.remove();
+        }
+      }
     });
-    this._on(this.container, "leftdown", () => {
-      this.mouseButton = "left";
-    });
+    this.container.addChild(this.validationButton);
   }
 
   _update() {}
 
   _teardown() {
+    this.container.removeChild(this.validationButton);
     this.sequence = null;
     this.path = null;
     this.matrix = null;
+    this.validationButton = null;
   }
 
   mouseDown() {
@@ -105,15 +112,16 @@ export default class Party extends entity.ParallelEntity {
   }
 
   mouseUp() {
-    if (this.mouseButton === "left") {
-      if (this.path.items.length === 1) {
-        const n = this.path.first;
-        n.state = n.state === "hole" ? "none" : "hole";
-        this.path.remove();
-      } else if (this.state === "slide") {
-        this.path.slide();
-        this.path.remove();
-      }
+    console.log("work");
+    if (this.path.items.length === 1) {
+      const n = this.path.first;
+      n.state = n.state === "hole" ? "none" : "hole";
+      n.render();
+      console.log(n.state);
+      this.path.remove();
+    } else if (this.state === "slide") {
+      this.path.slide();
+      this.path.remove();
     }
   }
 }

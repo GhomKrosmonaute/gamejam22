@@ -91,6 +91,8 @@ export default class Nucleotide extends entity.Entity {
     const oldMatrixPosition = this.matrixPosition.clone();
     this.matrixPosition.copyFrom(nucleotide.matrixPosition);
     nucleotide.matrixPosition.copyFrom(oldMatrixPosition);
+    nucleotide.render();
+    this.render();
   }
 
   /** @param {number} neighborIndex - from 0 to 5, start on top */
@@ -189,14 +191,27 @@ export default class Nucleotide extends entity.Entity {
   }
 
   render() {
-    if (this.state === "hole") return;
-
     /* Mouse collision */
     const hovered = this.isHovered;
 
+    this.graphics.clear();
+
+    switch (this.state) {
+      case "bonus":
+        this.graphics.beginFill(0xff00ff);
+        break;
+      case "cut":
+        this.graphics.beginFill(0x888888);
+        break;
+      case "hole":
+        this.graphics.beginFill(0x333333);
+        break;
+      case "none":
+        this.graphics.beginFill(this.color);
+        break;
+    }
+
     this.graphics
-      .clear()
-      .beginFill(this.color)
       .drawPolygon([
         new pixi.Point(-this.radius, 0),
         new pixi.Point(-this.radius / 2, this.height / 2),
@@ -204,15 +219,9 @@ export default class Nucleotide extends entity.Entity {
         new pixi.Point(this.radius, 0),
         new pixi.Point(this.radius / 2, -this.height / 2),
         new pixi.Point(-this.radius / 2, -this.height / 2),
-      ]);
+      ])
+      .endFill();
 
-    if (this.state === "cut") {
-      // Draw vectoriel cut
-    } else {
-      // Draw vectoriel nucleotide
-    }
-
-    this.graphics.endFill();
     this.graphics.x = this.x;
     this.graphics.y = this.y;
   }
