@@ -130,12 +130,10 @@ export default class Party extends entity.ParallelEntity {
   }
 
   mouseUp() {
-    console.log("work");
     if (this.path.items.length === 1) {
       const n = this.path.first;
       n.state = n.state === "hole" ? "none" : "hole";
       n.render();
-      console.log(n.state);
       this.path.remove();
     } else if (this.state === "slide") {
       this.path.slide();

@@ -63,6 +63,8 @@ export default class Matrix extends entity.ParallelEntity {
         nucleotide.recursiveSwap(opposedNeighborIndex);
       }
     this.addCuts();
+    this.party.state = "crunch";
+    this.party.stateSwitch.text = "mode: crunch";
   }
 
   addCuts() {
