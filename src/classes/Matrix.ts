@@ -38,6 +38,7 @@ export default class Matrix extends entity.ParallelEntity {
   generate() {
     for (let x = 0; x < this.colCount; x++) {
       for (let y = 0; y < this.rowCount; y++) {
+        if (x % 2 === 0 && y === this.rowCount - 1) continue;
         const n = new MatrixNucleotide(this, new pixi.Point(x, y));
         this.addEntity(
           n,
