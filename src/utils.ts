@@ -1,3 +1,5 @@
+import * as pixi from "pixi.js";
+
 export type NucleotideState = "cut" | "hole" | "bonus" | "none";
 export const nucleotideStates: NucleotideState[] = [
   "cut",
@@ -44,4 +46,16 @@ export function dist(x1: number, y1: number, x2: number, y2: number): number {
 
 export function degreesToRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
+}
+
+export function hexagon(radius: number) {
+  const height = Math.sqrt(3) * radius;
+  return [
+    new pixi.Point(-radius, 0),
+    new pixi.Point(-radius / 2, height / 2),
+    new pixi.Point(radius / 2, height / 2),
+    new pixi.Point(radius, 0),
+    new pixi.Point(radius / 2, -height / 2),
+    new pixi.Point(-radius / 2, -height / 2),
+  ];
 }

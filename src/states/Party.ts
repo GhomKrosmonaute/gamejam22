@@ -33,7 +33,7 @@ export default class Party extends entity.ParallelEntity {
 
   _setup() {
     this.container.interactive = true;
-    this.sequence = new Sequence(5);
+    this.sequence = new Sequence(this, 5);
     this.path = new Path(this);
     this.matrix = new Matrix(
       this,

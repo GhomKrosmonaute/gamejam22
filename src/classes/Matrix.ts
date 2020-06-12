@@ -6,6 +6,8 @@ import Party from "../states/Party";
 
 export default class Matrix extends entity.ParallelEntity {
   public nucleotides: MatrixNucleotide[] = [];
+  public x = 0;
+  public y = 0;
 
   constructor(
     public party: Party,
@@ -19,7 +21,6 @@ export default class Matrix extends entity.ParallelEntity {
 
   _setup() {
     this.generate();
-    this.render();
   }
 
   _update() {}
@@ -49,6 +50,7 @@ export default class Matrix extends entity.ParallelEntity {
     }
 
     this.addCuts();
+    this.render();
   }
 
   getHovered(): MatrixNucleotide | null {

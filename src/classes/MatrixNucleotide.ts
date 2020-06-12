@@ -5,6 +5,7 @@ import Nucleotide from "./Nucleotide";
 
 export default class MatrixNucleotide extends Nucleotide {
   public state: utils.NucleotideState;
+  public isHovered = false;
   public infected = false;
 
   constructor(public matrix: Matrix, matrixPosition: pixi.Point) {
@@ -18,6 +19,7 @@ export default class MatrixNucleotide extends Nucleotide {
   }
 
   _update() {
+    this.checkHovered();
     if (this.matrix.party.path.items.length > 0)
       this.matrix.party.path.calc(this);
   }
@@ -26,16 +28,20 @@ export default class MatrixNucleotide extends Nucleotide {
     this.container.removeChild(this.graphics);
   }
 
-  get isHovered(): boolean {
-    return (
+  checkHovered(): boolean {
+    const isHovered =
       utils.dist(
         this.x,
         this.y,
         this.matrix.party.mouse.global.x,
         this.matrix.party.mouse.global.y
       ) <
-      this.radius * 0.86
-    );
+      this.radius * 0.86;
+    if (this.isHovered !== isHovered) {
+      this.isHovered = isHovered;
+      this.render();
+    }
+    return isHovered;
   }
 
   generate() {
@@ -147,10 +153,7 @@ export default class MatrixNucleotide extends Nucleotide {
   }
 
   render() {
-    /* Mouse collision */
-    const hovered = this.isHovered;
-
-    this.graphics.clear();
+    this.graphics.clear().buttonMode = true;
 
     switch (this.state) {
       case "bonus":
@@ -168,17 +171,12 @@ export default class MatrixNucleotide extends Nucleotide {
     }
 
     this.graphics
-      .drawPolygon([
-        new pixi.Point(-this.radius, 0),
-        new pixi.Point(-this.radius / 2, this.height / 2),
-        new pixi.Point(this.radius / 2, this.height / 2),
-        new pixi.Point(this.radius, 0),
-        new pixi.Point(this.radius / 2, -this.height / 2),
-        new pixi.Point(-this.radius / 2, -this.height / 2),
-      ])
+      .drawPolygon(
+        utils.hexagon(this.isHovered ? this.radius * 0.97 : this.radius)
+      )
       .endFill();
 
-    this.graphics.x = this.x;
-    this.graphics.y = this.y;
+    this.graphics.x = this.x + this.matrix.x;
+    this.graphics.y = this.y + this.matrix.y;
   }
 }

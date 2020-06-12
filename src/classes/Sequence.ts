@@ -1,16 +1,20 @@
-// une sequence que le virus tient (il peut y en avoir plusieurs)
-
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
-import * as utils from "../utils";
+import SequenceNucleotide from "./SequenceNucleotide";
+import Party from "../states/Party";
 
-export default class Sequence extends entity.Entity {
-  public colorNames: utils.ColorName[];
+export default class Sequence extends entity.ParallelEntity {
+  public nucleotides: SequenceNucleotide[];
   public length: number;
   public x: number = 600;
   public y: number = 50;
+  public nucleotideRadius = 25;
 
-  constructor(public baseLength: number) {
+  constructor(
+    public party: Party,
+    public baseLength: number,
+    public zigzag?: boolean
+  ) {
     super();
   }
 
@@ -22,30 +26,42 @@ export default class Sequence extends entity.Entity {
   _update() {}
 
   _teardown() {
-    this.colorNames = null;
+    for (const nucleotide of this.nucleotides) {
+      this.container.removeChild(nucleotide.container);
+    }
   }
 
   get container(): pixi.Container {
     return this.entityConfig.container;
   }
 
-  render() {
-    for (let i = 0; i < this.colorNames.length; i++) {
-      const color = utils.getColorByName(this.colorNames[i]);
-      const graphics = new pixi.Graphics();
-      graphics.beginFill(color).drawEllipse(this.x, this.y + i * 50, 25, 25);
-      this.container.addChild(graphics);
-    }
-  }
-
   generate() {
-    this.colorNames = [];
-    for (let i = 0; i < this.length; i++)
-      this.colorNames.push(utils.getRandomColorName());
+    this.nucleotides = [];
+    for (let i = 0; i < this.length; i++) {
+      const position = new pixi.Point();
+      if (this.zigzag) {
+        position.y = Math.floor(i * 0.5);
+        position.x = i % 2 ? 0 : 1;
+      } else {
+        position.y = i;
+      }
+      const n = new SequenceNucleotide(this, position);
+      this.addEntity(
+        n,
+        entity.extendConfig({
+          container: this.container,
+        })
+      );
+      this.nucleotides.push(n);
+    }
     this.render();
   }
 
+  render() {
+    for (const nucleotide of this.nucleotides) nucleotide.render();
+  }
+
   toString() {
-    return this.colorNames.join(",");
+    return this.nucleotides.map((n) => n.colorName).join(",");
   }
 }
