@@ -1,11 +1,11 @@
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
-import Nucleotide from "./Nucleotide";
+import MatrixNucleotide from "./MatrixNucleotide";
 import Party from "../states/Party";
 
 export default class Matrix extends entity.ParallelEntity {
-  public nucleotides: Nucleotide[] = [];
+  public nucleotides: MatrixNucleotide[] = [];
 
   constructor(
     public party: Party,
@@ -37,7 +37,7 @@ export default class Matrix extends entity.ParallelEntity {
   generate() {
     for (let x = 0; x < this.colCount; x++) {
       for (let y = 0; y < this.rowCount; y++) {
-        const n = new Nucleotide(this, new pixi.Point(x, y));
+        const n = new MatrixNucleotide(this, new pixi.Point(x, y));
         this.addEntity(
           n,
           entity.extendConfig({
@@ -51,7 +51,7 @@ export default class Matrix extends entity.ParallelEntity {
     this.addCuts();
   }
 
-  getHovered(): Nucleotide | null {
+  getHovered(): MatrixNucleotide | null {
     return this.nucleotides.find((nucleotide) => nucleotide.isHovered);
   }
 

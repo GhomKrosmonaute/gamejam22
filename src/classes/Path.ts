@@ -1,10 +1,10 @@
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
-import Nucleotide from "./Nucleotide";
+import MatrixNucleotide from "./MatrixNucleotide";
 import Party from "../states/Party";
 
 export default class Path extends entity.Entity {
-  public items: Nucleotide[] = [];
+  public items: MatrixNucleotide[] = [];
   public graphics = new pixi.Graphics();
   public isValidSequence = false;
 
@@ -32,11 +32,11 @@ export default class Path extends entity.Entity {
     return this.nucleotides.length;
   }
 
-  get nucleotides(): Nucleotide[] {
+  get nucleotides(): MatrixNucleotide[] {
     return this.items.filter((n) => n.state !== "cut");
   }
 
-  get cuts(): Nucleotide[] {
+  get cuts(): MatrixNucleotide[] {
     return this.items.filter((n) => n.state === "cut");
   }
 
@@ -44,11 +44,11 @@ export default class Path extends entity.Entity {
     return this.party.sequence.length;
   }
 
-  get first(): Nucleotide | null {
+  get first(): MatrixNucleotide | null {
     return this.items[0];
   }
 
-  get last(): Nucleotide | null {
+  get last(): MatrixNucleotide | null {
     return this.items[this.items.length - 1];
   }
 
@@ -68,7 +68,7 @@ export default class Path extends entity.Entity {
     return isValidSequence;
   }
 
-  calc(nucleotide: Nucleotide): void {
+  calc(nucleotide: MatrixNucleotide): void {
     if (!nucleotide.isHovered || !this.party.mouseIsDown) return;
 
     if (this.items.length === 0) {
@@ -119,7 +119,7 @@ export default class Path extends entity.Entity {
   }
 
   render() {
-    let last: Nucleotide = null;
+    let last: MatrixNucleotide = null;
     let color = this.isValidSequence ? 0xffffff : 0x000000;
 
     this.graphics.clear();

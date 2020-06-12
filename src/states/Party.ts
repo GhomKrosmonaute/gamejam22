@@ -15,7 +15,6 @@ export default class Party extends entity.ParallelEntity {
   public matrix: Matrix;
   public state: utils.PartyState = "crunch";
   public mouseIsDown: boolean = false;
-  public mouseButton: "right" | "left";
 
   public validationButton: pixi.Text;
   public stateSwitch: pixi.Text;
@@ -112,10 +111,12 @@ export default class Party extends entity.ParallelEntity {
 
   _teardown() {
     this.container.removeChild(this.validationButton);
+    this.container.removeChild(this.stateSwitch);
     this.sequence = null;
     this.path = null;
     this.matrix = null;
     this.validationButton = null;
+    this.stateSwitch = null;
   }
 
   mouseDown() {
