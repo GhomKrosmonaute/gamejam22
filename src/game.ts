@@ -1,5 +1,9 @@
 import * as booyah from "booyah/src/booyah";
+import * as pixi from "pixi.js";
 import Party from "./states/Party";
+
+export const width = 336;
+export const height = 600;
 
 const gameStates = {
   start: new Party(),
@@ -7,10 +11,10 @@ const gameStates = {
 
 let gameTransitions = {};
 
-const entityInstallers = [
+const entityInstallers: any = [
   // audio.installJukebox,
   // audio.installFxMachine,
-  booyah.installMenu,
+  // booyah.installMenu,
 ];
 
 booyah.go({
@@ -18,4 +22,5 @@ booyah.go({
   //@ts-ignore
   transitions: gameTransitions,
   entityInstallers,
+  screenSize: new pixi.Point(width, height),
 });

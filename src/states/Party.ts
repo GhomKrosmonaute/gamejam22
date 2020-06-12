@@ -1,6 +1,7 @@
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
+import * as game from "../game";
 import Matrix from "../classes/Matrix";
 import Path from "../classes/Path";
 import Sequence from "../classes/Sequence";
@@ -9,7 +10,7 @@ export default class Party extends entity.ParallelEntity {
   public colCount = 7;
   public rowCount = 7;
   public cutCount = 9;
-  public nucleotideRadius = 40;
+  public nucleotideRadius = game.width / 13.44;
   public sequence: Sequence;
   public path: Path;
   public matrix: Matrix;
@@ -80,8 +81,8 @@ export default class Party extends entity.ParallelEntity {
     this.validationButton.buttonMode = true;
     this.validationButton.interactive = true;
     this.validationButton.anchor.set(0.5);
-    this.validationButton.x = 800;
-    this.validationButton.y = 250;
+    this.validationButton.x = game.width / 2;
+    this.validationButton.y = game.height * 0.1;
     this.validationButton.on("pointerdown", () => {
       if (this.state === "crunch") {
         if (this.path) {
@@ -96,8 +97,8 @@ export default class Party extends entity.ParallelEntity {
     this.stateSwitch.buttonMode = true;
     this.stateSwitch.interactive = true;
     this.stateSwitch.anchor.set(0.5);
-    this.stateSwitch.x = 800;
-    this.stateSwitch.y = 300;
+    this.stateSwitch.x = game.width / 2;
+    this.stateSwitch.y = game.height * 0.15;
     this.stateSwitch.on("pointerdown", () => {
       this.state = this.state === "crunch" ? "slide" : "crunch";
       this.stateSwitch.text = "mode: " + this.state;

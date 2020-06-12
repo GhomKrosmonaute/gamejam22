@@ -1,14 +1,15 @@
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
+import * as game from "../game";
 import SequenceNucleotide from "./SequenceNucleotide";
 import Party from "../states/Party";
 
 export default class Sequence extends entity.ParallelEntity {
   public nucleotides: SequenceNucleotide[];
   public length: number;
-  public x: number = 600;
-  public y: number = 50;
-  public nucleotideRadius = 25;
+  public x: number = game.width / 2;
+  public y: number = game.height * 0.16;
+  public nucleotideRadius = game.width * 0.05;
 
   constructor(
     public party: Party,

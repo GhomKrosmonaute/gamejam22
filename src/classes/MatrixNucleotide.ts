@@ -28,6 +28,14 @@ export default class MatrixNucleotide extends Nucleotide {
     this.container.removeChild(this.graphics);
   }
 
+  get x(): number {
+    return super.x + this.matrix.x;
+  }
+
+  get y(): number {
+    return super.y + this.matrix.y;
+  }
+
   checkHovered(): boolean {
     const isHovered =
       utils.dist(
@@ -176,7 +184,7 @@ export default class MatrixNucleotide extends Nucleotide {
       )
       .endFill();
 
-    this.graphics.x = this.x + this.matrix.x;
-    this.graphics.y = this.y + this.matrix.y;
+    this.graphics.x = this.x;
+    this.graphics.y = this.y;
   }
 }

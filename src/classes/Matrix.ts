@@ -1,13 +1,14 @@
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
+import * as game from "../game";
 import MatrixNucleotide from "./MatrixNucleotide";
 import Party from "../states/Party";
 
 export default class Matrix extends entity.ParallelEntity {
   public nucleotides: MatrixNucleotide[] = [];
-  public x = 0;
-  public y = 0;
+  public x = game.width * 0.1;
+  public y = game.height * 0.45;
 
   constructor(
     public party: Party,

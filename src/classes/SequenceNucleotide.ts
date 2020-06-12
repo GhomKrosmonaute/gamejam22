@@ -18,6 +18,14 @@ export default class SequenceNucleotide extends Nucleotide {
     this.container.removeChild(this.graphics);
   }
 
+  get x(): number {
+    return super.x + this.sequence.x;
+  }
+
+  get y(): number {
+    return super.y + this.sequence.y;
+  }
+
   generate() {
     this.colorName = utils.getRandomColorName();
   }
@@ -29,7 +37,7 @@ export default class SequenceNucleotide extends Nucleotide {
       .drawPolygon(utils.hexagon(this.radius))
       .endFill();
 
-    this.graphics.x = this.x + this.sequence.x;
-    this.graphics.y = this.y + this.sequence.y;
+    this.graphics.x = this.x;
+    this.graphics.y = this.y;
   }
 }
