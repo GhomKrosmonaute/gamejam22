@@ -17,7 +17,8 @@ export default class Party extends entity.ParallelEntity {
   public mouseIsDown: boolean = false;
   public mouseButton: "right" | "left";
 
-  private validationButton: pixi.Text;
+  public validationButton: pixi.Text;
+  public stateSwitch: pixi.Text;
 
   get container(): pixi.Container {
     return this.entityConfig.container;
@@ -71,9 +72,12 @@ export default class Party extends entity.ParallelEntity {
       this.mouseIsDown = false;
       this.mouseUp();
     });
+    this.path.on("validSequenceChange", (isValidSequence: boolean) => {
+      this.validationButton.text = isValidSequence ? "validate" : "cancel";
+    });
 
     // add validation button
-    this.validationButton = new pixi.Text("valider", { fill: "#FFFFFF" });
+    this.validationButton = new pixi.Text("cancel", { fill: "#FFFFFF" });
     this.validationButton.buttonMode = true;
     this.validationButton.interactive = true;
     this.validationButton.anchor.set(0.5);
@@ -87,7 +91,21 @@ export default class Party extends entity.ParallelEntity {
         }
       }
     });
+
+    // add party state switch
+    this.stateSwitch = new pixi.Text("mode: crunch", { fill: "#FFFFFF" });
+    this.stateSwitch.buttonMode = true;
+    this.stateSwitch.interactive = true;
+    this.stateSwitch.anchor.set(0.5);
+    this.stateSwitch.x = 800;
+    this.stateSwitch.y = 300;
+    this.stateSwitch.on("pointerdown", () => {
+      this.state = this.state === "crunch" ? "slide" : "crunch";
+      this.stateSwitch.text = "mode: " + this.state;
+    });
+
     this.container.addChild(this.validationButton);
+    this.container.addChild(this.stateSwitch);
   }
 
   _update() {}

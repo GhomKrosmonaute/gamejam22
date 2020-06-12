@@ -6,6 +6,7 @@ import Party from "../states/Party";
 export default class Path extends entity.Entity {
   public items: Nucleotide[] = [];
   public graphics = new pixi.Graphics();
+  public isValidSequence = false;
 
   constructor(public party: Party) {
     super();
@@ -15,7 +16,9 @@ export default class Path extends entity.Entity {
     this.container.addChild(this.graphics);
   }
 
-  _update() {}
+  _update() {
+    this.checkValidSequence();
+  }
 
   _teardown() {
     this.container.removeChild(this.graphics);
@@ -37,16 +40,6 @@ export default class Path extends entity.Entity {
     return this.items.filter((n) => n.state === "cut");
   }
 
-  get isValidSequence(): boolean {
-    const signature = this.nucleotides.map((n) => n.colorName).join(",");
-    return (
-      this.cuts.length >= 1 &&
-      (signature === this.party.sequence.toString() ||
-        signature ===
-          this.party.sequence.toString().split(",").reverse().join(","))
-    );
-  }
-
   get maxLength(): number {
     return this.party.sequence.length;
   }
@@ -57,6 +50,22 @@ export default class Path extends entity.Entity {
 
   get last(): Nucleotide | null {
     return this.items[this.items.length - 1];
+  }
+
+  checkValidSequence(): boolean {
+    const signature = this.nucleotides.map((n) => n.colorName).join(",");
+    const isValidSequence =
+      this.cuts.length >= 1 &&
+      (signature === this.party.sequence.toString() ||
+        signature ===
+          this.party.sequence.toString().split(",").reverse().join(","));
+
+    if (this.isValidSequence !== isValidSequence) {
+      this.isValidSequence = isValidSequence;
+      this.emit("validSequenceChange", isValidSequence);
+      this.render();
+    }
+    return isValidSequence;
   }
 
   calc(nucleotide: Nucleotide): void {
