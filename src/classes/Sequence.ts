@@ -9,12 +9,13 @@ export default class Sequence extends entity.ParallelEntity {
   public length: number;
   public x: number = game.width / 2;
   public y: number = game.height * 0.16;
+  public angle: number;
   public nucleotideRadius = game.width * 0.05;
 
   constructor(
     public party: Party,
     public baseLength: number,
-    public zigzag?: boolean
+    public pivot: pixi.Point
   ) {
     super();
   }
@@ -39,14 +40,7 @@ export default class Sequence extends entity.ParallelEntity {
   generate() {
     this.nucleotides = [];
     for (let i = 0; i < this.length; i++) {
-      const position = new pixi.Point();
-      if (this.zigzag) {
-        position.y = Math.floor(i * 0.5);
-        position.x = i % 2 ? 0 : 1;
-      } else {
-        position.y = i;
-      }
-      const n = new SequenceNucleotide(this, position);
+      const n = new SequenceNucleotide(this, i - 5);
       this.addEntity(
         n,
         entity.extendConfig({
@@ -56,6 +50,10 @@ export default class Sequence extends entity.ParallelEntity {
       this.nucleotides.push(n);
     }
     this.render();
+  }
+
+  step() {
+    for (const nucleotide of this.nucleotides) nucleotide.step();
   }
 
   render() {

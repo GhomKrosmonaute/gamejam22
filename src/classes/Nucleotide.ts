@@ -8,7 +8,7 @@ export default class Nucleotide extends entity.Entity {
 
   constructor(
     private getRadius: () => number,
-    public matrixPosition: pixi.Point
+    public matrixPosition: pixi.Point = new pixi.Point()
   ) {
     super();
   }

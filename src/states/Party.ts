@@ -17,6 +17,7 @@ export default class Party extends entity.ParallelEntity {
   public state: utils.PartyState = "crunch";
   public mouseIsDown: boolean = false;
 
+  // debug control buttons
   public validationButton: pixi.Text;
   public stateSwitch: pixi.Text;
 
@@ -34,7 +35,11 @@ export default class Party extends entity.ParallelEntity {
 
   _setup() {
     this.container.interactive = true;
-    this.sequence = new Sequence(this, 5);
+    this.sequence = new Sequence(
+      this,
+      50,
+      new pixi.Point(game.width * 0.5, game.height * 0.8)
+    );
     this.path = new Path(this);
     this.matrix = new Matrix(
       this,
@@ -82,7 +87,7 @@ export default class Party extends entity.ParallelEntity {
     this.validationButton.interactive = true;
     this.validationButton.anchor.set(0.5);
     this.validationButton.x = game.width / 2;
-    this.validationButton.y = game.height * 0.1;
+    this.validationButton.y = game.height * 0.02;
     this.validationButton.on("pointerdown", () => {
       if (this.state === "crunch") {
         if (this.path) {
@@ -98,10 +103,11 @@ export default class Party extends entity.ParallelEntity {
     this.stateSwitch.interactive = true;
     this.stateSwitch.anchor.set(0.5);
     this.stateSwitch.x = game.width / 2;
-    this.stateSwitch.y = game.height * 0.15;
+    this.stateSwitch.y = game.height * 0.06;
     this.stateSwitch.on("pointerdown", () => {
       this.state = this.state === "crunch" ? "slide" : "crunch";
       this.stateSwitch.text = "mode: " + this.state;
+      this.step();
     });
 
     this.container.addChild(this.validationButton);
@@ -141,5 +147,9 @@ export default class Party extends entity.ParallelEntity {
       this.path.slide();
       this.path.remove();
     }
+  }
+
+  step() {
+    this.sequence.step();
   }
 }

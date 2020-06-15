@@ -7,8 +7,8 @@ import Party from "../states/Party";
 
 export default class Matrix extends entity.ParallelEntity {
   public nucleotides: MatrixNucleotide[] = [];
-  public x = game.width * 0.1;
-  public y = game.height * 0.45;
+  public x = game.width * 0.09;
+  public y = game.height * 0.47;
 
   constructor(
     public party: Party,

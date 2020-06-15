@@ -180,7 +180,10 @@ export default class MatrixNucleotide extends Nucleotide {
 
     this.graphics
       .drawPolygon(
-        utils.hexagon(this.isHovered ? this.radius * 0.97 : this.radius)
+        utils.hexagon(
+          new pixi.Point(),
+          this.isHovered ? this.radius * 0.97 : this.radius
+        )
       )
       .endFill();
 

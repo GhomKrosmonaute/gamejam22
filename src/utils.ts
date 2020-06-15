@@ -40,22 +40,41 @@ export function getColorByName(name: ColorName): number {
   }
 }
 
-export function dist(x1: number, y1: number, x2: number, y2: number): number {
-  return Math.hypot(x2 - x1, y2 - y1);
+export function dist(
+  x1: number | pixi.Point,
+  y1: number | pixi.Point,
+  x2?: number,
+  y2?: number
+): number {
+  if (x1 instanceof pixi.Point && y1 instanceof pixi.Point)
+    return Math.hypot(y1.x - x1.x, y1.y - x1.y);
+  else if (typeof x1 === "number" && typeof y1 === "number")
+    return Math.hypot(x2 - x1, y2 - y1);
+  return NaN;
 }
 
 export function degreesToRadians(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
 
-export function hexagon(radius: number) {
+export function hexagon(
+  position: pixi.Point,
+  radius: number,
+  flatTopped: boolean = true
+) {
   const height = Math.sqrt(3) * radius;
   return [
-    new pixi.Point(-radius, 0),
-    new pixi.Point(-radius / 2, height / 2),
-    new pixi.Point(radius / 2, height / 2),
-    new pixi.Point(radius, 0),
-    new pixi.Point(radius / 2, -height / 2),
-    new pixi.Point(-radius / 2, -height / 2),
+    new pixi.Point(position.x - radius, position.y),
+    new pixi.Point(position.x - radius / 2, position.y + height / 2),
+    new pixi.Point(position.x + radius / 2, position.y + height / 2),
+    new pixi.Point(position.x + radius, position.y),
+    new pixi.Point(position.x + radius / 2, position.y - height / 2),
+    new pixi.Point(position.x - radius / 2, position.y - height / 2),
   ];
+}
+
+export function getAngle(a: pixi.Point, b: pixi.Point, c: pixi.Point): number {
+  const ab = dist(a, b);
+  const ca = dist(c, a);
+  return 180 - Math.acos(ab / 2 / ca) * 2;
 }

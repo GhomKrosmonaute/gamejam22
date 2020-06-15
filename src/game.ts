@@ -2,8 +2,8 @@ import * as booyah from "booyah/src/booyah";
 import * as pixi from "pixi.js";
 import Party from "./states/Party";
 
-export const width = 336;
-export const height = 600;
+export const width = 1080;
+export const height = 1920;
 
 const gameStates = {
   start: new Party(),
