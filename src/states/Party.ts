@@ -34,13 +34,20 @@ export default class Party extends entity.ParallelEntity {
   }
 
   _setup() {
+    // make container interactive
     this.container.interactive = true;
+
+    // add one sequence for tests
     this.sequence = new Sequence(
-      this,
-      50,
-      new pixi.Point(game.width * 0.5, game.height * 0.8)
+      this, // party
+      50, // base length
+      new pixi.Point(game.width * 0.5, game.height * 0.8) // pivot
     );
+
+    // instancie path system
     this.path = new Path(this);
+
+    // generate nucleotide matrix
     this.matrix = new Matrix(
       this,
       this.colCount,
@@ -49,6 +56,7 @@ export default class Party extends entity.ParallelEntity {
       this.nucleotideRadius
     );
 
+    // add to entities path, matrix and the test sequence
     this.addEntity(
       this.matrix,
       entity.extendConfig({
@@ -68,7 +76,7 @@ export default class Party extends entity.ParallelEntity {
       })
     );
 
-    // setup listeners
+    // setup mouse listeners
     this._on(this.container, "pointerdown", () => {
       this.mouseIsDown = true;
       this.mouseDown();
@@ -77,11 +85,13 @@ export default class Party extends entity.ParallelEntity {
       this.mouseIsDown = false;
       this.mouseUp();
     });
+
+    // check if path update to valid or invalid sequence
     this.path.on("validSequenceChange", (isValidSequence: boolean) => {
       this.validationButton.text = isValidSequence ? "validate" : "cancel";
     });
 
-    // add validation button
+    // add validation button (for debug)
     this.validationButton = new pixi.Text("cancel", { fill: "#FFFFFF" });
     this.validationButton.buttonMode = true;
     this.validationButton.interactive = true;
@@ -97,7 +107,7 @@ export default class Party extends entity.ParallelEntity {
       }
     });
 
-    // add party state switch
+    // add party state switch (for debug)
     this.stateSwitch = new pixi.Text("mode: crunch", { fill: "#FFFFFF" });
     this.stateSwitch.buttonMode = true;
     this.stateSwitch.interactive = true;
@@ -127,28 +137,41 @@ export default class Party extends entity.ParallelEntity {
   }
 
   mouseDown() {
+    // get the hovered nucleotide
     const hovered = this.matrix.getHovered();
+
+    // if path not includes this nucleotide
     if (hovered && !this.path.items.includes(hovered)) {
+      // if party state is "crunch"
       if (this.state === "crunch") {
+        // if hovered is not a cut, update path
         if (hovered.state !== "cut") this.path.calc(hovered);
+
+        // if party state is "slide"
       } else {
+        // update path
         this.path.calc(hovered);
       }
     }
   }
 
   mouseUp() {
+    // if path length === 1
     if (this.path.items.length === 1) {
+      // replace nucleotide by hole
       const n = this.path.first;
       n.state = n.state === "hole" ? "none" : "hole";
       n.render();
       this.path.remove();
+
+      // if party state === "slide"
     } else if (this.state === "slide") {
       this.path.slide();
       this.path.remove();
     }
   }
 
+  /** step (turn end | turn next) propagation */
   step() {
     this.sequence.step();
   }

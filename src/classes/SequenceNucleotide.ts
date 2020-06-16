@@ -1,3 +1,4 @@
+import * as geom from "booyah/src/geom";
 import * as pixi from "pixi.js";
 import * as game from "../game";
 import * as utils from "../utils";
@@ -33,7 +34,7 @@ export default class SequenceNucleotide extends Nucleotide {
 
   step(stepCount: number = 1) {
     this.index += stepCount;
-    if (this.index > 8 * this.stage) {
+    while (this.index > 8 * this.stage) {
       this.stage++;
     }
     if (this.stage > 4) this._teardown();
@@ -44,20 +45,8 @@ export default class SequenceNucleotide extends Nucleotide {
   }
 
   calcAngle() {
-    this.fix = 0;
-    switch (this.stage) {
-      case 2:
-        this.fix = 10;
-        break;
-      case 3:
-        this.fix = 7;
-        break;
-      case 4:
-        this.fix = 6;
-        break;
-    }
     this.angle =
-      utils.getAngle(
+      utils.getIsocèleAngle(
         new pixi.Point(0, this.y),
         new pixi.Point(this.width, this.y),
         this.pivot
@@ -70,7 +59,7 @@ export default class SequenceNucleotide extends Nucleotide {
 
   render() {
     this.graphics.position.copyFrom(this.pivot);
-    this.graphics.rotation = this.angle;
+    this.graphics.rotation = geom.degreesToRadians(this.angle);
     this.graphics
       .clear()
       .lineStyle()

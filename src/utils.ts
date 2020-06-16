@@ -1,4 +1,5 @@
 import * as pixi from "pixi.js";
+import * as geom from "booyah/src/geom";
 
 export type NucleotideState = "cut" | "hole" | "bonus" | "none";
 export const nucleotideStates: NucleotideState[] = [
@@ -53,10 +54,6 @@ export function dist(
   return NaN;
 }
 
-export function degreesToRadians(degrees: number): number {
-  return degrees * (Math.PI / 180);
-}
-
 export function hexagon(
   position: pixi.Point,
   radius: number,
@@ -73,8 +70,22 @@ export function hexagon(
   ];
 }
 
-export function getAngle(a: pixi.Point, b: pixi.Point, c: pixi.Point): number {
-  const ab = dist(a, b);
-  const ca = dist(c, a);
-  return 180 - Math.acos(ab / 2 / ca) * 2;
+export function middle(a: pixi.Point, b: pixi.Point): pixi.Point {
+  return new pixi.Point(a.x + (b.x - a.x) / 2, a.y + (b.y - a.y) / 2);
+}
+
+/**
+ * @param a - point
+ * @param b - point
+ * @param s - sommet
+ */
+export function getIsocèleAngle(
+  a: pixi.Point,
+  b: pixi.Point,
+  s: pixi.Point
+): number {
+  const m = middle(b, a);
+  const bm = dist(b, m);
+  const sm = dist(s, m);
+  return geom.radiansToDegrees(bm / sm);
 }

@@ -1,3 +1,4 @@
+import * as geom from "booyah/src/geom";
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
@@ -57,7 +58,7 @@ export default class Nucleotide extends entity.Entity {
 
   /** @param {number} cornerIndex - from 0 to 5, start on right corner */
   getCornerPosition(cornerIndex: number): pixi.Point {
-    const angle = utils.degreesToRadians(60 * cornerIndex);
+    const angle = geom.degreesToRadians(60 * cornerIndex);
     return new pixi.Point(
       this.x + this.radius * Math.cos(angle),
       this.y + this.radius * Math.sin(angle)
