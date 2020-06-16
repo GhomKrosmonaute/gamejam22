@@ -1,11 +1,12 @@
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as game from "../game";
-import SequenceNucleotide from "./SequenceNucleotide";
-import Party from "../states/Party";
+import * as utils from "../utils";
+import Party from "../scenes/Party";
+import Nucleotide from "./Nucleotide";
 
 export default class Sequence extends entity.ParallelEntity {
-  public nucleotides: SequenceNucleotide[];
+  public nucleotides: Nucleotide[];
   public length: number;
   public x: number = game.width / 2;
   public y: number = game.height * 0.16;
@@ -40,7 +41,7 @@ export default class Sequence extends entity.ParallelEntity {
   generate() {
     this.nucleotides = [];
     for (let i = 0; i < this.length; i++) {
-      const n = new SequenceNucleotide(this, i - 5);
+      const n = new Nucleotide(this.nucleotideRadius, new pixi.Point(), i - 5);
       this.addEntity(
         n,
         entity.extendConfig({
@@ -49,15 +50,37 @@ export default class Sequence extends entity.ParallelEntity {
       );
       this.nucleotides.push(n);
     }
-    this.render();
+    this.refresh();
   }
 
-  step() {
-    for (const nucleotide of this.nucleotides) nucleotide.step();
+  step(stepCount: number = 1) {
+    for (const nucleotide of this.nucleotides)
+      this.stepOf(nucleotide, stepCount);
   }
 
-  render() {
-    for (const nucleotide of this.nucleotides) nucleotide.render();
+  stepOf(n: Nucleotide, stepCount: number = 1) {
+    n.index += stepCount;
+    while (n.index > 8 * n.stage) {
+      n.stage++;
+    }
+    if (n.stage > 4) n._teardown();
+    else {
+      this.calcAngle(n);
+      n.refresh();
+    }
+  }
+
+  calcAngle(n: Nucleotide) {
+    this.angle =
+      utils.getIsoceleAngle(
+        new pixi.Point(0, n.getRelativeHeight(this.pivot.y)),
+        new pixi.Point(n.width, n.getRelativeHeight(this.pivot.y)),
+        this.pivot
+      ) * n.index;
+  }
+
+  refresh() {
+    for (const nucleotide of this.nucleotides) nucleotide.refresh();
   }
 
   toString() {

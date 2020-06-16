@@ -79,11 +79,11 @@ export function middle(a: pixi.Point, b: pixi.Point): pixi.Point {
  * @param b - point
  * @param s - sommet
  */
-export function getIsocèleAngle(
+export function getIsoceleAngle(
   a: pixi.Point,
   b: pixi.Point,
   s: pixi.Point
-): number {
+): any {
   const m = middle(b, a);
   const bm = dist(b, m);
   const sm = dist(s, m);

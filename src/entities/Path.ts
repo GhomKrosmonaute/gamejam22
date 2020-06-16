@@ -1,7 +1,7 @@
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
 import MatrixNucleotide from "./MatrixNucleotide";
-import Party from "../states/Party";
+import Party from "../scenes/Party";
 
 export default class Path extends entity.Entity {
   public items: MatrixNucleotide[] = [];
@@ -63,7 +63,7 @@ export default class Path extends entity.Entity {
     if (this.isValidSequence !== isValidSequence) {
       this.isValidSequence = isValidSequence;
       this.emit("validSequenceChange", isValidSequence);
-      this.render();
+      this.refresh();
     }
     return isValidSequence;
   }
@@ -73,7 +73,7 @@ export default class Path extends entity.Entity {
 
     if (this.items.length === 0) {
       this.items.push(nucleotide);
-      this.render();
+      this.refresh();
       return;
     }
 
@@ -90,7 +90,7 @@ export default class Path extends entity.Entity {
       this.items[this.items.length - 2] === nucleotide
     ) {
       this.items.pop();
-      this.render();
+      this.refresh();
       return;
     }
 
@@ -110,15 +110,15 @@ export default class Path extends entity.Entity {
 
     // push in this path the checked nucleotide
     this.items.push(nucleotide);
-    this.render();
+    this.refresh();
   }
 
   remove() {
     this.items = [];
-    this.render();
+    this.refresh();
   }
 
-  render() {
+  refresh() {
     let last: MatrixNucleotide = null;
     let color = this.isValidSequence ? 0xffffff : 0x000000;
 
@@ -149,7 +149,7 @@ export default class Path extends entity.Entity {
     if (this.isValidSequence) {
       this.items.forEach((n) => (n.state = "hole"));
       this.party.sequence.generate();
-      this.party.matrix.render();
+      this.party.matrix.refresh();
     }
   }
 

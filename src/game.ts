@@ -1,6 +1,6 @@
 import * as booyah from "booyah/src/booyah";
 import * as pixi from "pixi.js";
-import Party from "./states/Party";
+import Party from "./scenes/Party";
 
 export const width = 1080;
 export const height = 1920;

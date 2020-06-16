@@ -2,9 +2,9 @@ import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
 import * as game from "../game";
-import Matrix from "../classes/Matrix";
-import Path from "../classes/Path";
-import Sequence from "../classes/Sequence";
+import Grid from "../entities/Grid";
+import Path from "../entities/Path";
+import Sequence from "../entities/Sequence";
 
 export default class Party extends entity.ParallelEntity {
   public colCount = 7;
@@ -13,7 +13,7 @@ export default class Party extends entity.ParallelEntity {
   public nucleotideRadius = game.width / 13.44;
   public sequence: Sequence;
   public path: Path;
-  public matrix: Matrix;
+  public matrix: Grid;
   public state: utils.PartyState = "crunch";
   public mouseIsDown: boolean = false;
 
@@ -48,7 +48,7 @@ export default class Party extends entity.ParallelEntity {
     this.path = new Path(this);
 
     // generate nucleotide matrix
-    this.matrix = new Matrix(
+    this.matrix = new Grid(
       this,
       this.colCount,
       this.rowCount,
@@ -161,7 +161,7 @@ export default class Party extends entity.ParallelEntity {
       // replace nucleotide by hole
       const n = this.path.first;
       n.state = n.state === "hole" ? "none" : "hole";
-      n.render();
+      n.refresh();
       this.path.remove();
 
       // if party state === "slide"
