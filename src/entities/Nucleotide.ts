@@ -1,5 +1,5 @@
-import * as geom from "booyah/src/geom";
 import * as pixi from "pixi.js";
+import * as geom from "booyah/src/geom";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
 import * as game from "../game";
@@ -23,15 +23,11 @@ export default class Nucleotide extends entity.Entity {
 
   _setup() {
     this.generate();
-    this.container.addChild(this.graphics);
+    this.entityConfig.container.addChild(this.graphics);
   }
 
   _teardown() {
-    this.container.removeChild(this.graphics);
-  }
-
-  get container(): pixi.Container {
-    return this.entityConfig.container;
+    this.entityConfig.container.removeChild(this.graphics);
   }
 
   get color(): number {
@@ -110,8 +106,7 @@ export default class Nucleotide extends entity.Entity {
         )
         .endFill();
 
-      this.graphics.x = this.position.x;
-      this.graphics.y = this.position.y;
+      this.graphics.position.copyFrom(this.position);
     }
   }
 

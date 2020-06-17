@@ -13,7 +13,7 @@ export default class Path extends entity.Entity {
   }
 
   _setup() {
-    this.container.addChild(this.graphics);
+    this.entityConfig.container.addChild(this.graphics);
   }
 
   _update() {
@@ -21,11 +21,7 @@ export default class Path extends entity.Entity {
   }
 
   _teardown() {
-    this.container.removeChild(this.graphics);
-  }
-
-  get container(): pixi.Container {
-    return this.entityConfig.container;
+    this.entityConfig.container.removeChild(this.graphics);
   }
 
   get length(): number {
@@ -68,11 +64,11 @@ export default class Path extends entity.Entity {
     return isValidSequence;
   }
 
-  calc(nucleotide: Nucleotide): void {
-    if (!nucleotide.isHovered || !this.party.mouseIsDown) return;
+  calc(n: Nucleotide): void {
+    if (!n.isHovered || !this.party.mouseIsDown) return;
 
     if (this.items.length === 0) {
-      this.items.push(nucleotide);
+      this.items.push(n);
       this.refresh();
       return;
     }
@@ -80,14 +76,14 @@ export default class Path extends entity.Entity {
     // in crunch path case
     if (this.party.state === "crunch") {
       // check if the current nucleotide is a wall/hole/cut
-      if (this.length > 0 && nucleotide.state === "hole") return;
+      if (this.length > 0 && n.state === "hole") return;
       if (this.first.state === "hole") return;
     }
 
     // check the cancellation & cancel to previous nucleotide
     if (
       this.items[this.items.length - 2] &&
-      this.items[this.items.length - 2] === nucleotide
+      this.items[this.items.length - 2] === n
     ) {
       this.items.pop();
       this.refresh();
@@ -99,20 +95,20 @@ export default class Path extends entity.Entity {
       return;
 
     // check if nucleotide is already in this path
-    if (this.items.includes(nucleotide)) return;
+    if (this.items.includes(n)) return;
 
     // check if the current nucleotide is a neighbor of the last checked nucleotide
     if (
       this.items[this.items.length - 1] &&
       this.party.grid.getNeighborIndex(
         this.items[this.items.length - 1],
-        nucleotide
+        n
       ) === -1
     )
       return null;
 
     // push in this path the checked nucleotide
-    this.items.push(nucleotide);
+    this.items.push(n);
     this.refresh();
   }
 
@@ -146,7 +142,7 @@ export default class Path extends entity.Entity {
   crunch() {
     if (this.isValidSequence) {
       this.items.forEach((n) => (n.state = "hole"));
-      this.party.sequence.generate();
+      this.party.sequence._setup();
       this.party.grid.refresh();
     }
   }

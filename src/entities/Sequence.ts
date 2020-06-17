@@ -12,6 +12,7 @@ export default class Sequence extends entity.ParallelEntity {
   public y: number = game.height * 0.16;
   public angle: number;
   public nucleotideRadius = game.width * 0.05;
+  public container: pixi.Container;
 
   constructor(
     public party: Party,
@@ -22,23 +23,9 @@ export default class Sequence extends entity.ParallelEntity {
   }
 
   _setup() {
+    this.container = new pixi.Container();
+    this.container.position.set(this.x,this.y)
     this.length = this.baseLength;
-    this.generate();
-  }
-
-  _update() {}
-
-  _teardown() {
-    for (const nucleotide of this.nucleotides) {
-      this.container.removeChild(nucleotide.container);
-    }
-  }
-
-  get container(): pixi.Container {
-    return this.entityConfig.container;
-  }
-
-  generate() {
     this.nucleotides = [];
     for (let i = 0; i < this.length; i++) {
       const n = new Nucleotide(this.nucleotideRadius, new pixi.Point(), i - 5);
@@ -51,6 +38,16 @@ export default class Sequence extends entity.ParallelEntity {
       this.nucleotides.push(n);
     }
     this.refresh();
+    this.entityConfig.container.addChild(this.container);
+  }
+
+  _update() {}
+
+  _teardown() {
+    for (const nucleotide of this.nucleotides) {
+      this.container.removeChild(nucleotide.graphics);
+    }
+    this.entityConfig.container.removeChild(this.container);
   }
 
   step(stepCount: number = 1) {
@@ -66,7 +63,7 @@ export default class Sequence extends entity.ParallelEntity {
     if (n.stage > 4) n._teardown();
     else {
       this.calcAngle(n);
-      n.refresh();
+      n.refresh(this.pivot);
     }
   }
 
@@ -80,7 +77,7 @@ export default class Sequence extends entity.ParallelEntity {
   }
 
   refresh() {
-    for (const nucleotide of this.nucleotides) nucleotide.refresh();
+    for (const nucleotide of this.nucleotides) nucleotide.refresh(this.pivot);
   }
 
   toString() {

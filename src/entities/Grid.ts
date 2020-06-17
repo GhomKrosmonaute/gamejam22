@@ -7,6 +7,7 @@ import Nucleotide from "./Nucleotide";
 
 export default class Grid extends entity.ParallelEntity {
   public nucleotides: Nucleotide[] = [];
+  public container: pixi.Container;
   public x = game.width * 0.09;
   public y = game.height * 0.47;
 
@@ -21,6 +22,8 @@ export default class Grid extends entity.ParallelEntity {
   }
 
   _setup() {
+    this.container = new pixi.Container();
+    this.container.position.set(this.x,this.y)
     for (let x = 0; x < this.colCount; x++) {
       for (let y = 0; y < this.rowCount; y++) {
         if (x % 2 === 0 && y === this.rowCount - 1) continue;
@@ -40,22 +43,24 @@ export default class Grid extends entity.ParallelEntity {
 
     this.addCuts();
     this.refresh();
+    this.entityConfig.container.addChild(this.container);
   }
 
   _update() {
-    const hovered = this.getHovered();
-    if (this.party.path.items.length > 0) this.party.path.calc(hovered);
+    // check hovering of all nucleotides and stock hovered
+    let hovered: Nucleotide
+    for(const n of this.nucleotides) if(this.checkHovered(n)) hovered = n;
+
+    // update path with hovered
+    if (hovered && this.party.path.items.length > 0) this.party.path.calc(hovered);
   }
 
   _teardown() {
     for (const n of this.nucleotides) {
-      this.container.removeChild(n.container);
+      this.container.removeChild(n.graphics);
     }
     this.nucleotides = null;
-  }
-
-  get container(): pixi.Container {
-    return this.entityConfig.container;
+    this.entityConfig.container.removeChild(this.container);
   }
 
   isOnEvenCol(n: Nucleotide): boolean {
@@ -94,8 +99,8 @@ export default class Grid extends entity.ParallelEntity {
   checkHovered(n: Nucleotide): boolean {
     const isHovered =
       utils.dist(
-        n.position.x,
-        n.position.y,
+        n.position.x + this.x,
+        n.position.y + this.y,
         this.party.mouse.global.x,
         this.party.mouse.global.y
       ) <
