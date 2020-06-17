@@ -21,31 +21,12 @@ export default class Grid extends entity.ParallelEntity {
   }
 
   _setup() {
-    this.generate();
-  }
-
-  _update() {
-    const hovered = this.getHovered();
-    if (this.party.path.items.length > 0) this.party.path.calc(hovered);
-  }
-
-  _teardown() {
-    for (const nucleotide of this.nucleotides) {
-      this.container.removeChild(nucleotide.container);
-    }
-  }
-
-  get container(): pixi.Container {
-    return this.entityConfig.container;
-  }
-
-  generate() {
     for (let x = 0; x < this.colCount; x++) {
       for (let y = 0; y < this.rowCount; y++) {
         if (x % 2 === 0 && y === this.rowCount - 1) continue;
         const n = new Nucleotide(
           this.nucleotideRadius,
-          this.matrixPositionOf()
+          this.getAbsolutePositionFromGridPosition(new pixi.Point(x, y))
         );
         this.addEntity(
           n,
@@ -61,17 +42,48 @@ export default class Grid extends entity.ParallelEntity {
     this.refresh();
   }
 
-  isOnEvenCol(n: Nucleotide): boolean {
-    return this.matrixPositionOf(n).x % 2 === 0;
+  _update() {
+    const hovered = this.getHovered();
+    if (this.party.path.items.length > 0) this.party.path.calc(hovered);
   }
 
-  matrixPositionOf(n: Nucleotide): pixi.Point {
-    const x = n.width / 2 + this.matrixPosition.x * n.dist.x;
+  _teardown() {
+    for (const n of this.nucleotides) {
+      this.container.removeChild(n.container);
+    }
+    this.nucleotides = null;
+  }
+
+  get container(): pixi.Container {
+    return this.entityConfig.container;
+  }
+
+  isOnEvenCol(n: Nucleotide): boolean {
+    return this.getGridPositionOf(n).x % 2 === 0;
+  }
+
+  getNucleotideFromGridPosition(gridPos: pixi.Point): Nucleotide {
+    return this.nucleotides[gridPos.y * this.colCount + gridPos.x];
+  }
+
+  getGridPositionOf(n: Nucleotide): pixi.Point | null {
+    const index = this.nucleotides.indexOf(n);
+    if (index === -1) return null;
+    const x = index % this.colCount;
+    const y = index / this.colCount;
+    return new pixi.Point(x, y);
+  }
+
+  getAbsolutePositionFromGridPosition(gridPos: pixi.Point): pixi.Point {
+    const { width, height, dist } = Nucleotide.getNucleotideDimensions(
+      this.nucleotideRadius
+    );
+    const x = width / 2 + gridPos.x * dist.x;
     const y =
-      this.matrixPosition.y * n.height -
-      n.height / 2 +
-      (this.evenCol ? n.height / 2 : 0) +
-      n.height;
+      gridPos.y * height -
+      height / 2 +
+      (gridPos.x % 2 === 0 ? height / 2 : 0) +
+      height;
     return new pixi.Point(x, y);
   }
 
@@ -95,6 +107,7 @@ export default class Grid extends entity.ParallelEntity {
     return isHovered;
   }
 
+  /** @param {number} neighborIndex - from 0 to 5, start on top */
   slide(neighborIndex: number) {
     const opposedNeighborIndex = utils.opposedIndexOf(neighborIndex);
     for (const nucleotide of this.nucleotides)
@@ -164,46 +177,44 @@ export default class Grid extends entity.ParallelEntity {
   /** @returns {number} - -1 if is not a neighbor or the neighbor index */
   getNeighborIndex(n: Nucleotide, n2: Nucleotide): number {
     for (let i = 0; i < 6; i++) {
-      if (
-        this.getNeighborMatrixPosition(n, i).equals(this.matrixPositionOf(n2))
-      )
+      if (this.getNeighborGridPosition(n, i).equals(this.getGridPositionOf(n2)))
         return i;
     }
     return -1;
   }
 
   /** @param {number} neighborIndex - from 0 to 5, start on top */
-  getNeighborMatrixPosition(n: Nucleotide, neighborIndex: number): pixi.Point {
-    const matrixPosition = this.matrixPositionOf(n);
+  getNeighborGridPosition(n: Nucleotide, neighborIndex: number): pixi.Point {
+    const gridPosition = this.getGridPositionOf(n);
     const evenCol = this.isOnEvenCol(n);
     switch (neighborIndex) {
       case 0:
-        matrixPosition.y--;
+        gridPosition.y--;
         break;
       case 3:
-        matrixPosition.y++;
+        gridPosition.y++;
         break;
       case 1:
-        matrixPosition.x++;
-        if (!evenCol) matrixPosition.y--;
+        gridPosition.x++;
+        if (!evenCol) gridPosition.y--;
         break;
       case 5:
-        matrixPosition.x--;
-        if (!evenCol) matrixPosition.y--;
+        gridPosition.x--;
+        if (!evenCol) gridPosition.y--;
         break;
       case 2:
-        matrixPosition.x++;
-        if (evenCol) matrixPosition.y++;
+        gridPosition.x++;
+        if (evenCol) gridPosition.y++;
         break;
       case 4:
-        matrixPosition.x--;
-        if (evenCol) matrixPosition.y++;
+        gridPosition.x--;
+        if (evenCol) gridPosition.y++;
         break;
     }
-    return matrixPosition;
+    return gridPosition;
   }
 
   refresh() {
-    for (const nucleotide of this.nucleotides) nucleotide.refresh();
+    for (const n of this.nucleotides) n.refresh();
   }
 }

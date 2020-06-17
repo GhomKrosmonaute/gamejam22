@@ -114,4 +114,11 @@ export default class Nucleotide extends entity.Entity {
       this.graphics.y = this.position.y;
     }
   }
+
+  static getNucleotideDimensions(radius: number) {
+    const width = 2 * radius;
+    const height = Math.sqrt(3) * radius;
+    const dist = new pixi.Point(width * (3 / 4), height);
+    return { width, height, dist };
+  }
 }

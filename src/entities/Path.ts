@@ -1,10 +1,10 @@
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
-import MatrixNucleotide from "./MatrixNucleotide";
+import Nucleotide from "./Nucleotide";
 import Party from "../scenes/Party";
 
 export default class Path extends entity.Entity {
-  public items: MatrixNucleotide[] = [];
+  public items: Nucleotide[] = [];
   public graphics = new pixi.Graphics();
   public isValidSequence = false;
 
@@ -32,11 +32,11 @@ export default class Path extends entity.Entity {
     return this.nucleotides.length;
   }
 
-  get nucleotides(): MatrixNucleotide[] {
+  get nucleotides(): Nucleotide[] {
     return this.items.filter((n) => n.state !== "cut");
   }
 
-  get cuts(): MatrixNucleotide[] {
+  get cuts(): Nucleotide[] {
     return this.items.filter((n) => n.state === "cut");
   }
 
@@ -44,11 +44,11 @@ export default class Path extends entity.Entity {
     return this.party.sequence.length;
   }
 
-  get first(): MatrixNucleotide | null {
+  get first(): Nucleotide | null {
     return this.items[0];
   }
 
-  get last(): MatrixNucleotide | null {
+  get last(): Nucleotide | null {
     return this.items[this.items.length - 1];
   }
 
@@ -68,7 +68,7 @@ export default class Path extends entity.Entity {
     return isValidSequence;
   }
 
-  calc(nucleotide: MatrixNucleotide): void {
+  calc(nucleotide: Nucleotide): void {
     if (!nucleotide.isHovered || !this.party.mouseIsDown) return;
 
     if (this.items.length === 0) {
@@ -104,7 +104,10 @@ export default class Path extends entity.Entity {
     // check if the current nucleotide is a neighbor of the last checked nucleotide
     if (
       this.items[this.items.length - 1] &&
-      this.items[this.items.length - 1].getNeighborIndex(nucleotide) === -1
+      this.party.grid.getNeighborIndex(
+        this.items[this.items.length - 1],
+        nucleotide
+      ) === -1
     )
       return null;
 
@@ -119,29 +122,24 @@ export default class Path extends entity.Entity {
   }
 
   refresh() {
-    let last: MatrixNucleotide = null;
+    let last: Nucleotide = null;
     let color = this.isValidSequence ? 0xffffff : 0x000000;
 
     this.graphics.clear();
 
     // for all nucleotide in path
-    for (const nucleotide of this.items) {
+    for (const n of this.items) {
       this.graphics
         .beginFill(color)
-        .drawEllipse(
-          nucleotide.x,
-          nucleotide.y,
-          nucleotide.width * 0.2,
-          nucleotide.height * 0.2
-        );
+        .drawEllipse(n.position.x, n.position.y, n.width * 0.2, n.height * 0.2);
 
       if (last)
         this.graphics
           .lineStyle(5, color)
-          .moveTo(last.x, last.y)
-          .lineTo(nucleotide.x, nucleotide.y);
+          .moveTo(last.position.x, last.position.y)
+          .lineTo(n.position.x, n.position.y);
 
-      last = nucleotide;
+      last = n;
     }
   }
 
@@ -149,13 +147,16 @@ export default class Path extends entity.Entity {
     if (this.isValidSequence) {
       this.items.forEach((n) => (n.state = "hole"));
       this.party.sequence.generate();
-      this.party.matrix.refresh();
+      this.party.grid.refresh();
     }
   }
 
   slide() {
     if (!this.items[1]) return;
-    const neighborIndex = this.items[0].getNeighborIndex(this.items[1]);
-    this.party.matrix.slide(neighborIndex);
+    const neighborIndex = this.party.grid.getNeighborIndex(
+      this.items[0],
+      this.items[1]
+    );
+    this.party.grid.slide(neighborIndex);
   }
 }

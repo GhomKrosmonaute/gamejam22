@@ -13,7 +13,7 @@ export default class Party extends entity.ParallelEntity {
   public nucleotideRadius = game.width / 13.44;
   public sequence: Sequence;
   public path: Path;
-  public matrix: Grid;
+  public grid: Grid;
   public state: utils.PartyState = "crunch";
   public mouseIsDown: boolean = false;
 
@@ -47,8 +47,8 @@ export default class Party extends entity.ParallelEntity {
     // instancie path system
     this.path = new Path(this);
 
-    // generate nucleotide matrix
-    this.matrix = new Grid(
+    // generate nucleotide grid
+    this.grid = new Grid(
       this,
       this.colCount,
       this.rowCount,
@@ -56,9 +56,9 @@ export default class Party extends entity.ParallelEntity {
       this.nucleotideRadius
     );
 
-    // add to entities path, matrix and the test sequence
+    // add to entities path, grid and the test sequence
     this.addEntity(
-      this.matrix,
+      this.grid,
       entity.extendConfig({
         container: this.container,
       })
@@ -131,14 +131,14 @@ export default class Party extends entity.ParallelEntity {
     this.container.removeChild(this.stateSwitch);
     this.sequence = null;
     this.path = null;
-    this.matrix = null;
+    this.grid = null;
     this.validationButton = null;
     this.stateSwitch = null;
   }
 
   mouseDown() {
     // get the hovered nucleotide
-    const hovered = this.matrix.getHovered();
+    const hovered = this.grid.getHovered();
 
     // if path not includes this nucleotide
     if (hovered && !this.path.items.includes(hovered)) {
