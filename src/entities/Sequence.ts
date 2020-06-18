@@ -13,18 +13,15 @@ export default class Sequence extends entity.ParallelEntity {
   public angle: number;
   public nucleotideRadius = game.width * 0.05;
   public container: pixi.Container;
+  public pivot = new pixi.Point(game.width * 0.5, game.height * 0.8);
 
-  constructor(
-    public party: Party,
-    public baseLength: number,
-    public pivot: pixi.Point
-  ) {
+  constructor(public party: Party, public baseLength: number) {
     super();
   }
 
   _setup() {
     this.container = new pixi.Container();
-    this.container.position.set(this.x,this.y)
+    this.container.position.set(this.x, this.y);
     this.length = this.baseLength;
     this.nucleotides = [];
     for (let i = 0; i < this.length; i++) {
@@ -48,6 +45,7 @@ export default class Sequence extends entity.ParallelEntity {
       this.container.removeChild(nucleotide.graphics);
     }
     this.entityConfig.container.removeChild(this.container);
+    this.container = null;
   }
 
   step(stepCount: number = 1) {

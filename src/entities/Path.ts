@@ -24,10 +24,12 @@ export default class Path extends entity.Entity {
     this.entityConfig.container.removeChild(this.graphics);
   }
 
+  /** The real length without cuts */
   get length(): number {
     return this.nucleotides.length;
   }
 
+  /** only nucleotides */
   get nucleotides(): Nucleotide[] {
     return this.items.filter((n) => n.state !== "cut");
   }
@@ -75,8 +77,9 @@ export default class Path extends entity.Entity {
 
     // in crunch path case
     if (this.party.state === "crunch") {
-      // check if the current nucleotide is a wall/hole/cut
+      // if the no-start nucleotide is a hole, block the path
       if (this.length > 0 && n.state === "hole") return;
+      // if start by hole, switch hole to nucleotide
       if (this.first.state === "hole") return;
     }
 
@@ -98,14 +101,8 @@ export default class Path extends entity.Entity {
     if (this.items.includes(n)) return;
 
     // check if the current nucleotide is a neighbor of the last checked nucleotide
-    if (
-      this.items[this.items.length - 1] &&
-      this.party.grid.getNeighborIndex(
-        this.items[this.items.length - 1],
-        n
-      ) === -1
-    )
-      return null;
+    if (this.last && this.party.grid.getNeighborIndex(this.last, n) === -1)
+      return;
 
     // push in this path the checked nucleotide
     this.items.push(n);

@@ -23,7 +23,8 @@ export default class Grid extends entity.ParallelEntity {
 
   _setup() {
     this.container = new pixi.Container();
-    this.container.position.set(this.x,this.y)
+    this.container.position.set(this.x, this.y);
+    this.nucleotides.length = this.colCount * this.rowCount;
     for (let x = 0; x < this.colCount; x++) {
       for (let y = 0; y < this.rowCount; y++) {
         if (x % 2 === 0 && y === this.rowCount - 1) continue;
@@ -37,7 +38,7 @@ export default class Grid extends entity.ParallelEntity {
             container: this.container,
           })
         );
-        this.nucleotides.push(n);
+        this.nucleotides[y * this.colCount + x] = n;
       }
     }
 
@@ -48,19 +49,26 @@ export default class Grid extends entity.ParallelEntity {
 
   _update() {
     // check hovering of all nucleotides and stock hovered
-    let hovered: Nucleotide
-    for(const n of this.nucleotides) if(this.checkHovered(n)) hovered = n;
+    let hovered: Nucleotide;
+    for (const n of this.safetyNucleotides)
+      if (this.checkHovered(n)) hovered = n;
 
     // update path with hovered
-    if (hovered && this.party.path.items.length > 0) this.party.path.calc(hovered);
+    if (hovered && this.party.path.items.length > 0)
+      this.party.path.calc(hovered);
   }
 
   _teardown() {
-    for (const n of this.nucleotides) {
+    for (const n of this.safetyNucleotides) {
       this.container.removeChild(n.graphics);
     }
-    this.nucleotides = null;
     this.entityConfig.container.removeChild(this.container);
+    this.nucleotides = [];
+    this.container = null;
+  }
+
+  get safetyNucleotides(): Nucleotide[] {
+    return this.nucleotides.filter((n) => n !== undefined);
   }
 
   isOnEvenCol(n: Nucleotide): boolean {
@@ -75,7 +83,7 @@ export default class Grid extends entity.ParallelEntity {
     const index = this.nucleotides.indexOf(n);
     if (index === -1) return null;
     const x = index % this.colCount;
-    const y = index / this.colCount;
+    const y = Math.floor(index / this.colCount);
     return new pixi.Point(x, y);
   }
 
@@ -93,7 +101,7 @@ export default class Grid extends entity.ParallelEntity {
   }
 
   getHovered(): Nucleotide | null {
-    return this.nucleotides.find((nucleotide) => nucleotide.isHovered);
+    return this.safetyNucleotides.find((nucleotide) => nucleotide.isHovered);
   }
 
   checkHovered(n: Nucleotide): boolean {
@@ -126,15 +134,14 @@ export default class Grid extends entity.ParallelEntity {
   }
 
   addCuts() {
-    while (
-      this.nucleotides.filter((n) => n.state === "cut").length < this.cutCount
-    ) {
+    const safe = this.safetyNucleotides;
+    while (safe.filter((n) => n.state === "cut").length < this.cutCount) {
       let randomIndex;
       do {
-        randomIndex = Math.floor(Math.random() * this.nucleotides.length);
-      } while (this.nucleotides[randomIndex].state === "cut");
-      this.nucleotides[randomIndex].state = "cut";
-      this.nucleotides[randomIndex].refresh();
+        randomIndex = Math.floor(Math.random() * safe.length);
+      } while (safe[randomIndex].state === "cut");
+      safe[randomIndex].state = "cut";
+      safe[randomIndex].refresh();
     }
   }
 
@@ -166,6 +173,7 @@ export default class Grid extends entity.ParallelEntity {
     });
   }
 
+  /** get all neighbors of nucleotide */
   getNeighbors(n: Nucleotide): Nucleotide[] {
     const neighbors: Nucleotide[] = [];
     for (let i = 0; i < 6; i++) neighbors.push(this.getNeighbor(n, i));
@@ -190,36 +198,36 @@ export default class Grid extends entity.ParallelEntity {
 
   /** @param {number} neighborIndex - from 0 to 5, start on top */
   getNeighborGridPosition(n: Nucleotide, neighborIndex: number): pixi.Point {
-    const gridPosition = this.getGridPositionOf(n);
+    const gridPos = this.getGridPositionOf(n);
     const evenCol = this.isOnEvenCol(n);
     switch (neighborIndex) {
       case 0:
-        gridPosition.y--;
+        gridPos.y--;
         break;
       case 3:
-        gridPosition.y++;
+        gridPos.y++;
         break;
       case 1:
-        gridPosition.x++;
-        if (!evenCol) gridPosition.y--;
+        gridPos.x++;
+        if (!evenCol) gridPos.y--;
         break;
       case 5:
-        gridPosition.x--;
-        if (!evenCol) gridPosition.y--;
+        gridPos.x--;
+        if (!evenCol) gridPos.y--;
         break;
       case 2:
-        gridPosition.x++;
-        if (evenCol) gridPosition.y++;
+        gridPos.x++;
+        if (evenCol) gridPos.y++;
         break;
       case 4:
-        gridPosition.x--;
-        if (evenCol) gridPosition.y++;
+        gridPos.x--;
+        if (evenCol) gridPos.y++;
         break;
     }
-    return gridPosition;
+    return gridPos;
   }
 
   refresh() {
-    for (const n of this.nucleotides) n.refresh();
+    for (const n of this.safetyNucleotides) n.refresh();
   }
 }

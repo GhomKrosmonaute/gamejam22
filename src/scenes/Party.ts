@@ -40,8 +40,7 @@ export default class Party extends entity.ParallelEntity {
     // add one sequence for tests
     this.sequence = new Sequence(
       this, // party
-      50, // base length
-      new pixi.Point(game.width * 0.5, game.height * 0.8) // pivot
+      50 // base length
     );
 
     // instancie path system
@@ -146,9 +145,8 @@ export default class Party extends entity.ParallelEntity {
       if (this.state === "crunch") {
         // if hovered is not a cut, update path
         if (hovered.state !== "cut") this.path.calc(hovered);
-
-        // if party state is "slide"
       } else {
+        // if party state is "slide"
         // update path
         this.path.calc(hovered);
       }
@@ -156,7 +154,7 @@ export default class Party extends entity.ParallelEntity {
   }
 
   mouseUp() {
-    // if path length === 1
+    // if path items count === 1
     if (this.path.items.length === 1) {
       // replace nucleotide by hole
       const n = this.path.first;
@@ -171,7 +169,7 @@ export default class Party extends entity.ParallelEntity {
     }
   }
 
-  /** step (turn end | turn next) propagation */
+  /** step (turn end or turn next) propagation */
   step() {
     this.sequence.step();
   }
