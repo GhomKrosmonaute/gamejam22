@@ -55,6 +55,16 @@ export default class Party extends entity.ParallelEntity {
       this.nucleotideRadius
     );
 
+    // images
+    {
+      const space = new pixi.Sprite(
+        this.entityConfig.app.loader.resources[
+          "images/space-background.png"
+        ].texture
+      );
+      this.container.addChild(space);
+    }
+
     // add to entities path, grid and the test sequence
     this.addEntity(
       this.grid,

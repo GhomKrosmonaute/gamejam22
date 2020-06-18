@@ -9,6 +9,14 @@ const gameStates = {
   start: new Party(),
 };
 
+const graphicalAssets = [
+  "images/space-background.png",
+  "images/background.jpg",
+  "images/membrane.png",
+  "images/particles-background.png",
+  "images/particles-foreground.png",
+];
+
 let gameTransitions = {};
 
 const entityInstallers: any = [
@@ -23,4 +31,5 @@ booyah.go({
   transitions: gameTransitions,
   entityInstallers,
   screenSize: new pixi.Point(width, height),
+  graphicalAssets,
 });

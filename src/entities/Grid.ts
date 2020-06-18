@@ -145,13 +145,18 @@ export default class Grid extends entity.ParallelEntity {
   }
 
   swap(n1: Nucleotide, n2: Nucleotide) {
-    const oldPosition = n1.position.clone();
+    // swap grid indexes
     const index1 = this.nucleotides.indexOf(n1);
     const index2 = this.nucleotides.indexOf(n2);
-    n1.position.copyFrom(n2.position);
-    n2.position.copyFrom(oldPosition);
     this.nucleotides[index1] = n2;
     this.nucleotides[index2] = n1;
+
+    // swap absolute positions
+    const oldPosition = n1.position.clone();
+    n1.position.copyFrom(n2.position);
+    n2.position.copyFrom(oldPosition);
+
+    // refresh
     n1.refresh();
     n2.refresh();
   }
