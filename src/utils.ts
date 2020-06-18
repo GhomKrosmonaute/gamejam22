@@ -20,10 +20,14 @@ export function getRandomColorName(): ColorName {
 
 export type PartyState = "crunch" | "slide";
 
-export function opposedIndexOf(neighborIndex: number): number {
+/** from 0 to 5, start on top */
+export type NeighborIndex = 0 | 1 | 2 | 3 | 4 | 5;
+export const NeighborIndexes: NeighborIndex[] = [0, 1, 2, 3, 4, 5];
+
+export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
   let opposedNeighborIndex = neighborIndex - 3;
   if (opposedNeighborIndex < 0) opposedNeighborIndex += 6;
-  return opposedNeighborIndex;
+  return opposedNeighborIndex as NeighborIndex;
 }
 
 export function getColorByName(name: ColorName): number {

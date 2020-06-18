@@ -150,6 +150,6 @@ export default class Path extends entity.Entity {
       this.items[0],
       this.items[1]
     );
-    this.party.grid.slide(neighborIndex);
+    if (neighborIndex !== -1) this.party.grid.slide(neighborIndex);
   }
 }

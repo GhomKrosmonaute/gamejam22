@@ -67,6 +67,18 @@ export default class Grid extends entity.ParallelEntity {
     this.container = null;
   }
 
+  addCuts() {
+    const safe = this.safetyNucleotides;
+    while (safe.filter((n) => n.state === "cut").length < this.cutCount) {
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * safe.length);
+      } while (safe[randomIndex].state === "cut");
+      safe[randomIndex].state = "cut";
+      safe[randomIndex].refresh();
+    }
+  }
+
   get safetyNucleotides(): Nucleotide[] {
     return this.nucleotides.filter((n) => n !== undefined);
   }
@@ -120,10 +132,9 @@ export default class Grid extends entity.ParallelEntity {
     return isHovered;
   }
 
-  /** @param {number} neighborIndex - from 0 to 5, start on top */
-  slide(neighborIndex: number) {
+  slide(neighborIndex: utils.NeighborIndex) {
     const opposedNeighborIndex = utils.opposedIndexOf(neighborIndex);
-    for (const nucleotide of this.nucleotides)
+    for (const nucleotide of this.safetyNucleotides)
       if (nucleotide.state === "hole") {
         nucleotide.generate();
         this.recursiveSwap(nucleotide, opposedNeighborIndex);
@@ -133,42 +144,35 @@ export default class Grid extends entity.ParallelEntity {
     this.party.stateSwitch.text = "mode: crunch";
   }
 
-  addCuts() {
-    const safe = this.safetyNucleotides;
-    while (safe.filter((n) => n.state === "cut").length < this.cutCount) {
-      let randomIndex;
-      do {
-        randomIndex = Math.floor(Math.random() * safe.length);
-      } while (safe[randomIndex].state === "cut");
-      safe[randomIndex].state = "cut";
-      safe[randomIndex].refresh();
-    }
+  swap(n1: Nucleotide, n2: Nucleotide) {
+    const oldPosition = n1.position.clone();
+    const index1 = this.nucleotides.indexOf(n1);
+    const index2 = this.nucleotides.indexOf(n2);
+    n1.position.copyFrom(n2.position);
+    n2.position.copyFrom(oldPosition);
+    this.nucleotides[index1] = n2;
+    this.nucleotides[index2] = n1;
+    n1.refresh();
+    n2.refresh();
   }
 
-  swap(n: Nucleotide, nucleotide: Nucleotide) {
-    const oldPosition = n.position.clone();
-    n.position.copyFrom(nucleotide.position);
-    nucleotide.position.copyFrom(oldPosition);
-    nucleotide.refresh();
-    this.refresh();
-  }
-
-  /** @param {number} neighborIndex - from 0 to 5, start on top */
-  recursiveSwap(n: Nucleotide, neighborIndex: number) {
-    // get the opposed neighbor
-    const neighbor = this.getNeighbor(n, neighborIndex);
-    if (neighbor) {
-      // swap places with this nucleotide
-      this.swap(n, neighbor);
+  recursiveSwap(n: Nucleotide, neighborIndex: utils.NeighborIndex) {
+    // get the neighbor of n
+    const nn = this.getNeighbor(n, neighborIndex);
+    if (nn) {
+      // swap places between neighbor and n
+      this.swap(n, nn);
 
       // continue recursively
       this.recursiveSwap(n, neighborIndex);
     }
   }
 
-  /** @param {number} neighborIndex - from 0 to 5, start on top */
-  getNeighbor(n: Nucleotide, neighborIndex: number): Nucleotide | null {
-    return this.nucleotides.find((nn) => {
+  getNeighbor(
+    n: Nucleotide,
+    neighborIndex: utils.NeighborIndex
+  ): Nucleotide | null {
+    return this.safetyNucleotides.find((nn) => {
       return this.getNeighborIndex(n, nn) === neighborIndex;
     });
   }
@@ -176,28 +180,37 @@ export default class Grid extends entity.ParallelEntity {
   /** get all neighbors of nucleotide */
   getNeighbors(n: Nucleotide): Nucleotide[] {
     const neighbors: Nucleotide[] = [];
-    for (let i = 0; i < 6; i++) neighbors.push(this.getNeighbor(n, i));
+    for (const neighborIndex of utils.NeighborIndexes)
+      neighbors.push(this.getNeighbor(n, neighborIndex));
     return neighbors;
   }
 
-  /** @param {number} neighborIndex - from 0 to 5, start on top */
-  getNeighborsInLine(n: Nucleotide, neighborIndex: number): Nucleotide[] {
+  getNeighborsInLine(
+    n: Nucleotide,
+    neighborIndex: utils.NeighborIndex
+  ): Nucleotide[] {
     const neighbor = this.getNeighbor(n, neighborIndex);
     if (!neighbor) return [];
     return [neighbor, ...this.getNeighborsInLine(neighbor, neighborIndex)];
   }
 
   /** @returns {number} - -1 if is not a neighbor or the neighbor index */
-  getNeighborIndex(n: Nucleotide, n2: Nucleotide): number {
-    for (let i = 0; i < 6; i++) {
-      if (this.getNeighborGridPosition(n, i).equals(this.getGridPositionOf(n2)))
-        return i;
+  getNeighborIndex(n: Nucleotide, n2: Nucleotide): utils.NeighborIndex | -1 {
+    for (const neighborIndex of utils.NeighborIndexes) {
+      if (
+        this.getNeighborGridPosition(n, neighborIndex).equals(
+          this.getGridPositionOf(n2)
+        )
+      )
+        return neighborIndex;
     }
     return -1;
   }
 
-  /** @param {number} neighborIndex - from 0 to 5, start on top */
-  getNeighborGridPosition(n: Nucleotide, neighborIndex: number): pixi.Point {
+  getNeighborGridPosition(
+    n: Nucleotide,
+    neighborIndex: utils.NeighborIndex
+  ): pixi.Point {
     const gridPos = this.getGridPositionOf(n);
     const evenCol = this.isOnEvenCol(n);
     switch (neighborIndex) {
