@@ -100,7 +100,7 @@ export default class Grid extends entity.ParallelEntity {
   }
 
   getAbsolutePositionFromGridPosition(gridPos: pixi.Point): pixi.Point {
-    const { width, height, dist } = Nucleotide.getNucleotideDimensions(
+    const { width, height, dist } = Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
     );
     const x = width / 2 + gridPos.x * dist.x;

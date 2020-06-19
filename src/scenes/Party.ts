@@ -10,8 +10,9 @@ export default class Party extends entity.ParallelEntity {
   public colCount = 7;
   public rowCount = 7;
   public cutCount = 9;
+  public baseSequenceLength = 5;
   public nucleotideRadius = game.width / 13.44;
-  public sequence: Sequence;
+  public sequences: Sequence[] = [];
   public path: Path;
   public grid: Grid;
   public state: utils.PartyState = "crunch";
@@ -38,9 +39,13 @@ export default class Party extends entity.ParallelEntity {
     this.container.interactive = true;
 
     // add one sequence for tests
-    this.sequence = new Sequence(
-      this, // party
-      50 // base length
+    // todo: made a sequence manager
+    this.sequences.push(
+      new Sequence(
+        this, // party
+        this.baseSequenceLength, // base length
+        new pixi.Point(game.width / 2, game.height * 0.22)
+      )
     );
 
     // instancie path system
@@ -89,7 +94,7 @@ export default class Party extends entity.ParallelEntity {
       })
     );
     this.addEntity(
-      this.sequence,
+      this.sequences[0],
       entity.extendConfig({
         container: this.container,
       })
@@ -167,7 +172,7 @@ export default class Party extends entity.ParallelEntity {
   _teardown() {
     this.container.removeChild(this.validationButton);
     this.container.removeChild(this.stateSwitch);
-    this.sequence = null;
+    this.sequences = [];
     this.path = null;
     this.grid = null;
     this.validationButton = null;
@@ -210,6 +215,6 @@ export default class Party extends entity.ParallelEntity {
 
   /** step (turn end or turn next) propagation */
   step() {
-    this.sequence.step();
+    // todo: turn changes
   }
 }

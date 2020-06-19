@@ -29,6 +29,10 @@ export default class Path extends entity.Entity {
     this.entityConfig.container.removeChild(this.graphics);
   }
 
+  get signature(): string {
+    return this.nucleotides.map((n) => n.colorName).join(",");
+  }
+
   /** The real length without cuts */
   get length(): number {
     return this.nucleotides.length;
@@ -44,7 +48,7 @@ export default class Path extends entity.Entity {
   }
 
   get maxLength(): number {
-    return this.party.sequence.length;
+    return Math.max(...this.party.sequences.map((s) => s.length));
   }
 
   get first(): Nucleotide | null {
@@ -56,12 +60,11 @@ export default class Path extends entity.Entity {
   }
 
   checkValidSequence(): boolean {
-    const signature = this.nucleotides.map((n) => n.colorName).join(",");
-    const isValidSequence =
-      this.cuts.length >= 1 &&
-      (signature === this.party.sequence.toString() ||
-        signature ===
-          this.party.sequence.toString().split(",").reverse().join(","));
+    const signature = this.signature;
+
+    let isValidSequence = false;
+    if (this.cuts.length >= 1)
+      isValidSequence = this.party.sequences.some((s) => s.validate(signature));
 
     if (this.isValidSequence !== isValidSequence) {
       this.isValidSequence = isValidSequence;
@@ -143,9 +146,12 @@ export default class Path extends entity.Entity {
 
   crunch() {
     if (this.isValidSequence) {
-      this.items.forEach((n) => (n.state = "hole"));
-      this.party.sequence._setup();
-      this.party.grid.refresh();
+      const signature = this.signature;
+      this.items.forEach((n) => {
+        n.state = "hole";
+        n.refresh();
+      });
+      this.party.sequences.find((s) => s.validate(signature))._teardown();
     }
   }
 

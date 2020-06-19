@@ -93,3 +93,24 @@ export function getIsoceleAngle(
   const sm = dist(s, m);
   return geom.radiansToDegrees(bm / sm);
 }
+
+export function random(min?: number[] | number, max?: number): number {
+  let rand = Math.random();
+  if (typeof min === "undefined") {
+    return rand;
+  } else if (typeof max === "undefined") {
+    if (min instanceof Array) {
+      return min[Math.floor(rand * min.length)];
+    } else {
+      return rand * min;
+    }
+  } else {
+    if (min > max) {
+      const tmp = min as number;
+      min = max;
+      max = tmp;
+    }
+    //@ts-ignore
+    return rand * (max - min) + min;
+  }
+}

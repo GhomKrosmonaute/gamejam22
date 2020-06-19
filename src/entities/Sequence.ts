@@ -8,24 +8,31 @@ import Nucleotide from "./Nucleotide";
 export default class Sequence extends entity.ParallelEntity {
   public nucleotides: Nucleotide[];
   public length: number;
-  public x: number = game.width / 2;
-  public y: number = game.height * 0.16;
-  public angle: number;
   public nucleotideRadius = game.width * 0.05;
   public container: pixi.Container;
-  public pivot = new pixi.Point(game.width * 0.5, game.height * 0.8);
 
-  constructor(public party: Party, public baseLength: number) {
+  constructor(
+    public party: Party,
+    public baseLength: number,
+    public position: pixi.Point
+  ) {
     super();
   }
 
   _setup() {
     this.container = new pixi.Container();
-    this.container.position.set(this.x, this.y);
+    this.container.position.copyFrom(this.position);
     this.length = this.baseLength;
     this.nucleotides = [];
+    const { height } = Nucleotide.getNucleotideDimensionsByRadius(
+      this.nucleotideRadius
+    );
     for (let i = 0; i < this.length; i++) {
-      const n = new Nucleotide(this.nucleotideRadius, new pixi.Point(), i - 5);
+      const n = new Nucleotide(
+        this.nucleotideRadius,
+        new pixi.Point(utils.random(-height * 0.3, height * 0.3), i * height)
+      );
+      n.graphics.rotation = Math.random();
       this.addEntity(
         n,
         entity.extendConfig({
@@ -48,34 +55,15 @@ export default class Sequence extends entity.ParallelEntity {
     this.container = null;
   }
 
-  step(stepCount: number = 1) {
-    for (const nucleotide of this.nucleotides)
-      this.stepOf(nucleotide, stepCount);
-  }
-
-  stepOf(n: Nucleotide, stepCount: number = 1) {
-    n.index += stepCount;
-    while (n.index > 8 * n.stage) {
-      n.stage++;
-    }
-    if (n.stage > 4) n._teardown();
-    else {
-      this.calcAngle(n);
-      n.refresh(this.pivot);
-    }
-  }
-
-  calcAngle(n: Nucleotide) {
-    this.angle =
-      utils.getIsoceleAngle(
-        new pixi.Point(0, n.getRelativeHeight(this.pivot.y)),
-        new pixi.Point(n.width, n.getRelativeHeight(this.pivot.y)),
-        this.pivot
-      ) * n.index;
+  validate(signature: string): boolean {
+    return (
+      signature === this.toString() ||
+      signature === this.toString().split(",").reverse().join(",")
+    );
   }
 
   refresh() {
-    for (const nucleotide of this.nucleotides) nucleotide.refresh(this.pivot);
+    for (const nucleotide of this.nucleotides) nucleotide.refresh();
   }
 
   toString() {
