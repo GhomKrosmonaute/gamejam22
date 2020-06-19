@@ -60,6 +60,12 @@ module.exports = {
 
         // Copy CSS
         { from: "*.css" },
+        
+        // copy game image assets
+        {
+          from: "images",
+          to: "images"
+        }
       ],
     }),
     // //opimize all image file

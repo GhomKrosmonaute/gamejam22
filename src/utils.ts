@@ -20,10 +20,14 @@ export function getRandomColorName(): ColorName {
 
 export type PartyState = "crunch" | "slide";
 
-export function opposedIndexOf(neighborIndex: number): number {
+/** from 0 to 5, start on top */
+export type NeighborIndex = 0 | 1 | 2 | 3 | 4 | 5;
+export const NeighborIndexes: NeighborIndex[] = [0, 1, 2, 3, 4, 5];
+
+export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
   let opposedNeighborIndex = neighborIndex - 3;
   if (opposedNeighborIndex < 0) opposedNeighborIndex += 6;
-  return opposedNeighborIndex;
+  return opposedNeighborIndex as NeighborIndex;
 }
 
 export function getColorByName(name: ColorName): number {
@@ -79,11 +83,11 @@ export function middle(a: pixi.Point, b: pixi.Point): pixi.Point {
  * @param b - point
  * @param s - sommet
  */
-export function getIsocèleAngle(
+export function getIsoceleAngle(
   a: pixi.Point,
   b: pixi.Point,
   s: pixi.Point
-): number {
+): any {
   const m = middle(b, a);
   const bm = dist(b, m);
   const sm = dist(s, m);
