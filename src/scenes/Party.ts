@@ -203,8 +203,8 @@ export default class Party extends entity.ParallelEntity {
     if (hovered && !this.path.items.includes(hovered)) {
       // if party state is "crunch"
       if (this.state === "crunch") {
-        // if hovered is not a cut, update path
-        if (hovered.state !== "cut") this.path.calc(hovered);
+        // if hovered is not a scissors, update path
+        if (hovered.state !== "scissors") this.path.calc(hovered);
       } else {
         // if party state is "slide"
         // update path
@@ -214,19 +214,18 @@ export default class Party extends entity.ParallelEntity {
   }
 
   mouseUp() {
-    // if path items count === 1
-    if (this.path.items.length === 1) {
-      // replace nucleotide by hole
-      const n = this.path.first;
-      n.state = n.state === "hole" ? "none" : "hole";
-      n.refresh();
-      this.path.remove();
-
-      // if party state === "slide"
-    } else if (this.state === "slide") {
-      this.path.slide();
-      this.path.remove();
-    }
+    // // if path items count === 1
+    // if (this.path.items.length === 1) {
+    //   // replace nucleotide by hole
+    //   const n = this.path.first;
+    //   n.state = n.state === "hole" ? "none" : "hole";
+    //   n.refresh();
+    //   this.path.remove();
+    //   // if party state === "slide"
+    // } else if (this.state === "slide") {
+    //   this.path.slide();
+    //   this.path.remove();
+    // }
   }
 
   /** step (turn end or turn next) propagation */
@@ -237,9 +236,12 @@ export default class Party extends entity.ParallelEntity {
   private _onGo() {
     console.assert(this.state === "crunch");
 
-    if (this.path) {
+    if (this.path.items.length > 0) {
       this.path.crunch();
       this.path.remove();
+      this.grid.refresh();
+    } else if (this.grid.containsHoles()) {
+      this.grid.slide(1);
     } else {
       // TODO: add confirm dialog
       // TODO: refresh grid

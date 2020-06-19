@@ -1,9 +1,9 @@
 import * as PIXI from "pixi.js";
 import * as geom from "booyah/src/geom";
 
-export type NucleotideState = "cut" | "hole" | "bonus" | "none";
+export type NucleotideState = "scissors" | "hole" | "bonus" | "none";
 export const nucleotideStates: NucleotideState[] = [
-  "cut",
+  "scissors",
   "hole",
   "bonus",
   "none",

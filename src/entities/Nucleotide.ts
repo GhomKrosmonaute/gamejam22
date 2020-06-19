@@ -86,7 +86,7 @@ export default class Nucleotide extends entity.Entity {
         case "bonus":
           this.graphics.beginFill(0xff00ff);
           break;
-        case "cut":
+        case "scissors":
           this.graphics.beginFill(0x888888);
           break;
         case "hole":

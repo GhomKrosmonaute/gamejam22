@@ -42,7 +42,7 @@ export default class Grid extends entity.ParallelEntity {
       }
     }
 
-    this.addCuts();
+    this.addScissors();
     this.refresh();
     this.entityConfig.container.addChild(this.container);
   }
@@ -67,14 +67,14 @@ export default class Grid extends entity.ParallelEntity {
     this.container = null;
   }
 
-  addCuts() {
+  addScissors() {
     const safe = this.safetyNucleotides;
-    while (safe.filter((n) => n.state === "cut").length < this.cutCount) {
+    while (safe.filter((n) => n.state === "scissors").length < this.cutCount) {
       let randomIndex;
       do {
         randomIndex = Math.floor(Math.random() * safe.length);
-      } while (safe[randomIndex].state === "cut");
-      safe[randomIndex].state = "cut";
+      } while (safe[randomIndex].state === "scissors");
+      safe[randomIndex].state = "scissors";
       safe[randomIndex].refresh();
     }
   }
@@ -139,7 +139,7 @@ export default class Grid extends entity.ParallelEntity {
         nucleotide.generate();
         this.recursiveSwap(nucleotide, opposedNeighborIndex);
       }
-    this.addCuts();
+    this.addScissors();
     this.party.state = "crunch";
     this.party.stateSwitch.text = "mode: crunch";
   }
@@ -247,5 +247,9 @@ export default class Grid extends entity.ParallelEntity {
 
   refresh() {
     for (const n of this.safetyNucleotides) n.refresh();
+  }
+
+  containsHoles(): boolean {
+    return this.nucleotides.some((n) => n.state === "hole");
   }
 }
