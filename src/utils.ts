@@ -130,6 +130,23 @@ export function map(
     : constrain(output, stop2, start2);
 }
 
+export function mapFromMiddle(
+  n: number,
+  start: number,
+  stop: number,
+  extremity: number,
+  middle: number,
+  withinBounds: boolean = false
+): number {
+  const middle1 = (start + stop) / 2;
+  if (n < middle1)
+    return map(n, start, middle1, extremity, middle, withinBounds);
+  else return map(n, middle1, stop, middle, extremity, withinBounds);
+}
+
 export function constrain(n: number, low: number, high: number): number {
   return Math.max(Math.min(n, high), low);
+}
+export function approxima(n: number, x: number): number {
+  return random(n - x, n + x);
 }

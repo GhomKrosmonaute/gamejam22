@@ -1,6 +1,7 @@
 import * as pixi from "pixi.js";
 import * as geom from "booyah/src/geom";
 import * as entity from "booyah/src/entity";
+import * as easing from "booyah/src/easing";
 import * as utils from "../utils";
 import * as game from "../game";
 
@@ -20,6 +21,8 @@ export default class Nucleotide extends entity.Entity {
     this.generate();
     this.entityConfig.container.addChild(this.graphics);
   }
+
+  _update() {}
 
   _teardown() {
     this.entityConfig.container.removeChild(this.graphics);

@@ -8,7 +8,7 @@ import Nucleotide from "./Nucleotide";
 export default class Sequence extends entity.ParallelEntity {
   public nucleotides: Nucleotide[] = [];
   public length: number;
-  public nucleotideRadius = game.width * 0.05;
+  public nucleotideRadius = game.width * 0.04;
   public container: pixi.Container;
 
   constructor(public baseLength: number, public position = new pixi.Point()) {
@@ -26,7 +26,14 @@ export default class Sequence extends entity.ParallelEntity {
     for (let i = 0; i < this.length; i++) {
       const n = new Nucleotide(
         this.nucleotideRadius,
-        new pixi.Point(utils.random(-height * 0.3, height * 0.3), i * height)
+        new pixi.Point(
+          0,
+          i * height * 2 +
+            utils.approxima(
+              utils.mapFromMiddle(i, 0, this.length, height, 0),
+              height * 0.2
+            )
+        )
       );
       n.graphics.rotation = Math.random();
       this.addEntity(
