@@ -4,6 +4,7 @@ import Nucleotide from "./Nucleotide";
 import Party from "../scenes/Party";
 import * as game from "../game";
 
+/** Represent the user path to validate sequences */
 export default class Path extends entity.Entity {
   public items: Nucleotide[] = [];
   public graphics = new pixi.Graphics();
@@ -48,7 +49,9 @@ export default class Path extends entity.Entity {
   }
 
   get maxLength(): number {
-    return Math.max(...this.party.sequences.map((s) => s.length));
+    return Math.max(
+      ...this.party.sequenceManager.sequences.map((s) => s.length)
+    );
   }
 
   get first(): Nucleotide | null {
@@ -64,7 +67,9 @@ export default class Path extends entity.Entity {
 
     let isValidSequence = false;
     if (this.cuts.length >= 1)
-      isValidSequence = this.party.sequences.some((s) => s.validate(signature));
+      isValidSequence = this.party.sequenceManager.sequences.some((s) =>
+        s.validate(signature)
+      );
 
     if (this.isValidSequence !== isValidSequence) {
       this.isValidSequence = isValidSequence;
@@ -146,12 +151,11 @@ export default class Path extends entity.Entity {
 
   crunch() {
     if (this.isValidSequence) {
-      const signature = this.signature;
       this.items.forEach((n) => {
         n.state = "hole";
         n.refresh();
       });
-      this.party.sequences.find((s) => s.validate(signature))._teardown();
+      this.party.sequenceManager.crunch(this);
     }
   }
 

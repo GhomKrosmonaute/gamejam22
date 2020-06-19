@@ -5,6 +5,7 @@ import * as game from "../game";
 import Party from "../scenes/Party";
 import Nucleotide from "./Nucleotide";
 
+/** Represent the game nucleotides grid */
 export default class Grid extends entity.ParallelEntity {
   public nucleotides: Nucleotide[] = [];
   public container: pixi.Container;

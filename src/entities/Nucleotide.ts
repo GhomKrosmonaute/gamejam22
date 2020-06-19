@@ -4,6 +4,7 @@ import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
 import * as game from "../game";
 
+/** Represent a nucleotide */
 export default class Nucleotide extends entity.Entity {
   public colorName: utils.ColorName;
   public graphics = new pixi.Graphics();

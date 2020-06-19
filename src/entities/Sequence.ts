@@ -2,28 +2,24 @@ import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as game from "../game";
 import * as utils from "../utils";
-import Party from "../scenes/Party";
 import Nucleotide from "./Nucleotide";
 
+/** Represent a sequence dropped by virus */
 export default class Sequence extends entity.ParallelEntity {
-  public nucleotides: Nucleotide[];
+  public nucleotides: Nucleotide[] = [];
   public length: number;
   public nucleotideRadius = game.width * 0.05;
   public container: pixi.Container;
 
-  constructor(
-    public party: Party,
-    public baseLength: number,
-    public position: pixi.Point
-  ) {
+  constructor(public baseLength: number, public position = new pixi.Point()) {
     super();
   }
 
   _setup() {
     this.container = new pixi.Container();
     this.container.position.copyFrom(this.position);
+    this.entityConfig.container.addChild(this.container);
     this.length = this.baseLength;
-    this.nucleotides = [];
     const { height } = Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
     );
@@ -42,17 +38,15 @@ export default class Sequence extends entity.ParallelEntity {
       this.nucleotides.push(n);
     }
     this.refresh();
-    this.entityConfig.container.addChild(this.container);
   }
 
   _update() {}
 
   _teardown() {
-    for (const nucleotide of this.nucleotides) {
-      this.container.removeChild(nucleotide.graphics);
-    }
+    for (const n of this.nucleotides) this.container.removeChild(n.graphics);
     this.entityConfig.container.removeChild(this.container);
     this.container = null;
+    this.nucleotides = [];
   }
 
   validate(signature: string): boolean {

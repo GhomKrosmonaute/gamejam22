@@ -5,6 +5,7 @@ import * as game from "../game";
 import Grid from "../entities/Grid";
 import Path from "../entities/Path";
 import Sequence from "../entities/Sequence";
+import SequenceManager from "../entities/SequenceManager";
 
 export default class Party extends entity.ParallelEntity {
   public colCount = 7;
@@ -12,7 +13,7 @@ export default class Party extends entity.ParallelEntity {
   public cutCount = 9;
   public baseSequenceLength = 5;
   public nucleotideRadius = game.width / 13.44;
-  public sequences: Sequence[] = [];
+  public sequenceManager: SequenceManager;
   public path: Path;
   public grid: Grid;
   public state: utils.PartyState = "crunch";
@@ -38,15 +39,12 @@ export default class Party extends entity.ParallelEntity {
     // make container interactive
     this.container.interactive = true;
 
-    // add one sequence for tests
-    // todo: made a sequence manager
-    this.sequences.push(
-      new Sequence(
-        this, // party
-        this.baseSequenceLength, // base length
-        new pixi.Point(game.width / 2, game.height * 0.22)
-      )
-    );
+    this.sequenceManager = new SequenceManager();
+    // add sequences for tests
+    // todo: remove tests
+    this.sequenceManager.add(5);
+    this.sequenceManager.add(4);
+    this.sequenceManager.add(5);
 
     // instancie path system
     this.path = new Path(this);
@@ -94,7 +92,7 @@ export default class Party extends entity.ParallelEntity {
       })
     );
     this.addEntity(
-      this.sequences[0],
+      this.sequenceManager,
       entity.extendConfig({
         container: this.container,
       })
@@ -172,10 +170,10 @@ export default class Party extends entity.ParallelEntity {
   _teardown() {
     this.container.removeChild(this.validationButton);
     this.container.removeChild(this.stateSwitch);
-    this.sequences = [];
     this.path = null;
     this.grid = null;
     this.validationButton = null;
+    this.sequenceManager = null;
     this.stateSwitch = null;
   }
 
