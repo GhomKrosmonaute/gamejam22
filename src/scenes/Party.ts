@@ -55,14 +55,24 @@ export default class Party extends entity.ParallelEntity {
       this.nucleotideRadius
     );
 
-    // images
+    // background images
     {
+      const background = new pixi.Sprite(
+        this.entityConfig.app.loader.resources["images/background.jpg"].texture
+      );
       const space = new pixi.Sprite(
         this.entityConfig.app.loader.resources[
           "images/space-background.png"
         ].texture
       );
+      const particles = new pixi.Sprite(
+        this.entityConfig.app.loader.resources[
+          "images/particles-background.png"
+        ].texture
+      );
+      this.container.addChild(background);
       this.container.addChild(space);
+      this.container.addChild(particles);
     }
 
     // add to entities path, grid and the test sequence
@@ -85,6 +95,20 @@ export default class Party extends entity.ParallelEntity {
       })
     );
 
+    // foreground images
+    {
+      const particles2 = new pixi.Sprite(
+        this.entityConfig.app.loader.resources[
+          "images/particles-foreground.png"
+        ].texture
+      );
+      const membrane = new pixi.Sprite(
+        this.entityConfig.app.loader.resources["images/membrane.png"].texture
+      );
+      this.container.addChild(particles2);
+      this.container.addChild(membrane);
+    }
+
     // setup mouse listeners
     this._on(this.container, "pointerdown", () => {
       this.mouseIsDown = true;
@@ -100,37 +124,42 @@ export default class Party extends entity.ParallelEntity {
       this.validationButton.text = isValidSequence ? "validate" : "cancel";
     });
 
-    // add validation button (for debug)
-    this.validationButton = new pixi.Text("cancel", { fill: "#FFFFFF" });
-    this.validationButton.buttonMode = true;
-    this.validationButton.interactive = true;
-    this.validationButton.anchor.set(0.5);
-    this.validationButton.x = game.width / 2;
-    this.validationButton.y = game.height * 0.02;
-    this.validationButton.on("pointerdown", () => {
-      if (this.state === "crunch") {
-        if (this.path) {
-          this.path.crunch();
-          this.path.remove();
+    // debug buttons
+    {
+      const textStyle = { fill: "#000000", fontSize: "50px" };
+
+      // add validation button (for debug)
+      this.validationButton = new pixi.Text("cancel", textStyle);
+      this.validationButton.buttonMode = true;
+      this.validationButton.interactive = true;
+      this.validationButton.anchor.set(0.5);
+      this.validationButton.x = game.width / 2;
+      this.validationButton.y = game.height * 0.02;
+      this.validationButton.on("pointerdown", () => {
+        if (this.state === "crunch") {
+          if (this.path) {
+            this.path.crunch();
+            this.path.remove();
+          }
         }
-      }
-    });
+      });
 
-    // add party state switch (for debug)
-    this.stateSwitch = new pixi.Text("mode: crunch", { fill: "#FFFFFF" });
-    this.stateSwitch.buttonMode = true;
-    this.stateSwitch.interactive = true;
-    this.stateSwitch.anchor.set(0.5);
-    this.stateSwitch.x = game.width / 2;
-    this.stateSwitch.y = game.height * 0.06;
-    this.stateSwitch.on("pointerdown", () => {
-      this.state = this.state === "crunch" ? "slide" : "crunch";
-      this.stateSwitch.text = "mode: " + this.state;
-      this.step();
-    });
+      // add party state switch (for debug)
+      this.stateSwitch = new pixi.Text("mode: crunch", textStyle);
+      this.stateSwitch.buttonMode = true;
+      this.stateSwitch.interactive = true;
+      this.stateSwitch.anchor.set(0.5);
+      this.stateSwitch.x = game.width / 2;
+      this.stateSwitch.y = game.height * 0.045;
+      this.stateSwitch.on("pointerdown", () => {
+        this.state = this.state === "crunch" ? "slide" : "crunch";
+        this.stateSwitch.text = "mode: " + this.state;
+        this.step();
+      });
 
-    this.container.addChild(this.validationButton);
-    this.container.addChild(this.stateSwitch);
+      this.container.addChild(this.validationButton);
+      this.container.addChild(this.stateSwitch);
+    }
   }
 
   _update() {}

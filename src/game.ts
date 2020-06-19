@@ -4,6 +4,7 @@ import Party from "./scenes/Party";
 
 export const width = 1080;
 export const height = 1920;
+export const size = new pixi.Point(width, height);
 
 const gameStates = {
   start: new Party(),
