@@ -4,7 +4,6 @@ import * as utils from "../utils";
 import * as game from "../game";
 import Grid from "../entities/Grid";
 import Path from "../entities/Path";
-import Sequence from "../entities/Sequence";
 import SequenceManager from "../entities/SequenceManager";
 
 export default class Party extends entity.ParallelEntity {
@@ -40,11 +39,6 @@ export default class Party extends entity.ParallelEntity {
     this.container.interactive = true;
 
     this.sequenceManager = new SequenceManager();
-    // add sequences for tests
-    // todo: remove tests
-    this.sequenceManager.add(5);
-    this.sequenceManager.add(4);
-    this.sequenceManager.add(5);
 
     // instancie path system
     this.path = new Path(this);
@@ -78,7 +72,7 @@ export default class Party extends entity.ParallelEntity {
       this.container.addChild(particles);
     }
 
-    // add to entities path, grid and the test sequence
+    // add to entities path, grid and the test sequenceManager
     this.addEntity(
       this.grid,
       entity.extendConfig({
@@ -97,6 +91,12 @@ export default class Party extends entity.ParallelEntity {
         container: this.container,
       })
     );
+
+    // add sequences for tests
+    // todo: remove tests
+    this.sequenceManager.add(5);
+    this.sequenceManager.add(4);
+    this.sequenceManager.add(5);
 
     // foreground images
     {

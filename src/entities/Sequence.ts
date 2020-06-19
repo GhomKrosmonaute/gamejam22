@@ -57,6 +57,7 @@ export default class Sequence extends entity.ParallelEntity {
   }
 
   refresh() {
+    this.container.position.copyFrom(this.position);
     for (const nucleotide of this.nucleotides) nucleotide.refresh();
   }
 
