@@ -4,6 +4,8 @@ import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
 import * as game from "../game";
 
+const scissorsPercentage = 1 / 8;
+
 export default class Nucleotide extends entity.Entity {
   public colorName: utils.ColorName;
   public graphics = new PIXI.Graphics();
@@ -60,8 +62,12 @@ export default class Nucleotide extends entity.Entity {
   }
 
   generate() {
-    this.state = "none";
-    this.colorName = utils.getRandomColorName();
+    if (Math.random() < scissorsPercentage) {
+      this.state = "scissors";
+    } else {
+      this.state = "normal";
+      this.colorName = utils.getRandomColorName();
+    }
   }
 
   refresh(pivot?: PIXI.Point) {
@@ -92,7 +98,7 @@ export default class Nucleotide extends entity.Entity {
         case "hole":
           this.graphics.beginFill(0x333333);
           break;
-        case "none":
+        case "normal":
           this.graphics.beginFill(this.color);
           break;
       }

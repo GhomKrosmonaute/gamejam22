@@ -18,6 +18,8 @@ export default class Party extends entity.ParallelEntity {
   public state: utils.PartyState = "crunch";
   public mouseIsDown: boolean = false;
 
+  private _slideDownPos: PIXI.Point;
+
   // debug control buttons
   public validationButton: PIXI.Text;
   public stateSwitch: PIXI.Text;
@@ -132,14 +134,22 @@ export default class Party extends entity.ParallelEntity {
     }
 
     // setup mouse listeners
-    this._on(this.container, "pointerdown", () => {
-      this.mouseIsDown = true;
-      this.mouseDown();
-    });
-    this._on(this.container, "pointerup", () => {
-      this.mouseIsDown = false;
-      this.mouseUp();
-    });
+    this._on(
+      this.container,
+      "pointerdown",
+      (e: PIXI.interaction.InteractionEvent) => {
+        this.mouseIsDown = true;
+        this.mouseDown(e);
+      }
+    );
+    this._on(
+      this.container,
+      "pointerup",
+      (e: PIXI.interaction.InteractionEvent) => {
+        this.mouseIsDown = false;
+        this.mouseUp(e);
+      }
+    );
 
     // check if path update to valid or invalid sequence
     this.path.on("validSequenceChange", (isValidSequence: boolean) => {
@@ -195,30 +205,37 @@ export default class Party extends entity.ParallelEntity {
     this.stateSwitch = null;
   }
 
-  mouseDown() {
-    // get the hovered nucleotide
-    const hovered = this.grid.getHovered();
+  mouseDown(e: PIXI.interaction.InteractionEvent) {
+    if (this.state === "crunch") {
+      // get the hovered nucleotide
+      const hovered = this.grid.getHovered();
 
-    // if path not includes this nucleotide
-    if (hovered && !this.path.items.includes(hovered)) {
-      // if party state is "crunch"
-      if (this.state === "crunch") {
+      // if path not includes this nucleotide
+      if (hovered && !this.path.items.includes(hovered)) {
         // if hovered is not a scissors, update path
         if (hovered.state !== "scissors") this.path.calc(hovered);
-      } else {
-        // if party state is "slide"
-        // update path
-        this.path.calc(hovered);
       }
+    } else if (this.state === "slide") {
+      this._slideDownPos = e.data.global;
     }
   }
 
-  mouseUp() {
+  mouseUp(e: PIXI.interaction.InteractionEvent) {
+    if (this.state === "slide") {
+      const endPos = e.data.global;
+
+      const angle = Math.atan2(
+        endPos.y - this._slideDownPos.y,
+        endPos.x - this._slideDownPos.x
+      );
+
+      console.log("slide angle", angle);
+    }
     // // if path items count === 1
     // if (this.path.items.length === 1) {
     //   // replace nucleotide by hole
     //   const n = this.path.first;
-    //   n.state = n.state === "hole" ? "none" : "hole";
+    //   n.state = n.state === "hole" ? "normal" : "hole";
     //   n.refresh();
     //   this.path.remove();
     //   // if party state === "slide"

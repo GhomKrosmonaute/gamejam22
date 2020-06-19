@@ -73,7 +73,7 @@ export default class Path extends entity.Entity {
 
     if (n.state === "hole") return;
 
-    if (this.items.length === 0 && n.state === "none") {
+    if (this.items.length === 0 && n.state === "normal") {
       this.items.push(n);
       this.refresh();
       return;

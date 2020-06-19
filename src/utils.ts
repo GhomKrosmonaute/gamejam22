@@ -1,12 +1,12 @@
 import * as PIXI from "pixi.js";
 import * as geom from "booyah/src/geom";
 
-export type NucleotideState = "scissors" | "hole" | "bonus" | "none";
+export type NucleotideState = "scissors" | "hole" | "bonus" | "normal";
 export const nucleotideStates: NucleotideState[] = [
   "scissors",
   "hole",
   "bonus",
-  "none",
+  "normal",
 ];
 export function getRandomNucleotideState(): NucleotideState {
   return nucleotideStates[Math.floor(Math.random() * nucleotideStates.length)];

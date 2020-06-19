@@ -42,7 +42,7 @@ export default class Grid extends entity.ParallelEntity {
       }
     }
 
-    this.addScissors();
+    // this.addScissors();
     this.refresh();
     this.entityConfig.container.addChild(this.container);
   }
@@ -67,17 +67,17 @@ export default class Grid extends entity.ParallelEntity {
     this.container = null;
   }
 
-  addScissors() {
-    const safe = this.safetyNucleotides;
-    while (safe.filter((n) => n.state === "scissors").length < this.cutCount) {
-      let randomIndex;
-      do {
-        randomIndex = Math.floor(Math.random() * safe.length);
-      } while (safe[randomIndex].state === "scissors");
-      safe[randomIndex].state = "scissors";
-      safe[randomIndex].refresh();
-    }
-  }
+  // addScissors() {
+  //   const safe = this.safetyNucleotides;
+  //   while (safe.filter((n) => n.state === "scissors").length < this.cutCount) {
+  //     let randomIndex;
+  //     do {
+  //       randomIndex = Math.floor(Math.random() * safe.length);
+  //     } while (safe[randomIndex].state === "scissors");
+  //     safe[randomIndex].state = "scissors";
+  //     safe[randomIndex].refresh();
+  //   }
+  // }
 
   get safetyNucleotides(): Nucleotide[] {
     return this.nucleotides.filter((n) => n !== undefined);
@@ -134,14 +134,16 @@ export default class Grid extends entity.ParallelEntity {
 
   slide(neighborIndex: utils.NeighborIndex) {
     const opposedNeighborIndex = utils.opposedIndexOf(neighborIndex);
-    for (const nucleotide of this.safetyNucleotides)
+    for (const nucleotide of this.safetyNucleotides) {
       if (nucleotide.state === "hole") {
         nucleotide.generate();
         this.recursiveSwap(nucleotide, opposedNeighborIndex);
       }
-    this.addScissors();
-    this.party.state = "crunch";
-    this.party.stateSwitch.text = "mode: crunch";
+    }
+
+    //   this.addScissors();
+    // this.party.state = "crunch";
+    // this.party.stateSwitch.text = "mode: crunch";
   }
 
   swap(n1: Nucleotide, n2: Nucleotide) {
