@@ -1,4 +1,4 @@
-import * as pixi from "pixi.js";
+import * as PIXI from "pixi.js";
 import * as geom from "booyah/src/geom";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
@@ -6,7 +6,7 @@ import * as game from "../game";
 
 export default class Nucleotide extends entity.Entity {
   public colorName: utils.ColorName;
-  public graphics = new pixi.Graphics();
+  public graphics = new PIXI.Graphics();
   public angle: number;
   public stage = 1;
   public state: utils.NucleotideState;
@@ -15,7 +15,7 @@ export default class Nucleotide extends entity.Entity {
 
   constructor(
     public radius: number,
-    public position: pixi.Point,
+    public position: PIXI.Point,
     public index: number = 0
   ) {
     super();
@@ -42,14 +42,14 @@ export default class Nucleotide extends entity.Entity {
     return Math.sqrt(3) * this.radius;
   }
 
-  get dist(): pixi.Point {
-    return new pixi.Point(this.width * (3 / 4), this.height);
+  get dist(): PIXI.Point {
+    return new PIXI.Point(this.width * (3 / 4), this.height);
   }
 
   /** @param {number} cornerIndex - from 0 to 5, start on right corner */
-  getCornerPosition(cornerIndex: number): pixi.Point {
+  getCornerPosition(cornerIndex: number): PIXI.Point {
     const angle = geom.degreesToRadians(60 * cornerIndex);
-    return new pixi.Point(
+    return new PIXI.Point(
       this.position.x + this.radius * Math.cos(angle),
       this.position.y + this.radius * Math.sin(angle)
     );
@@ -64,7 +64,7 @@ export default class Nucleotide extends entity.Entity {
     this.colorName = utils.getRandomColorName();
   }
 
-  refresh(pivot?: pixi.Point) {
+  refresh(pivot?: PIXI.Point) {
     if (pivot) {
       this.graphics.position.copyFrom(pivot);
       this.graphics.rotation = geom.degreesToRadians(this.angle);
@@ -74,7 +74,7 @@ export default class Nucleotide extends entity.Entity {
         .beginFill(this.color)
         .drawPolygon(
           utils.hexagon(
-            new pixi.Point(0, this.getRelativeHeight(pivot.y)),
+            new PIXI.Point(0, this.getRelativeHeight(pivot.y)),
             this.radius
           )
         )
@@ -100,7 +100,7 @@ export default class Nucleotide extends entity.Entity {
       this.graphics
         .drawPolygon(
           utils.hexagon(
-            new pixi.Point(),
+            new PIXI.Point(),
             this.isHovered ? this.radius * 0.97 : this.radius
           )
         )
@@ -113,7 +113,7 @@ export default class Nucleotide extends entity.Entity {
   static getNucleotideDimensions(radius: number) {
     const width = 2 * radius;
     const height = Math.sqrt(3) * radius;
-    const dist = new pixi.Point(width * (3 / 4), height);
+    const dist = new PIXI.Point(width * (3 / 4), height);
     return { width, height, dist };
   }
 }

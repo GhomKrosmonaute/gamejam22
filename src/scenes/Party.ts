@@ -1,4 +1,4 @@
-import * as pixi from "pixi.js";
+import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
 import * as game from "../game";
@@ -7,6 +7,7 @@ import Path from "../entities/Path";
 import Sequence from "../entities/Sequence";
 
 export default class Party extends entity.ParallelEntity {
+  public container: PIXI.Container;
   public colCount = 7;
   public rowCount = 7;
   public cutCount = 9;
@@ -18,24 +19,21 @@ export default class Party extends entity.ParallelEntity {
   public mouseIsDown: boolean = false;
 
   // debug control buttons
-  public validationButton: pixi.Text;
-  public stateSwitch: pixi.Text;
+  public validationButton: PIXI.Text;
+  public stateSwitch: PIXI.Text;
 
-  get container(): pixi.Container {
-    return this.entityConfig.container;
-  }
-
-  get renderer(): pixi.Renderer {
+  get renderer(): PIXI.Renderer {
     return this.entityConfig.app.renderer;
   }
 
-  get mouse(): pixi.interaction.InteractionData {
+  get mouse(): PIXI.interaction.InteractionData {
     return this.renderer.plugins.interaction.mouse;
   }
 
   _setup() {
-    // make container interactive
+    this.container = new PIXI.Container();
     this.container.interactive = true;
+    this.entityConfig.container.addChild(this.container);
 
     // add one sequence for tests
     this.sequence = new Sequence(
@@ -57,15 +55,15 @@ export default class Party extends entity.ParallelEntity {
 
     // background images
     {
-      const background = new pixi.Sprite(
+      const background = new PIXI.Sprite(
         this.entityConfig.app.loader.resources["images/background.jpg"].texture
       );
-      const space = new pixi.Sprite(
+      const space = new PIXI.Sprite(
         this.entityConfig.app.loader.resources[
           "images/space-background.png"
         ].texture
       );
-      const particles = new pixi.Sprite(
+      const particles = new PIXI.Sprite(
         this.entityConfig.app.loader.resources[
           "images/particles-background.png"
         ].texture
@@ -95,17 +93,41 @@ export default class Party extends entity.ParallelEntity {
       })
     );
 
+    // Add go button
+    {
+      const goButton = new PIXI.Container();
+      goButton.position.set(
+        this.entityConfig.app.view.width / 2,
+        this.entityConfig.app.view.height - 90
+      );
+      goButton.interactive = true;
+      goButton.buttonMode = true;
+      this._on(goButton, "pointerup", this._onGo);
+      this.container.addChild(goButton);
+
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0xaaaaaa);
+      bg.drawRect(-200, -50, 400, 100);
+      bg.endFill();
+      goButton.addChild(bg);
+
+      const text = new PIXI.Text("GO", { fill: "#000000", fontSize: "50px" });
+      text.anchor.set(0.5);
+      goButton.addChild(text);
+    }
+
     // foreground images
     {
-      const particles2 = new pixi.Sprite(
+      const particles2 = new PIXI.Sprite(
         this.entityConfig.app.loader.resources[
           "images/particles-foreground.png"
         ].texture
       );
-      const membrane = new pixi.Sprite(
+      this.container.addChild(particles2);
+
+      const membrane = new PIXI.Sprite(
         this.entityConfig.app.loader.resources["images/membrane.png"].texture
       );
-      this.container.addChild(particles2);
       this.container.addChild(membrane);
     }
 
@@ -129,7 +151,7 @@ export default class Party extends entity.ParallelEntity {
       const textStyle = { fill: "#000000", fontSize: "50px" };
 
       // add validation button (for debug)
-      this.validationButton = new pixi.Text("cancel", textStyle);
+      this.validationButton = new PIXI.Text("cancel", textStyle);
       this.validationButton.buttonMode = true;
       this.validationButton.interactive = true;
       this.validationButton.anchor.set(0.5);
@@ -145,7 +167,7 @@ export default class Party extends entity.ParallelEntity {
       });
 
       // add party state switch (for debug)
-      this.stateSwitch = new pixi.Text("mode: crunch", textStyle);
+      this.stateSwitch = new PIXI.Text("mode: crunch", textStyle);
       this.stateSwitch.buttonMode = true;
       this.stateSwitch.interactive = true;
       this.stateSwitch.anchor.set(0.5);
@@ -165,8 +187,7 @@ export default class Party extends entity.ParallelEntity {
   _update() {}
 
   _teardown() {
-    this.container.removeChild(this.validationButton);
-    this.container.removeChild(this.stateSwitch);
+    this.entityConfig.container.removeChild(this.container);
     this.sequence = null;
     this.path = null;
     this.grid = null;
@@ -211,5 +232,19 @@ export default class Party extends entity.ParallelEntity {
   /** step (turn end or turn next) propagation */
   step() {
     this.sequence.step();
+  }
+
+  private _onGo() {
+    console.assert(this.state === "crunch");
+
+    if (this.path) {
+      this.path.crunch();
+      this.path.remove();
+    } else {
+      // TODO: add confirm dialog
+      // TODO: refresh grid
+
+      console.log("TODO: refresh grid");
+    }
   }
 }

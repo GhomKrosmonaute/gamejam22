@@ -1,4 +1,4 @@
-import * as pixi from "pixi.js";
+import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import Nucleotide from "./Nucleotide";
 import Party from "../scenes/Party";
@@ -6,10 +6,10 @@ import * as game from "../game";
 
 export default class Path extends entity.Entity {
   public items: Nucleotide[] = [];
-  public graphics = new pixi.Graphics();
+  public graphics = new PIXI.Graphics();
   public isValidSequence = false;
   public x = game.width * 0.09;
-  public y = game.height * 0.47;
+  public y = game.height * 0.4;
 
   constructor(public party: Party) {
     super();

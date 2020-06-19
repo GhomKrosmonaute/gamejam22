@@ -1,4 +1,4 @@
-import * as pixi from "pixi.js";
+import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as game from "../game";
 import * as utils from "../utils";
@@ -12,20 +12,20 @@ export default class Sequence extends entity.ParallelEntity {
   public y: number = game.height * 0.16;
   public angle: number;
   public nucleotideRadius = game.width * 0.05;
-  public container: pixi.Container;
-  public pivot = new pixi.Point(game.width * 0.5, game.height * 0.8);
+  public container: PIXI.Container;
+  public pivot = new PIXI.Point(game.width * 0.5, game.height * 0.8);
 
   constructor(public party: Party, public baseLength: number) {
     super();
   }
 
   _setup() {
-    this.container = new pixi.Container();
+    this.container = new PIXI.Container();
     this.container.position.set(this.x, this.y);
     this.length = this.baseLength;
     this.nucleotides = [];
     for (let i = 0; i < this.length; i++) {
-      const n = new Nucleotide(this.nucleotideRadius, new pixi.Point(), i - 5);
+      const n = new Nucleotide(this.nucleotideRadius, new PIXI.Point(), i - 5);
       this.addEntity(
         n,
         entity.extendConfig({
@@ -68,8 +68,8 @@ export default class Sequence extends entity.ParallelEntity {
   calcAngle(n: Nucleotide) {
     this.angle =
       utils.getIsoceleAngle(
-        new pixi.Point(0, n.getRelativeHeight(this.pivot.y)),
-        new pixi.Point(n.width, n.getRelativeHeight(this.pivot.y)),
+        new PIXI.Point(0, n.getRelativeHeight(this.pivot.y)),
+        new PIXI.Point(n.width, n.getRelativeHeight(this.pivot.y)),
         this.pivot
       ) * n.index;
   }
