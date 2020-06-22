@@ -151,11 +151,11 @@ export default class Path extends entity.Entity {
 
   crunch() {
     if (this.isValidSequence) {
+      this.party.sequenceManager.crunch(this);
       this.items.forEach((n) => {
         n.state = "hole";
         n.refresh();
       });
-      this.party.sequenceManager.crunch(this);
     }
   }
 

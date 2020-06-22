@@ -27,8 +27,10 @@ export default class Nucleotide extends entity.Entity {
 
   _update(frameInfo: entity.FrameInfo) {
     if (this.floating) {
-      const cos = Math.cos((this.floatingShift + frameInfo.timeSinceStart) / 3);
-      this.graphics.y += cos;
+      const cos = Math.cos(
+        this.floatingShift + frameInfo.timeSinceStart / 2000
+      );
+      this.graphics.y += cos / 20;
     }
   }
 

@@ -49,10 +49,7 @@ export default class Sequence extends entity.ParallelEntity {
   }
 
   validate(signature: string): boolean {
-    return (
-      signature === this.toString() ||
-      signature === this.toString().split(",").reverse().join(",")
-    );
+    return signature === this.toString() || signature === this.toString(true);
   }
 
   refresh() {
@@ -60,7 +57,9 @@ export default class Sequence extends entity.ParallelEntity {
     for (const nucleotide of this.nucleotides) nucleotide.refresh();
   }
 
-  toString() {
-    return this.nucleotides.map((n) => n.colorName).join(",");
+  toString(reverse = false) {
+    return (!!reverse ? this.nucleotides.reverse() : this.nucleotides)
+      .map((n) => n.colorName)
+      .join(",");
   }
 }
