@@ -16,6 +16,8 @@ const graphicalAssets = [
   "images/membrane.png",
   "images/particles-background.png",
   "images/particles-foreground.png",
+  "images/arrow.png",
+  "images/circle.png",
 ];
 
 let gameTransitions = {};

@@ -25,10 +25,6 @@ export default class Path extends entity.Entity {
     this.entityConfig.container.addChild(this.graphics);
   }
 
-  // _update() {
-  //   this.checkValidSequence();
-  // }
-
   _teardown() {
     this.entityConfig.container.removeChild(this.graphics);
   }
@@ -79,14 +75,6 @@ export default class Path extends entity.Entity {
       return;
     }
 
-    // in crunch path case
-    // if (this.party.state === "crunch") {
-    // if the no-start nucleotide is a hole, block the path
-    // if (this.length > 0 && n.state === "hole") return;
-    // if start by hole, switch hole to nucleotide
-    // if (this.first.state === "hole") return;
-    // }
-
     // check the cancellation & cancel to previous nucleotide
     const index = this.items.indexOf(n);
     if (index === 0 && this.items.length > 1) {
@@ -98,20 +86,6 @@ export default class Path extends entity.Entity {
       this.refresh();
       return;
     }
-    // if ()
-    // if (
-    //   this.items[this.items.length - 2] &&
-    //   this.items[this.items.length - 2] === n
-    // ) {
-    //   this.items.pop();
-    //   this.refresh();
-    //   return;
-    // }
-
-    // TODO: remove?
-    // // check if this path is terminated or not
-    // if (this.length >= (this.party.state === "crunch" ? this.maxLength : 2))
-    //   return;
 
     // check if nucleotide is already in this path
     if (this.items.includes(n)) return;
@@ -154,19 +128,6 @@ export default class Path extends entity.Entity {
   }
 
   crunch() {
-    // if (this.isValidSequence) {
     this.items.forEach((n) => (n.state = "hole"));
-    // this.party.sequence._setup();
-    // this.party.grid.refresh();
-    // }
   }
-
-  // slide() {
-  //   if (!this.items[1]) return;
-  //   const neighborIndex = this.party.grid.getNeighborIndex(
-  //     this.items[0],
-  //     this.items[1]
-  //   );
-  //   if (neighborIndex !== -1) this.party.grid.slide(neighborIndex);
-  // }
 }

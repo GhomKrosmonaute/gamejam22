@@ -1,4 +1,6 @@
 import * as PIXI from "pixi.js";
+import * as _ from "underscore";
+
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
 import * as game from "../game";
@@ -141,9 +143,7 @@ export default class Grid extends entity.ParallelEntity {
       }
     }
 
-    //   this.addScissors();
-    // this.party.state = "crunch";
-    // this.party.stateSwitch.text = "mode: crunch";
+    this.refresh();
   }
 
   swap(n1: Nucleotide, n2: Nucleotide) {
@@ -253,5 +253,17 @@ export default class Grid extends entity.ParallelEntity {
 
   containsHoles(): boolean {
     return this.nucleotides.some((n) => n.state === "hole");
+  }
+
+  /**
+   * Regenerate a certain number of nucleotides
+   */
+  regenerate(n: number): void {
+    _.chain(this.safetyNucleotides)
+      .shuffle()
+      .take(n)
+      .each((n) => n.generate());
+
+    this.refresh();
   }
 }

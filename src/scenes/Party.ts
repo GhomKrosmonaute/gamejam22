@@ -5,6 +5,7 @@ import * as game from "../game";
 import Grid from "../entities/Grid";
 import Path from "../entities/Path";
 import Sequence from "../entities/Sequence";
+import Slide from "../entities/Slide";
 
 export default class Party extends entity.ParallelEntity {
   public container: PIXI.Container;
@@ -18,11 +19,8 @@ export default class Party extends entity.ParallelEntity {
   public state: utils.PartyState = "crunch";
   public mouseIsDown: boolean = false;
 
-  private _slideDownPos: PIXI.Point;
-
-  // debug control buttons
-  public validationButton: PIXI.Text;
-  public stateSwitch: PIXI.Text;
+  private goButtonText: PIXI.Text;
+  private slide = new Slide();
 
   get renderer(): PIXI.Renderer {
     return this.entityConfig.app.renderer;
@@ -36,6 +34,10 @@ export default class Party extends entity.ParallelEntity {
     this.container = new PIXI.Container();
     this.container.interactive = true;
     this.entityConfig.container.addChild(this.container);
+
+    // Create slide entity, but don't add it yet
+    this.slide = new Slide();
+    this._on(this.slide, "choseSide", this._onChoseSide);
 
     // add one sequence for tests
     this.sequence = new Sequence(
@@ -113,9 +115,12 @@ export default class Party extends entity.ParallelEntity {
       bg.endFill();
       goButton.addChild(bg);
 
-      const text = new PIXI.Text("GO", { fill: "#000000", fontSize: "50px" });
-      text.anchor.set(0.5);
-      goButton.addChild(text);
+      this.goButtonText = new PIXI.Text("GO", {
+        fill: "#000000",
+        fontSize: "50px",
+      });
+      this.goButtonText.anchor.set(0.5);
+      goButton.addChild(this.goButtonText);
     }
 
     // foreground images
@@ -143,47 +148,7 @@ export default class Party extends entity.ParallelEntity {
       this.mouseUp(e);
     });
 
-    // check if path update to valid or invalid sequence
-    this.path.on("validSequenceChange", (isValidSequence: boolean) => {
-      this.validationButton.text = isValidSequence ? "validate" : "cancel";
-    });
-
-    // debug buttons
-    {
-      const textStyle = { fill: "#000000", fontSize: "50px" };
-
-      // add validation button (for debug)
-      this.validationButton = new PIXI.Text("cancel", textStyle);
-      this.validationButton.buttonMode = true;
-      this.validationButton.interactive = true;
-      this.validationButton.anchor.set(0.5);
-      this.validationButton.x = game.width / 2;
-      this.validationButton.y = game.height * 0.02;
-      this.validationButton.on("pointerdown", () => {
-        if (this.state === "crunch") {
-          if (this.path) {
-            this.path.crunch();
-            this.path.remove();
-          }
-        }
-      });
-
-      // add party state switch (for debug)
-      this.stateSwitch = new PIXI.Text("mode: crunch", textStyle);
-      this.stateSwitch.buttonMode = true;
-      this.stateSwitch.interactive = true;
-      this.stateSwitch.anchor.set(0.5);
-      this.stateSwitch.x = game.width / 2;
-      this.stateSwitch.y = game.height * 0.045;
-      this.stateSwitch.on("pointerdown", () => {
-        this.state = this.state === "crunch" ? "slide" : "crunch";
-        this.stateSwitch.text = "mode: " + this.state;
-        this.step();
-      });
-
-      this.container.addChild(this.validationButton);
-      this.container.addChild(this.stateSwitch);
-    }
+    this._refresh();
   }
 
   _update() {}
@@ -193,8 +158,6 @@ export default class Party extends entity.ParallelEntity {
     this.sequence = null;
     this.path = null;
     this.grid = null;
-    this.validationButton = null;
-    this.stateSwitch = null;
   }
 
   mouseDown(e: PIXI.InteractionEvent) {
@@ -207,22 +170,20 @@ export default class Party extends entity.ParallelEntity {
         // if hovered is not a scissors, update path
         if (hovered.state !== "scissors") this.path.calc(hovered);
       }
-    } else if (this.state === "slide") {
-      this._slideDownPos = e.data.global;
     }
   }
 
   mouseUp(e: PIXI.InteractionEvent) {
-    if (this.state === "slide") {
-      const endPos = e.data.global;
+    this._refresh();
 
-      const angle = Math.atan2(
-        endPos.y - this._slideDownPos.y,
-        endPos.x - this._slideDownPos.x
-      );
-
-      console.log("slide angle", angle);
-    }
+    // if (this.state === "slide") {
+    //   const endPos = e.data.global;
+    //   const angle = Math.atan2(
+    //     endPos.y - this._slideDownPos.y,
+    //     endPos.x - this._slideDownPos.x
+    //   );
+    //   console.log("slide angle", angle);
+    // }
     // // if path items count === 1
     // if (this.path.items.length === 1) {
     //   // replace nucleotide by hole
@@ -250,12 +211,39 @@ export default class Party extends entity.ParallelEntity {
       this.path.remove();
       this.grid.refresh();
     } else if (this.grid.containsHoles()) {
-      this.grid.slide(1);
-    } else {
-      // TODO: add confirm dialog
-      // TODO: refresh grid
+      // Switch to slide mode
+      this.state = "slide";
+      this._refresh();
 
-      console.log("TODO: refresh grid");
+      this.addEntity(this.slide);
+    } else {
+      // TODO: add confirm dialog "Are you sure?"
+
+      this.grid.regenerate(5);
+
+      this._refresh();
+    }
+  }
+
+  private _onChoseSide(neighborIndex: utils.NeighborIndex) {
+    console.assert(this.state === "slide");
+
+    console.log("sliding neighborIndex", neighborIndex);
+
+    this.grid.slide(neighborIndex);
+
+    this.removeEntity(this.slide);
+    this.state = "crunch";
+    this._refresh();
+  }
+
+  private _refresh() {
+    if (this.path.items.length > 0) {
+      this.goButtonText.text = "CRUNCH";
+    } else if (this.grid.containsHoles()) {
+      this.goButtonText.text = "SLIDE";
+    } else {
+      this.goButtonText.text = "SKIP";
     }
   }
 }
