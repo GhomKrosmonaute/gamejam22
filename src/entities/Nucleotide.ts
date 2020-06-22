@@ -13,6 +13,9 @@ export default class Nucleotide extends entity.Entity {
   public isHovered = false;
   public infected = false;
 
+  private floating = false;
+  private floatingShift: number;
+
   constructor(public radius: number, public position = new pixi.Point()) {
     super();
   }
@@ -22,10 +25,20 @@ export default class Nucleotide extends entity.Entity {
     this.entityConfig.container.addChild(this.graphics);
   }
 
-  _update() {}
+  _update(frameInfo: entity.FrameInfo) {
+    if (this.floating) {
+      const cos = Math.cos((this.floatingShift + frameInfo.timeSinceStart) / 3);
+      this.graphics.y += cos;
+    }
+  }
 
   _teardown() {
     this.entityConfig.container.removeChild(this.graphics);
+  }
+
+  setFloating() {
+    this.floating = true;
+    this.floatingShift = Math.random() * 10;
   }
 
   get color(): number {
