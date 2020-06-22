@@ -29,7 +29,7 @@ export default class Sequence extends entity.ParallelEntity {
         new pixi.Point(i * width, utils.approximate(0, height * 0.2))
       );
       n.setFloating();
-      n.graphics.rotation = Math.random();
+      n.animatedSprite.rotation = Math.random();
       this.addEntity(
         n,
         entity.extendConfig({
@@ -42,7 +42,8 @@ export default class Sequence extends entity.ParallelEntity {
   }
 
   _teardown() {
-    for (const n of this.nucleotides) this.container.removeChild(n.graphics);
+    for (const n of this.nucleotides)
+      this.container.removeChild(n.animatedSprite);
     this.entityConfig.container.removeChild(this.container);
     this.container = null;
     this.nucleotides = [];

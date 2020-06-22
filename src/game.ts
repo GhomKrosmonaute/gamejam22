@@ -16,6 +16,12 @@ const graphicalAssets = [
   "images/membrane.png",
   "images/particles-background.png",
   "images/particles-foreground.png",
+  "images/nucleotide_blue.json",
+  "images/nucleotide_red.json",
+  "images/nucleotide_green.json",
+  "images/nucleotide_yellow.json",
+  "images/cut.png",
+  "images/hole.png",
 ];
 
 let gameTransitions = {};

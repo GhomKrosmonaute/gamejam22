@@ -1,14 +1,10 @@
 import * as pixi from "pixi.js";
-import * as geom from "booyah/src/geom";
 import * as entity from "booyah/src/entity";
-import * as easing from "booyah/src/easing";
 import * as utils from "../utils";
-import * as game from "../game";
 
 /** Represent a nucleotide */
-export default class Nucleotide extends entity.Entity {
+export default class Nucleotide extends entity.AnimatedSpriteEntity {
   public colorName: utils.ColorName;
-  public graphics = new pixi.Graphics();
   public state: utils.NucleotideState;
   public isHovered = false;
   public infected = false;
@@ -17,12 +13,11 @@ export default class Nucleotide extends entity.Entity {
   private floatingShift: number;
 
   constructor(public radius: number, public position = new pixi.Point()) {
-    super();
+    super(null);
   }
 
   _setup() {
     this.generate();
-    this.entityConfig.container.addChild(this.graphics);
   }
 
   _update(frameInfo: entity.FrameInfo) {
@@ -30,21 +25,15 @@ export default class Nucleotide extends entity.Entity {
       const cos = Math.cos(
         this.floatingShift + frameInfo.timeSinceStart / 2000
       );
-      this.graphics.y += cos / 20;
+      this.animatedSprite.y += cos / 20;
     }
   }
 
-  _teardown() {
-    this.entityConfig.container.removeChild(this.graphics);
-  }
+  _teardown() {}
 
   setFloating() {
     this.floating = true;
     this.floatingShift = Math.random() * 10;
-  }
-
-  get color(): number {
-    return utils.getColorByName(this.colorName);
   }
 
   get width(): number {
@@ -59,6 +48,7 @@ export default class Nucleotide extends entity.Entity {
     return new pixi.Point(this.width * (3 / 4), this.height);
   }
 
+  // todo: aura t-on besoin de conaitre la position absolue d'un coin d'hexagone un jour ?
   // /** @param {number} cornerIndex - from 0 to 5, start on right corner */
   // getCornerPosition(cornerIndex: number): pixi.Point {
   //   const angle = geom.degreesToRadians(60 * cornerIndex);
@@ -71,36 +61,33 @@ export default class Nucleotide extends entity.Entity {
   generate() {
     this.state = "none";
     this.colorName = utils.getRandomColorName();
+    this.refresh();
   }
 
   refresh() {
-    this.graphics.clear();
-
     switch (this.state) {
       case "bonus":
-        this.graphics.beginFill(0xff00ff);
+        this.animatedSprite = null;
         break;
       case "cut":
-        this.graphics.beginFill(0x888888);
+        this.animatedSprite = new pixi.AnimatedSprite(
+          this.entityConfig.app.loader.resources["images/cut.png"].texture
+        );
         break;
       case "hole":
-        this.graphics.beginFill(0x333333);
+        this.animatedSprite = new pixi.AnimatedSprite(
+          this.entityConfig.app.loader.resources["images/hole.png"].texture
+        );
         break;
-      case "none":
-        this.graphics.beginFill(this.color);
-        break;
+      default:
+        this.animatedSprite = new pixi.AnimatedSprite(
+          this.entityConfig.app.loader.resources[
+            "images/nucleotide_" + this.colorName + ".json"
+          ].texture
+        );
     }
 
-    this.graphics
-      .drawPolygon(
-        utils.hexagon(
-          new pixi.Point(),
-          this.isHovered ? this.radius * 0.97 : this.radius
-        )
-      )
-      .endFill();
-
-    this.graphics.position.copyFrom(this.position);
+    this.animatedSprite.position.copyFrom(this.position);
   }
 
   static getNucleotideDimensionsByRadius(radius: number) {

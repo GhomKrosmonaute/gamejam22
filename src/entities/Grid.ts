@@ -61,7 +61,7 @@ export default class Grid extends entity.ParallelEntity {
 
   _teardown() {
     for (const n of this.safetyNucleotides) {
-      this.container.removeChild(n.graphics);
+      this.container.removeChild(n.animatedSprite);
     }
     this.entityConfig.container.removeChild(this.container);
     this.nucleotides = [];
