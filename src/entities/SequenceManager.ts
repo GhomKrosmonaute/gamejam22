@@ -1,4 +1,4 @@
-import * as pixi from "pixi.js";
+import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as game from "../game";
 import * as utils from "../utils";
@@ -8,10 +8,10 @@ import Nucleotide from "./Nucleotide";
 
 export default class SequenceManager extends entity.ParallelEntity {
   public sequences: Sequence[] = [];
-  public container: pixi.Container;
+  public container: PIXI.Container;
 
   _setup() {
-    this.container = new pixi.Container();
+    this.container = new PIXI.Container();
     this.entityConfig.container.addChild(this.container);
   }
 
@@ -60,7 +60,7 @@ export default class SequenceManager extends entity.ParallelEntity {
         0,
         this.sequences.length,
         game.height * 0.25,
-        game.height * 0.47
+        game.height * 0.42
       );
       s.refresh();
     });

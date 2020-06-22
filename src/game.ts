@@ -1,10 +1,10 @@
 import * as booyah from "booyah/src/booyah";
-import * as pixi from "pixi.js";
+import * as PIXI from "pixi.js";
 import Party from "./scenes/Party";
 
 export const width = 1080;
 export const height = 1920;
-export const size = new pixi.Point(width, height);
+export const size = new PIXI.Point(width, height);
 
 const gameStates = {
   start: new Party(),
@@ -16,6 +16,8 @@ const graphicalAssets = [
   "images/membrane.png",
   "images/particles-background.png",
   "images/particles-foreground.png",
+  "images/arrow.png",
+  "images/circle.png",
 ];
 
 let gameTransitions = {};
@@ -31,6 +33,6 @@ booyah.go({
   //@ts-ignore
   transitions: gameTransitions,
   entityInstallers,
-  screenSize: new pixi.Point(width, height),
+  screenSize: new PIXI.Point(width, height),
   graphicalAssets,
 });
