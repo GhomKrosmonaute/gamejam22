@@ -4,6 +4,7 @@ import * as game from "../game";
 import * as utils from "../utils";
 import Sequence from "./Sequence";
 import Path from "./Path";
+import Nucleotide from "./Nucleotide";
 
 export default class SequenceManager extends entity.ParallelEntity {
   public sequences: Sequence[] = [];
@@ -50,14 +51,17 @@ export default class SequenceManager extends entity.ParallelEntity {
 
   refresh() {
     this.sequences.forEach((s, i) => {
-      s.position.x = utils.map(
+      const { width } = Nucleotide.getNucleotideDimensionsByRadius(
+        s.nucleotideRadius
+      );
+      s.position.x = game.width / 2 - (s.length * width) / 2;
+      s.position.y = utils.map(
         i,
         0,
         this.sequences.length,
-        game.width * 0.2,
-        game.width * 0.8
+        game.height * 0.25,
+        game.height * 0.47
       );
-      s.position.y = game.height * 0.22;
       s.refresh();
     });
   }

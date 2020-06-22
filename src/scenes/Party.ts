@@ -30,7 +30,7 @@ export default class Party extends entity.ParallelEntity {
     return this.entityConfig.app.renderer;
   }
 
-  get mouse(): pixi.interaction.InteractionData {
+  get mouse(): pixi.InteractionData {
     return this.renderer.plugins.interaction.mouse;
   }
 

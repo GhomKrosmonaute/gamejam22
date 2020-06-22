@@ -147,6 +147,6 @@ export function mapFromMiddle(
 export function constrain(n: number, low: number, high: number): number {
   return Math.max(Math.min(n, high), low);
 }
-export function approxima(n: number, x: number): number {
-  return random(n - x, n + x);
+export function approximate(base: number, shift: number): number {
+  return random(base - shift, base + shift);
 }
