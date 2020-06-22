@@ -28,7 +28,7 @@ export default class Party extends entity.ParallelEntity {
     return this.entityConfig.app.renderer;
   }
 
-  get mouse(): PIXI.interaction.InteractionData {
+  get mouse(): PIXI.InteractionData {
     return this.renderer.plugins.interaction.mouse;
   }
 
@@ -134,22 +134,14 @@ export default class Party extends entity.ParallelEntity {
     }
 
     // setup mouse listeners
-    this._on(
-      this.container,
-      "pointerdown",
-      (e: PIXI.interaction.InteractionEvent) => {
-        this.mouseIsDown = true;
-        this.mouseDown(e);
-      }
-    );
-    this._on(
-      this.container,
-      "pointerup",
-      (e: PIXI.interaction.InteractionEvent) => {
-        this.mouseIsDown = false;
-        this.mouseUp(e);
-      }
-    );
+    this._on(this.container, "pointerdown", (e: PIXI.InteractionEvent) => {
+      this.mouseIsDown = true;
+      this.mouseDown(e);
+    });
+    this._on(this.container, "pointerup", (e: PIXI.InteractionEvent) => {
+      this.mouseIsDown = false;
+      this.mouseUp(e);
+    });
 
     // check if path update to valid or invalid sequence
     this.path.on("validSequenceChange", (isValidSequence: boolean) => {
@@ -205,7 +197,7 @@ export default class Party extends entity.ParallelEntity {
     this.stateSwitch = null;
   }
 
-  mouseDown(e: PIXI.interaction.InteractionEvent) {
+  mouseDown(e: PIXI.InteractionEvent) {
     if (this.state === "crunch") {
       // get the hovered nucleotide
       const hovered = this.grid.getHovered();
@@ -220,7 +212,7 @@ export default class Party extends entity.ParallelEntity {
     }
   }
 
-  mouseUp(e: PIXI.interaction.InteractionEvent) {
+  mouseUp(e: PIXI.InteractionEvent) {
     if (this.state === "slide") {
       const endPos = e.data.global;
 
