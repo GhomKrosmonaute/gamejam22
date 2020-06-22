@@ -180,40 +180,17 @@ export default class Party extends entity.ParallelEntity {
 
   mouseUp(e: PIXI.InteractionEvent) {
     this._refresh();
-
-    // if (this.state === "slide") {
-    //   const endPos = e.data.global;
-    //   const angle = Math.atan2(
-    //     endPos.y - this._slideDownPos.y,
-    //     endPos.x - this._slideDownPos.x
-    //   );
-    //   console.log("slide angle", angle);
-    // }
-    // // if path items count === 1
-    // if (this.path.items.length === 1) {
-    //   // replace nucleotide by hole
-    //   const n = this.path.first;
-    //   n.state = n.state === "hole" ? "normal" : "hole";
-    //   n.refresh();
-    //   this.path.remove();
-    //   // if party state === "slide"
-    // } else if (this.state === "slide") {
-    //   this.path.slide();
-    //   this.path.remove();
-    // }
-  }
-
-  /** step (turn end or turn next) propagation */
-  step() {
-    // todo: turn changes
   }
 
   private _onGo() {
     console.assert(this.state === "crunch");
 
     if (this.path.items.length > 0) {
+      this.sequenceManager.crunch(this.path);
+
       this.path.crunch();
       this.path.remove();
+
       this.grid.refresh();
     } else if (this.grid.containsHoles()) {
       // Switch to slide mode

@@ -5,13 +5,14 @@ import * as easing from "booyah/src/easing";
 import * as utils from "../utils";
 import * as game from "../game";
 
-const scissorsPercentage = 1 / 8;
+// const scissorsPercentage = 1 / 8;
 
 /** Represent a nucleotide */
 export default class Nucleotide extends entity.Entity {
-  public colorName: utils.ColorName;
+  public state: utils.NucleotideState = "normal";
+  public colorName: utils.ColorName = utils.getRandomColorName();
+
   public graphics = new PIXI.Graphics();
-  public state: utils.NucleotideState;
   public isHovered = false;
   public infected = false;
 
@@ -23,7 +24,6 @@ export default class Nucleotide extends entity.Entity {
   }
 
   _setup() {
-    this.generate();
     this.entityConfig.container.addChild(this.graphics);
   }
 
@@ -61,14 +61,14 @@ export default class Nucleotide extends entity.Entity {
     return new PIXI.Point(this.width * (3 / 4), this.height);
   }
 
-  generate() {
-    if (Math.random() < scissorsPercentage) {
-      this.state = "scissors";
-    } else {
-      this.state = "normal";
-      this.colorName = utils.getRandomColorName();
-    }
-  }
+  // generate() {
+  //   if (Math.random() < scissorsPercentage) {
+  //     this.state = "scissors";
+  //   } else {
+  //     this.state = "normal";
+  //     this.colorName = utils.getRandomColorName();
+  //   }
+  // }
 
   refresh() {
     this.graphics.clear();

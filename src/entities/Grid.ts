@@ -7,6 +7,8 @@ import * as game from "../game";
 import Party from "../scenes/Party";
 import Nucleotide from "./Nucleotide";
 
+const scissorsPercentage = 1 / 8;
+
 /** Represent the game nucleotides grid */
 export default class Grid extends entity.ParallelEntity {
   public nucleotides: Nucleotide[] = [];
@@ -35,6 +37,7 @@ export default class Grid extends entity.ParallelEntity {
           this.nucleotideRadius,
           this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y))
         );
+        this.generateNucleotide(n);
         this.addEntity(
           n,
           entity.extendConfig({
@@ -69,18 +72,6 @@ export default class Grid extends entity.ParallelEntity {
     this.nucleotides = [];
     this.container = null;
   }
-
-  // addScissors() {
-  //   const safe = this.safetyNucleotides;
-  //   while (safe.filter((n) => n.state === "scissors").length < this.cutCount) {
-  //     let randomIndex;
-  //     do {
-  //       randomIndex = Math.floor(Math.random() * safe.length);
-  //     } while (safe[randomIndex].state === "scissors");
-  //     safe[randomIndex].state = "scissors";
-  //     safe[randomIndex].refresh();
-  //   }
-  // }
 
   get safetyNucleotides(): Nucleotide[] {
     return this.nucleotides.filter((n) => n !== undefined);
@@ -139,7 +130,7 @@ export default class Grid extends entity.ParallelEntity {
     const opposedNeighborIndex = utils.opposedIndexOf(neighborIndex);
     for (const nucleotide of this.safetyNucleotides) {
       if (nucleotide.state === "hole") {
-        nucleotide.generate();
+        this.generateNucleotide(nucleotide);
         this.recursiveSwap(nucleotide, opposedNeighborIndex);
       }
     }
@@ -263,8 +254,17 @@ export default class Grid extends entity.ParallelEntity {
     _.chain(this.safetyNucleotides)
       .shuffle()
       .take(n)
-      .each((n) => n.generate());
+      .each((nucleotide) => this.generateNucleotide(nucleotide));
 
     this.refresh();
+  }
+
+  generateNucleotide(nucleotide: Nucleotide) {
+    if (Math.random() < scissorsPercentage) {
+      nucleotide.state = "scissors";
+    } else {
+      nucleotide.state = "normal";
+      nucleotide.colorName = utils.getRandomColorName();
+    }
   }
 }
