@@ -1,12 +1,12 @@
-import * as pixi from "pixi.js";
+import * as PIXI from "pixi.js";
 import * as geom from "booyah/src/geom";
 
-export type NucleotideState = "cut" | "hole" | "bonus" | "none";
+export type NucleotideState = "scissors" | "hole" | "bonus" | "normal";
 export const nucleotideStates: NucleotideState[] = [
-  "cut",
+  "scissors",
   "hole",
   "bonus",
-  "none",
+  "normal",
 ];
 export function getRandomNucleotideState(): NucleotideState {
   return nucleotideStates[Math.floor(Math.random() * nucleotideStates.length)];
@@ -30,19 +30,23 @@ export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
   return opposedNeighborIndex as NeighborIndex;
 }
 
-export function dist(x1: pixi.Point, y1: pixi.Point): number;
+export function dist(x1: PIXI.Point, y1: PIXI.Point): number;
 export function dist(x1: number, y1: number, x2: number, y2: number): number;
 export function dist(
-  x1: number | pixi.Point,
-  y1: number | pixi.Point,
+  x1: number | PIXI.Point,
+  y1: number | PIXI.Point,
   x2?: number,
   y2?: number
 ): number {
-  if (x1 instanceof pixi.Point && y1 instanceof pixi.Point)
+  if (x1 instanceof PIXI.Point && y1 instanceof PIXI.Point)
     return Math.hypot(y1.x - x1.x, y1.y - x1.y);
   else if (typeof x1 === "number" && typeof y1 === "number")
     return Math.hypot(x2 - x1, y2 - y1);
   return NaN;
+}
+
+export function middle(a: PIXI.Point, b: PIXI.Point): PIXI.Point {
+  return new PIXI.Point(a.x + (b.x - a.x) / 2, a.y + (b.y - a.y) / 2);
 }
 
 export function random(): number;

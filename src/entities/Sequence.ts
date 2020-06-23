@@ -1,4 +1,4 @@
-import * as pixi from "pixi.js";
+import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as game from "../game";
 import * as utils from "../utils";
@@ -8,15 +8,15 @@ import Nucleotide from "./Nucleotide";
 export default class Sequence extends entity.ParallelEntity {
   public nucleotides: Nucleotide[] = [];
   public length: number;
-  public container: pixi.Container;
-  public nucleotideRadius = game.width * 0.05;
+  public container: PIXI.Container;
+  public nucleotideRadius = game.width * 0.04;
 
-  constructor(public baseLength: number, public position = new pixi.Point()) {
+  constructor(public baseLength: number, public position = new PIXI.Point()) {
     super();
   }
 
   _setup() {
-    this.container = new pixi.Container();
+    this.container = new PIXI.Container();
     this.container.position.copyFrom(this.position);
     this.entityConfig.container.addChild(this.container);
     this.length = this.baseLength;
@@ -26,7 +26,7 @@ export default class Sequence extends entity.ParallelEntity {
     for (let i = 0; i < this.length; i++) {
       const n = new Nucleotide(
         this.nucleotideRadius,
-        new pixi.Point(i * width * 0.8, utils.approximate(height * 0.1)),
+        new PIXI.Point(i * width * 0.8, utils.approximate(height * 0.1)),
         Math.random()
       );
       n.setFloating();

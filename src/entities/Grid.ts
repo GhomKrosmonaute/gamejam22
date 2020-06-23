@@ -1,16 +1,20 @@
-import * as pixi from "pixi.js";
+import * as PIXI from "pixi.js";
+import * as _ from "underscore";
+
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
 import * as game from "../game";
 import Party from "../scenes/Party";
 import Nucleotide from "./Nucleotide";
 
+const scissorsPercentage = 1 / 8;
+
 /** Represent the game nucleotides grid */
 export default class Grid extends entity.ParallelEntity {
   public nucleotides: Nucleotide[] = [];
-  public container: pixi.Container;
+  public container: PIXI.Container;
   public x = game.width * 0.09;
-  public y = game.height * 0.47;
+  public y = game.height * 0.4;
 
   constructor(
     public party: Party,
@@ -23,7 +27,7 @@ export default class Grid extends entity.ParallelEntity {
   }
 
   _setup() {
-    this.container = new pixi.Container();
+    this.container = new PIXI.Container();
     this.container.position.set(this.x, this.y);
     this.nucleotides.length = this.colCount * this.rowCount;
     for (let x = 0; x < this.colCount; x++) {
@@ -31,8 +35,9 @@ export default class Grid extends entity.ParallelEntity {
         if (x % 2 === 0 && y === this.rowCount - 1) continue;
         const n = new Nucleotide(
           this.nucleotideRadius,
-          this.getAbsolutePositionFromGridPosition(new pixi.Point(x, y))
+          this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y))
         );
+        this.generateNucleotide(n);
         this.addEntity(
           n,
           entity.extendConfig({
@@ -43,7 +48,7 @@ export default class Grid extends entity.ParallelEntity {
       }
     }
 
-    this.addCuts();
+    // this.addScissors();
     this.refresh();
     this.entityConfig.container.addChild(this.container);
   }
@@ -68,18 +73,6 @@ export default class Grid extends entity.ParallelEntity {
     this.container = null;
   }
 
-  addCuts() {
-    const safe = this.safetyNucleotides;
-    while (safe.filter((n) => n.state === "cut").length < this.cutCount) {
-      let randomIndex;
-      do {
-        randomIndex = Math.floor(Math.random() * safe.length);
-      } while (safe[randomIndex].state === "cut");
-      safe[randomIndex].state = "cut";
-      safe[randomIndex].refresh();
-    }
-  }
-
   get safetyNucleotides(): Nucleotide[] {
     return this.nucleotides.filter((n) => n !== undefined);
   }
@@ -88,19 +81,19 @@ export default class Grid extends entity.ParallelEntity {
     return this.getGridPositionOf(n).x % 2 === 0;
   }
 
-  getNucleotideFromGridPosition(gridPos: pixi.Point): Nucleotide {
+  getNucleotideFromGridPosition(gridPos: PIXI.Point): Nucleotide {
     return this.nucleotides[gridPos.y * this.colCount + gridPos.x];
   }
 
-  getGridPositionOf(n: Nucleotide): pixi.Point | null {
+  getGridPositionOf(n: Nucleotide): PIXI.Point | null {
     const index = this.nucleotides.indexOf(n);
     if (index === -1) return null;
     const x = index % this.colCount;
     const y = Math.floor(index / this.colCount);
-    return new pixi.Point(x, y);
+    return new PIXI.Point(x, y);
   }
 
-  getAbsolutePositionFromGridPosition(gridPos: pixi.Point): pixi.Point {
+  getAbsolutePositionFromGridPosition(gridPos: PIXI.Point): PIXI.Point {
     const { width, height, dist } = Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
     );
@@ -110,7 +103,7 @@ export default class Grid extends entity.ParallelEntity {
       height / 2 +
       (gridPos.x % 2 === 0 ? height / 2 : 0) +
       height;
-    return new pixi.Point(x, y);
+    return new PIXI.Point(x, y);
   }
 
   getHovered(): Nucleotide | null {
@@ -132,14 +125,14 @@ export default class Grid extends entity.ParallelEntity {
 
   slide(neighborIndex: utils.NeighborIndex) {
     const opposedNeighborIndex = utils.opposedIndexOf(neighborIndex);
-    for (const nucleotide of this.safetyNucleotides)
+    for (const nucleotide of this.safetyNucleotides) {
       if (nucleotide.state === "hole") {
-        nucleotide.generate();
+        this.generateNucleotide(nucleotide);
         this.recursiveSwap(nucleotide, opposedNeighborIndex);
       }
-    this.addCuts();
-    this.party.state = "crunch";
-    this.party.stateSwitch.text = "mode: crunch";
+    }
+
+    this.refresh();
   }
 
   swap(n1: Nucleotide, n2: Nucleotide) {
@@ -213,7 +206,7 @@ export default class Grid extends entity.ParallelEntity {
   getNeighborGridPosition(
     n: Nucleotide,
     neighborIndex: utils.NeighborIndex
-  ): pixi.Point {
+  ): PIXI.Point {
     const gridPos = this.getGridPositionOf(n);
     const evenCol = this.isOnEvenCol(n);
     switch (neighborIndex) {
@@ -245,5 +238,30 @@ export default class Grid extends entity.ParallelEntity {
 
   refresh() {
     for (const n of this.safetyNucleotides) n.refresh();
+  }
+
+  containsHoles(): boolean {
+    return this.nucleotides.some((n) => n.state === "hole");
+  }
+
+  /**
+   * Regenerate a certain number of nucleotides
+   */
+  regenerate(n: number): void {
+    _.chain(this.safetyNucleotides)
+      .shuffle()
+      .take(n)
+      .each((nucleotide) => this.generateNucleotide(nucleotide));
+
+    this.refresh();
+  }
+
+  generateNucleotide(nucleotide: Nucleotide) {
+    if (Math.random() < scissorsPercentage) {
+      nucleotide.state = "scissors";
+    } else {
+      nucleotide.state = "normal";
+      nucleotide.colorName = utils.getRandomColorName();
+    }
   }
 }

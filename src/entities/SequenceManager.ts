@@ -1,4 +1,4 @@
-import * as pixi from "pixi.js";
+import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as game from "../game";
 import * as utils from "../utils";
@@ -8,10 +8,10 @@ import Nucleotide from "./Nucleotide";
 
 export default class SequenceManager extends entity.ParallelEntity {
   public sequences: Sequence[] = [];
-  public container: pixi.Container;
+  public container: PIXI.Container;
 
   _setup() {
-    this.container = new pixi.Container();
+    this.container = new PIXI.Container();
     this.entityConfig.container.addChild(this.container);
   }
 
@@ -54,15 +54,20 @@ export default class SequenceManager extends entity.ParallelEntity {
       const { width } = Nucleotide.getNucleotideDimensionsByRadius(
         s.nucleotideRadius
       );
-      s.position.x = game.width / 2 - (s.length * width) / 2;
+      s.position.x = game.width / 2 - (s.length * width * 0.8) / 2;
       s.position.y = utils.map(
         i,
         0,
         this.sequences.length,
         game.height * 0.25,
-        game.height * 0.47
+        game.height * 0.42
       );
       s.refresh();
     });
+  }
+
+  matchesSequence(path: Path): boolean {
+    // TODO: perhaps this should only work if one and only one sequence matches?
+    return this.sequences.some((s) => s.validate(path.signature));
   }
 }
