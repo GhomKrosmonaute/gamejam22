@@ -17,16 +17,16 @@ const graphicalAssets = [
   "images/space_background.png",
   "images/background.jpg",
   "images/membrane.png",
-  "images/scissors.png",
   "images/hole.png",
   "images/arrow.png",
   "images/circle.png",
 
   // animated sprites
-  "images/nucleotide_blue.json",
   "images/nucleotide_red.json",
+  "images/nucleotide_blue.json",
   "images/nucleotide_green.json",
   "images/nucleotide_yellow.json",
+  "images/scissors.json",
 ];
 
 let gameTransitions = {};

@@ -62,9 +62,10 @@ export default class Nucleotide extends entity.Entity {
     if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
     switch (this.state) {
       case "scissors":
-        this.sprite = new PIXI.Sprite(
-          this.entityConfig.app.loader.resources["images/scissors.png"].texture
+        this.sprite = util.makeAnimatedSprite(
+          this.entityConfig.app.loader.resources["images/scissors.json"]
         );
+        (this.sprite as PIXI.AnimatedSprite).play();
         break;
       case "bonus":
         throw Error("not implemented");
