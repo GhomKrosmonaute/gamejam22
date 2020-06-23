@@ -39,10 +39,14 @@ export default class SequenceManager extends entity.ParallelEntity {
   crunch(path: Path) {
     const signature = path.signature;
     const newSequences: Sequence[] = [];
+    let crunched = false;
     for (const s of this.sequences) {
-      if (s.validate(signature)) this.removeEntity(s);
-      else newSequences.push(s);
+      if (s.validate(signature)) {
+        this.removeEntity(s);
+        crunched = true;
+      } else newSequences.push(s);
     }
+    if (crunched) path.items.forEach((n) => (n.infected = false));
     if (newSequences.length !== this.sequences.length) {
       this.sequences = newSequences;
       this.refresh();

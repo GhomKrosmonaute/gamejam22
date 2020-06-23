@@ -109,7 +109,7 @@ export default class Path extends entity.Entity {
 
     this.graphics.clear();
 
-    // for all nucleotide in path
+    // for each nucleotide in path
     for (const n of this.items) {
       this.graphics
         .beginFill(color)

@@ -4,6 +4,8 @@ import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as utils from "../utils";
 
+import { OutlineFilter } from "@pixi/filter-outline";
+
 // const scissorsPercentage = 1 / 8;
 
 /** Represent a nucleotide */
@@ -12,9 +14,9 @@ export default class Nucleotide extends entity.Entity {
   public colorName: utils.ColorName = utils.getRandomColorName();
 
   public isHovered = false;
-  public infected = false;
   public sprite: PIXI.AnimatedSprite | PIXI.Sprite = null;
 
+  private isInfected = false;
   private floating = false;
   private floatingShift: number;
 
@@ -39,6 +41,15 @@ export default class Nucleotide extends entity.Entity {
 
   _teardown() {
     if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
+  }
+
+  set infected(isInfected: boolean) {
+    this.isInfected = isInfected;
+    this.sprite.filters = isInfected ? [new OutlineFilter(4, 0xffee00ff)] : [];
+  }
+
+  get infected(): boolean {
+    return this.isInfected;
   }
 
   setFloating() {

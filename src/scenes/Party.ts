@@ -1,15 +1,13 @@
 import * as PIXI from "pixi.js";
-
 import * as entity from "booyah/src/entity";
 import * as geom from "booyah/src/geom";
-
 import * as utils from "../utils";
 import * as game from "../game";
+import * as _ from "underscore";
 import Grid from "../entities/Grid";
 import Path from "../entities/Path";
-import SequenceManager from "../entities/SequenceManager";
-import Sequence from "../entities/Sequence";
 import Slide from "../entities/Slide";
+import SequenceManager from "../entities/SequenceManager";
 
 export default class Party extends entity.ParallelEntity {
   public container: PIXI.Container;
@@ -22,7 +20,7 @@ export default class Party extends entity.ParallelEntity {
   public path: Path;
   public grid: Grid;
   public state: utils.PartyState = "crunch";
-  public mouseIsDown: boolean = false;
+  public mouseIsDown = false;
 
   private goButton: PIXI.Container & { text?: PIXI.Text };
   private slide = new Slide();
@@ -210,10 +208,26 @@ export default class Party extends entity.ParallelEntity {
   }
 
   private _endTurn(): void {
-    if (this.sequenceManager.countSequences() < 3) {
-      const length = geom.randomInRange(3, 6);
+    if (!this.grid.safetyNucleotides.some((n) => !n.infected)) {
+      this.requestedTransition = "game_over";
+    }
+
+    const countSequences = this.sequenceManager.countSequences();
+    if (countSequences > 0) {
+      const countInfects = countSequences * 5;
+      _.chain(this.grid.safetyNucleotides)
+        .filter((n) => !n.infected)
+        .shuffle()
+        .take(countInfects)
+        .forEach((n) => (n.infected = true));
+    }
+
+    if (countSequences < 3) {
+      const length = utils.random(3, 6);
       this.sequenceManager.add(length);
     }
+
+    console.log(this.grid.safetyNucleotides.filter((n) => n.infected).length);
   }
 
   private _onChoseSide(neighborIndex: utils.NeighborIndex) {

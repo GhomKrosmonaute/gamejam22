@@ -29,7 +29,10 @@ const graphicalAssets = [
   "images/scissors.json",
 ];
 
-let gameTransitions = {};
+let gameTransitions = {
+  start: "start",
+  game_over: "none",
+};
 
 const entityInstallers: any = [
   // audio.installJukebox,

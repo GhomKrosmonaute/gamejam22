@@ -81,7 +81,7 @@ export default class Grid extends entity.ParallelEntity {
     return this.getGridPositionOf(n).x % 2 === 0;
   }
 
-  getNucleotideFromGridPosition(gridPos: PIXI.Point): Nucleotide {
+  getNucleotideFromGridPosition(gridPos: PIXI.Point): Nucleotide | null {
     return this.nucleotides[gridPos.y * this.colCount + gridPos.x];
   }
 
@@ -192,6 +192,7 @@ export default class Grid extends entity.ParallelEntity {
 
   /** @returns {number} - -1 if is not a neighbor or the neighbor index */
   getNeighborIndex(n: Nucleotide, n2: Nucleotide): utils.NeighborIndex | -1 {
+    if (!n || !n2) return -1;
     for (const neighborIndex of utils.NeighborIndexes) {
       if (
         this.getNeighborGridPosition(n, neighborIndex).equals(
@@ -241,7 +242,7 @@ export default class Grid extends entity.ParallelEntity {
   }
 
   containsHoles(): boolean {
-    return this.nucleotides.some((n) => n.state === "hole");
+    return this.safetyNucleotides.some((n) => n.state === "hole");
   }
 
   /**
