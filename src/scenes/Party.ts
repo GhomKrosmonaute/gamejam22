@@ -1,5 +1,8 @@
 import * as PIXI from "pixi.js";
+
 import * as entity from "booyah/src/entity";
+import * as geom from "booyah/src/geom";
+
 import * as utils from "../utils";
 import * as game from "../game";
 import Grid from "../entities/Grid";
@@ -97,9 +100,7 @@ export default class Party extends entity.ParallelEntity {
 
     // add sequences for tests
     // TODO: remove tests
-    this.sequenceManager.add(5);
-    this.sequenceManager.add(4);
-    this.sequenceManager.add(5);
+    this.sequenceManager.add(3);
 
     // Add go button
     {
@@ -182,7 +183,7 @@ export default class Party extends entity.ParallelEntity {
     this._refresh();
   }
 
-  private _onGo() {
+  private _onGo(): void {
     console.assert(this.state === "crunch");
 
     if (this.path.items.length > 0) {
@@ -203,7 +204,15 @@ export default class Party extends entity.ParallelEntity {
 
       this.grid.regenerate(5);
 
+      this._endTurn();
       this._refresh();
+    }
+  }
+
+  private _endTurn(): void {
+    if (this.sequenceManager.countSequences() < 3) {
+      const length = geom.randomInRange(3, 6);
+      this.sequenceManager.add(length);
     }
   }
 
@@ -216,6 +225,8 @@ export default class Party extends entity.ParallelEntity {
 
     this.removeEntity(this.slide);
     this.state = "crunch";
+
+    this._endTurn();
     this._refresh();
   }
 

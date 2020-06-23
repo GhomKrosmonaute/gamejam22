@@ -70,4 +70,8 @@ export default class SequenceManager extends entity.ParallelEntity {
     // TODO: perhaps this should only work if one and only one sequence matches?
     return this.sequences.some((s) => s.validate(path.signature));
   }
+
+  countSequences(): number {
+    return this.sequences.length;
+  }
 }
