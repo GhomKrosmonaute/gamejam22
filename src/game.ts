@@ -11,17 +11,20 @@ const gameStates = {
 };
 
 const graphicalAssets = [
-  "images/space-background.png",
+  // images
+  "images/particles_background.png",
+  "images/particles_foreground.png",
+  "images/space_background.png",
   "images/background.jpg",
   "images/membrane.png",
-  "images/particles-background.png",
-  "images/particles-foreground.png",
+  "images/cut.png",
+  "images/hole.png",
+
+  // animated sprites
   "images/nucleotide_blue.json",
   "images/nucleotide_red.json",
   "images/nucleotide_green.json",
   "images/nucleotide_yellow.json",
-  "images/cut.png",
-  "images/hole.png",
 ];
 
 let gameTransitions = {};

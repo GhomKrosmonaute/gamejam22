@@ -30,21 +30,8 @@ export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
   return opposedNeighborIndex as NeighborIndex;
 }
 
-export function getColorByName(name: ColorName): number {
-  switch (name) {
-    case "blue":
-      return 0x247ba0;
-    case "red":
-      return 0xf25f5c;
-    case "yellow":
-      return 0xffe066;
-    case "green":
-      return 0x70c1b3;
-    default:
-      return 0xfffff;
-  }
-}
-
+export function dist(x1: pixi.Point, y1: pixi.Point): number;
+export function dist(x1: number, y1: number, x2: number, y2: number): number;
 export function dist(
   x1: number | pixi.Point,
   y1: number | pixi.Point,
@@ -58,42 +45,10 @@ export function dist(
   return NaN;
 }
 
-export function hexagon(
-  position: pixi.Point,
-  radius: number,
-  flatTopped: boolean = true
-) {
-  const height = Math.sqrt(3) * radius;
-  return [
-    new pixi.Point(position.x - radius, position.y),
-    new pixi.Point(position.x - radius / 2, position.y + height / 2),
-    new pixi.Point(position.x + radius / 2, position.y + height / 2),
-    new pixi.Point(position.x + radius, position.y),
-    new pixi.Point(position.x + radius / 2, position.y - height / 2),
-    new pixi.Point(position.x - radius / 2, position.y - height / 2),
-  ];
-}
-
-export function middle(a: pixi.Point, b: pixi.Point): pixi.Point {
-  return new pixi.Point(a.x + (b.x - a.x) / 2, a.y + (b.y - a.y) / 2);
-}
-
-/**
- * @param a - point
- * @param b - point
- * @param s - sommet
- */
-export function getIsoceleAngle(
-  a: pixi.Point,
-  b: pixi.Point,
-  s: pixi.Point
-): any {
-  const m = middle(b, a);
-  const bm = dist(b, m);
-  const sm = dist(s, m);
-  return geom.radiansToDegrees(bm / sm);
-}
-
+export function random(): number;
+export function random(min: number): number;
+export function random(min: number[]): number;
+export function random(min: number, max: number): number;
 export function random(min?: number[] | number, max?: number): number {
   let rand = Math.random();
   if (typeof min === "undefined") {
@@ -130,23 +85,12 @@ export function map(
     : constrain(output, stop2, start2);
 }
 
-export function mapFromMiddle(
-  n: number,
-  start: number,
-  stop: number,
-  extremity: number,
-  middle: number,
-  withinBounds: boolean = false
-): number {
-  const middle1 = (start + stop) / 2;
-  if (n < middle1)
-    return map(n, start, middle1, extremity, middle, withinBounds);
-  else return map(n, middle1, stop, middle, extremity, withinBounds);
-}
-
 export function constrain(n: number, low: number, high: number): number {
   return Math.max(Math.min(n, high), low);
 }
-export function approximate(base: number, shift: number): number {
+
+export function approximate(base: number): number;
+export function approximate(base: number, shift?: number): number {
+  if (typeof shift === "undefined") return random(-base, base);
   return random(base - shift, base + shift);
 }

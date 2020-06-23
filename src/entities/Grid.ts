@@ -61,7 +61,7 @@ export default class Grid extends entity.ParallelEntity {
 
   _teardown() {
     for (const n of this.safetyNucleotides) {
-      this.container.removeChild(n.animatedSprite);
+      this.container.removeChild(n.sprite);
     }
     this.entityConfig.container.removeChild(this.container);
     this.nucleotides = [];
@@ -126,10 +126,7 @@ export default class Grid extends entity.ParallelEntity {
         this.party.mouse.global.y
       ) <
       n.radius * 0.86;
-    if (n.isHovered !== isHovered) {
-      n.isHovered = isHovered;
-      n.refresh();
-    }
+    if (n.isHovered !== isHovered) n.isHovered = isHovered;
     return isHovered;
   }
 

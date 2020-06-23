@@ -1,6 +1,6 @@
 {"frames": {
 
-"nucleotide_blue_049.png":
+"nucleotide_bleu_000.png":
 {
 	"frame": {"x":1,"y":1,"w":134,"h":129},
 	"rotated": false,
@@ -8,7 +8,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_050.png":
+"nucleotide_bleu_001.png":
 {
 	"frame": {"x":137,"y":1,"w":134,"h":129},
 	"rotated": false,
@@ -16,7 +16,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_051.png":
+"nucleotide_bleu_002.png":
 {
 	"frame": {"x":273,"y":1,"w":134,"h":129},
 	"rotated": false,
@@ -24,7 +24,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_052.png":
+"nucleotide_bleu_003.png":
 {
 	"frame": {"x":409,"y":1,"w":134,"h":129},
 	"rotated": false,
@@ -32,7 +32,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_053.png":
+"nucleotide_bleu_004.png":
 {
 	"frame": {"x":545,"y":1,"w":134,"h":129},
 	"rotated": false,
@@ -40,7 +40,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_054.png":
+"nucleotide_bleu_005.png":
 {
 	"frame": {"x":681,"y":1,"w":134,"h":129},
 	"rotated": false,
@@ -48,15 +48,71 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_055.png":
+"nucleotide_bleu_006.png":
 {
 	"frame": {"x":817,"y":1,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_007.png":
+{
+	"frame": {"x":953,"y":1,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_008.png":
+{
+	"frame": {"x":1089,"y":1,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_009.png":
+{
+	"frame": {"x":1225,"y":1,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_010.png":
+{
+	"frame": {"x":1361,"y":1,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_011.png":
+{
+	"frame": {"x":1497,"y":1,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_012.png":
+{
+	"frame": {"x":1633,"y":1,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_013.png":
+{
+	"frame": {"x":1769,"y":1,"w":134,"h":129},
 	"rotated": true,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_056.png":
+"nucleotide_bleu_014.png":
 {
 	"frame": {"x":1,"y":132,"w":134,"h":129},
 	"rotated": false,
@@ -64,7 +120,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_057.png":
+"nucleotide_bleu_015.png":
 {
 	"frame": {"x":137,"y":132,"w":134,"h":129},
 	"rotated": false,
@@ -72,7 +128,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_058.png":
+"nucleotide_bleu_016.png":
 {
 	"frame": {"x":273,"y":132,"w":134,"h":129},
 	"rotated": false,
@@ -80,7 +136,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_059.png":
+"nucleotide_bleu_017.png":
 {
 	"frame": {"x":409,"y":132,"w":134,"h":129},
 	"rotated": false,
@@ -88,7 +144,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_060.png":
+"nucleotide_bleu_018.png":
 {
 	"frame": {"x":545,"y":132,"w":134,"h":129},
 	"rotated": false,
@@ -96,7 +152,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_061.png":
+"nucleotide_bleu_019.png":
 {
 	"frame": {"x":681,"y":132,"w":134,"h":129},
 	"rotated": false,
@@ -104,15 +160,71 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_062.png":
+"nucleotide_bleu_020.png":
 {
-	"frame": {"x":817,"y":137,"w":134,"h":129},
+	"frame": {"x":817,"y":132,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_021.png":
+{
+	"frame": {"x":953,"y":132,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_022.png":
+{
+	"frame": {"x":1089,"y":132,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_023.png":
+{
+	"frame": {"x":1225,"y":132,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_024.png":
+{
+	"frame": {"x":1361,"y":132,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_025.png":
+{
+	"frame": {"x":1497,"y":132,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_026.png":
+{
+	"frame": {"x":1633,"y":132,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_027.png":
+{
+	"frame": {"x":1769,"y":137,"w":134,"h":129},
 	"rotated": true,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_063.png":
+"nucleotide_bleu_028.png":
 {
 	"frame": {"x":1,"y":263,"w":134,"h":129},
 	"rotated": false,
@@ -120,7 +232,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_064.png":
+"nucleotide_bleu_029.png":
 {
 	"frame": {"x":137,"y":263,"w":134,"h":129},
 	"rotated": false,
@@ -128,7 +240,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_065.png":
+"nucleotide_bleu_030.png":
 {
 	"frame": {"x":273,"y":263,"w":134,"h":129},
 	"rotated": false,
@@ -136,7 +248,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_066.png":
+"nucleotide_bleu_031.png":
 {
 	"frame": {"x":409,"y":263,"w":134,"h":129},
 	"rotated": false,
@@ -144,7 +256,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_067.png":
+"nucleotide_bleu_032.png":
 {
 	"frame": {"x":545,"y":263,"w":134,"h":129},
 	"rotated": false,
@@ -152,7 +264,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_068.png":
+"nucleotide_bleu_033.png":
 {
 	"frame": {"x":681,"y":263,"w":134,"h":129},
 	"rotated": false,
@@ -160,15 +272,71 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_069.png":
+"nucleotide_bleu_034.png":
 {
-	"frame": {"x":817,"y":273,"w":134,"h":129},
+	"frame": {"x":817,"y":263,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_035.png":
+{
+	"frame": {"x":953,"y":263,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_036.png":
+{
+	"frame": {"x":1089,"y":263,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_037.png":
+{
+	"frame": {"x":1225,"y":263,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_038.png":
+{
+	"frame": {"x":1361,"y":263,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_039.png":
+{
+	"frame": {"x":1497,"y":263,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_040.png":
+{
+	"frame": {"x":1633,"y":263,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_041.png":
+{
+	"frame": {"x":1769,"y":273,"w":134,"h":129},
 	"rotated": true,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_070.png":
+"nucleotide_bleu_042.png":
 {
 	"frame": {"x":1,"y":394,"w":134,"h":129},
 	"rotated": false,
@@ -176,7 +344,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_071.png":
+"nucleotide_bleu_043.png":
 {
 	"frame": {"x":137,"y":394,"w":134,"h":129},
 	"rotated": false,
@@ -184,7 +352,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_072.png":
+"nucleotide_bleu_044.png":
 {
 	"frame": {"x":273,"y":394,"w":134,"h":129},
 	"rotated": false,
@@ -192,7 +360,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_073.png":
+"nucleotide_bleu_045.png":
 {
 	"frame": {"x":409,"y":394,"w":134,"h":129},
 	"rotated": false,
@@ -200,7 +368,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_074.png":
+"nucleotide_bleu_046.png":
 {
 	"frame": {"x":545,"y":394,"w":134,"h":129},
 	"rotated": false,
@@ -208,7 +376,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_075.png":
+"nucleotide_bleu_047.png":
 {
 	"frame": {"x":681,"y":394,"w":134,"h":129},
 	"rotated": false,
@@ -216,15 +384,71 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_076.png":
+"nucleotide_bleu_048.png":
 {
-	"frame": {"x":817,"y":409,"w":134,"h":129},
+	"frame": {"x":817,"y":394,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_049.png":
+{
+	"frame": {"x":953,"y":394,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_050.png":
+{
+	"frame": {"x":1089,"y":394,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_051.png":
+{
+	"frame": {"x":1225,"y":394,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_052.png":
+{
+	"frame": {"x":1361,"y":394,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_053.png":
+{
+	"frame": {"x":1497,"y":394,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_054.png":
+{
+	"frame": {"x":1633,"y":394,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_055.png":
+{
+	"frame": {"x":1769,"y":409,"w":134,"h":129},
 	"rotated": true,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_077.png":
+"nucleotide_bleu_056.png":
 {
 	"frame": {"x":1,"y":525,"w":134,"h":129},
 	"rotated": false,
@@ -232,7 +456,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_078.png":
+"nucleotide_bleu_057.png":
 {
 	"frame": {"x":137,"y":525,"w":134,"h":129},
 	"rotated": false,
@@ -240,7 +464,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_079.png":
+"nucleotide_bleu_058.png":
 {
 	"frame": {"x":273,"y":525,"w":134,"h":129},
 	"rotated": false,
@@ -248,7 +472,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_080.png":
+"nucleotide_bleu_059.png":
 {
 	"frame": {"x":409,"y":525,"w":134,"h":129},
 	"rotated": false,
@@ -256,7 +480,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_081.png":
+"nucleotide_bleu_060.png":
 {
 	"frame": {"x":545,"y":525,"w":134,"h":129},
 	"rotated": false,
@@ -264,7 +488,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_082.png":
+"nucleotide_bleu_061.png":
 {
 	"frame": {"x":681,"y":525,"w":134,"h":129},
 	"rotated": false,
@@ -272,15 +496,71 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_083.png":
+"nucleotide_bleu_062.png":
 {
-	"frame": {"x":817,"y":545,"w":134,"h":129},
+	"frame": {"x":817,"y":525,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_063.png":
+{
+	"frame": {"x":953,"y":525,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_064.png":
+{
+	"frame": {"x":1089,"y":525,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_065.png":
+{
+	"frame": {"x":1225,"y":525,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_066.png":
+{
+	"frame": {"x":1361,"y":525,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_067.png":
+{
+	"frame": {"x":1497,"y":525,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_068.png":
+{
+	"frame": {"x":1633,"y":525,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_069.png":
+{
+	"frame": {"x":1769,"y":545,"w":134,"h":129},
 	"rotated": true,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_084.png":
+"nucleotide_bleu_070.png":
 {
 	"frame": {"x":1,"y":656,"w":134,"h":129},
 	"rotated": false,
@@ -288,7 +568,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_085.png":
+"nucleotide_bleu_071.png":
 {
 	"frame": {"x":137,"y":656,"w":134,"h":129},
 	"rotated": false,
@@ -296,7 +576,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_086.png":
+"nucleotide_bleu_072.png":
 {
 	"frame": {"x":273,"y":656,"w":134,"h":129},
 	"rotated": false,
@@ -304,7 +584,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_087.png":
+"nucleotide_bleu_073.png":
 {
 	"frame": {"x":409,"y":656,"w":134,"h":129},
 	"rotated": false,
@@ -312,7 +592,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_088.png":
+"nucleotide_bleu_074.png":
 {
 	"frame": {"x":545,"y":656,"w":134,"h":129},
 	"rotated": false,
@@ -320,7 +600,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_089.png":
+"nucleotide_bleu_075.png":
 {
 	"frame": {"x":681,"y":656,"w":134,"h":129},
 	"rotated": false,
@@ -328,15 +608,71 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_090.png":
+"nucleotide_bleu_076.png":
 {
-	"frame": {"x":817,"y":681,"w":134,"h":129},
+	"frame": {"x":817,"y":656,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_077.png":
+{
+	"frame": {"x":953,"y":656,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_078.png":
+{
+	"frame": {"x":1089,"y":656,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_079.png":
+{
+	"frame": {"x":1225,"y":656,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_080.png":
+{
+	"frame": {"x":1361,"y":656,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_081.png":
+{
+	"frame": {"x":1497,"y":656,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_082.png":
+{
+	"frame": {"x":1633,"y":656,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_083.png":
+{
+	"frame": {"x":1769,"y":681,"w":134,"h":129},
 	"rotated": true,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_091.png":
+"nucleotide_bleu_084.png":
 {
 	"frame": {"x":1,"y":787,"w":134,"h":129},
 	"rotated": false,
@@ -344,7 +680,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_092.png":
+"nucleotide_bleu_085.png":
 {
 	"frame": {"x":137,"y":787,"w":134,"h":129},
 	"rotated": false,
@@ -352,7 +688,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_093.png":
+"nucleotide_bleu_086.png":
 {
 	"frame": {"x":273,"y":787,"w":134,"h":129},
 	"rotated": false,
@@ -360,7 +696,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_094.png":
+"nucleotide_bleu_087.png":
 {
 	"frame": {"x":409,"y":787,"w":134,"h":129},
 	"rotated": false,
@@ -368,7 +704,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_095.png":
+"nucleotide_bleu_088.png":
 {
 	"frame": {"x":545,"y":787,"w":134,"h":129},
 	"rotated": false,
@@ -376,7 +712,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_096.png":
+"nucleotide_bleu_089.png":
 {
 	"frame": {"x":681,"y":787,"w":134,"h":129},
 	"rotated": false,
@@ -384,15 +720,71 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_097.png":
+"nucleotide_bleu_090.png":
 {
-	"frame": {"x":817,"y":817,"w":134,"h":129},
+	"frame": {"x":817,"y":787,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_091.png":
+{
+	"frame": {"x":953,"y":787,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_092.png":
+{
+	"frame": {"x":1089,"y":787,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_093.png":
+{
+	"frame": {"x":1225,"y":787,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_094.png":
+{
+	"frame": {"x":1361,"y":787,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_095.png":
+{
+	"frame": {"x":1497,"y":787,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_096.png":
+{
+	"frame": {"x":1633,"y":787,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_097.png":
+{
+	"frame": {"x":1769,"y":817,"w":134,"h":129},
 	"rotated": true,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_098.png":
+"nucleotide_bleu_098.png":
 {
 	"frame": {"x":1,"y":918,"w":134,"h":129},
 	"rotated": false,
@@ -400,7 +792,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_099.png":
+"nucleotide_bleu_099.png":
 {
 	"frame": {"x":137,"y":918,"w":134,"h":129},
 	"rotated": false,
@@ -408,7 +800,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_100.png":
+"nucleotide_bleu_100.png":
 {
 	"frame": {"x":273,"y":918,"w":134,"h":129},
 	"rotated": false,
@@ -416,7 +808,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_101.png":
+"nucleotide_bleu_101.png":
 {
 	"frame": {"x":409,"y":918,"w":134,"h":129},
 	"rotated": false,
@@ -424,7 +816,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_102.png":
+"nucleotide_bleu_102.png":
 {
 	"frame": {"x":545,"y":918,"w":134,"h":129},
 	"rotated": false,
@@ -432,7 +824,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_103.png":
+"nucleotide_bleu_103.png":
 {
 	"frame": {"x":681,"y":918,"w":134,"h":129},
 	"rotated": false,
@@ -440,15 +832,71 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_104.png":
+"nucleotide_bleu_104.png":
 {
-	"frame": {"x":817,"y":953,"w":134,"h":129},
+	"frame": {"x":817,"y":918,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_105.png":
+{
+	"frame": {"x":953,"y":918,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_106.png":
+{
+	"frame": {"x":1089,"y":918,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_107.png":
+{
+	"frame": {"x":1225,"y":918,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_108.png":
+{
+	"frame": {"x":1361,"y":918,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_109.png":
+{
+	"frame": {"x":1497,"y":918,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_110.png":
+{
+	"frame": {"x":1633,"y":918,"w":134,"h":129},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
+	"sourceSize": {"w":134,"h":129}
+},
+"nucleotide_bleu_111.png":
+{
+	"frame": {"x":1769,"y":953,"w":134,"h":129},
 	"rotated": true,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_105.png":
+"nucleotide_bleu_112.png":
 {
 	"frame": {"x":1,"y":1049,"w":134,"h":129},
 	"rotated": false,
@@ -456,7 +904,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_106.png":
+"nucleotide_bleu_113.png":
 {
 	"frame": {"x":137,"y":1049,"w":134,"h":129},
 	"rotated": false,
@@ -464,7 +912,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_107.png":
+"nucleotide_bleu_114.png":
 {
 	"frame": {"x":273,"y":1049,"w":134,"h":129},
 	"rotated": false,
@@ -472,7 +920,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_108.png":
+"nucleotide_bleu_115.png":
 {
 	"frame": {"x":409,"y":1049,"w":134,"h":129},
 	"rotated": false,
@@ -480,7 +928,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_109.png":
+"nucleotide_bleu_116.png":
 {
 	"frame": {"x":545,"y":1049,"w":134,"h":129},
 	"rotated": false,
@@ -488,7 +936,7 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_110.png":
+"nucleotide_bleu_117.png":
 {
 	"frame": {"x":681,"y":1049,"w":134,"h":129},
 	"rotated": false,
@@ -496,128 +944,72 @@
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_111.png":
+"nucleotide_bleu_118.png":
 {
-	"frame": {"x":817,"y":1089,"w":134,"h":129},
-	"rotated": true,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
-	"sourceSize": {"w":134,"h":129}
-},
-"nucleotide_blue_112.png":
-{
-	"frame": {"x":1,"y":1180,"w":134,"h":129},
+	"frame": {"x":817,"y":1049,"w":134,"h":129},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_113.png":
+"nucleotide_bleu_119.png":
 {
-	"frame": {"x":137,"y":1180,"w":134,"h":129},
+	"frame": {"x":953,"y":1049,"w":134,"h":129},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_114.png":
+"nucleotide_bleu_120.png":
 {
-	"frame": {"x":273,"y":1180,"w":134,"h":129},
+	"frame": {"x":1089,"y":1049,"w":134,"h":129},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_115.png":
+"nucleotide_bleu_121.png":
 {
-	"frame": {"x":409,"y":1180,"w":134,"h":129},
+	"frame": {"x":1225,"y":1049,"w":134,"h":129},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_116.png":
+"nucleotide_bleu_122.png":
 {
-	"frame": {"x":545,"y":1180,"w":134,"h":129},
+	"frame": {"x":1361,"y":1049,"w":134,"h":129},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_117.png":
+"nucleotide_bleu_123.png":
 {
-	"frame": {"x":681,"y":1180,"w":134,"h":129},
+	"frame": {"x":1497,"y":1049,"w":134,"h":129},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 },
-"nucleotide_blue_118.png":
+"nucleotide_bleu_124.png":
 {
-	"frame": {"x":817,"y":1225,"w":134,"h":129},
-	"rotated": true,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
-	"sourceSize": {"w":134,"h":129}
-},
-"nucleotide_blue_119.png":
-{
-	"frame": {"x":1,"y":1311,"w":134,"h":129},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
-	"sourceSize": {"w":134,"h":129}
-},
-"nucleotide_blue_120.png":
-{
-	"frame": {"x":137,"y":1311,"w":134,"h":129},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
-	"sourceSize": {"w":134,"h":129}
-},
-"nucleotide_blue_121.png":
-{
-	"frame": {"x":273,"y":1311,"w":134,"h":129},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
-	"sourceSize": {"w":134,"h":129}
-},
-"nucleotide_blue_122.png":
-{
-	"frame": {"x":409,"y":1311,"w":134,"h":129},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
-	"sourceSize": {"w":134,"h":129}
-},
-"nucleotide_blue_123.png":
-{
-	"frame": {"x":545,"y":1311,"w":134,"h":129},
-	"rotated": false,
-	"trimmed": false,
-	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
-	"sourceSize": {"w":134,"h":129}
-},
-"nucleotide_blue_124.png":
-{
-	"frame": {"x":681,"y":1311,"w":134,"h":129},
+	"frame": {"x":1633,"y":1049,"w":134,"h":129},
 	"rotated": false,
 	"trimmed": false,
 	"spriteSourceSize": {"x":0,"y":0,"w":134,"h":129},
 	"sourceSize": {"w":134,"h":129}
 }},
 "animations": {
-	"nucleotide_blue": ["nucleotide_blue_049.png","nucleotide_blue_050.png","nucleotide_blue_051.png","nucleotide_blue_052.png","nucleotide_blue_053.png","nucleotide_blue_054.png","nucleotide_blue_055.png","nucleotide_blue_056.png","nucleotide_blue_057.png","nucleotide_blue_058.png","nucleotide_blue_059.png","nucleotide_blue_060.png","nucleotide_blue_061.png","nucleotide_blue_062.png","nucleotide_blue_063.png","nucleotide_blue_064.png","nucleotide_blue_065.png","nucleotide_blue_066.png","nucleotide_blue_067.png","nucleotide_blue_068.png","nucleotide_blue_069.png","nucleotide_blue_070.png","nucleotide_blue_071.png","nucleotide_blue_072.png","nucleotide_blue_073.png","nucleotide_blue_074.png","nucleotide_blue_075.png","nucleotide_blue_076.png","nucleotide_blue_077.png","nucleotide_blue_078.png","nucleotide_blue_079.png","nucleotide_blue_080.png","nucleotide_blue_081.png","nucleotide_blue_082.png","nucleotide_blue_083.png","nucleotide_blue_084.png","nucleotide_blue_085.png","nucleotide_blue_086.png","nucleotide_blue_087.png","nucleotide_blue_088.png","nucleotide_blue_089.png","nucleotide_blue_090.png","nucleotide_blue_091.png","nucleotide_blue_092.png","nucleotide_blue_093.png","nucleotide_blue_094.png","nucleotide_blue_095.png","nucleotide_blue_096.png","nucleotide_blue_097.png","nucleotide_blue_098.png","nucleotide_blue_099.png","nucleotide_blue_100.png","nucleotide_blue_101.png","nucleotide_blue_102.png","nucleotide_blue_103.png","nucleotide_blue_104.png","nucleotide_blue_105.png","nucleotide_blue_106.png","nucleotide_blue_107.png","nucleotide_blue_108.png","nucleotide_blue_109.png","nucleotide_blue_110.png","nucleotide_blue_111.png","nucleotide_blue_112.png","nucleotide_blue_113.png","nucleotide_blue_114.png","nucleotide_blue_115.png","nucleotide_blue_116.png","nucleotide_blue_117.png","nucleotide_blue_118.png","nucleotide_blue_119.png","nucleotide_blue_120.png","nucleotide_blue_121.png","nucleotide_blue_122.png","nucleotide_blue_123.png","nucleotide_blue_124.png"]
+	"nucleotide_bleu": ["nucleotide_bleu_000.png","nucleotide_bleu_001.png","nucleotide_bleu_002.png","nucleotide_bleu_003.png","nucleotide_bleu_004.png","nucleotide_bleu_005.png","nucleotide_bleu_006.png","nucleotide_bleu_007.png","nucleotide_bleu_008.png","nucleotide_bleu_009.png","nucleotide_bleu_010.png","nucleotide_bleu_011.png","nucleotide_bleu_012.png","nucleotide_bleu_013.png","nucleotide_bleu_014.png","nucleotide_bleu_015.png","nucleotide_bleu_016.png","nucleotide_bleu_017.png","nucleotide_bleu_018.png","nucleotide_bleu_019.png","nucleotide_bleu_020.png","nucleotide_bleu_021.png","nucleotide_bleu_022.png","nucleotide_bleu_023.png","nucleotide_bleu_024.png","nucleotide_bleu_025.png","nucleotide_bleu_026.png","nucleotide_bleu_027.png","nucleotide_bleu_028.png","nucleotide_bleu_029.png","nucleotide_bleu_030.png","nucleotide_bleu_031.png","nucleotide_bleu_032.png","nucleotide_bleu_033.png","nucleotide_bleu_034.png","nucleotide_bleu_035.png","nucleotide_bleu_036.png","nucleotide_bleu_037.png","nucleotide_bleu_038.png","nucleotide_bleu_039.png","nucleotide_bleu_040.png","nucleotide_bleu_041.png","nucleotide_bleu_042.png","nucleotide_bleu_043.png","nucleotide_bleu_044.png","nucleotide_bleu_045.png","nucleotide_bleu_046.png","nucleotide_bleu_047.png","nucleotide_bleu_048.png","nucleotide_bleu_049.png","nucleotide_bleu_050.png","nucleotide_bleu_051.png","nucleotide_bleu_052.png","nucleotide_bleu_053.png","nucleotide_bleu_054.png","nucleotide_bleu_055.png","nucleotide_bleu_056.png","nucleotide_bleu_057.png","nucleotide_bleu_058.png","nucleotide_bleu_059.png","nucleotide_bleu_060.png","nucleotide_bleu_061.png","nucleotide_bleu_062.png","nucleotide_bleu_063.png","nucleotide_bleu_064.png","nucleotide_bleu_065.png","nucleotide_bleu_066.png","nucleotide_bleu_067.png","nucleotide_bleu_068.png","nucleotide_bleu_069.png","nucleotide_bleu_070.png","nucleotide_bleu_071.png","nucleotide_bleu_072.png","nucleotide_bleu_073.png","nucleotide_bleu_074.png","nucleotide_bleu_075.png","nucleotide_bleu_076.png","nucleotide_bleu_077.png","nucleotide_bleu_078.png","nucleotide_bleu_079.png","nucleotide_bleu_080.png","nucleotide_bleu_081.png","nucleotide_bleu_082.png","nucleotide_bleu_083.png","nucleotide_bleu_084.png","nucleotide_bleu_085.png","nucleotide_bleu_086.png","nucleotide_bleu_087.png","nucleotide_bleu_088.png","nucleotide_bleu_089.png","nucleotide_bleu_090.png","nucleotide_bleu_091.png","nucleotide_bleu_092.png","nucleotide_bleu_093.png","nucleotide_bleu_094.png","nucleotide_bleu_095.png","nucleotide_bleu_096.png","nucleotide_bleu_097.png","nucleotide_bleu_098.png","nucleotide_bleu_099.png","nucleotide_bleu_100.png","nucleotide_bleu_101.png","nucleotide_bleu_102.png","nucleotide_bleu_103.png","nucleotide_bleu_104.png","nucleotide_bleu_105.png","nucleotide_bleu_106.png","nucleotide_bleu_107.png","nucleotide_bleu_108.png","nucleotide_bleu_109.png","nucleotide_bleu_110.png","nucleotide_bleu_111.png","nucleotide_bleu_112.png","nucleotide_bleu_113.png","nucleotide_bleu_114.png","nucleotide_bleu_115.png","nucleotide_bleu_116.png","nucleotide_bleu_117.png","nucleotide_bleu_118.png","nucleotide_bleu_119.png","nucleotide_bleu_120.png","nucleotide_bleu_121.png","nucleotide_bleu_122.png","nucleotide_bleu_123.png","nucleotide_bleu_124.png"]
 },
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.0",
 	"image": "nucleotide_blue.png",
 	"format": "RGBA8888",
-	"size": {"w":947,"h":1441},
+	"size": {"w":1899,"h":1179},
 	"scale": "1",
-	"smartupdate": "$TexturePacker:SmartUpdate:85d2782f715d64024c832785aeb871f0:72a972baa03335b547cdb559dade7b7b:4bf9c1d8dbd07d367c0d35cdca0be235$"
+	"smartupdate": "$TexturePacker:SmartUpdate:c50f2585f38ed15116b38e5ae37c7e73:5a2c6f4dfb1cf8e13f412fddeec0402c:a6868afae6181cde8330266a2ffbaddf$"
 }
 }

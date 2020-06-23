@@ -1006,7 +1006,7 @@
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.0",
-	"image": "nucleotide_vert.png",
+	"image": "nucleotide_green.png",
 	"format": "RGBA8888",
 	"size": {"w":1925,"h":1179},
 	"scale": "1",

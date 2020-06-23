@@ -1,19 +1,25 @@
 import * as pixi from "pixi.js";
 import * as entity from "booyah/src/entity";
+import * as util from "booyah/src/util";
 import * as utils from "../utils";
 
 /** Represent a nucleotide */
-export default class Nucleotide extends entity.AnimatedSpriteEntity {
+export default class Nucleotide extends entity.Entity {
   public colorName: utils.ColorName;
   public state: utils.NucleotideState;
   public isHovered = false;
   public infected = false;
+  public sprite: pixi.AnimatedSprite | pixi.Sprite = null;
 
   private floating = false;
   private floatingShift: number;
 
-  constructor(public radius: number, public position = new pixi.Point()) {
-    super(null);
+  constructor(
+    public radius: number,
+    public position = new pixi.Point(),
+    public rotation = 0
+  ) {
+    super();
   }
 
   _setup() {
@@ -23,13 +29,15 @@ export default class Nucleotide extends entity.AnimatedSpriteEntity {
   _update(frameInfo: entity.FrameInfo) {
     if (this.floating) {
       const cos = Math.cos(
-        this.floatingShift + frameInfo.timeSinceStart / 2000
+        this.floatingShift + frameInfo.timeSinceStart / 1000
       );
-      this.animatedSprite.y += cos / 20;
+      this.sprite.y += cos / 15;
     }
   }
 
-  _teardown() {}
+  _teardown() {
+    if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
+  }
 
   setFloating() {
     this.floating = true;
@@ -65,29 +73,39 @@ export default class Nucleotide extends entity.AnimatedSpriteEntity {
   }
 
   refresh() {
+    if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
     switch (this.state) {
       case "bonus":
-        this.animatedSprite = null;
+        this.sprite = new pixi.Sprite(
+          this.entityConfig.app.loader.resources["images/cut.png"].texture
+        );
         break;
       case "cut":
-        this.animatedSprite = new pixi.AnimatedSprite(
+        this.sprite = new pixi.Sprite(
           this.entityConfig.app.loader.resources["images/cut.png"].texture
         );
         break;
       case "hole":
-        this.animatedSprite = new pixi.AnimatedSprite(
+        this.sprite = new pixi.Sprite(
           this.entityConfig.app.loader.resources["images/hole.png"].texture
         );
         break;
       default:
-        this.animatedSprite = new pixi.AnimatedSprite(
+        this.sprite = util.makeAnimatedSprite(
           this.entityConfig.app.loader.resources[
             "images/nucleotide_" + this.colorName + ".json"
-          ].texture
+          ]
         );
+        (this.sprite as pixi.AnimatedSprite).play();
     }
 
-    this.animatedSprite.position.copyFrom(this.position);
+    this.sprite.rotation = this.rotation;
+    this.sprite.position.copyFrom(this.position);
+    this.sprite.anchor.set(0.5, 0.5);
+    const scale = this.state === "cut" ? 0.74 : 0.9;
+    this.sprite.width = this.width * scale;
+    this.sprite.height = this.height * scale;
+    this.entityConfig.container.addChild(this.sprite);
   }
 
   static getNucleotideDimensionsByRadius(radius: number) {

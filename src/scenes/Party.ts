@@ -59,12 +59,12 @@ export default class Party extends entity.ParallelEntity {
       );
       const space = new pixi.Sprite(
         this.entityConfig.app.loader.resources[
-          "images/space-background.png"
+          "images/space_background.png"
         ].texture
       );
       const particles = new pixi.Sprite(
         this.entityConfig.app.loader.resources[
-          "images/particles-background.png"
+          "images/particles_background.png"
         ].texture
       );
       this.container.addChild(background);
@@ -102,7 +102,7 @@ export default class Party extends entity.ParallelEntity {
     {
       const particles2 = new pixi.Sprite(
         this.entityConfig.app.loader.resources[
-          "images/particles-foreground.png"
+          "images/particles_foreground.png"
         ].texture
       );
       const membrane = new pixi.Sprite(

@@ -9,7 +9,7 @@ export default class Sequence extends entity.ParallelEntity {
   public nucleotides: Nucleotide[] = [];
   public length: number;
   public container: pixi.Container;
-  public nucleotideRadius = game.width * 0.04;
+  public nucleotideRadius = game.width * 0.05;
 
   constructor(public baseLength: number, public position = new pixi.Point()) {
     super();
@@ -26,10 +26,10 @@ export default class Sequence extends entity.ParallelEntity {
     for (let i = 0; i < this.length; i++) {
       const n = new Nucleotide(
         this.nucleotideRadius,
-        new pixi.Point(i * width, utils.approximate(0, height * 0.2))
+        new pixi.Point(i * width * 0.8, utils.approximate(height * 0.1)),
+        Math.random()
       );
       n.setFloating();
-      n.animatedSprite.rotation = Math.random();
       this.addEntity(
         n,
         entity.extendConfig({
@@ -42,8 +42,7 @@ export default class Sequence extends entity.ParallelEntity {
   }
 
   _teardown() {
-    for (const n of this.nucleotides)
-      this.container.removeChild(n.animatedSprite);
+    for (const n of this.nucleotides) this.container.removeChild(n.sprite);
     this.entityConfig.container.removeChild(this.container);
     this.container = null;
     this.nucleotides = [];
