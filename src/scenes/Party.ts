@@ -21,7 +21,7 @@ export default class Party extends entity.ParallelEntity {
   public state: utils.PartyState = "crunch";
   public mouseIsDown: boolean = false;
 
-  private goButtonText: PIXI.Text;
+  private goButton: PIXI.Container & { text?: PIXI.Text };
   private slide = new Slide();
 
   get renderer(): PIXI.Renderer {
@@ -103,28 +103,28 @@ export default class Party extends entity.ParallelEntity {
 
     // Add go button
     {
-      const goButton = new PIXI.Container();
-      goButton.position.set(
+      this.goButton = new PIXI.Container();
+      this.goButton.position.set(
         this.entityConfig.app.view.width / 2,
         this.entityConfig.app.view.height - 90
       );
-      goButton.interactive = true;
-      goButton.buttonMode = true;
-      this._on(goButton, "pointerup", this._onGo);
-      this.container.addChild(goButton);
+      this.goButton.interactive = true;
+      this.goButton.buttonMode = true;
+      this._on(this.goButton, "pointerup", this._onGo);
+      this.container.addChild(this.goButton);
 
       const bg = new PIXI.Graphics();
       bg.beginFill(0xaaaaaa);
-      bg.drawRect(-200, -50, 400, 100);
+      bg.drawRect(-250, -50, 500, 100);
       bg.endFill();
-      goButton.addChild(bg);
+      this.goButton.addChild(bg);
 
-      this.goButtonText = new PIXI.Text("GO", {
+      this.goButton.text = new PIXI.Text("GO", {
         fill: "#000000",
         fontSize: "50px",
       });
-      this.goButtonText.anchor.set(0.5);
-      goButton.addChild(this.goButtonText);
+      this.goButton.text.anchor.set(0.5);
+      this.goButton.addChild(this.goButton.text);
     }
 
     // foreground images
@@ -221,11 +221,19 @@ export default class Party extends entity.ParallelEntity {
 
   private _refresh() {
     if (this.path.items.length > 0) {
-      this.goButtonText.text = "CRUNCH";
+      if (this.sequenceManager.matchesSequence(this.path)) {
+        this.goButton.text.text = "CRUNCH";
+        this.goButton.interactive = true;
+      } else {
+        this.goButton.text.text = "INVALID SEQUENCE";
+        this.goButton.interactive = false;
+      }
     } else if (this.grid.containsHoles()) {
-      this.goButtonText.text = "SLIDE";
+      this.goButton.text.text = "SLIDE";
+      this.goButton.interactive = true;
     } else {
-      this.goButtonText.text = "SKIP";
+      this.goButton.text.text = "SKIP";
+      this.goButton.interactive = true;
     }
   }
 }
