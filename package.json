@@ -23,7 +23,7 @@
     "serve": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --config webpack.dev.js",
     "dist": "webpack --config webpack.prod.js",
-    "deploy": "yarn dist && rclone --progress sync --s3-acl public-read dist digitalocean:play-curious-crispr-crunch"
+    "deploy": "yarn dist && rclone --progress sync --s3-acl public-read dist digitalocean:play-curious-crispr-crunch && node deploy-webhook.js"
   },
   "license": "MIT",
   "devDependencies": {
@@ -33,6 +33,7 @@
     "html-webpack-plugin": "^4.3.0",
     "prettier": "^2.0.5",
     "ts-loader": "^7.0.5",
+    "webhook-discord": "^3.7.4",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.11.0",
