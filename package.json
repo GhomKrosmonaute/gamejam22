@@ -22,7 +22,8 @@
     "prettier": "prettier --write ./src",
     "serve": "webpack-dev-server --config webpack.dev.js",
     "build": "webpack --config webpack.dev.js",
-    "dist": "webpack --config webpack.prod.js"
+    "dist": "webpack --config webpack.prod.js",
+    "deploy": "rclone --progress sync --s3-acl public-read dist digitalocean:play-curious-crispr-crunch"
   },
   "license": "MIT",
   "devDependencies": {
