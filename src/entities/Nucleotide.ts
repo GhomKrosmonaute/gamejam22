@@ -18,8 +18,10 @@ export default class Nucleotide extends entity.Entity {
   public sprite: PIXI.AnimatedSprite | PIXI.Sprite = null;
 
   private isInfected = false;
-  private floating = false;
-  private floatingShift: number;
+  private floating: { x: boolean; y: boolean } = { x: false, y: false };
+  private floatingShift = new PIXI.Point();
+  private floatingSpeed = new PIXI.Point();
+  private floatingAmplitude = new PIXI.Point();
 
   constructor(
     public radius: number,
@@ -32,11 +34,16 @@ export default class Nucleotide extends entity.Entity {
   _setup() {}
 
   _update(frameInfo: entity.FrameInfo) {
-    if (this.floating) {
-      const cos = Math.cos(
-        this.floatingShift + frameInfo.timeSinceStart / 1000
-      );
-      this.sprite.y += cos / 15;
+    for (const vector in this.floating) {
+      const v = vector as "x" | "y";
+      if (this.floating[v]) {
+        const cos = Math.cos(
+          this.floatingShift[v] +
+            frameInfo.timeSinceStart * this.floatingSpeed[v]
+        );
+        const add = cos * this.floatingAmplitude[v];
+        this.sprite[v] = this.position[v] + add * 200;
+      }
     }
   }
 
@@ -53,9 +60,16 @@ export default class Nucleotide extends entity.Entity {
     return this.isInfected;
   }
 
-  setFloating() {
-    this.floating = true;
-    this.floatingShift = Math.random() * 10;
+  setFloating(
+    vector: "x" | "y",
+    speed = 0.0005,
+    amplitude = 0.06,
+    shift = Math.random() * 10
+  ) {
+    this.floating[vector] = true;
+    this.floatingShift[vector] = shift;
+    this.floatingSpeed[vector] = speed;
+    this.floatingAmplitude[vector] = amplitude;
   }
 
   get width(): number {
@@ -99,7 +113,9 @@ export default class Nucleotide extends entity.Entity {
       this.sprite = animatedSprite;
     }
 
+    // reset infected filter
     this.infected = this.infected;
+
     this.sprite.rotation = this.rotation;
     this.sprite.position.copyFrom(this.position);
     this.sprite.anchor.set(0.5, 0.5);

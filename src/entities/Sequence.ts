@@ -29,7 +29,7 @@ export default class Sequence extends entity.ParallelEntity {
         new PIXI.Point(i * width * 0.8, utils.approximate(height * 0.05)),
         Math.random()
       );
-      n.setFloating();
+      n.setFloating("y");
       this.addEntity(
         n,
         entity.extendConfig({

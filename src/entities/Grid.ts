@@ -71,7 +71,8 @@ export default class Grid extends entity.ParallelEntity {
           this.nucleotideRadius,
           this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y))
         );
-        n.setFloating();
+        n.setFloating("y", 0.001, 0.018);
+        n.setFloating("x", 0.0007, 0.018);
         this.generateNucleotide(n);
         this.addEntity(
           n,
