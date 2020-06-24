@@ -48,7 +48,7 @@ export default class Grid extends entity.ParallelEntity {
     // Add background to get pointer events
     {
       const bg = new PIXI.Graphics();
-      bg.beginFill(0, 0.2);
+      bg.beginFill(0, 0);
       bg.drawRect(
         0,
         0,
