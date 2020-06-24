@@ -1,10 +1,11 @@
 import * as PIXI from "pixi.js";
+import * as _ from "underscore";
+import { OutlineFilter } from "@pixi/filter-outline";
+
 import * as geom from "booyah/src/geom";
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as utils from "../utils";
-
-import { OutlineFilter } from "@pixi/filter-outline";
 
 // const scissorsPercentage = 1 / 8;
 
@@ -77,25 +78,25 @@ export default class Nucleotide extends entity.Entity {
         this.entityConfig.app.loader.resources["images/hole.png"].texture
       );
     else if (this.state === "normal") {
-      this.sprite = util.makeAnimatedSprite(
+      const animatedSprite = util.makeAnimatedSprite(
         this.entityConfig.app.loader.resources[
           "images/nucleotide_" + this.colorName + ".json"
         ]
       );
-      (this.sprite as PIXI.AnimatedSprite).play();
-      (this.sprite as PIXI.AnimatedSprite).animationSpeed = utils.random(
-        0.45,
-        0.6
-      );
+      animatedSprite.animationSpeed = 25 / 60;
+      // Start on a random frame
+      animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
+
+      this.sprite = animatedSprite;
     } else {
-      this.sprite = util.makeAnimatedSprite(
+      const animatedSprite = util.makeAnimatedSprite(
         this.entityConfig.app.loader.resources["images/" + this.state + ".json"]
       );
-      (this.sprite as PIXI.AnimatedSprite).play();
-      (this.sprite as PIXI.AnimatedSprite).animationSpeed = utils.random(
-        0.45,
-        0.6
-      );
+      animatedSprite.animationSpeed = 25 / 60;
+      // Start on a random frame
+      animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
+
+      this.sprite = animatedSprite;
     }
 
     this.infected = this.infected;
