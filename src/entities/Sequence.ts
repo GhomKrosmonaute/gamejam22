@@ -26,7 +26,7 @@ export default class Sequence extends entity.ParallelEntity {
     for (let i = 0; i < this.length; i++) {
       const n = new Nucleotide(
         this.nucleotideRadius,
-        new PIXI.Point(i * width * 0.8, utils.approximate(height * 0.1)),
+        new PIXI.Point(i * width * 0.8, utils.approximate(height * 0.05)),
         Math.random()
       );
       n.setFloating();
