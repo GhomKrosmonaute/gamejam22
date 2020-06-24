@@ -71,29 +71,34 @@ export default class Nucleotide extends entity.Entity {
 
   refresh() {
     if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
-    switch (this.state) {
-      case "scissors":
-        this.sprite = util.makeAnimatedSprite(
-          this.entityConfig.app.loader.resources["images/scissors.json"]
-        );
-        (this.sprite as PIXI.AnimatedSprite).play();
-        break;
-      case "bonus":
-        throw Error("not implemented");
-      case "hole":
-        this.sprite = new PIXI.Sprite(
-          this.entityConfig.app.loader.resources["images/hole.png"].texture
-        );
-        break;
-      default:
-        this.sprite = util.makeAnimatedSprite(
-          this.entityConfig.app.loader.resources[
-            "images/nucleotide_" + this.colorName + ".json"
-          ]
-        );
-        (this.sprite as PIXI.AnimatedSprite).play();
+
+    if (this.state === "hole")
+      this.sprite = new PIXI.Sprite(
+        this.entityConfig.app.loader.resources["images/hole.png"].texture
+      );
+    else if (this.state === "normal") {
+      this.sprite = util.makeAnimatedSprite(
+        this.entityConfig.app.loader.resources[
+          "images/nucleotide_" + this.colorName + ".json"
+        ]
+      );
+      (this.sprite as PIXI.AnimatedSprite).play();
+      (this.sprite as PIXI.AnimatedSprite).animationSpeed = utils.random(
+        0.45,
+        0.6
+      );
+    } else {
+      this.sprite = util.makeAnimatedSprite(
+        this.entityConfig.app.loader.resources["images/" + this.state + ".json"]
+      );
+      (this.sprite as PIXI.AnimatedSprite).play();
+      (this.sprite as PIXI.AnimatedSprite).animationSpeed = utils.random(
+        0.45,
+        0.6
+      );
     }
 
+    this.infected = this.infected;
     this.sprite.rotation = this.rotation;
     this.sprite.position.copyFrom(this.position);
     this.sprite.anchor.set(0.5, 0.5);

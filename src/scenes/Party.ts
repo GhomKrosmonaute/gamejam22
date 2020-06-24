@@ -1,6 +1,5 @@
 import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
-import * as geom from "booyah/src/geom";
 import * as utils from "../utils";
 import * as game from "../game";
 import * as _ from "underscore";
@@ -11,16 +10,17 @@ import SequenceManager from "../entities/SequenceManager";
 
 export default class Party extends entity.ParallelEntity {
   public container: PIXI.Container;
-  public colCount = 7;
-  public rowCount = 7;
-  public cutCount = 9;
-  public baseSequenceLength = 5;
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: SequenceManager;
   public path: Path;
   public grid: Grid;
   public state: utils.PartyState = "crunch";
   public mouseIsDown = false;
+
+  public readonly baseSequenceLength = 5;
+  public readonly colCount = 7;
+  public readonly rowCount = 7;
+  public readonly cutCount = 9;
 
   private goButton: PIXI.Container & { text?: PIXI.Text };
   private slide = new Slide();
@@ -38,16 +38,16 @@ export default class Party extends entity.ParallelEntity {
     this.container.interactive = true;
     this.entityConfig.container.addChild(this.container);
 
-    // Create slide entity, but don't add it yet
+    // Creating slide entity, but don't add it yet
     this.slide = new Slide();
     this._on(this.slide, "choseSide", this._onChoseSide);
 
     this.sequenceManager = new SequenceManager();
 
-    // instancie path system
+    // instancing path system
     this.path = new Path(this);
 
-    // generate nucleotide grid
+    // generating nucleotide grid
     this.grid = new Grid(
       this,
       this.colCount,
@@ -96,11 +96,11 @@ export default class Party extends entity.ParallelEntity {
       })
     );
 
-    // add sequences for tests
+    // adding sequences for tests
     // TODO: remove tests
     this.sequenceManager.add(3);
 
-    // Add go button
+    // adding go button
     {
       this.goButton = new PIXI.Container();
       this.goButton.position.set(
@@ -112,10 +112,11 @@ export default class Party extends entity.ParallelEntity {
       this._on(this.goButton, "pointerup", this._onGo);
       this.container.addChild(this.goButton);
 
-      const bg = new PIXI.Graphics();
-      bg.beginFill(0xaaaaaa);
-      bg.drawRect(-250, -50, 500, 100);
-      bg.endFill();
+      const bg = new PIXI.Graphics()
+        .beginFill(0xaaaaaa)
+        .drawRect(-250, -50, 500, 100)
+        .endFill();
+
       this.goButton.addChild(bg);
 
       this.goButton.text = new PIXI.Text("GO", {
