@@ -11,10 +11,14 @@ const scissorsPercentage = 1 / 8;
 
 /** Represent the game nucleotides grid */
 export default class Grid extends entity.ParallelEntity {
-  public nucleotides: Nucleotide[] = [];
   public container: PIXI.Container;
+  public nucleotides: Nucleotide[] = [];
+  public nucleotideContainer: PIXI.Container;
   public x = game.width * 0.09;
   public y = game.height * 0.4;
+
+  private _isPointerDown: boolean;
+  private _lastPointerPos: PIXI.Point;
 
   constructor(
     public party: Party,
@@ -27,8 +31,38 @@ export default class Grid extends entity.ParallelEntity {
   }
 
   _setup() {
+    this._isPointerDown = false;
+
     this.container = new PIXI.Container();
-    this.container.position.set(this.x, this.y);
+    this.container.interactive = true;
+    // Keep track of last pointer position
+    this._on(this.container, "pointerdown", this._onPointerDown);
+    this._on(this.container, "pointerup", () => (this._isPointerDown = false));
+    this._on(
+      this.container,
+      "pointermove",
+      (e: PIXI.InteractionEvent) => (this._lastPointerPos = e.data.global)
+    );
+    this.entityConfig.container.addChild(this.container);
+
+    // Add background to get pointer events
+    {
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0, 0.2);
+      bg.drawRect(
+        0,
+        0,
+        this.entityConfig.app.view.width,
+        this.entityConfig.app.view.height
+      );
+      bg.endFill();
+      this.container.addChild(bg);
+    }
+
+    this.nucleotideContainer = new PIXI.Container();
+    this.nucleotideContainer.position.set(this.x, this.y);
+    this.container.addChild(this.nucleotideContainer);
+
     this.nucleotides.length = this.colCount * this.rowCount;
     for (let x = 0; x < this.colCount; x++) {
       for (let y = 0; y < this.rowCount; y++) {
@@ -41,36 +75,45 @@ export default class Grid extends entity.ParallelEntity {
         this.addEntity(
           n,
           entity.extendConfig({
-            container: this.container,
+            container: this.nucleotideContainer,
           })
         );
         this.nucleotides[y * this.colCount + x] = n;
       }
     }
 
-    // this.addScissors();
     this.refresh();
-    this.entityConfig.container.addChild(this.container);
   }
 
   _update() {
-    // check hovering of all nucleotides and stock hovered
-    let hovered: Nucleotide;
-    for (const n of this.safetyNucleotides)
-      if (this.checkHovered(n)) hovered = n;
+    if (!this._isPointerDown) return;
+
+    const hovered: Nucleotide = this.safetyNucleotides.find((n) =>
+      this.checkHovered(n)
+    );
+    if (!hovered) return;
 
     // update path with hovered
-    if (hovered && this.party.path.items.length > 0)
-      this.party.path.calc(hovered);
+    this.party.path.add(hovered);
   }
 
   _teardown() {
-    for (const n of this.safetyNucleotides) {
-      this.container.removeChild(n.sprite);
-    }
     this.entityConfig.container.removeChild(this.container);
-    this.nucleotides = [];
     this.container = null;
+
+    this.nucleotides = [];
+  }
+
+  private _onPointerDown(e: PIXI.InteractionEvent): void {
+    this._isPointerDown = true;
+
+    const hovered: Nucleotide = this.safetyNucleotides.find((n) =>
+      this.checkHovered(n)
+    );
+    if (!hovered) return;
+
+    // update path with hovered
+    this.party.path.startAt(hovered);
   }
 
   get safetyNucleotides(): Nucleotide[] {
@@ -107,20 +150,21 @@ export default class Grid extends entity.ParallelEntity {
   }
 
   getHovered(): Nucleotide | null {
-    return this.safetyNucleotides.find((nucleotide) => nucleotide.isHovered);
+    return this.safetyNucleotides.find((nucleotide) =>
+      this.checkHovered(nucleotide)
+    );
   }
 
   checkHovered(n: Nucleotide): boolean {
-    const isHovered =
+    return (
       utils.dist(
         n.position.x + this.x,
         n.position.y + this.y,
-        this.party.mouse.global.x,
-        this.party.mouse.global.y
+        this._lastPointerPos.x,
+        this._lastPointerPos.y
       ) <
-      n.radius * 0.86;
-    if (n.isHovered !== isHovered) n.isHovered = isHovered;
-    return isHovered;
+      n.radius * 0.86
+    );
   }
 
   slide(neighborIndex: utils.NeighborIndex) {

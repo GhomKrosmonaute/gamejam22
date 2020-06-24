@@ -2,16 +2,26 @@
 
 ## Deployment with rclone
 
+First create the S3-compatible bucket:
+
+```bash
+rclone mkdir digitalocean:play-curious-crispr-crunch
+```
+
+Basic deployment `yarn deploy`.
+
+For more complex deployment
+
 To deploy without checking
 
 ```bash
-rclone --progress copy --s3-acl public-read dist digitalocean:play-curious-blockchain-battle --no-check-dest
+rclone --progress copy --s3-acl public-read dist digitalocean:play-curious-crispr-crunch --no-check-dest
 ```
 
 To deploy with checking
 
 ```bash
-rclone --progress sync --s3-acl public-read dist digitalocean:play-curious-blockchain-battle
+rclone --progress sync --s3-acl public-read dist digitalocean:play-curious-crispr-crunch
 ```
 
 ## Licensing

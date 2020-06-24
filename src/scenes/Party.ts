@@ -15,7 +15,6 @@ export default class Party extends entity.ParallelEntity {
   public path: Path;
   public grid: Grid;
   public state: utils.PartyState = "crunch";
-  public mouseIsDown = false;
 
   public readonly baseSequenceLength = 5;
   public readonly colCount = 7;
@@ -46,6 +45,7 @@ export default class Party extends entity.ParallelEntity {
 
     // instancing path system
     this.path = new Path(this);
+    this._on(this.path, "updated", this._refresh);
 
     // generating nucleotide grid
     this.grid = new Grid(
@@ -97,7 +97,6 @@ export default class Party extends entity.ParallelEntity {
     );
 
     // adding sequences for tests
-    // TODO: remove tests
     this.sequenceManager.add(3);
 
     // adding go button
@@ -142,16 +141,6 @@ export default class Party extends entity.ParallelEntity {
       this.container.addChild(membrane);
     }
 
-    // setup mouse listeners
-    this._on(this.container, "pointerdown", (e: PIXI.InteractionEvent) => {
-      this.mouseIsDown = true;
-      this.mouseDown(e);
-    });
-    this._on(this.container, "pointerup", (e: PIXI.InteractionEvent) => {
-      this.mouseIsDown = false;
-      this.mouseUp(e);
-    });
-
     this._refresh();
   }
 
@@ -163,23 +152,6 @@ export default class Party extends entity.ParallelEntity {
     this.path = null;
     this.grid = null;
     this.sequenceManager = null;
-  }
-
-  mouseDown(e: PIXI.InteractionEvent) {
-    if (this.state === "crunch") {
-      // get the hovered nucleotide
-      const hovered = this.grid.getHovered();
-
-      // if path not includes this nucleotide
-      if (hovered && !this.path.items.includes(hovered)) {
-        // if hovered is not a scissors, update path
-        if (hovered.state !== "scissors") this.path.calc(hovered);
-      }
-    }
-  }
-
-  mouseUp(e: PIXI.InteractionEvent) {
-    this._refresh();
   }
 
   private _onGo(): void {

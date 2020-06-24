@@ -1,11 +1,17 @@
 import * as PIXI from "pixi.js";
+import * as _ from "underscore";
+
 import * as entity from "booyah/src/entity";
 import Nucleotide from "./Nucleotide";
 import Sequence from "./Sequence";
 import Party from "../scenes/Party";
 import * as game from "../game";
 
-/** Represent the user path to validate sequences */
+/**
+ * Represent the user path to validate sequences
+ * Emits:
+ * - updated
+ * */
 export default class Path extends entity.Entity {
   public items: Nucleotide[] = [];
   public graphics = new PIXI.Graphics();
@@ -62,44 +68,55 @@ export default class Path extends entity.Entity {
     return this.items[this.items.length - 1];
   }
 
-  calc(n: Nucleotide): void {
-    if (!n.isHovered || !this.party.mouseIsDown) return;
-
-    if (n.state === "hole") return;
-
-    if (this.items.length === 0 && n.state === "normal") {
-      this.items.push(n);
-      this.refresh();
-      return;
-    }
+  startAt(n: Nucleotide): boolean {
+    if (n.state === "hole") return false;
 
     // check the cancellation & cancel to previous nucleotide
     const index = this.items.indexOf(n);
-    if (index === 0 && this.items.length > 1) {
+    if (index === 0) {
+      // Clear path
       this.items = [];
-      this.refresh();
-      return;
-    } else if (index > -1 && index !== this.items.length - 1) {
+    } else if (index > -1) {
+      // Return to previous step in the path
       this.items = this.items.slice(0, index + 1);
-      this.refresh();
-      return;
+    } else {
+      // Try adding to the path
+      if (this.add(n)) return true;
+
+      // Otherwise, start path anew
+      this.items = [n];
     }
 
-    // check if nucleotide is already in this path
-    if (this.items.includes(n)) return;
-
-    // check if the current nucleotide is a neighbor of the last checked nucleotide
-    if (this.last && this.party.grid.getNeighborIndex(this.last, n) === -1) {
-      return;
-    }
-
-    // push in this path the checked nucleotide
-    this.items.push(n);
+    this.emit("updated");
     this.refresh();
+    return true;
+  }
+
+  add(n: Nucleotide): boolean {
+    // Ignore holes
+    if (n.state === "hole") return false;
+
+    // Don't start new paths
+    if (this.items.length === 0) return false;
+
+    // If the nucleotide is already in the path, stop
+    if (_.contains(this.items, n)) return false;
+
+    // If the nucleaotide is not a neighbor of the last one, stop
+    if (this.party.grid.getNeighborIndex(n, _.last(this.items)) === -1)
+      return false;
+
+    // Add to the path
+    this.items.push(n);
+
+    this.emit("updated");
+    this.refresh();
+    return true;
   }
 
   remove() {
     this.items = [];
+    this.emit("updated");
     this.refresh();
   }
 
@@ -127,5 +144,7 @@ export default class Path extends entity.Entity {
 
   crunch() {
     this.items.forEach((n) => (n.state = "hole"));
+    this.emit("updated");
+    this.refresh();
   }
 }
