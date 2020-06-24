@@ -1,13 +1,10 @@
 import * as PIXI from "pixi.js";
 import * as _ from "underscore";
-
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
 import * as game from "../game";
 import Party from "../scenes/Party";
 import Nucleotide from "./Nucleotide";
-
-const scissorsPercentage = 1 / 8;
 
 /** Represent the game nucleotides grid */
 export default class Grid extends entity.ParallelEntity {
@@ -84,6 +81,7 @@ export default class Grid extends entity.ParallelEntity {
       }
     }
 
+    this.addScissors(this.safetyNucleotides);
     this.refresh();
   }
 
@@ -106,7 +104,7 @@ export default class Grid extends entity.ParallelEntity {
     this.nucleotides = [];
   }
 
-  private _onPointerDown(e: PIXI.InteractionEvent): void {
+  private _onPointerDown(e: PIXI.InteractionEvent) {
     this._isPointerDown = true;
 
     const hovered: Nucleotide = this.safetyNucleotides.find((n) =>
@@ -120,6 +118,18 @@ export default class Grid extends entity.ParallelEntity {
 
   get safetyNucleotides(): Nucleotide[] {
     return this.nucleotides.filter((n) => n !== undefined);
+  }
+
+  addScissors(among: Nucleotide[]) {
+    const safe = this.safetyNucleotides;
+    while (safe.filter((n) => n.state === "scissors").length < this.cutCount) {
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * among.length);
+      } while (among[randomIndex].state === "scissors");
+      among[randomIndex].state = "scissors";
+      among[randomIndex].refresh();
+    }
   }
 
   isOnEvenCol(n: Nucleotide): boolean {
@@ -171,6 +181,7 @@ export default class Grid extends entity.ParallelEntity {
 
   slide(neighborIndex: utils.NeighborIndex) {
     const opposedNeighborIndex = utils.opposedIndexOf(neighborIndex);
+    const oldHoles = this.safetyNucleotides.filter((n) => n.state === "hole");
     for (const nucleotide of this.safetyNucleotides) {
       if (nucleotide.state === "hole") {
         this.generateNucleotide(nucleotide);
@@ -178,6 +189,7 @@ export default class Grid extends entity.ParallelEntity {
       }
     }
 
+    this.addScissors(oldHoles);
     this.refresh();
   }
 
@@ -298,17 +310,13 @@ export default class Grid extends entity.ParallelEntity {
     _.chain(this.safetyNucleotides)
       .shuffle()
       .take(n)
-      .each((nucleotide) => this.generateNucleotide(nucleotide));
+      .each(this.generateNucleotide);
 
     this.refresh();
   }
 
   generateNucleotide(nucleotide: Nucleotide) {
-    if (Math.random() < scissorsPercentage) {
-      nucleotide.state = "scissors";
-    } else {
-      nucleotide.state = "normal";
-      nucleotide.colorName = utils.getRandomColorName();
-    }
+    nucleotide.state = "normal";
+    nucleotide.colorName = utils.getRandomColorName();
   }
 }

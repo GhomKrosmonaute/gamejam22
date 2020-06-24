@@ -19,7 +19,7 @@ export default class Party extends entity.ParallelEntity {
   public readonly baseSequenceLength = 5;
   public readonly colCount = 7;
   public readonly rowCount = 7;
-  public readonly cutCount = 9;
+  public readonly cutCount = 6;
 
   private goButton: PIXI.Container & { text?: PIXI.Text };
   private slide = new Slide();
@@ -200,7 +200,10 @@ export default class Party extends entity.ParallelEntity {
       this.sequenceManager.add(length);
     }
 
-    console.log(this.grid.safetyNucleotides.filter((n) => n.infected).length);
+    console.log(
+      "infected nucleotides",
+      this.grid.safetyNucleotides.filter((n) => n.infected).length
+    );
   }
 
   private _onChoseSide(neighborIndex: utils.NeighborIndex) {
