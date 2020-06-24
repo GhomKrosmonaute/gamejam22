@@ -20,7 +20,7 @@ module.exports = {
      * the js file will generated after webpack build the project, and the js will inserted at index.html automatically.
      * [hash:8] means unique 8 digit hash generated everytime.
      **/
-    filename: "game.js",
+    filename: "game.[hash:8].js",
   },
   module: {
     rules: [
@@ -60,12 +60,12 @@ module.exports = {
 
         // Copy CSS
         { from: "*.css" },
-        
+
         // copy game image assets
         {
           from: "images",
-          to: "images"
-        }
+          to: "images",
+        },
       ],
     }),
     // //opimize all image file
