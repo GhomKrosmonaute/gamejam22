@@ -74,6 +74,7 @@ export default class SequenceManager extends entity.ParallelEntity {
     // TODO: perhaps this should only work if one and only one sequence matches?
     return (
       path.scissors.length > 0 &&
+      path.last.state !== "scissors" &&
       this.sequences.some((s) => s.validate(path.signature))
     );
   }

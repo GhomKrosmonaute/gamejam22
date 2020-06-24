@@ -1,11 +1,9 @@
 import * as PIXI from "pixi.js";
 import * as _ from "underscore";
-
 import * as entity from "booyah/src/entity";
-import Nucleotide from "./Nucleotide";
-import Sequence from "./Sequence";
-import Party from "../scenes/Party";
 import * as game from "../game";
+import Nucleotide from "./Nucleotide";
+import Party from "../scenes/Party";
 
 /**
  * Represent the user path to validate sequences
@@ -93,6 +91,12 @@ export default class Path extends entity.Entity {
   }
 
   add(n: Nucleotide): boolean {
+    // not add scissors on first position
+    if (this.first && this.first.state === "scissors") {
+      this.remove();
+      return false;
+    }
+
     // Ignore holes
     if (n.state === "hole") return false;
 
@@ -102,9 +106,8 @@ export default class Path extends entity.Entity {
     // If the nucleotide is already in the path, stop
     if (_.contains(this.items, n)) return false;
 
-    // If the nucleaotide is not a neighbor of the last one, stop
-    if (this.party.grid.getNeighborIndex(n, _.last(this.items)) === -1)
-      return false;
+    // If the nucleotide is not a neighbor of the last one, stop
+    if (this.party.grid.getNeighborIndex(n, this.last) === -1) return false;
 
     // Add to the path
     this.items.push(n);
