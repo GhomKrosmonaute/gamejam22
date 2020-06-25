@@ -83,14 +83,17 @@ export default class SequenceManager extends entity.ParallelEntity {
 
   updateHighlighting(path: Path) {
     for (const s of this.sequences) {
-      const { left, right } = SequenceManager.matches(
+      const highlight = SequenceManager.matches(
         path.nucleotides,
         s.nucleotides
       );
-      const highlight = left.length > right.length ? left : right;
-      for (const n of s.nucleotides) {
-        if (highlight.includes(n)) n.sprite.filters = [new GlowFilter({})];
-        else n.sprite.filters = [];
+      if (SequenceManager.canMatch(path.nucleotides, s.nucleotides)) {
+        for (const n of s.nucleotides) {
+          if (highlight.includes(n)) n.sprite.filters = [new GlowFilter()];
+          else n.sprite.filters = [];
+        }
+      } else {
+        for (const n of s.nucleotides) n.sprite.filters = [];
       }
     }
   }
@@ -99,10 +102,7 @@ export default class SequenceManager extends entity.ParallelEntity {
     return this.sequences.length;
   }
 
-  static matches(
-    tested: Nucleotide[],
-    pattern: Nucleotide[]
-  ): { left: Nucleotide[]; right: Nucleotide[] } {
+  static matches(tested: Nucleotide[], pattern: Nucleotide[]): Nucleotide[] {
     const left: Nucleotide[] = [],
       right: Nucleotide[] = [];
 
@@ -116,14 +116,29 @@ export default class SequenceManager extends entity.ParallelEntity {
         if (tested[i].colorName === pattern[i].colorName) left.push(pattern[i]);
         else leftEnd = true;
       }
+
       if (!rightEnd) {
-        // todo: faire l'inverse
         if (tested[i].colorName === pattern[pattern.length - (i + 1)].colorName)
           right.push(pattern[pattern.length - (i + 1)]);
         else rightEnd = true;
       }
     }
 
-    return { left, right };
+    return left.length > right.length ? left : right;
+  }
+
+  static canMatch(tested: Nucleotide[], pattern: Nucleotide[]): boolean {
+    const reversedTested = tested.slice(0).reverse();
+    const reversedPattern = pattern.slice(0).reverse();
+    return (
+      pattern.join(",").startsWith(tested.join(",")) ||
+      pattern.join(",").startsWith(reversedTested.join(",")) ||
+      pattern.join(",").endsWith(tested.join(",")) ||
+      pattern.join(",").endsWith(reversedTested.join(",")) ||
+      reversedPattern.join(",").endsWith(tested.join(",")) ||
+      reversedPattern.join(",").endsWith(reversedTested.join(",")) ||
+      reversedPattern.join(",").startsWith(tested.join(",")) ||
+      reversedPattern.join(",").startsWith(reversedTested.join(","))
+    );
   }
 }
