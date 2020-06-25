@@ -7,11 +7,15 @@ import Grid from "../entities/Grid";
 import Path from "../entities/Path";
 import Slide from "../entities/Slide";
 import SequenceManager from "../entities/SequenceManager";
+import Inventory from "../entities/Inventory";
+import Bonus from "../entities/Bonus";
+import Nucleotide from "../entities/Nucleotide";
 
 export default class Party extends entity.ParallelEntity {
   public container: PIXI.Container;
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: SequenceManager;
+  public inventory: Inventory;
   public path: Path;
   public grid: Grid;
   public state: utils.PartyState = "crunch";
@@ -42,6 +46,7 @@ export default class Party extends entity.ParallelEntity {
     this._on(this.slide, "choseSide", this._onChoseSide);
 
     this.sequenceManager = new SequenceManager();
+    this.inventory = new Inventory();
 
     // instancing path system
     this.path = new Path(this);
@@ -95,9 +100,12 @@ export default class Party extends entity.ParallelEntity {
         container: this.container,
       })
     );
-
-    // adding sequences for tests
-    this.sequenceManager.add(3);
+    this.addEntity(
+      this.inventory,
+      entity.extendConfig({
+        container: this.container,
+      })
+    );
 
     // adding go button
     {
@@ -140,6 +148,12 @@ export default class Party extends entity.ParallelEntity {
       );
       this.container.addChild(membrane);
     }
+
+    // adding sequences for tests
+    this.sequenceManager.add(3);
+
+    // adding bonus for tests
+    this.inventory.add(new Bonus(this.grid.swap));
 
     this._refresh();
   }

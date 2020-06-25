@@ -152,8 +152,6 @@ export default class Path extends entity.Entity {
   }
 
   toString(reverse = false) {
-    return (!!reverse ? this.nucleotides.reverse() : this.nucleotides).join(
-      ","
-    );
+    return (reverse ? this.nucleotides.reverse() : this.nucleotides).join(",");
   }
 }
