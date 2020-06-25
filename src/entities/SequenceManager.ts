@@ -124,7 +124,7 @@ export default class SequenceManager extends entity.ParallelEntity {
       }
     }
 
-    return left.length > right.length ? left : right;
+    return left.length >= right.length ? left : right;
   }
 
   static canMatch(tested: Nucleotide[], pattern: Nucleotide[]): boolean {
