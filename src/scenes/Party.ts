@@ -236,5 +236,6 @@ export default class Party extends entity.ParallelEntity {
       this.goButton.text.text = "SKIP";
       this.goButton.interactive = true;
     }
+    this.sequenceManager.updateHighlighting(this.path);
   }
 }

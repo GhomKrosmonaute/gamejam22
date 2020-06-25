@@ -6,6 +6,8 @@ import Sequence from "./Sequence";
 import Path from "./Path";
 import Nucleotide from "./Nucleotide";
 
+import { GlowFilter } from "@pixi/filter-glow";
+
 export default class SequenceManager extends entity.ParallelEntity {
   public sequences: Sequence[] = [];
   public container: PIXI.Container;
@@ -79,7 +81,49 @@ export default class SequenceManager extends entity.ParallelEntity {
     );
   }
 
+  updateHighlighting(path: Path) {
+    for (const s of this.sequences) {
+      const { left, right } = SequenceManager.matches(
+        path.nucleotides,
+        s.nucleotides
+      );
+      const highlight = left.length > right.length ? left : right;
+      for (const n of s.nucleotides) {
+        if (highlight.includes(n)) n.sprite.filters = [new GlowFilter({})];
+        else n.sprite.filters = [];
+      }
+    }
+  }
+
   countSequences(): number {
     return this.sequences.length;
+  }
+
+  static matches(
+    tested: Nucleotide[],
+    pattern: Nucleotide[]
+  ): { left: Nucleotide[]; right: Nucleotide[] } {
+    const left: Nucleotide[] = [],
+      right: Nucleotide[] = [];
+
+    let leftEnd = false,
+      rightEnd = false;
+
+    for (let i = 0; i < pattern.length; i++) {
+      if (!tested[i]) break;
+
+      if (!leftEnd) {
+        if (tested[i].colorName === pattern[i].colorName) left.push(pattern[i]);
+        else leftEnd = true;
+      }
+      if (!rightEnd) {
+        // todo: faire l'inverse
+        if (tested[i].colorName === pattern[pattern.length - (i + 1)].colorName)
+          right.push(pattern[pattern.length - (i + 1)]);
+        else rightEnd = true;
+      }
+    }
+
+    return { left, right };
   }
 }
