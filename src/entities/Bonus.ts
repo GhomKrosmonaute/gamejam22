@@ -2,7 +2,6 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
 import Nucleotide from "./Nucleotide";
-import Party from "../scenes/Party";
 
 import { GlowFilter } from "@pixi/filter-glow";
 
