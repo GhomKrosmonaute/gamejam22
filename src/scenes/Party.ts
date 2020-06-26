@@ -27,6 +27,7 @@ export default class Party extends entity.ParallelEntity {
 
   private goButton: PIXI.Container & { text?: PIXI.Text };
   private slide = new Slide();
+  private crunchCount: number = 0;
 
   get renderer(): PIXI.Renderer {
     return this.entityConfig.app.renderer;
@@ -149,22 +150,28 @@ export default class Party extends entity.ParallelEntity {
     // adding sequences for tests
     this.sequenceManager.add(3);
 
-    const swapBonus = new Bonus(
-      "swap",
-      new PIXI.Sprite(
-        this.entityConfig.app.loader.resources["images/bonus_swap.png"].texture
-      ),
-      "drag & drop"
-    );
+    // adding bonus
+    {
+      const swapBonus = new Bonus(
+        "swap",
+        new PIXI.Sprite(
+          this.entityConfig.app.loader.resources[
+            "images/bonus_swap.png"
+          ].texture
+        ),
+        "drag & drop"
+      );
+      this.inventory.add(swapBonus);
+      this._on(swapBonus, "trigger", (n1: Nucleotide, n2: Nucleotide) => {
+        // todo: make animated swap function on grid
+        this.grid.swap(n1, n2);
+      });
 
-    // adding bonus for tests
-    // todo: remove test bonus
-    for (let i = 0; i++ < 5; ) this.inventory.add(swapBonus);
-
-    // todo: make animated swap function on grid
-    this._on(swapBonus, "trigger", (n1: Nucleotide, n2: Nucleotide) => {
-      this.grid.swap(n1, n2);
-    });
+      this._on(this.sequenceManager, "crunch", () => {
+        this.crunchCount++;
+        if (this.crunchCount % 2 === 0) this.inventory.add(swapBonus);
+      });
+    }
 
     this._refresh();
   }

@@ -6,6 +6,9 @@ import Sequence from "./Sequence";
 import Path from "./Path";
 import Nucleotide from "./Nucleotide";
 
+/**
+ * emit: crunch; (s: Sequence)
+ */
 export default class SequenceManager extends entity.ParallelEntity {
   public sequences: Sequence[] = [];
   public container: PIXI.Container;
@@ -44,6 +47,7 @@ export default class SequenceManager extends entity.ParallelEntity {
       if (s.validate(signature)) {
         this.removeEntity(s);
         crunched = true;
+        this.emit("crunch", s);
       } else newSequences.push(s);
     }
     if (crunched) path.items.forEach((n) => (n.infected = false));
