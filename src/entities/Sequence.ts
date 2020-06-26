@@ -58,8 +58,9 @@ export default class Sequence extends entity.ParallelEntity {
   }
 
   toString(reverse = false) {
-    return (!!reverse ? this.nucleotides.reverse() : this.nucleotides)
-      .map((n) => n.colorName)
-      .join(",");
+    return (!!reverse
+      ? this.nucleotides.slice(0).reverse()
+      : this.nucleotides
+    ).join(",");
   }
 }

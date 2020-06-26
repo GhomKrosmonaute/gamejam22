@@ -35,7 +35,7 @@ export default class Path extends entity.Entity {
   }
 
   get signature(): string {
-    return this.nucleotides.map((n) => n.colorName).join(",");
+    return this.nucleotides.join(",");
   }
 
   /** The real length without cuts */
@@ -149,5 +149,9 @@ export default class Path extends entity.Entity {
     this.items.forEach((n) => (n.state = "hole"));
     this.emit("updated");
     this.refresh();
+  }
+
+  toString(reverse = false) {
+    return (reverse ? this.nucleotides.reverse() : this.nucleotides).join(",");
   }
 }

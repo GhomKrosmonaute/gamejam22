@@ -131,4 +131,8 @@ export default class Nucleotide extends entity.Entity {
     const dist = new PIXI.Point(width * (3 / 4), height);
     return { width, height, dist };
   }
+
+  toString(): string {
+    return this.colorName;
+  }
 }
