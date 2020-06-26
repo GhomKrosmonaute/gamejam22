@@ -1,10 +1,8 @@
 import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
+import * as game from "../game";
 import Nucleotide from "./Nucleotide";
-import Party from "../scenes/Party";
-
-import { GlowFilter } from "@pixi/filter-glow";
 
 export default class Bonus extends entity.Entity {
   public targets: Nucleotide[] = [];
@@ -58,7 +56,7 @@ export default class Bonus extends entity.Entity {
 
   set focused(isFocused: boolean) {
     this.isFocused = isFocused;
-    if (isFocused) this.sprite.filters = [new GlowFilter()];
+    if (isFocused) this.sprite.filters = [game.filters["glow40"]];
     else this.sprite.filters = [];
   }
 

@@ -10,8 +10,9 @@ export const height = 1920;
 export const size = new PIXI.Point(width, height);
 
 export const filters: { [key: string]: any } = {
+  glow40: new GlowFilter({ distance: 40 }),
   glow: new GlowFilter(),
-  outline: new OutlineFilter(4, 0xffee00ff),
+  outline: new OutlineFilter(3, 0xffee00ff),
 };
 
 const gameStates = {

@@ -23,7 +23,7 @@ export default class Inventory extends entity.ParallelEntity {
     this.arrowButton.interactive = true;
     this.arrowButton.buttonMode = true;
     this.arrowButton.hitArea = new PIXI.Rectangle(
-      game.width - game.width / 20,
+      game.width,
       game.height * 0.45,
       game.width / 10,
       game.height / 10
@@ -47,7 +47,7 @@ export default class Inventory extends entity.ParallelEntity {
 
   _onSwitch() {
     this.isOpened = !this.isOpened;
-    if (this.isOpened) this.container.x = 0;
+    if (this.isOpened) this.container.x = game.width * -0.7;
     else this.container.x = game.width * -1;
   }
 
@@ -60,14 +60,14 @@ export default class Inventory extends entity.ParallelEntity {
       bonus.count++;
       return;
     }
-    bonus.sprite.x = 50;
+    bonus.sprite.x = game.width - 300;
     bonus.sprite.y = bonus.sprite.height * this.bonus.length + 50;
     this._on(
       bonus.sprite,
       "pointerup",
       function () {
         this.that.focus(this.bonus);
-        this.that._onSwitch();
+        //this.that._onSwitch();
       }.bind({ that: this, bonus })
     );
     this._on(
