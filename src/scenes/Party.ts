@@ -37,6 +37,8 @@ export default class Party extends entity.ParallelEntity {
   }
 
   _setup() {
+    this.entityConfig.party = this;
+
     this.container = new PIXI.Container();
     this.container.interactive = true;
     this.entityConfig.container.addChild(this.container);
@@ -46,7 +48,6 @@ export default class Party extends entity.ParallelEntity {
     this._on(this.slide, "choseSide", this._onChoseSide);
 
     this.sequenceManager = new SequenceManager();
-    this.inventory = new Inventory();
 
     // instancing path system
     this.path = new Path(this);
@@ -54,7 +55,6 @@ export default class Party extends entity.ParallelEntity {
 
     // generating nucleotide grid
     this.grid = new Grid(
-      this,
       this.colCount,
       this.rowCount,
       this.cutCount,
@@ -66,18 +66,12 @@ export default class Party extends entity.ParallelEntity {
       const background = new PIXI.Sprite(
         this.entityConfig.app.loader.resources["images/background.jpg"].texture
       );
-      const space = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources[
-          "images/space_background.png"
-        ].texture
-      );
       const particles = new PIXI.Sprite(
         this.entityConfig.app.loader.resources[
           "images/particles_background.png"
         ].texture
       );
       this.container.addChild(background);
-      this.container.addChild(space);
       this.container.addChild(particles);
     }
 
@@ -96,12 +90,6 @@ export default class Party extends entity.ParallelEntity {
     );
     this.addEntity(
       this.sequenceManager,
-      entity.extendConfig({
-        container: this.container,
-      })
-    );
-    this.addEntity(
-      this.inventory,
       entity.extendConfig({
         container: this.container,
       })
@@ -149,11 +137,34 @@ export default class Party extends entity.ParallelEntity {
       this.container.addChild(membrane);
     }
 
+    this.inventory = new Inventory();
+
+    this.addEntity(
+      this.inventory,
+      entity.extendConfig({
+        container: this.container,
+      })
+    );
+
     // adding sequences for tests
     this.sequenceManager.add(3);
 
+    const swapBonus = new Bonus(
+      "swap",
+      new PIXI.Sprite(
+        this.entityConfig.app.loader.resources["images/bonus_swap.png"].texture
+      ),
+      "drag & drop"
+    );
+
     // adding bonus for tests
-    this.inventory.add(new Bonus(this.grid.swap));
+    // todo: remove test bonus
+    for (let i = 0; i++ < 5; ) this.inventory.add(swapBonus);
+
+    // todo: make animated swap function on grid
+    this._on(swapBonus, "trigger", (n1: Nucleotide, n2: Nucleotide) => {
+      this.grid.swap(n1, n2);
+    });
 
     this._refresh();
   }
@@ -215,8 +226,8 @@ export default class Party extends entity.ParallelEntity {
     }
 
     console.log(
-      "infected nucleotides",
-      this.grid.safetyNucleotides.filter((n) => n.infected).length
+      this.grid.safetyNucleotides.filter((n) => n.infected).length,
+      "infected nucleotides"
     );
   }
 

@@ -18,7 +18,12 @@ export function getRandomColorName(): ColorName {
   return colorNames[Math.floor(Math.random() * colorNames.length)];
 }
 
-export type PartyState = "crunch" | "slide";
+export type PartyState = "crunch" | "slide" | "bonus";
+
+export type BonusUsageStyle =
+  | "drag & drop"
+  | "drag & drop on neighbor"
+  | "click";
 
 /** from 0 to 5, start on top */
 export type NeighborIndex = 0 | 1 | 2 | 3 | 4 | 5;
