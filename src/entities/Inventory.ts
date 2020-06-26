@@ -67,7 +67,7 @@ export default class Inventory extends entity.ParallelEntity {
       "pointerup",
       function () {
         this.that.focus(this.bonus);
-        this.that._onSwitch();
+        //this.that._onSwitch();
       }.bind({ that: this, bonus })
     );
     this._on(
