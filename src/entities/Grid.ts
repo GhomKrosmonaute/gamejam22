@@ -18,7 +18,6 @@ export default class Grid extends entity.ParallelEntity {
   private _lastPointerPos: PIXI.Point;
 
   constructor(
-    public party: Party,
     public colCount: number,
     public rowCount: number,
     public cutCount: number,
@@ -94,7 +93,7 @@ export default class Grid extends entity.ParallelEntity {
     if (!hovered) return;
 
     // update path with hovered
-    this.party.path.add(hovered);
+    this.entityConfig.party.path.add(hovered);
   }
 
   _teardown() {
@@ -112,8 +111,13 @@ export default class Grid extends entity.ParallelEntity {
     );
     if (!hovered) return;
 
-    // update path with hovered
-    this.party.path.startAt(hovered);
+    const focused = this.entityConfig.party.inventory.focused;
+
+    if (!focused)
+      // update path with hovered
+      this.entityConfig.party.path.startAt(hovered);
+    // use bonus
+    else focused.use(hovered);
   }
 
   get safetyNucleotides(): Nucleotide[] {

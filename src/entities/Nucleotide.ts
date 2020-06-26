@@ -1,21 +1,17 @@
 import * as PIXI from "pixi.js";
 import * as _ from "underscore";
-import { OutlineFilter } from "@pixi/filter-outline";
-
-import * as geom from "booyah/src/geom";
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as utils from "../utils";
-
-// const scissorsPercentage = 1 / 8;
+import * as game from "../game";
 
 /** Represent a nucleotide */
 export default class Nucleotide extends entity.Entity {
   public state: utils.NucleotideState = "normal";
   public colorName: utils.ColorName = utils.getRandomColorName();
-
   public isHovered = false;
   public sprite: PIXI.AnimatedSprite | PIXI.Sprite = null;
+  public filterFlags: { [key: string]: boolean } = {};
 
   private isInfected = false;
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
@@ -51,9 +47,16 @@ export default class Nucleotide extends entity.Entity {
     if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
   }
 
+  setFilter(name: string, value: boolean) {
+    this.filterFlags[name] = value;
+    this.sprite.filters = Object.entries(this.filterFlags)
+      .filter((e) => e[1])
+      .map((e) => game.filters[e[0]]);
+  }
+
   set infected(isInfected: boolean) {
     this.isInfected = isInfected;
-    this.sprite.filters = isInfected ? [new OutlineFilter(4, 0xffee00ff)] : [];
+    this.setFilter("outline", isInfected);
   }
 
   get infected(): boolean {

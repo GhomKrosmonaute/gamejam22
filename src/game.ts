@@ -2,9 +2,17 @@ import * as booyah from "booyah/src/booyah";
 import * as PIXI from "pixi.js";
 import Party from "./scenes/Party";
 
+import { OutlineFilter } from "@pixi/filter-outline";
+import { GlowFilter } from "@pixi/filter-glow";
+
 export const width = 1080;
 export const height = 1920;
 export const size = new PIXI.Point(width, height);
+
+export const filters: { [key: string]: any } = {
+  glow: new GlowFilter(),
+  outline: new OutlineFilter(4, 0xffee00ff),
+};
 
 const gameStates = {
   start: new Party(),
@@ -14,12 +22,13 @@ const graphicalAssets = [
   // images
   "images/particles_background.png",
   "images/particles_foreground.png",
-  "images/space_background.png",
   "images/background.jpg",
   "images/membrane.png",
+  "images/inventory.png",
   "images/hole.png",
   "images/arrow.png",
   "images/circle.png",
+  "images/bonus_swap.png",
 
   // animated sprites
   "images/nucleotide_red.json",

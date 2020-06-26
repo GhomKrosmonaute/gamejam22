@@ -6,8 +6,6 @@ import Sequence from "./Sequence";
 import Path from "./Path";
 import Nucleotide from "./Nucleotide";
 
-import { GlowFilter } from "@pixi/filter-glow";
-
 export default class SequenceManager extends entity.ParallelEntity {
   public sequences: Sequence[] = [];
   public container: PIXI.Container;
@@ -88,12 +86,10 @@ export default class SequenceManager extends entity.ParallelEntity {
         s.nucleotides
       );
       if (SequenceManager.canMatch(path.nucleotides, s.nucleotides)) {
-        for (const n of s.nucleotides) {
-          if (highlight.includes(n)) n.sprite.filters = [new GlowFilter()];
-          else n.sprite.filters = [];
-        }
+        for (const n of s.nucleotides)
+          n.setFilter("glow", highlight.includes(n));
       } else {
-        for (const n of s.nucleotides) n.sprite.filters = [];
+        for (const n of s.nucleotides) n.setFilter("glow", false);
       }
     }
   }
