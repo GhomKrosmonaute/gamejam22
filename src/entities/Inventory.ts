@@ -100,6 +100,6 @@ export default class Inventory extends entity.ParallelEntity {
   focus(bonus?: Bonus) {
     if (bonus && bonus.focused) bonus.focused = false;
     else for (const b of this.bonus) b.focused = b === bonus;
-    if (bonus && bonus.focused) this.entityConfig.party.else;
+    if (bonus && bonus.focused) this.entityConfig.level.else;
   }
 }

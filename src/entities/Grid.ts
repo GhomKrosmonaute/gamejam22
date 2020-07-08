@@ -3,7 +3,7 @@ import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
 import * as utils from "../utils";
 import * as game from "../game";
-import Party from "../scenes/Party";
+import Level from "../scenes/Level";
 import Nucleotide from "./Nucleotide";
 
 /** Represent the game nucleotides grid */
@@ -93,7 +93,7 @@ export default class Grid extends entity.ParallelEntity {
     if (!hovered) return;
 
     // update path with hovered
-    this.entityConfig.party.path.add(hovered);
+    this.entityConfig.level.path.add(hovered);
   }
 
   _teardown() {
@@ -111,11 +111,11 @@ export default class Grid extends entity.ParallelEntity {
     );
     if (!hovered) return;
 
-    const focused = this.entityConfig.party.inventory.focused;
+    const focused = this.entityConfig.level.inventory.focused;
 
     if (!focused)
       // update path with hovered
-      this.entityConfig.party.path.startAt(hovered);
+      this.entityConfig.level.path.startAt(hovered);
     // use bonus
     else focused.use(hovered);
   }

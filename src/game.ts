@@ -1,6 +1,6 @@
 import * as booyah from "booyah/src/booyah";
 import * as PIXI from "pixi.js";
-import Party from "./scenes/Party";
+import Level from "./scenes/Level";
 
 import { OutlineFilter } from "@pixi/filter-outline";
 import { GlowFilter } from "@pixi/filter-glow";
@@ -16,7 +16,7 @@ export const filters: { [key: string]: any } = {
 };
 
 const gameStates = {
-  start: new Party(),
+  start: new Level(),
 };
 
 const graphicalAssets = [

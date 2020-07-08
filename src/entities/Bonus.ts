@@ -69,7 +69,7 @@ export default class Bonus extends entity.Entity {
       }
     } else if (this.usageStyle === "drag & drop on neighbor") {
       if (this.targets.length === 2) {
-        const neighborIndex = this.entityConfig.party.grid.getNeighborIndex(
+        const neighborIndex = this.entityConfig.level.grid.getNeighborIndex(
           this.targets[0],
           this.targets[1]
         );

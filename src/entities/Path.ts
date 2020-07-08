@@ -3,7 +3,7 @@ import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
 import * as game from "../game";
 import Nucleotide from "./Nucleotide";
-import Party from "../scenes/Party";
+import Level from "../scenes/Level";
 
 /**
  * Represent the user path to validate sequences
@@ -19,8 +19,8 @@ export default class Path extends entity.Entity {
   public x = game.width * 0.09;
   public y = game.height * 0.4;
 
-  // TODO: remove dependency on Party
-  constructor(public party: Party) {
+  // TODO: remove dependency on Level
+  constructor(public level: Level) {
     super();
   }
 
@@ -54,7 +54,7 @@ export default class Path extends entity.Entity {
 
   get maxLength(): number {
     return Math.max(
-      ...this.party.sequenceManager.sequences.map((s) => s.length)
+      ...this.level.sequenceManager.sequences.map((s) => s.length)
     );
   }
 
@@ -107,7 +107,7 @@ export default class Path extends entity.Entity {
     if (_.contains(this.items, n)) return false;
 
     // If the nucleotide is not a neighbor of the last one, stop
-    if (this.party.grid.getNeighborIndex(n, this.last) === -1) return false;
+    if (this.level.grid.getNeighborIndex(n, this.last) === -1) return false;
 
     // Add to the path
     this.items.push(n);

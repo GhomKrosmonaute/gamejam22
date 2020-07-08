@@ -11,7 +11,7 @@ import Inventory from "../entities/Inventory";
 import Bonus from "../entities/Bonus";
 import Nucleotide from "../entities/Nucleotide";
 
-export default class Party extends entity.ParallelEntity {
+export default class Level extends entity.ParallelEntity {
   public container: PIXI.Container;
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: SequenceManager;
@@ -38,7 +38,7 @@ export default class Party extends entity.ParallelEntity {
   }
 
   _setup() {
-    this.entityConfig.party = this;
+    this.entityConfig.level = this;
 
     this.container = new PIXI.Container();
     this.container.interactive = true;
