@@ -197,6 +197,17 @@ export default class Grid extends entity.ParallelEntity {
     this.refresh();
   }
 
+  fillHoles(): Nucleotide[] {
+    const holes = this.safetyNucleotides.filter((n) => n.state === "hole");
+    for (const nucleotide of holes) {
+      this.generateNucleotide(nucleotide);
+    }
+    this.addScissors(holes);
+    this.refresh();
+
+    return holes;
+  }
+
   swap(n1: Nucleotide, n2: Nucleotide) {
     // swap grid indexes
     const index1 = this.nucleotides.indexOf(n1);

@@ -18,7 +18,7 @@ export function getRandomColorName(): ColorName {
   return colorNames[Math.floor(Math.random() * colorNames.length)];
 }
 
-export type PartyState = "crunch" | "slide" | "bonus";
+export type PartyState = "crunch" | "regenerate" | "bonus";
 
 export type BonusUsageStyle =
   | "drag & drop"

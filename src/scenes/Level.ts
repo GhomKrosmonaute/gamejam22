@@ -1,11 +1,14 @@
 import * as PIXI from "pixi.js";
+import * as _ from "underscore";
+
 import * as entity from "booyah/src/entity";
+import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
+
 import * as utils from "../utils";
 import * as game from "../game";
-import * as _ from "underscore";
 import Grid from "../entities/Grid";
 import Path from "../entities/Path";
-import Slide from "../entities/Slide";
 import SequenceManager from "../entities/SequenceManager";
 import Inventory from "../entities/Inventory";
 import Bonus from "../entities/Bonus";
@@ -26,7 +29,6 @@ export default class Level extends entity.ParallelEntity {
   public readonly cutCount = 6;
 
   private goButton: PIXI.Container & { text?: PIXI.Text };
-  private slide = new Slide();
   private crunchCount: number = 0;
 
   get renderer(): PIXI.Renderer {
@@ -43,10 +45,6 @@ export default class Level extends entity.ParallelEntity {
     this.container = new PIXI.Container();
     this.container.interactive = true;
     this.entityConfig.container.addChild(this.container);
-
-    // Creating slide entity, but don't add it yet
-    this.slide = new Slide();
-    this._on(this.slide, "choseSide", this._onChoseSide);
 
     this.sequenceManager = new SequenceManager();
 
@@ -197,11 +195,33 @@ export default class Level extends entity.ParallelEntity {
 
       this.grid.refresh();
     } else if (this.grid.containsHoles()) {
-      // Switch to slide mode
-      this.state = "slide";
+      // Switch to regenerate mode
+      this.state = "regenerate";
       this._refresh();
 
-      this.addEntity(this.slide);
+      const newNucleotides = this.grid.fillHoles();
+
+      // Setup growing animation
+      const radiusTween = new tween.Tween({
+        from: 0,
+        to: this.grid.nucleotideRadius,
+        easing: easing.easeOutBounce,
+      });
+      this._on(radiusTween, "updatedValue", (radius) => {
+        for (const n of newNucleotides) n.radius = radius;
+      });
+      const tweenAnimation = new entity.EntitySequence([
+        radiusTween,
+        new entity.FunctionCallEntity(() => {
+          this.state = "crunch";
+
+          this._endTurn();
+          this._refresh();
+
+          this.removeEntity(tweenAnimation);
+        }),
+      ]);
+      this.addEntity(tweenAnimation);
     } else {
       // TODO: add confirm dialog "Are you sure?"
 
@@ -228,7 +248,7 @@ export default class Level extends entity.ParallelEntity {
     }
 
     if (countSequences < 3) {
-      const length = utils.random(3, 6);
+      const length = utils.random(3, 4);
       this.sequenceManager.add(length);
     }
 
@@ -236,20 +256,6 @@ export default class Level extends entity.ParallelEntity {
       this.grid.safetyNucleotides.filter((n) => n.infected).length,
       "infected nucleotides"
     );
-  }
-
-  private _onChoseSide(neighborIndex: utils.NeighborIndex) {
-    console.assert(this.state === "slide");
-
-    console.log("sliding neighborIndex", neighborIndex);
-
-    this.grid.slide(neighborIndex);
-
-    this.removeEntity(this.slide);
-    this.state = "crunch";
-
-    this._endTurn();
-    this._refresh();
   }
 
   private _refresh() {
@@ -262,7 +268,7 @@ export default class Level extends entity.ParallelEntity {
         this.goButton.interactive = false;
       }
     } else if (this.grid.containsHoles()) {
-      this.goButton.text.text = "SLIDE";
+      this.goButton.text.text = "REGENERATE";
       this.goButton.interactive = true;
     } else {
       this.goButton.text.text = "SKIP";

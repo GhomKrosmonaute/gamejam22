@@ -13,6 +13,7 @@ export default class Nucleotide extends entity.Entity {
   public sprite: PIXI.AnimatedSprite | PIXI.Sprite = null;
   public filterFlags: { [key: string]: boolean } = {};
 
+  private _radius: number;
   private isInfected = false;
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
   private floatingShift = new PIXI.Point();
@@ -20,11 +21,13 @@ export default class Nucleotide extends entity.Entity {
   private floatingAmplitude = new PIXI.Point();
 
   constructor(
-    public radius: number,
+    radius: number,
     public position = new PIXI.Point(),
     public rotation = 0
   ) {
     super();
+
+    this._radius = radius;
   }
 
   _setup() {}
@@ -123,12 +126,7 @@ export default class Nucleotide extends entity.Entity {
     this.sprite.position.copyFrom(this.position);
     this.sprite.anchor.set(0.5, 0.5);
 
-    // TODO: is this necessary?
-    // const scale = this.state === "scissors" ? 0.74 : 0.9;
-
-    // Native sprite size is 136 x 129 px
-    const scale = (0.85 * this.width) / 136;
-    this.sprite.scale.set(scale);
+    this._refreshScale();
 
     this.entityConfig.container.addChild(this.sprite);
   }
@@ -142,5 +140,23 @@ export default class Nucleotide extends entity.Entity {
 
   toString(): string {
     return this.colorName;
+  }
+
+  get radius(): number {
+    return this._radius;
+  }
+  set radius(radius: number) {
+    this._radius = radius;
+
+    this._refreshScale();
+  }
+
+  private _refreshScale() {
+    // TODO: is this necessary?
+    // const scale = this.state === "scissors" ? 0.74 : 0.9;
+
+    // Native sprite size is 136 x 129 px
+    const scale = (0.85 * this.width) / 136;
+    this.sprite.scale.set(scale);
   }
 }
