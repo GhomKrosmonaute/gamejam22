@@ -122,9 +122,14 @@ export default class Nucleotide extends entity.Entity {
     this.sprite.rotation = this.rotation;
     this.sprite.position.copyFrom(this.position);
     this.sprite.anchor.set(0.5, 0.5);
-    const scale = this.state === "scissors" ? 0.74 : 0.9;
-    this.sprite.width = this.width * scale;
-    this.sprite.height = this.height * scale;
+
+    // TODO: is this necessary?
+    // const scale = this.state === "scissors" ? 0.74 : 0.9;
+
+    // Native sprite size is 136 x 129 px
+    const scale = (0.85 * this.width) / 136;
+    this.sprite.scale.set(scale);
+
     this.entityConfig.container.addChild(this.sprite);
   }
 
