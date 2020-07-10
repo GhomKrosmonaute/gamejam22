@@ -98,7 +98,7 @@ export default class Level extends entity.ParallelEntity {
     {
       this.goButton = new PIXI.Container();
       this.goButton.position.set(
-        this.entityConfig.app.view.width / 2,
+        this.entityConfig.app.view.width * 0.75,
         this.entityConfig.app.view.height - 90
       );
       this.goButton.interactive = true;
