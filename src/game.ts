@@ -31,6 +31,13 @@ class LevelMenu extends entity.Entity {
         () => (this.requestedTransition = "turnBased")
       )
     );
+    this.container.addChild(
+      this._makeButton(
+        "Continuous",
+        new PIXI.Point(this.entityConfig.app.view.width / 2, 600),
+        () => (this.requestedTransition = "continuous")
+      )
+    );
   }
 
   _teardown(): void {
@@ -68,12 +75,14 @@ class LevelMenu extends entity.Entity {
 
 const gameStates = {
   start: new LevelMenu(),
-  turnBased: new Level(),
+  turnBased: new Level("turnBased"),
+  continuous: new Level("continuous"),
 };
 
 let gameTransitions = {
   start: entity.makeTransitionTable({
     turnBased: "turnBased",
+    continuous: "continuous",
   }),
 };
 

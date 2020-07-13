@@ -54,7 +54,7 @@ export default class Path extends entity.Entity {
 
   get maxLength(): number {
     return Math.max(
-      ...this.level.sequenceManager.sequences.map((s) => s.length)
+      ...this.level.sequenceManager.sequences.map((s) => s.baseLength)
     );
   }
 

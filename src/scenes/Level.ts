@@ -14,6 +14,10 @@ import Inventory from "../entities/Inventory";
 import Bonus from "../entities/Bonus";
 import Nucleotide from "../entities/Nucleotide";
 
+export type LevelVariant = "turnBased" | "continuous";
+
+const dropSpeed = 0.001;
+
 export default class Level extends entity.ParallelEntity {
   public container: PIXI.Container;
   public nucleotideRadius = game.width / 13.44;
@@ -23,7 +27,6 @@ export default class Level extends entity.ParallelEntity {
   public grid: Grid;
   public state: utils.PartyState = "crunch";
 
-  public readonly baseSequenceLength = 5;
   public readonly colCount = 7;
   public readonly rowCount = 7;
   public readonly cutCount = 6;
@@ -31,12 +34,8 @@ export default class Level extends entity.ParallelEntity {
   private goButton: PIXI.Container & { text?: PIXI.Text };
   private crunchCount: number = 0;
 
-  get renderer(): PIXI.Renderer {
-    return this.entityConfig.app.renderer;
-  }
-
-  get mouse(): PIXI.InteractionData {
-    return this.renderer.plugins.interaction.mouse;
+  constructor(public readonly levelVariant: LevelVariant) {
+    super();
   }
 
   _setup() {
@@ -147,6 +146,8 @@ export default class Level extends entity.ParallelEntity {
 
     // adding sequences for tests
     this.sequenceManager.add(3);
+    if (this.levelVariant === "turnBased")
+      this.sequenceManager.distributeSequences();
 
     // adding bonus
     {
@@ -174,7 +175,26 @@ export default class Level extends entity.ParallelEntity {
     this._refresh();
   }
 
-  _update() {}
+  _update() {
+    if (this.levelVariant !== "continuous") return;
+
+    const droppedSequences = this.sequenceManager.advanceSequences(dropSpeed);
+    if (droppedSequences.length > 0) {
+      if (!this.grid.safetyNucleotides.some((n) => !n.infected)) {
+        this.requestedTransition = "game_over";
+      }
+
+      const countInfects = droppedSequences.length * 5;
+      _.chain(this.grid.safetyNucleotides)
+        .filter((n) => !n.infected)
+        .shuffle()
+        .take(countInfects)
+        .forEach((n) => (n.infected = true));
+
+      const length = utils.random(3, 4);
+      this.sequenceManager.add(length);
+    }
+  }
 
   _teardown() {
     this.entityConfig.container.removeChild(this.container);
@@ -189,6 +209,9 @@ export default class Level extends entity.ParallelEntity {
 
     if (this.path.items.length > 0) {
       this.sequenceManager.crunch(this.path);
+      if (this.levelVariant === "turnBased") {
+        this.sequenceManager.distributeSequences();
+      }
 
       this.path.crunch();
       this.path.remove();
@@ -250,6 +273,7 @@ export default class Level extends entity.ParallelEntity {
     if (countSequences < 3) {
       const length = utils.random(3, 4);
       this.sequenceManager.add(length);
+      this.sequenceManager.distributeSequences();
     }
 
     console.log(

@@ -1,5 +1,8 @@
 import * as PIXI from "pixi.js";
+import * as _ from "underscore";
+
 import * as entity from "booyah/src/entity";
+
 import * as game from "../game";
 import * as utils from "../utils";
 import Sequence from "./Sequence";
@@ -7,15 +10,23 @@ import Path from "./Path";
 import Nucleotide from "./Nucleotide";
 
 /**
- * emit: crunch; (s: Sequence)
+ * emits:
+ * - crunch(s: Sequence)
  */
 export default class SequenceManager extends entity.ParallelEntity {
   public sequences: Sequence[] = [];
   public container: PIXI.Container;
 
+  private sequenceRangeY: [number, number];
+
   _setup() {
     this.container = new PIXI.Container();
     this.entityConfig.container.addChild(this.container);
+
+    this.sequenceRangeY = [
+      this.entityConfig.app.view.height * 0.25,
+      this.entityConfig.app.view.height * 0.42,
+    ];
   }
 
   _update() {}
@@ -28,6 +39,13 @@ export default class SequenceManager extends entity.ParallelEntity {
 
   add(length: number) {
     const s = new Sequence(length);
+    const { width } = Nucleotide.getNucleotideDimensionsByRadius(
+      s.nucleotideRadius
+    );
+    s.position.set(
+      this.entityConfig.app.view.width / 2 - (s.baseLength * width * 0.8) / 2,
+      this.sequenceRangeY[0]
+    );
     this.addEntity(
       s,
       entity.extendConfig({
@@ -35,7 +53,7 @@ export default class SequenceManager extends entity.ParallelEntity {
       })
     );
     this.sequences.push(s);
-    this.refresh();
+    // this.refresh();
   }
 
   /** remove all validated sequences */
@@ -53,22 +71,50 @@ export default class SequenceManager extends entity.ParallelEntity {
     if (crunched) path.items.forEach((n) => (n.infected = false));
     if (newSequences.length !== this.sequences.length) {
       this.sequences = newSequences;
-      this.refresh();
+      // this.refresh();
     }
   }
 
-  refresh() {
+  /**
+   * In the case that sequences fall continuously, makes them fall a bit.
+   * Removes sequences that reached the bottom, and returns them.
+   */
+  advanceSequences(fraction: number): Sequence[] {
+    const yDist = this.sequenceRangeY[1] - this.sequenceRangeY[0];
+
+    const droppedSequences: Sequence[] = [];
+    for (const s of this.sequences) {
+      s.position.y += fraction * yDist;
+
+      if (s.position.y >= this.sequenceRangeY[1]) {
+        droppedSequences.push(s);
+      } else {
+        s.refresh();
+      }
+    }
+
+    if (droppedSequences.length > 0) {
+      droppedSequences.forEach((s) => this.removeEntity(s));
+      this.sequences = _.difference(this.sequences, droppedSequences);
+    }
+
+    return droppedSequences;
+  }
+
+  /**
+   * In the case that sequences are layed out, distributes them evenly
+   */
+  distributeSequences(): void {
     this.sequences.forEach((s, i) => {
       const { width } = Nucleotide.getNucleotideDimensionsByRadius(
         s.nucleotideRadius
       );
-      s.position.x = game.width / 2 - (s.length * width * 0.8) / 2;
       s.position.y = utils.map(
         i,
         0,
         this.sequences.length,
-        game.height * 0.25,
-        game.height * 0.42
+        this.sequenceRangeY[0],
+        this.sequenceRangeY[1]
       );
       s.refresh();
     });

@@ -7,11 +7,13 @@ import Nucleotide from "./Nucleotide";
 /** Represent a sequence dropped by virus */
 export default class Sequence extends entity.ParallelEntity {
   public nucleotides: Nucleotide[] = [];
-  public length: number;
   public container: PIXI.Container;
   public nucleotideRadius = game.width * 0.04;
 
-  constructor(public baseLength: number, public position = new PIXI.Point()) {
+  constructor(
+    public readonly baseLength: number,
+    public position = new PIXI.Point()
+  ) {
     super();
   }
 
@@ -19,11 +21,10 @@ export default class Sequence extends entity.ParallelEntity {
     this.container = new PIXI.Container();
     this.container.position.copyFrom(this.position);
     this.entityConfig.container.addChild(this.container);
-    this.length = this.baseLength;
     const { width, height } = Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
     );
-    for (let i = 0; i < this.length; i++) {
+    for (let i = 0; i < this.baseLength; i++) {
       const n = new Nucleotide(
         this.nucleotideRadius,
         new PIXI.Point(i * width * 0.8, utils.approximate(height * 0.05)),
