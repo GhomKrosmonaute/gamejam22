@@ -58,6 +58,7 @@ export default class Level extends entity.ParallelEntity {
       this.cutCount,
       this.nucleotideRadius
     );
+    this._on(this.grid, "pointerup", this._attemptCrunch);
 
     // background images
     {
@@ -282,14 +283,33 @@ export default class Level extends entity.ParallelEntity {
     );
   }
 
-  private _refresh() {
+  private _attemptCrunch(): void {
+    if (
+      this.path.items.length === 0 ||
+      !this.sequenceManager.matchesSequence(this.path)
+    ) {
+      return;
+    }
+
+    this.sequenceManager.crunch(this.path);
+    if (this.levelVariant === "turnBased") {
+      this.sequenceManager.distributeSequences();
+    }
+
+    this.path.crunch();
+    this.path.remove();
+
+    this.grid.refresh();
+  }
+
+  private _refresh(): void {
     if (this.path.items.length > 0) {
+      this.goButton.interactive = false;
       if (this.sequenceManager.matchesSequence(this.path)) {
         this.goButton.text.text = "CRUNCH";
-        this.goButton.interactive = true;
+        // this.goButton.interactive = true;
       } else {
         this.goButton.text.text = "INVALID SEQUENCE";
-        this.goButton.interactive = false;
       }
     } else if (this.grid.containsHoles()) {
       this.goButton.text.text = "REGENERATE";

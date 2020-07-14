@@ -6,7 +6,12 @@ import * as game from "../game";
 import Level from "../scenes/Level";
 import Nucleotide from "./Nucleotide";
 
-/** Represent the game nucleotides grid */
+/** Represent the game nucleotides grid
+ *
+ * Emits
+ *  - pointerup()
+ *
+ */
 export default class Grid extends entity.ParallelEntity {
   public container: PIXI.Container;
   public nucleotides: Nucleotide[] = [];
@@ -33,7 +38,7 @@ export default class Grid extends entity.ParallelEntity {
     this.container.interactive = true;
     // Keep track of last pointer position
     this._on(this.container, "pointerdown", this._onPointerDown);
-    this._on(this.container, "pointerup", () => (this._isPointerDown = false));
+    this._on(this.container, "pointerup", this._onPointerUp);
     this._on(
       this.container,
       "pointermove",
@@ -118,6 +123,12 @@ export default class Grid extends entity.ParallelEntity {
       this.entityConfig.level.path.startAt(hovered);
     // use bonus
     else focused.use(hovered);
+  }
+
+  private _onPointerUp(): void {
+    this._isPointerDown = false;
+
+    this.emit("pointerup");
   }
 
   get safetyNucleotides(): Nucleotide[] {
