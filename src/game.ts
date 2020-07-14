@@ -84,6 +84,8 @@ let gameTransitions = {
     turnBased: "turnBased",
     continuous: "continuous",
   }),
+  turnBased: "end",
+  continuous: "end",
 };
 
 const graphicalAssets = [

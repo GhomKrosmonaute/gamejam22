@@ -17,16 +17,9 @@ export default class SequenceManager extends entity.ParallelEntity {
   public sequences: Sequence[] = [];
   public container: PIXI.Container;
 
-  private sequenceRangeY: [number, number];
-
   _setup() {
     this.container = new PIXI.Container();
     this.entityConfig.container.addChild(this.container);
-
-    this.sequenceRangeY = [
-      this.entityConfig.app.view.height * 0.25,
-      this.entityConfig.app.view.height * 0.42,
-    ];
   }
 
   _update() {}
@@ -37,6 +30,20 @@ export default class SequenceManager extends entity.ParallelEntity {
     this.container = null;
   }
 
+  private _getSequenceRangeY(): [number, number] {
+    if (this.entityConfig.level.levelVariant === "continuous") {
+      return [
+        this.entityConfig.app.view.height * 0.2,
+        this.entityConfig.app.view.height * 0.4,
+      ];
+    } else {
+      return [
+        this.entityConfig.app.view.height * 0.25,
+        this.entityConfig.app.view.height * 0.42,
+      ];
+    }
+  }
+
   add(length: number) {
     const s = new Sequence(length);
     const { width } = Nucleotide.getNucleotideDimensionsByRadius(
@@ -44,7 +51,7 @@ export default class SequenceManager extends entity.ParallelEntity {
     );
     s.position.set(
       this.entityConfig.app.view.width / 2 - (s.baseLength * width * 0.8) / 2,
-      this.sequenceRangeY[0]
+      this._getSequenceRangeY()[0]
     );
     this.addEntity(
       s,
@@ -80,13 +87,13 @@ export default class SequenceManager extends entity.ParallelEntity {
    * Removes sequences that reached the bottom, and returns them.
    */
   advanceSequences(fraction: number): Sequence[] {
-    const yDist = this.sequenceRangeY[1] - this.sequenceRangeY[0];
+    const yDist = this._getSequenceRangeY()[1] - this._getSequenceRangeY()[0];
 
     const droppedSequences: Sequence[] = [];
     for (const s of this.sequences) {
       s.position.y += fraction * yDist;
 
-      if (s.position.y >= this.sequenceRangeY[1]) {
+      if (s.position.y >= this._getSequenceRangeY()[1]) {
         droppedSequences.push(s);
       } else {
         s.refresh();
@@ -97,6 +104,16 @@ export default class SequenceManager extends entity.ParallelEntity {
       droppedSequences.forEach((s) => this.removeEntity(s));
       this.sequences = _.difference(this.sequences, droppedSequences);
     }
+
+    return droppedSequences;
+  }
+
+  /** Drops the last @count sequences and returns them */
+  dropSequences(count = 1): Sequence[] {
+    const droppedSequences = _.last(this.sequences, count);
+
+    droppedSequences.forEach((s) => this.removeEntity(s));
+    this.sequences = _.difference(this.sequences, droppedSequences);
 
     return droppedSequences;
   }
@@ -113,8 +130,8 @@ export default class SequenceManager extends entity.ParallelEntity {
         i,
         0,
         this.sequences.length,
-        this.sequenceRangeY[0],
-        this.sequenceRangeY[1]
+        this._getSequenceRangeY()[0],
+        this._getSequenceRangeY()[1]
       );
       s.refresh();
     });

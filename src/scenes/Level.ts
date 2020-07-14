@@ -181,19 +181,7 @@ export default class Level extends entity.ParallelEntity {
 
     const droppedSequences = this.sequenceManager.advanceSequences(dropSpeed);
     if (droppedSequences.length > 0) {
-      if (!this.grid.safetyNucleotides.some((n) => !n.infected)) {
-        this.requestedTransition = "game_over";
-      }
-
-      const countInfects = droppedSequences.length * 5;
-      _.chain(this.grid.safetyNucleotides)
-        .filter((n) => !n.infected)
-        .shuffle()
-        .take(countInfects)
-        .forEach((n) => (n.infected = true));
-
-      const length = utils.random(3, 4);
-      this.sequenceManager.add(length);
+      this._onInfection(droppedSequences.length);
     }
   }
 
@@ -206,53 +194,24 @@ export default class Level extends entity.ParallelEntity {
   }
 
   private _onGo(): void {
-    console.assert(this.state === "crunch");
+    if (this.state !== "crunch") return;
+    if (this.path.items.length > 0) return;
 
-    if (this.path.items.length > 0) {
-      this.sequenceManager.crunch(this.path);
-      if (this.levelVariant === "turnBased") {
-        this.sequenceManager.distributeSequences();
+    if (this.levelVariant === "turnBased") {
+      if (this.grid.containsHoles()) {
+        this._regenerate();
+      } else {
+        // TODO: add confirm dialog "Are you sure?"
+
+        this.grid.regenerate(5);
+
+        this._endTurn();
+        this._refresh();
       }
-
-      this.path.crunch();
-      this.path.remove();
-
-      this.grid.refresh();
-    } else if (this.grid.containsHoles()) {
-      // Switch to regenerate mode
-      this.state = "regenerate";
-      this._refresh();
-
-      const newNucleotides = this.grid.fillHoles();
-
-      // Setup growing animation
-      const radiusTween = new tween.Tween({
-        from: 0,
-        to: this.grid.nucleotideRadius,
-        easing: easing.easeOutBounce,
-      });
-      this._on(radiusTween, "updatedValue", (radius) => {
-        for (const n of newNucleotides) n.radius = radius;
-      });
-      const tweenAnimation = new entity.EntitySequence([
-        radiusTween,
-        new entity.FunctionCallEntity(() => {
-          this.state = "crunch";
-
-          this._endTurn();
-          this._refresh();
-
-          this.removeEntity(tweenAnimation);
-        }),
-      ]);
-      this.addEntity(tweenAnimation);
     } else {
-      // TODO: add confirm dialog "Are you sure?"
-
-      this.grid.regenerate(5);
-
-      this._endTurn();
-      this._refresh();
+      // As if the sequence dropped all the way down
+      this.sequenceManager.dropSequences();
+      this._onInfection();
     }
   }
 
@@ -300,6 +259,8 @@ export default class Level extends entity.ParallelEntity {
     this.path.remove();
 
     this.grid.refresh();
+
+    if (this.levelVariant === "continuous") this._regenerate();
   }
 
   private _refresh(): void {
@@ -307,7 +268,6 @@ export default class Level extends entity.ParallelEntity {
       this.goButton.interactive = false;
       if (this.sequenceManager.matchesSequence(this.path)) {
         this.goButton.text.text = "CRUNCH";
-        // this.goButton.interactive = true;
       } else {
         this.goButton.text.text = "INVALID SEQUENCE";
       }
@@ -319,5 +279,51 @@ export default class Level extends entity.ParallelEntity {
       this.goButton.interactive = true;
     }
     this.sequenceManager.updateHighlighting(this.path);
+  }
+
+  private _regenerate(): void {
+    // Switch to regenerate mode
+    this.state = "regenerate";
+    this._refresh();
+
+    const newNucleotides = this.grid.fillHoles();
+
+    // Setup growing animation
+    const radiusTween = new tween.Tween({
+      from: 0,
+      to: this.grid.nucleotideRadius,
+      easing: easing.easeOutBounce,
+    });
+    this._on(radiusTween, "updatedValue", (radius) => {
+      for (const n of newNucleotides) n.radius = radius;
+    });
+    const tweenAnimation = new entity.EntitySequence([
+      radiusTween,
+      new entity.FunctionCallEntity(() => {
+        this.state = "crunch";
+
+        this._endTurn();
+        this._refresh();
+
+        this.removeEntity(tweenAnimation);
+      }),
+    ]);
+    this.addEntity(tweenAnimation);
+  }
+
+  private _onInfection(infectionCount = 1): void {
+    if (!this.grid.safetyNucleotides.some((n) => !n.infected)) {
+      this.requestedTransition = "game_over";
+    }
+
+    const countInfects = infectionCount * 5;
+    _.chain(this.grid.safetyNucleotides)
+      .filter((n) => !n.infected)
+      .shuffle()
+      .take(countInfects)
+      .forEach((n) => (n.infected = true));
+
+    const length = utils.random(3, 4);
+    this.sequenceManager.add(length);
   }
 }
