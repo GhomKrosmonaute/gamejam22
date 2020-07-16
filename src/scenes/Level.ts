@@ -261,6 +261,12 @@ export default class Level extends entity.ParallelEntity {
     this.grid.refresh();
 
     if (this.levelVariant === "continuous") this._regenerate();
+    else if (
+      this.levelVariant === "turnBased" &&
+      this.sequenceManager.countSequences() === 0
+    ) {
+      this._regenerate();
+    }
   }
 
   private _refresh(): void {
@@ -271,9 +277,6 @@ export default class Level extends entity.ParallelEntity {
       } else {
         this.goButton.text.text = "INVALID SEQUENCE";
       }
-    } else if (this.grid.containsHoles()) {
-      this.goButton.text.text = "REGENERATE";
-      this.goButton.interactive = true;
     } else {
       this.goButton.text.text = "SKIP";
       this.goButton.interactive = true;
