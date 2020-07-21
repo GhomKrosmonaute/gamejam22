@@ -12,6 +12,7 @@ export function getRandomNucleotideState(): NucleotideState {
   return nucleotideStates[Math.floor(Math.random() * nucleotideStates.length)];
 }
 
+// TODO: Use string enum here?
 export type ColorName = "blue" | "red" | "green" | "yellow";
 export const colorNames: ColorName[] = ["blue", "red", "green", "yellow"];
 export function getRandomColorName(): ColorName {

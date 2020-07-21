@@ -14,7 +14,7 @@ import Inventory from "../entities/Inventory";
 import Bonus from "../entities/Bonus";
 import Nucleotide from "../entities/Nucleotide";
 
-export type LevelVariant = "turnBased" | "continuous";
+export type LevelVariant = "turnBased" | "continuous" | "long";
 
 const dropSpeed = 0.001;
 
@@ -146,7 +146,19 @@ export default class Level extends entity.ParallelEntity {
     );
 
     // adding sequences for tests
-    this.sequenceManager.add(3);
+    switch (this.levelVariant) {
+      case "turnBased":
+      case "continuous": {
+        this.sequenceManager.add(3);
+        break;
+      }
+
+      case "long": {
+        this.sequenceManager.add(10);
+        break;
+      }
+    }
+
     if (this.levelVariant === "turnBased")
       this.sequenceManager.distributeSequences();
 

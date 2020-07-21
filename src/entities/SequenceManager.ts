@@ -3,7 +3,6 @@ import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
 
-import * as game from "../game";
 import * as utils from "../utils";
 import Sequence from "./Sequence";
 import Path from "./Path";
@@ -35,6 +34,11 @@ export default class SequenceManager extends entity.ParallelEntity {
       return [
         this.entityConfig.app.view.height * 0.2,
         this.entityConfig.app.view.height * 0.4,
+      ];
+    } else if (this.entityConfig.level.levelVariant === "long") {
+      return [
+        this.entityConfig.app.view.height * 0.3,
+        this.entityConfig.app.view.height * 0.3,
       ];
     } else {
       return [

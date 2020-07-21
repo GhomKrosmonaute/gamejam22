@@ -49,8 +49,16 @@ export default class Sequence extends entity.ParallelEntity {
     this.nucleotides = [];
   }
 
-  validate(signature: string): boolean {
+  validate(
+    signature: string,
+    validationMode: "full" | "partial" = "full"
+  ): boolean {
+    // if(validationMode === "full") {
     return signature === this.toString() || signature === this.toString(true);
+    // } else {
+    //   const thisSignature = this.toString();
+
+    // }
   }
 
   refresh() {
@@ -58,7 +66,8 @@ export default class Sequence extends entity.ParallelEntity {
     for (const nucleotide of this.nucleotides) nucleotide.refresh();
   }
 
-  toString(reverse = false) {
+  // TODO: use single letters, without comma
+  toString(reverse = false): string {
     return (!!reverse
       ? this.nucleotides.slice(0).reverse()
       : this.nucleotides
