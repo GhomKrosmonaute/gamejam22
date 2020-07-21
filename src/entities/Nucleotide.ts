@@ -10,9 +10,9 @@ export default class Nucleotide extends entity.Entity {
   public state: utils.NucleotideState = "normal";
   public colorName: utils.ColorName = utils.getRandomColorName();
   public isHovered = false;
-  public sprite: PIXI.AnimatedSprite | PIXI.Sprite = null;
   public filterFlags: { [key: string]: boolean } = {};
 
+  private sprite: PIXI.AnimatedSprite | PIXI.Sprite = null;
   private _radius: number;
   private isInfected = false;
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
@@ -50,6 +50,7 @@ export default class Nucleotide extends entity.Entity {
     if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
   }
 
+  // TODO: move to a private function system that just sets highlight mode or not
   setFilter(name: string, value: boolean) {
     this.filterFlags[name] = value;
     this.sprite.filters = Object.entries(this.filterFlags)
@@ -59,7 +60,7 @@ export default class Nucleotide extends entity.Entity {
 
   set infected(isInfected: boolean) {
     this.isInfected = isInfected;
-    this.setFilter("outline", isInfected);
+    this.refresh();
   }
 
   get infected(): boolean {
@@ -98,16 +99,24 @@ export default class Nucleotide extends entity.Entity {
         this.entityConfig.app.loader.resources["images/hole.png"].texture
       );
     else if (this.state === "normal") {
-      const animatedSprite = util.makeAnimatedSprite(
-        this.entityConfig.app.loader.resources[
-          "images/nucleotide_" + this.colorName + ".json"
-        ]
-      );
-      animatedSprite.animationSpeed = 25 / 60;
-      // Start on a random frame
-      animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
+      if (this.isInfected) {
+        this.sprite = new PIXI.Sprite(
+          this.entityConfig.app.loader.resources[
+            `images/infection_${this.colorName}.png`
+          ].texture
+        );
+      } else {
+        const animatedSprite = util.makeAnimatedSprite(
+          this.entityConfig.app.loader.resources[
+            "images/nucleotide_" + this.colorName + ".json"
+          ]
+        );
+        animatedSprite.animationSpeed = 25 / 60;
+        // Start on a random frame
+        animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
 
-      this.sprite = animatedSprite;
+        this.sprite = animatedSprite;
+      }
     } else {
       const animatedSprite = util.makeAnimatedSprite(
         this.entityConfig.app.loader.resources["images/" + this.state + ".json"]
@@ -118,9 +127,6 @@ export default class Nucleotide extends entity.Entity {
 
       this.sprite = animatedSprite;
     }
-
-    // reset infected filter
-    this.infected = this.infected;
 
     this.sprite.rotation = this.rotation;
     this.sprite.position.copyFrom(this.position);

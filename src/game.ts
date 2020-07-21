@@ -11,6 +11,7 @@ export const width = 1080;
 export const height = 1920;
 export const size = new PIXI.Point(width, height);
 
+// TODO: copy filters to the specific modules that use them
 export const filters: { [key: string]: any } = {
   glow40: new GlowFilter({ distance: 40 }),
   glow: new GlowFilter(),
@@ -98,6 +99,10 @@ const graphicalAssets = [
   "images/arrow.png",
   "images/circle.png",
   "images/bonus_swap.png",
+  "images/infection_red.png",
+  "images/infection_blue.png",
+  "images/infection_green.png",
+  "images/infection_yellow.png",
 
   // animated sprites
   "images/nucleotide_red.json",

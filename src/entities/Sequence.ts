@@ -43,7 +43,6 @@ export default class Sequence extends entity.ParallelEntity {
   }
 
   _teardown() {
-    for (const n of this.nucleotides) this.container.removeChild(n.sprite);
     this.entityConfig.container.removeChild(this.container);
     this.container = null;
     this.nucleotides = [];
