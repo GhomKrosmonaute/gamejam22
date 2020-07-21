@@ -110,6 +110,9 @@ const graphicalAssets = [
   "images/nucleotide_green.json",
   "images/nucleotide_yellow.json",
   "images/scissors.json",
+  "images/mini_bob_idle.json",
+  "images/mini_bob_sting.json",
+  "images/mini_bob_walk.json",
 ];
 
 const entityInstallers: any = [

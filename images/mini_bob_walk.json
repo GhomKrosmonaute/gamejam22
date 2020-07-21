@@ -1,0 +1,191 @@
+{"frames": {
+
+"mini_bob_run_01.png":
+{
+	"frame": {"x":430,"y":1,"w":140,"h":235},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":186,"y":13,"w":140,"h":235},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_02.png":
+{
+	"frame": {"x":430,"y":1,"w":140,"h":235},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":186,"y":13,"w":140,"h":235},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_03.png":
+{
+	"frame": {"x":1,"y":1,"w":126,"h":238},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":181,"y":9,"w":126,"h":238},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_04.png":
+{
+	"frame": {"x":695,"y":1,"w":147,"h":232},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":172,"y":12,"w":147,"h":232},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_05.png":
+{
+	"frame": {"x":1030,"y":1,"w":136,"h":228},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":180,"y":19,"w":136,"h":228},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_06.png":
+{
+	"frame": {"x":1030,"y":1,"w":136,"h":228},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":180,"y":19,"w":136,"h":228},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_07.png":
+{
+	"frame": {"x":572,"y":1,"w":121,"h":234},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":193,"y":13,"w":121,"h":234},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_08.png":
+{
+	"frame": {"x":572,"y":1,"w":121,"h":234},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":193,"y":13,"w":121,"h":234},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_09.png":
+{
+	"frame": {"x":129,"y":1,"w":120,"h":238},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":176,"y":9,"w":120,"h":238},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_10.png":
+{
+	"frame": {"x":251,"y":1,"w":177,"h":235},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":167,"y":12,"w":177,"h":235},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_11.png":
+{
+	"frame": {"x":844,"y":1,"w":184,"h":228},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":158,"y":19,"w":184,"h":228},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_12.png":
+{
+	"frame": {"x":430,"y":1,"w":140,"h":235},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":186,"y":13,"w":140,"h":235},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_13.png":
+{
+	"frame": {"x":430,"y":1,"w":140,"h":235},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":186,"y":13,"w":140,"h":235},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_14.png":
+{
+	"frame": {"x":1,"y":1,"w":126,"h":238},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":181,"y":9,"w":126,"h":238},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_15.png":
+{
+	"frame": {"x":695,"y":1,"w":147,"h":232},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":172,"y":12,"w":147,"h":232},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_16.png":
+{
+	"frame": {"x":1030,"y":1,"w":136,"h":228},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":180,"y":19,"w":136,"h":228},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_17.png":
+{
+	"frame": {"x":1030,"y":1,"w":136,"h":228},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":180,"y":19,"w":136,"h":228},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_18.png":
+{
+	"frame": {"x":572,"y":1,"w":121,"h":234},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":193,"y":13,"w":121,"h":234},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_19.png":
+{
+	"frame": {"x":572,"y":1,"w":121,"h":234},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":193,"y":13,"w":121,"h":234},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_20.png":
+{
+	"frame": {"x":129,"y":1,"w":120,"h":238},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":176,"y":9,"w":120,"h":238},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_21.png":
+{
+	"frame": {"x":251,"y":1,"w":177,"h":235},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":167,"y":12,"w":177,"h":235},
+	"sourceSize": {"w":480,"h":270}
+},
+"mini_bob_run_22.png":
+{
+	"frame": {"x":844,"y":1,"w":184,"h":228},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":158,"y":19,"w":184,"h":228},
+	"sourceSize": {"w":480,"h":270}
+}},
+"animations": {
+	"mini_bob_run": ["mini_bob_run_01.png","mini_bob_run_02.png","mini_bob_run_03.png","mini_bob_run_04.png","mini_bob_run_05.png","mini_bob_run_06.png","mini_bob_run_07.png","mini_bob_run_08.png","mini_bob_run_09.png","mini_bob_run_10.png","mini_bob_run_11.png","mini_bob_run_12.png","mini_bob_run_13.png","mini_bob_run_14.png","mini_bob_run_15.png","mini_bob_run_16.png","mini_bob_run_17.png","mini_bob_run_18.png","mini_bob_run_19.png","mini_bob_run_20.png","mini_bob_run_21.png","mini_bob_run_22.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "mini_bob_walk.png",
+	"format": "RGBA8888",
+	"size": {"w":1167,"h":240},
+	"scale": "0.25",
+	"smartupdate": "$TexturePacker:SmartUpdate:ce937dc0e9af8ad7a722a280075f812e:3363ff773cbfe896c20b7d221b32a64b:1b3a040a7b0af64fc560670cd6bda25f$"
+}
+}

@@ -157,7 +157,7 @@ export default class Nucleotide extends entity.Entity {
     this._refreshScale();
   }
 
-  private _refreshScale() {
+  private _refreshScale(): void {
     // TODO: is this necessary?
     // const scale = this.state === "scissors" ? 0.74 : 0.9;
 

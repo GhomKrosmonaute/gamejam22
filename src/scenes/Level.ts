@@ -4,6 +4,7 @@ import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
+import * as util from "booyah/src/util";
 
 import * as utils from "../utils";
 import * as game from "../game";
@@ -171,6 +172,20 @@ export default class Level extends entity.ParallelEntity {
         this.crunchCount++;
         if (this.crunchCount % 2 === 0) this.inventory.add(swapBonus);
       });
+    }
+
+    // adding viruses (test)
+    {
+      const virus = util.makeAnimatedSprite(
+        this.entityConfig.app.loader.resources["images/mini_bob_idle.json"]
+      );
+      virus.animationSpeed = 25 / 60;
+      virus.scale.set(0.6);
+      virus.anchor.set(0.5, 1);
+      virus.position.set(300, 400);
+      virus.play();
+
+      this.container.addChild(virus);
     }
 
     this._refresh();
