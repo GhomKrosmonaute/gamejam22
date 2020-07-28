@@ -60,7 +60,7 @@ export default class SequenceManager extends entity.ParallelEntity {
       })
     );
     this.sequences.push(s);
-    // this.refresh();
+    this.refresh();
   }
 
   /** remove all validated sequences */
@@ -75,10 +75,12 @@ export default class SequenceManager extends entity.ParallelEntity {
         this.emit("crunch", s);
       } else newSequences.push(s);
     }
-    if (crunched) path.items.forEach((n) => (n.infected = false));
+
+    if (crunched) path.items.forEach((n) => (n.state = "missing"));
+
     if (newSequences.length !== this.sequences.length) {
       this.sequences = newSequences;
-      // this.refresh();
+      this.refresh();
     }
   }
 
@@ -141,7 +143,7 @@ export default class SequenceManager extends entity.ParallelEntity {
     // TODO: perhaps this should only work if one and only one sequence matches?
     return (
       path.scissors.length > 0 &&
-      path.last.state !== "scissors" &&
+      path.last.type !== "scissors" &&
       this.sequences.some((s) => s.validate(path.signature))
     );
   }
@@ -163,6 +165,10 @@ export default class SequenceManager extends entity.ParallelEntity {
 
   countSequences(): number {
     return this.sequences.length;
+  }
+
+  refresh(): void {
+    this.sequences.forEach((s) => s.refresh());
   }
 
   static matches(tested: Nucleotide[], pattern: Nucleotide[]): Nucleotide[] {

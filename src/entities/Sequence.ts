@@ -37,6 +37,7 @@ export default class Sequence extends entity.ParallelEntity {
           container: this.container,
         })
       );
+      n.state = "present";
       this.nucleotides.push(n);
     }
     this.refresh();
@@ -54,7 +55,6 @@ export default class Sequence extends entity.ParallelEntity {
 
   refresh() {
     this.container.position.copyFrom(this.position);
-    for (const nucleotide of this.nucleotides) nucleotide.refresh();
   }
 
   toString(reverse = false) {

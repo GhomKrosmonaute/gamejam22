@@ -231,18 +231,14 @@ export default class Level extends entity.ParallelEntity {
   }
 
   private _endTurn(): void {
-    if (!this.grid.safetyNucleotides.some((n) => !n.infected)) {
+    if (this.grid.isGameOver()) {
       this.requestedTransition = "game_over";
+      return;
     }
 
     const countSequences = this.sequenceManager.countSequences();
     if (countSequences > 0) {
-      const countInfects = countSequences * 5;
-      _.chain(this.grid.safetyNucleotides)
-        .filter((n) => !n.infected)
-        .shuffle()
-        .take(countInfects)
-        .forEach((n) => (n.infected = true));
+      this.grid.infect(countSequences * 5);
     }
 
     if (countSequences < 3) {
@@ -272,8 +268,6 @@ export default class Level extends entity.ParallelEntity {
 
     this.path.crunch();
     this.path.remove();
-
-    this.grid.refresh();
 
     if (this.levelVariant === "continuous") this._regenerate();
     else if (
@@ -305,9 +299,6 @@ export default class Level extends entity.ParallelEntity {
     this._refresh();
 
     const newNucleotides = this.grid.fillHoles();
-    for (const n of newNucleotides) {
-      n.triggerAnimation("generate");
-    }
 
     // Wait for a second, then continue
     this.addEntity(
@@ -324,16 +315,12 @@ export default class Level extends entity.ParallelEntity {
   }
 
   private _onInfection(infectionCount = 1): void {
-    if (!this.grid.safetyNucleotides.some((n) => !n.infected)) {
+    if (this.grid.isGameOver()) {
       this.requestedTransition = "game_over";
+      return;
     }
 
-    const countInfects = infectionCount * 5;
-    _.chain(this.grid.safetyNucleotides)
-      .filter((n) => !n.infected)
-      .shuffle()
-      .take(countInfects)
-      .forEach((n) => (n.infected = true));
+    this.grid.infect(infectionCount * 5);
 
     const length = utils.random(3, 4);
     this.sequenceManager.add(length);

@@ -86,9 +86,8 @@ export default class Grid extends entity.ParallelEntity {
     }
 
     this.addScissors(this.safetyNucleotides);
-    this.refresh();
 
-    this, this.safetyNucleotides.forEach((n) => n.triggerAnimation("generate"));
+    this.safetyNucleotides.forEach((n) => (n.state = "present"));
   }
 
   _update() {
@@ -139,13 +138,12 @@ export default class Grid extends entity.ParallelEntity {
 
   addScissors(among: Nucleotide[]) {
     const safe = this.safetyNucleotides;
-    while (safe.filter((n) => n.state === "scissors").length < this.cutCount) {
+    while (safe.filter((n) => n.type === "scissors").length < this.cutCount) {
       let randomIndex;
       do {
         randomIndex = Math.floor(Math.random() * among.length);
-      } while (among[randomIndex].state === "scissors");
-      among[randomIndex].state = "scissors";
-      among[randomIndex].refresh();
+      } while (among[randomIndex].type === "scissors");
+      among[randomIndex].type = "scissors";
     }
   }
 
@@ -198,25 +196,28 @@ export default class Grid extends entity.ParallelEntity {
 
   slide(neighborIndex: utils.NeighborIndex) {
     const opposedNeighborIndex = utils.opposedIndexOf(neighborIndex);
-    const oldHoles = this.safetyNucleotides.filter((n) => n.state === "hole");
+    const oldHoles = this.safetyNucleotides.filter(
+      (n) => n.state === "missing"
+    );
     for (const nucleotide of this.safetyNucleotides) {
-      if (nucleotide.state === "hole") {
+      if (nucleotide.state === "missing") {
         this.generateNucleotide(nucleotide);
         this.recursiveSwap(nucleotide, opposedNeighborIndex);
       }
     }
 
     this.addScissors(oldHoles);
-    this.refresh();
+    // this.refresh();
   }
 
   fillHoles(): Nucleotide[] {
-    const holes = this.safetyNucleotides.filter((n) => n.state === "hole");
+    const holes = this.safetyNucleotides.filter((n) => n.state === "missing");
     for (const nucleotide of holes) {
       this.generateNucleotide(nucleotide);
     }
     this.addScissors(holes);
-    this.refresh();
+
+    holes.forEach((n) => (n.state = "present"));
 
     return holes;
   }
@@ -232,10 +233,6 @@ export default class Grid extends entity.ParallelEntity {
     const oldPosition = n1.position.clone();
     n1.position.copyFrom(n2.position);
     n2.position.copyFrom(oldPosition);
-
-    // refresh
-    n1.refresh();
-    n2.refresh();
   }
 
   recursiveSwap(n: Nucleotide, neighborIndex: utils.NeighborIndex) {
@@ -323,28 +320,52 @@ export default class Grid extends entity.ParallelEntity {
     return gridPos;
   }
 
-  refresh() {
-    for (const n of this.safetyNucleotides) n.refresh();
-  }
-
   containsHoles(): boolean {
-    return this.safetyNucleotides.some((n) => n.state === "hole");
+    return this.safetyNucleotides.some((n) => n.state === "missing");
   }
 
   /**
    * Regenerate a certain number of nucleotides
    */
   regenerate(n: number): void {
-    _.chain(this.safetyNucleotides)
+    // Pick a certain number of non-infected nucleotides
+    // @ts-ignore
+    const nucleotides: Nucleotide[] = _.chain(this.safetyNucleotides)
+      // @ts-ignore
+      .filter({ state: "present" })
       .shuffle()
       .take(n)
-      .each(this.generateNucleotide);
+      .value();
 
-    this.refresh();
+    // Make them dissapear
+    nucleotides.forEach((n) => {
+      n.state = "missing";
+      this.generateNucleotide(n);
+    });
+
+    this.addScissors(nucleotides);
+
+    nucleotides.forEach((n) => (n.state = "present"));
   }
 
   generateNucleotide(nucleotide: Nucleotide) {
-    nucleotide.state = "normal";
+    nucleotide.type = "normal";
     nucleotide.colorName = utils.getRandomColorName();
+  }
+
+  isGameOver(): boolean {
+    return !this.safetyNucleotides.some(
+      (n) => n.state === "present" && n.type === "normal"
+    );
+  }
+
+  infect(count: number): Nucleotide[] {
+    // @ts-ignore
+    return _.chain(this.safetyNucleotides)
+      .filter((n) => n.state === "present" && n.type === "normal")
+      .shuffle()
+      .take(count)
+      .forEach((n) => (n.state = "infected"))
+      .value();
   }
 }

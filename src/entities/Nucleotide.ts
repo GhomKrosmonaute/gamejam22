@@ -9,18 +9,20 @@ import * as easing from "booyah/src/easing";
 import * as utils from "../utils";
 import * as game from "../game";
 
-export type AnimationName = "remove" | "generate" | "infect" | "disinfect";
+export type State = "missing" | "present" | "infected";
 
 /** Represent a nucleotide */
 export default class Nucleotide extends entity.ParallelEntity {
-  public state: utils.NucleotideState = "normal";
+  public type: utils.NucleotideType = "normal";
   public colorName: utils.ColorName = utils.getRandomColorName();
   public isHovered = false;
   public filterFlags: { [key: string]: boolean } = {};
 
-  private sprite: PIXI.AnimatedSprite | PIXI.Sprite = null;
+  private _container: PIXI.Container;
+  private _state: State;
+  private mainSprite: PIXI.AnimatedSprite | PIXI.Sprite = null;
+  private secondarySprite: PIXI.Sprite = null;
   private _radius: number;
-  private isInfected = false;
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
   private floatingShift = new PIXI.Point();
   private floatingSpeed = new PIXI.Point();
@@ -28,16 +30,25 @@ export default class Nucleotide extends entity.ParallelEntity {
   private animation: entity.Entity = null;
 
   constructor(
-    radius: number,
+    public readonly fullRadius: number,
     public position = new PIXI.Point(),
     public rotation = 0
   ) {
     super();
 
-    this._radius = radius;
+    this._radius = fullRadius;
   }
 
-  _setup() {}
+  _setup() {
+    this._state = "missing";
+
+    this._container = new PIXI.Container();
+    this._container.rotation = this.rotation;
+    this._container.position.copyFrom(this.position);
+    this._refreshScale();
+
+    this.entityConfig.container.addChild(this._container);
+  }
 
   _update(frameInfo: entity.FrameInfo) {
     for (const vector in this.floating) {
@@ -48,30 +59,27 @@ export default class Nucleotide extends entity.ParallelEntity {
             frameInfo.timeSinceStart * this.floatingSpeed[v]
         );
         const add = cos * this.floatingAmplitude[v];
-        this.sprite[v] = this.position[v] + add * 200;
+        this._container[v] = this.position[v] + add * 200;
       }
     }
   }
 
   _teardown() {
-    if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
+    this.entityConfig.container.removeChild(this._container);
   }
 
   // TODO: move to a private function system that just sets highlight mode or not
   setFilter(name: string, value: boolean) {
+    if (!this.mainSprite) return;
+
     this.filterFlags[name] = value;
-    this.sprite.filters = Object.entries(this.filterFlags)
+    this.mainSprite.filters = Object.entries(this.filterFlags)
       .filter((e) => e[1])
       .map((e) => game.filters[e[0]]);
   }
 
-  set infected(isInfected: boolean) {
-    this.isInfected = isInfected;
-    this.refresh();
-  }
-
   get infected(): boolean {
-    return this.isInfected;
+    return this._state === "infected";
   }
 
   setFloating(
@@ -98,50 +106,85 @@ export default class Nucleotide extends entity.ParallelEntity {
     return new PIXI.Point(this.width * (3 / 4), this.height);
   }
 
-  refresh() {
-    if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
+  get state(): State {
+    return this._state;
+  }
+  set state(newState: State) {
+    // Remove previous graphics
+    if (this.mainSprite) {
+      this._container.removeChild(this.mainSprite);
+      this.mainSprite = null;
+    }
+    if (this.secondarySprite) {
+      this._container.removeChild(this.secondarySprite);
+      this.secondarySprite = null;
+    }
 
-    if (this.state === "hole")
-      this.sprite = new PIXI.Sprite(
+    if (newState === "missing") {
+      // TODO: do animation
+
+      this.mainSprite = new PIXI.Sprite(
         this.entityConfig.app.loader.resources["images/hole.png"].texture
       );
-    else if (this.state === "normal") {
-      if (this.isInfected) {
-        this.sprite = new PIXI.Sprite(
-          this.entityConfig.app.loader.resources[
-            `images/infection_${this.colorName}.png`
-          ].texture
-        );
-      } else {
-        const animatedSprite = util.makeAnimatedSprite(
-          this.entityConfig.app.loader.resources[
-            "images/nucleotide_" + this.colorName + ".json"
-          ]
-        );
-        animatedSprite.animationSpeed = 25 / 60;
-        // Start on a random frame
-        animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
+      this.mainSprite.anchor.set(0.5, 0.5);
+      this._container.addChild(this.mainSprite);
+    } else if (newState === "infected") {
+      // TODO: do animation
 
-        this.sprite = animatedSprite;
-      }
-    } else {
-      const animatedSprite = util.makeAnimatedSprite(
-        this.entityConfig.app.loader.resources["images/" + this.state + ".json"]
+      this.mainSprite = new PIXI.Sprite(
+        this.entityConfig.app.loader.resources[
+          `images/infection_${this.colorName}.png`
+        ].texture
+      );
+      this.mainSprite.anchor.set(0.5, 0.5);
+
+      this._container.addChild(this.mainSprite);
+    } else if (this._state === "missing") {
+      // Create animated sprite
+      this.mainSprite = this._createAnimatedSprite();
+      this._container.addChild(this.mainSprite);
+      this._refreshScale();
+
+      // Trigger "generation" animation
+      const radiusTween = new tween.Tween({
+        obj: this,
+        property: "radius",
+        from: 0,
+        to: this.fullRadius,
+        easing: easing.easeOutBounce,
+      });
+      this.animation = radiusTween;
+      this.addEntity(this.animation);
+    }
+
+    this._state = newState;
+  }
+
+  private _createAnimatedSprite(): PIXI.AnimatedSprite {
+    let animatedSprite: PIXI.AnimatedSprite;
+    if (this.type === "normal") {
+      animatedSprite = util.makeAnimatedSprite(
+        this.entityConfig.app.loader.resources[
+          "images/nucleotide_" + this.colorName + ".json"
+        ]
       );
       animatedSprite.animationSpeed = 25 / 60;
       // Start on a random frame
       animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
-
-      this.sprite = animatedSprite;
+    } else if (this.type === "scissors") {
+      animatedSprite = util.makeAnimatedSprite(
+        this.entityConfig.app.loader.resources["images/scissors.json"]
+      );
+      animatedSprite.animationSpeed = 25 / 60;
+      // Start on a random frame
+      animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
+    } else {
+      throw new Error("Unhandled type");
     }
 
-    this.sprite.rotation = this.rotation;
-    this.sprite.position.copyFrom(this.position);
-    this.sprite.anchor.set(0.5, 0.5);
+    animatedSprite.anchor.set(0.5, 0.5);
 
-    this._refreshScale();
-
-    this.entityConfig.container.addChild(this.sprite);
+    return animatedSprite;
   }
 
   static getNucleotideDimensionsByRadius(radius: number) {
@@ -155,32 +198,6 @@ export default class Nucleotide extends entity.ParallelEntity {
     return this.colorName;
   }
 
-  triggerAnimation(animationName: AnimationName): void {
-    if (this.animation) {
-      if (this.animation.isSetup) this.removeEntity(this.animation);
-      this.animation = null;
-    }
-
-    switch (animationName) {
-      case "generate": {
-        const radiusTween = new tween.Tween({
-          obj: this,
-          property: "radius",
-          from: 0,
-          to: this.entityConfig.level.grid.nucleotideRadius,
-          easing: easing.easeOutBounce,
-        });
-        this.animation = radiusTween;
-        this.addEntity(this.animation);
-
-        break;
-      }
-      default: {
-        throw new Error("Unhandled animation");
-      }
-    }
-  }
-
   get radius(): number {
     return this._radius;
   }
@@ -191,11 +208,8 @@ export default class Nucleotide extends entity.ParallelEntity {
   }
 
   private _refreshScale(): void {
-    // TODO: is this necessary?
-    // const scale = this.state === "scissors" ? 0.74 : 0.9;
-
     // Native sprite size is 136 x 129 px
     const scale = (0.85 * this.width) / 136;
-    this.sprite.scale.set(scale);
+    this._container.scale.set(scale);
   }
 }
