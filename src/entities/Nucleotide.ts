@@ -20,14 +20,14 @@ export default class Nucleotide extends entity.ParallelEntity {
 
   private _container: PIXI.Container;
   private _state: State;
-  private mainSprite: PIXI.AnimatedSprite | PIXI.Sprite = null;
-  private secondarySprite: PIXI.Sprite = null;
+  private nucleotideAnimation: PIXI.AnimatedSprite = null;
+  private holeSprite: PIXI.Sprite = null;
+  private infectionSprite: PIXI.Sprite = null;
   private _radius: number;
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
   private floatingShift = new PIXI.Point();
   private floatingSpeed = new PIXI.Point();
   private floatingAmplitude = new PIXI.Point();
-  private animation: entity.Entity = null;
 
   constructor(
     public readonly fullRadius: number,
@@ -70,10 +70,10 @@ export default class Nucleotide extends entity.ParallelEntity {
 
   // TODO: move to a private function system that just sets highlight mode or not
   setFilter(name: string, value: boolean) {
-    if (!this.mainSprite) return;
+    if (!this.nucleotideAnimation) return;
 
     this.filterFlags[name] = value;
-    this.mainSprite.filters = Object.entries(this.filterFlags)
+    this.nucleotideAnimation.filters = Object.entries(this.filterFlags)
       .filter((e) => e[1])
       .map((e) => game.filters[e[0]]);
   }
@@ -110,39 +110,67 @@ export default class Nucleotide extends entity.ParallelEntity {
     return this._state;
   }
   set state(newState: State) {
-    // Remove previous graphics
-    if (this.mainSprite) {
-      this._container.removeChild(this.mainSprite);
-      this.mainSprite = null;
-    }
-    if (this.secondarySprite) {
-      this._container.removeChild(this.secondarySprite);
-      this.secondarySprite = null;
-    }
+    if (newState === this._state) return;
 
     if (newState === "missing") {
+      // Remove previous graphics
+      if (this.nucleotideAnimation) {
+        this._container.removeChild(this.nucleotideAnimation);
+        this.nucleotideAnimation = null;
+      }
+      if (this.infectionSprite) {
+        this._container.removeChild(this.infectionSprite);
+        this.infectionSprite = null;
+      }
+
       // TODO: do animation
 
-      this.mainSprite = new PIXI.Sprite(
+      this.holeSprite = new PIXI.Sprite(
         this.entityConfig.app.loader.resources["images/hole.png"].texture
       );
-      this.mainSprite.anchor.set(0.5, 0.5);
-      this._container.addChild(this.mainSprite);
+      this.holeSprite.anchor.set(0.5, 0.5);
+      this._container.addChild(this.holeSprite);
     } else if (newState === "infected") {
-      // TODO: do animation
+      // Freeze animation
+      this.nucleotideAnimation.stop();
 
-      this.mainSprite = new PIXI.Sprite(
+      // TODO: Remove animation after infection is done
+      // this._container.removeChild(this.nucleotideAnimation);
+      // this.nucleotideAnimation = null;
+
+      // Create mask
+      const mask = new PIXI.Graphics();
+      mask.beginFill(0xff3300);
+      mask.drawCircle(0, 0, this.fullRadius);
+      mask.endFill();
+      this._container.addChild(mask);
+
+      // Overlay infection
+      this.infectionSprite = new PIXI.Sprite(
         this.entityConfig.app.loader.resources[
           `images/infection_${this.colorName}.png`
         ].texture
       );
-      this.mainSprite.anchor.set(0.5, 0.5);
+      this.infectionSprite.anchor.set(0.5, 0.5);
+      this.infectionSprite.mask = mask;
+      this._container.addChild(this.infectionSprite);
 
-      this._container.addChild(this.mainSprite);
+      // Make infection "grow"
+      const radiusTween = new tween.Tween({
+        from: 0,
+        to: 1,
+        easing: easing.linear,
+      });
+      this._on(radiusTween, "updatedValue", (value) => mask.scale.set(value));
+      this.addEntity(radiusTween);
     } else if (this._state === "missing") {
+      // Remove hole sprite
+      this._container.removeChild(this.holeSprite);
+      this.holeSprite = null;
+
       // Create animated sprite
-      this.mainSprite = this._createAnimatedSprite();
-      this._container.addChild(this.mainSprite);
+      this.nucleotideAnimation = this._createAnimatedSprite();
+      this._container.addChild(this.nucleotideAnimation);
       this._refreshScale();
 
       // Trigger "generation" animation
@@ -153,8 +181,7 @@ export default class Nucleotide extends entity.ParallelEntity {
         to: this.fullRadius,
         easing: easing.easeOutBounce,
       });
-      this.animation = radiusTween;
-      this.addEntity(this.animation);
+      this.addEntity(radiusTween);
     }
 
     this._state = newState;
