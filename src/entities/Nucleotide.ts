@@ -1,12 +1,18 @@
 import * as PIXI from "pixi.js";
 import * as _ from "underscore";
+
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
+import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
+
 import * as utils from "../utils";
 import * as game from "../game";
 
+export type AnimationName = "remove" | "generate" | "infect" | "disinfect";
+
 /** Represent a nucleotide */
-export default class Nucleotide extends entity.Entity {
+export default class Nucleotide extends entity.ParallelEntity {
   public state: utils.NucleotideState = "normal";
   public colorName: utils.ColorName = utils.getRandomColorName();
   public isHovered = false;
@@ -19,6 +25,7 @@ export default class Nucleotide extends entity.Entity {
   private floatingShift = new PIXI.Point();
   private floatingSpeed = new PIXI.Point();
   private floatingAmplitude = new PIXI.Point();
+  private animation: entity.Entity = null;
 
   constructor(
     radius: number,
@@ -146,6 +153,32 @@ export default class Nucleotide extends entity.Entity {
 
   toString(): string {
     return this.colorName;
+  }
+
+  triggerAnimation(animationName: AnimationName): void {
+    if (this.animation) {
+      if (this.animation.isSetup) this.removeEntity(this.animation);
+      this.animation = null;
+    }
+
+    switch (animationName) {
+      case "generate": {
+        const radiusTween = new tween.Tween({
+          obj: this,
+          property: "radius",
+          from: 0,
+          to: this.entityConfig.level.grid.nucleotideRadius,
+          easing: easing.easeOutBounce,
+        });
+        this.animation = radiusTween;
+        this.addEntity(this.animation);
+
+        break;
+      }
+      default: {
+        throw new Error("Unhandled animation");
+      }
+    }
   }
 
   get radius(): number {

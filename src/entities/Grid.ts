@@ -87,6 +87,8 @@ export default class Grid extends entity.ParallelEntity {
 
     this.addScissors(this.safetyNucleotides);
     this.refresh();
+
+    this, this.safetyNucleotides.forEach((n) => n.triggerAnimation("generate"));
   }
 
   _update() {

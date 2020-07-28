@@ -305,28 +305,22 @@ export default class Level extends entity.ParallelEntity {
     this._refresh();
 
     const newNucleotides = this.grid.fillHoles();
+    for (const n of newNucleotides) {
+      n.triggerAnimation("generate");
+    }
 
-    // Setup growing animation
-    const radiusTween = new tween.Tween({
-      from: 0,
-      to: this.grid.nucleotideRadius,
-      easing: easing.easeOutBounce,
-    });
-    this._on(radiusTween, "updatedValue", (radius) => {
-      for (const n of newNucleotides) n.radius = radius;
-    });
-    const tweenAnimation = new entity.EntitySequence([
-      radiusTween,
-      new entity.FunctionCallEntity(() => {
-        this.state = "crunch";
+    // Wait for a second, then continue
+    this.addEntity(
+      new entity.EntitySequence([
+        new entity.WaitingEntity(1000),
+        new entity.FunctionCallEntity(() => {
+          this.state = "crunch";
 
-        this._endTurn();
-        this._refresh();
-
-        this.removeEntity(tweenAnimation);
-      }),
-    ]);
-    this.addEntity(tweenAnimation);
+          this._endTurn();
+          this._refresh();
+        }),
+      ])
+    );
   }
 
   private _onInfection(infectionCount = 1): void {
