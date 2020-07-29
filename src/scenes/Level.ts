@@ -238,7 +238,8 @@ export default class Level extends entity.ParallelEntity {
 
     const countSequences = this.sequenceManager.countSequences();
     if (countSequences > 0) {
-      this.grid.infect(countSequences * 5);
+      const infectionSequence = this.grid.infect(countSequences * 5);
+      this.addEntity(infectionSequence);
     }
 
     if (countSequences < 3) {
@@ -246,11 +247,6 @@ export default class Level extends entity.ParallelEntity {
       this.sequenceManager.add(length);
       this.sequenceManager.distributeSequences();
     }
-
-    console.log(
-      this.grid.safetyNucleotides.filter((n) => n.infected).length,
-      "infected nucleotides"
-    );
   }
 
   private _attemptCrunch(): void {
@@ -320,9 +316,16 @@ export default class Level extends entity.ParallelEntity {
       return;
     }
 
-    this.grid.infect(infectionCount * 5);
+    const infectionSequence = this.grid.infect(infectionCount * 5);
 
-    const length = utils.random(3, 4);
-    this.sequenceManager.add(length);
+    this.addEntity(
+      new entity.EntitySequence([
+        infectionSequence,
+        new entity.FunctionCallEntity(() => {
+          const length = utils.random(3, 4);
+          this.sequenceManager.add(length);
+        }),
+      ])
+    );
   }
 }

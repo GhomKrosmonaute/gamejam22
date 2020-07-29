@@ -359,13 +359,27 @@ export default class Grid extends entity.ParallelEntity {
     );
   }
 
-  infect(count: number): Nucleotide[] {
+  /**
+   * Returns an entity sequence that gradually infects each of the nucleotides
+   * @param count
+   */
+  infect(count: number): entity.EntitySequence {
     // @ts-ignore
-    return _.chain(this.safetyNucleotides)
+    const infections: Nucleotide[] = _.chain(this.safetyNucleotides)
       .filter((n) => n.state === "present" && n.type === "normal")
       .shuffle()
       .take(count)
-      .forEach((n) => (n.state = "infected"))
       .value();
+
+    // Stagger infections after the other
+    const sequence: entity.Entity[] = [];
+    for (let i = 0; i < infections.length; i++) {
+      sequence.push(
+        new entity.FunctionCallEntity(() => (infections[i].state = "infected"))
+      );
+      sequence.push(new entity.WaitingEntity(500));
+    }
+
+    return new entity.EntitySequence(sequence);
   }
 }

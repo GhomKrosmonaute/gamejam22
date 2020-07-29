@@ -134,13 +134,9 @@ export default class Nucleotide extends entity.ParallelEntity {
       // Freeze animation
       this.nucleotideAnimation.stop();
 
-      // TODO: Remove animation after infection is done
-      // this._container.removeChild(this.nucleotideAnimation);
-      // this.nucleotideAnimation = null;
-
-      // Create mask, that also does the white flash effect
+      // Create mask, that also does the black flash effect
       const mask = new PIXI.Graphics();
-      mask.beginFill(0xffffff);
+      mask.beginFill(0x000001);
       mask.drawCircle(0, 0, this.fullRadius);
       mask.endFill();
       this._container.addChild(mask);
@@ -165,7 +161,7 @@ export default class Nucleotide extends entity.ParallelEntity {
 
       this.addEntity(
         new entity.EntitySequence([
-          // Briefly flash white
+          // Briefly flash
           new entity.WaitingEntity(100),
           new entity.FunctionCallEntity(() => {
             this.infectionSprite.mask = mask;
@@ -174,10 +170,13 @@ export default class Nucleotide extends entity.ParallelEntity {
 
           radiusTween,
 
-          // Remove mask
+          // Remove mask and infection
           new entity.FunctionCallEntity(() => {
             this.infectionSprite.mask = null;
             this._container.removeChild(mask);
+
+            this._container.removeChild(this.nucleotideAnimation);
+            this.nucleotideAnimation = null;
           }),
         ])
       );
