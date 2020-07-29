@@ -138,9 +138,9 @@ export default class Nucleotide extends entity.ParallelEntity {
       // this._container.removeChild(this.nucleotideAnimation);
       // this.nucleotideAnimation = null;
 
-      // Create mask
+      // Create mask, that also does the white flash effect
       const mask = new PIXI.Graphics();
-      mask.beginFill(0xff3300);
+      mask.beginFill(0xffffff);
       mask.drawCircle(0, 0, this.fullRadius);
       mask.endFill();
       this._container.addChild(mask);
@@ -152,7 +152,7 @@ export default class Nucleotide extends entity.ParallelEntity {
         ].texture
       );
       this.infectionSprite.anchor.set(0.5, 0.5);
-      this.infectionSprite.mask = mask;
+      this.infectionSprite.visible = false;
       this._container.addChild(this.infectionSprite);
 
       // Make infection "grow"
@@ -162,7 +162,25 @@ export default class Nucleotide extends entity.ParallelEntity {
         easing: easing.linear,
       });
       this._on(radiusTween, "updatedValue", (value) => mask.scale.set(value));
-      this.addEntity(radiusTween);
+
+      this.addEntity(
+        new entity.EntitySequence([
+          // Briefly flash white
+          new entity.WaitingEntity(100),
+          new entity.FunctionCallEntity(() => {
+            this.infectionSprite.mask = mask;
+            this.infectionSprite.visible = true;
+          }),
+
+          radiusTween,
+
+          // Remove mask
+          new entity.FunctionCallEntity(() => {
+            this.infectionSprite.mask = null;
+            this._container.removeChild(mask);
+          }),
+        ])
+      );
     } else if (this._state === "missing") {
       // Remove hole sprite
       this._container.removeChild(this.holeSprite);
