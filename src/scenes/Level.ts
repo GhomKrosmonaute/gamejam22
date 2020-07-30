@@ -2,9 +2,8 @@ import * as PIXI from "pixi.js";
 import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
-import * as tween from "booyah/src/tween";
-import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
+import * as geom from "booyah/src/geom";
 
 import * as utils from "../utils";
 import * as game from "../game";
@@ -18,6 +17,7 @@ import Nucleotide from "../entities/Nucleotide";
 export type LevelVariant = "turnBased" | "continuous";
 
 const dropSpeed = 0.001;
+const hairCount = 50;
 
 export default class Level extends entity.ParallelEntity {
   public container: PIXI.Container;
@@ -134,7 +134,17 @@ export default class Level extends entity.ParallelEntity {
       const membrane = new PIXI.Sprite(
         this.entityConfig.app.loader.resources["images/membrane.png"].texture
       );
+      membrane.position.set(0, 300);
       this.container.addChild(membrane);
+
+      // Make hair
+      for (let i = 0; i < hairCount; i++) {
+        this.container.addChild(
+          this._makeHair(
+            geom.degreesToRadians(geom.lerp(-23, 23, Math.random()))
+          )
+        );
+      }
     }
 
     this.inventory = new Inventory();
@@ -209,7 +219,6 @@ export default class Level extends entity.ParallelEntity {
   }
 
   private _onGo(): void {
-    if (this.state !== "crunch") return;
     if (this.path.items.length > 0) return;
 
     if (this.levelVariant === "turnBased") {
@@ -344,5 +353,43 @@ export default class Level extends entity.ParallelEntity {
         }),
       ])
     );
+  }
+
+  /**
+   *
+   * @param angle in radians
+   */
+  private _makeHair(angle: number): PIXI.AnimatedSprite {
+    const hair = util.makeAnimatedSprite(
+      this.entityConfig.app.loader.resources["images/hair.json"]
+    );
+    hair.animationSpeed = 25 / 60;
+
+    // Make hair ping-pong
+    hair.loop = false;
+    hair.onComplete = () => {
+      hair.animationSpeed *= -1;
+      hair.play();
+    };
+    hair.play();
+
+    hair.scale.set(0.6);
+    hair.anchor.set(0.5, 1);
+
+    // Calculate position:
+    // circle radius = 1337
+    // x = r * cos(a - 90d) + w/2
+    // y = r * sin(a - 90d) + h/2
+
+    const radius = 1337;
+    const centerY = 340 + radius;
+    hair.position.set(
+      radius * Math.cos(angle + Math.PI / 2) +
+        this.entityConfig.app.view.width / 2,
+      centerY - radius * Math.sin(angle + Math.PI / 2)
+    );
+    hair.rotation = -angle;
+
+    return hair;
   }
 }
