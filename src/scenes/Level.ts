@@ -218,10 +218,16 @@ export default class Level extends entity.ParallelEntity {
       } else {
         // TODO: add confirm dialog "Are you sure?"
 
-        this.grid.regenerate(5);
-
-        this._endTurn();
-        this._refresh();
+        this.addEntity(
+          new entity.EntitySequence([
+            new entity.FunctionCallEntity(() => this.grid.regenerate(5)),
+            new entity.WaitingEntity(1200),
+            new entity.FunctionCallEntity(() => {
+              this._endTurn();
+              this._refresh();
+            }),
+          ])
+        );
       }
     } else {
       // As if the sequence dropped all the way down
@@ -236,16 +242,27 @@ export default class Level extends entity.ParallelEntity {
       return;
     }
 
+    // Create a list of "actions" that will take place at the end of calling this function
+    let actions = [];
+
     const countSequences = this.sequenceManager.countSequences();
     if (countSequences > 0) {
       const infectionSequence = this.grid.infect(countSequences * 5);
-      this.addEntity(infectionSequence);
+      actions.push(infectionSequence);
     }
 
     if (countSequences < 3) {
-      const length = utils.random(3, 4);
-      this.sequenceManager.add(length);
-      this.sequenceManager.distributeSequences();
+      actions.push(
+        new entity.FunctionCallEntity(() => {
+          const length = utils.random(3, 4);
+          this.sequenceManager.add(length);
+          this.sequenceManager.distributeSequences();
+        })
+      );
+    }
+
+    if (actions.length > 0) {
+      this.addEntity(new entity.EntitySequence(actions));
     }
   }
 
