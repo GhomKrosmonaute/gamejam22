@@ -17,7 +17,9 @@ import Nucleotide from "../entities/Nucleotide";
 export type LevelVariant = "turnBased" | "continuous";
 
 const dropSpeed = 0.001;
-const hairCount = 50;
+const hairCount = 40;
+const hairMinScale = 0.3;
+const hairMaxScale = 0.6;
 
 export default class Level extends entity.ParallelEntity {
   public container: PIXI.Container;
@@ -131,20 +133,21 @@ export default class Level extends entity.ParallelEntity {
       );
       this.container.addChild(particles2);
 
+      // Make hair
+      for (let i = 0; i < hairCount; i++) {
+        this.container.addChild(
+          this._makeHair(
+            geom.degreesToRadians(geom.lerp(-23, 24, i / hairCount)),
+            geom.lerp(hairMaxScale, hairMinScale, Math.random())
+          )
+        );
+      }
+
       const membrane = new PIXI.Sprite(
         this.entityConfig.app.loader.resources["images/membrane.png"].texture
       );
       membrane.position.set(0, 300);
       this.container.addChild(membrane);
-
-      // Make hair
-      for (let i = 0; i < hairCount; i++) {
-        this.container.addChild(
-          this._makeHair(
-            geom.degreesToRadians(geom.lerp(-23, 23, Math.random()))
-          )
-        );
-      }
     }
 
     this.inventory = new Inventory();
@@ -359,7 +362,7 @@ export default class Level extends entity.ParallelEntity {
    *
    * @param angle in radians
    */
-  private _makeHair(angle: number): PIXI.AnimatedSprite {
+  private _makeHair(angle: number, scale: number): PIXI.AnimatedSprite {
     const hair = util.makeAnimatedSprite(
       this.entityConfig.app.loader.resources["images/hair.json"]
     );
@@ -373,13 +376,8 @@ export default class Level extends entity.ParallelEntity {
     };
     hair.play();
 
-    hair.scale.set(0.6);
+    hair.scale.set(scale);
     hair.anchor.set(0.5, 1);
-
-    // Calculate position:
-    // circle radius = 1337
-    // x = r * cos(a - 90d) + w/2
-    // y = r * sin(a - 90d) + h/2
 
     const radius = 1337;
     const centerY = 340 + radius;
