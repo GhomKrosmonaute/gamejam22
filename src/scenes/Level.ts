@@ -19,7 +19,7 @@ export type LevelVariant = "turnBased" | "continuous";
 const dropSpeed = 0.001;
 const hairCount = 40;
 const hairMinScale = 0.3;
-const hairMaxScale = 0.6;
+const hairMaxScale = 0.45;
 
 export default class Level extends entity.ParallelEntity {
   public container: PIXI.Container;
