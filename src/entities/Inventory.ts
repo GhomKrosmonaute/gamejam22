@@ -3,7 +3,7 @@ import * as entity from "booyah/src/entity";
 import * as game from "../game";
 import Bonus from "./Bonus";
 
-export default class Inventory extends entity.ParallelEntity {
+export default class Inventory extends entity.CompositeEntity {
   public container: PIXI.Container;
   public sprite: PIXI.Sprite;
   public arrowButton: PIXI.Container;
@@ -12,7 +12,7 @@ export default class Inventory extends entity.ParallelEntity {
 
   _setup() {
     this.container = new PIXI.Container();
-    this.entityConfig.container.addChild(this.container);
+    this._entityConfig.container.addChild(this.container);
   }
 
   _update() {}
@@ -38,7 +38,7 @@ export default class Inventory extends entity.ParallelEntity {
     bonus.sprite.anchor.set(0.5);
     bonus.sprite.position.set(
       100 + this.bonuses.length * 100,
-      this.entityConfig.app.view.height - 100
+      this._entityConfig.app.view.height - 100
     );
 
     this._on(bonus.sprite, "pointerup", () => this.focus(bonus));
@@ -50,7 +50,7 @@ export default class Inventory extends entity.ParallelEntity {
       }
     });
     this.bonuses.push(bonus);
-    this.addEntity(
+    this._activateChildEntity(
       bonus,
       entity.extendConfig({
         container: this.container,
@@ -62,7 +62,7 @@ export default class Inventory extends entity.ParallelEntity {
     this._off(bonus);
     this.bonuses = this.bonuses.filter((b) => b !== bonus);
     this.container.removeChild(bonus.sprite);
-    this.removeEntity(bonus);
+    this._deactivateChildEntity(bonus);
   }
 
   focus(bonus?: Bonus) {

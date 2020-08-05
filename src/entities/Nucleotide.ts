@@ -12,7 +12,7 @@ import * as game from "../game";
 export type State = "missing" | "present" | "infected";
 
 /** Represent a nucleotide */
-export default class Nucleotide extends entity.ParallelEntity {
+export default class Nucleotide extends entity.CompositeEntity {
   public type: utils.NucleotideType = "normal";
   public colorName: utils.ColorName = utils.getRandomColorName();
   public isHovered = false;
@@ -47,7 +47,7 @@ export default class Nucleotide extends entity.ParallelEntity {
     this._container.position.copyFrom(this.position);
     this._refreshScale();
 
-    this.entityConfig.container.addChild(this._container);
+    this._entityConfig.container.addChild(this._container);
   }
 
   _update(frameInfo: entity.FrameInfo) {
@@ -65,7 +65,7 @@ export default class Nucleotide extends entity.ParallelEntity {
   }
 
   _teardown() {
-    this.entityConfig.container.removeChild(this._container);
+    this._entityConfig.container.removeChild(this._container);
   }
 
   // TODO: move to a private function system that just sets highlight mode or not
@@ -126,7 +126,7 @@ export default class Nucleotide extends entity.ParallelEntity {
       // TODO: do animation
 
       this.holeSprite = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources["images/hole.png"].texture
+        this._entityConfig.app.loader.resources["images/hole.png"].texture
       );
       this.holeSprite.anchor.set(0.5, 0.5);
       this._container.addChild(this.holeSprite);
@@ -143,7 +143,7 @@ export default class Nucleotide extends entity.ParallelEntity {
 
       // Overlay infection
       this.infectionSprite = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources[
+        this._entityConfig.app.loader.resources[
           `images/infection_${this.colorName}.png`
         ].texture
       );
@@ -159,7 +159,7 @@ export default class Nucleotide extends entity.ParallelEntity {
       });
       this._on(radiusTween, "updatedValue", (value) => mask.scale.set(value));
 
-      this.addEntity(
+      this._activateChildEntity(
         new entity.EntitySequence([
           // Briefly flash
           new entity.WaitingEntity(100),
@@ -198,7 +198,7 @@ export default class Nucleotide extends entity.ParallelEntity {
         to: this.fullRadius,
         easing: easing.easeOutBounce,
       });
-      this.addEntity(radiusTween);
+      this._activateChildEntity(radiusTween);
     }
 
     this._state = newState;
@@ -208,7 +208,7 @@ export default class Nucleotide extends entity.ParallelEntity {
     let animatedSprite: PIXI.AnimatedSprite;
     if (this.type === "normal") {
       animatedSprite = util.makeAnimatedSprite(
-        this.entityConfig.app.loader.resources[
+        this._entityConfig.app.loader.resources[
           "images/nucleotide_" + this.colorName + ".json"
         ]
       );
@@ -217,7 +217,7 @@ export default class Nucleotide extends entity.ParallelEntity {
       animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
     } else if (this.type === "scissors") {
       animatedSprite = util.makeAnimatedSprite(
-        this.entityConfig.app.loader.resources["images/scissors.json"]
+        this._entityConfig.app.loader.resources["images/scissors.json"]
       );
       animatedSprite.animationSpeed = 25 / 60;
       // Start on a random frame

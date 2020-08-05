@@ -18,31 +18,31 @@ export const filters: { [key: string]: any } = {
   outline: new OutlineFilter(3, 0xffee00ff),
 };
 
-class LevelMenu extends entity.Entity {
+class LevelMenu extends entity.EntityBase {
   private container: PIXI.Container;
 
   _setup(): void {
     this.container = new PIXI.Container();
-    this.entityConfig.container.addChild(this.container);
+    this._entityConfig.container.addChild(this.container);
 
     this.container.addChild(
       this._makeButton(
         "Turn-based",
-        new PIXI.Point(this.entityConfig.app.view.width / 2, 400),
-        () => (this.requestedTransition = "turnBased")
+        new PIXI.Point(this._entityConfig.app.view.width / 2, 400),
+        () => (this._transition = entity.makeTransition("turnBased"))
       )
     );
     this.container.addChild(
       this._makeButton(
         "Continuous",
-        new PIXI.Point(this.entityConfig.app.view.width / 2, 600),
-        () => (this.requestedTransition = "continuous")
+        new PIXI.Point(this._entityConfig.app.view.width / 2, 600),
+        () => (this._transition = entity.makeTransition("continuous"))
       )
     );
   }
 
   _teardown(): void {
-    this.entityConfig.container.removeChild(this.container);
+    this._entityConfig.container.removeChild(this.container);
   }
 
   private _makeButton(
@@ -81,10 +81,6 @@ const gameStates = {
 };
 
 let gameTransitions = {
-  start: entity.makeTransitionTable({
-    turnBased: "turnBased",
-    continuous: "continuous",
-  }),
   turnBased: "end",
   continuous: "end",
 };

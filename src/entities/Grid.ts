@@ -12,7 +12,7 @@ import Nucleotide from "./Nucleotide";
  *  - pointerup()
  *
  */
-export default class Grid extends entity.ParallelEntity {
+export default class Grid extends entity.CompositeEntity {
   public container: PIXI.Container;
   public nucleotides: Nucleotide[] = [];
   public nucleotideContainer: PIXI.Container;
@@ -44,7 +44,7 @@ export default class Grid extends entity.ParallelEntity {
       "pointermove",
       (e: PIXI.InteractionEvent) => (this._lastPointerPos = e.data.global)
     );
-    this.entityConfig.container.addChild(this.container);
+    this._entityConfig.container.addChild(this.container);
 
     // Add background to get pointer events
     {
@@ -53,8 +53,8 @@ export default class Grid extends entity.ParallelEntity {
       bg.drawRect(
         0,
         0,
-        this.entityConfig.app.view.width,
-        this.entityConfig.app.view.height
+        this._entityConfig.app.view.width,
+        this._entityConfig.app.view.height
       );
       bg.endFill();
       this.container.addChild(bg);
@@ -75,7 +75,7 @@ export default class Grid extends entity.ParallelEntity {
         n.setFloating("y", 0.001, 0.018);
         n.setFloating("x", 0.0007, 0.018);
         this.generateNucleotide(n);
-        this.addEntity(
+        this._activateChildEntity(
           n,
           entity.extendConfig({
             container: this.nucleotideContainer,
@@ -99,11 +99,11 @@ export default class Grid extends entity.ParallelEntity {
     if (!hovered) return;
 
     // update path with hovered
-    this.entityConfig.level.path.add(hovered);
+    this._entityConfig.level.path.add(hovered);
   }
 
   _teardown() {
-    this.entityConfig.container.removeChild(this.container);
+    this._entityConfig.container.removeChild(this.container);
     this.container = null;
 
     this.nucleotides = [];
@@ -117,11 +117,11 @@ export default class Grid extends entity.ParallelEntity {
     );
     if (!hovered) return;
 
-    const focused = this.entityConfig.level.inventory.focused;
+    const focused = this._entityConfig.level.inventory.focused;
 
     if (!focused)
       // update path with hovered
-      this.entityConfig.level.path.startAt(hovered);
+      this._entityConfig.level.path.startAt(hovered);
     // use bonus
     else focused.use(hovered);
   }

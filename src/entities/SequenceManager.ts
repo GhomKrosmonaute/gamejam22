@@ -13,33 +13,33 @@ import Nucleotide from "./Nucleotide";
  * emits:
  * - crunch(s: Sequence)
  */
-export default class SequenceManager extends entity.ParallelEntity {
+export default class SequenceManager extends entity.CompositeEntity {
   public sequences: Sequence[] = [];
   public container: PIXI.Container;
 
   _setup() {
     this.container = new PIXI.Container();
-    this.entityConfig.container.addChild(this.container);
+    this._entityConfig.container.addChild(this.container);
   }
 
   _update() {}
 
   _teardown() {
     this.sequences = [];
-    this.entityConfig.container.removeChild(this.container);
+    this._entityConfig.container.removeChild(this.container);
     this.container = null;
   }
 
   private _getSequenceRangeY(): [number, number] {
-    if (this.entityConfig.level.levelVariant === "continuous") {
+    if (this._entityConfig.level.levelVariant === "continuous") {
       return [
-        this.entityConfig.app.view.height * 0.2,
-        this.entityConfig.app.view.height * 0.4,
+        this._entityConfig.app.view.height * 0.2,
+        this._entityConfig.app.view.height * 0.4,
       ];
     } else {
       return [
-        this.entityConfig.app.view.height * 0.25,
-        this.entityConfig.app.view.height * 0.42,
+        this._entityConfig.app.view.height * 0.25,
+        this._entityConfig.app.view.height * 0.42,
       ];
     }
   }
@@ -50,10 +50,10 @@ export default class SequenceManager extends entity.ParallelEntity {
       s.nucleotideRadius
     );
     s.position.set(
-      this.entityConfig.app.view.width / 2 - (s.baseLength * width * 0.8) / 2,
+      this._entityConfig.app.view.width / 2 - (s.baseLength * width * 0.8) / 2,
       this._getSequenceRangeY()[0]
     );
-    this.addEntity(
+    this._activateChildEntity(
       s,
       entity.extendConfig({
         container: this.container,
@@ -70,7 +70,7 @@ export default class SequenceManager extends entity.ParallelEntity {
     let crunched = false;
     for (const s of this.sequences) {
       if (s.validate(signature)) {
-        this.removeEntity(s);
+        this._deactivateChildEntity(s);
         crunched = true;
         this.emit("crunch", s);
       } else newSequences.push(s);
@@ -103,7 +103,7 @@ export default class SequenceManager extends entity.ParallelEntity {
     }
 
     if (droppedSequences.length > 0) {
-      droppedSequences.forEach((s) => this.removeEntity(s));
+      droppedSequences.forEach((s) => this._deactivateChildEntity(s));
       this.sequences = _.difference(this.sequences, droppedSequences);
     }
 
@@ -114,7 +114,7 @@ export default class SequenceManager extends entity.ParallelEntity {
   dropSequences(count = 1): Sequence[] {
     const droppedSequences = _.last(this.sequences, count);
 
-    droppedSequences.forEach((s) => this.removeEntity(s));
+    droppedSequences.forEach((s) => this._deactivateChildEntity(s));
     this.sequences = _.difference(this.sequences, droppedSequences);
 
     return droppedSequences;

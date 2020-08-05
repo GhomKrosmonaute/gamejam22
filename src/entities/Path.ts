@@ -10,7 +10,7 @@ import Level from "../scenes/Level";
  * Emits:
  * - updated
  * */
-export default class Path extends entity.Entity {
+export default class Path extends entity.EntityBase {
   public items: Nucleotide[] = [];
   public graphics = new PIXI.Graphics();
   public isValidSequence = false;
@@ -27,11 +27,11 @@ export default class Path extends entity.Entity {
   _setup() {
     this.graphics.x = this.x;
     this.graphics.y = this.y;
-    this.entityConfig.container.addChild(this.graphics);
+    this._entityConfig.container.addChild(this.graphics);
   }
 
   _teardown() {
-    this.entityConfig.container.removeChild(this.graphics);
+    this._entityConfig.container.removeChild(this.graphics);
   }
 
   get signature(): string {

@@ -21,7 +21,7 @@ const hairCount = 40;
 const hairMinScale = 0.3;
 const hairMaxScale = 0.45;
 
-export default class Level extends entity.ParallelEntity {
+export default class Level extends entity.CompositeEntity {
   public container: PIXI.Container;
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: SequenceManager;
@@ -42,11 +42,11 @@ export default class Level extends entity.ParallelEntity {
   }
 
   _setup() {
-    this.entityConfig.level = this;
+    this._entityConfig.level = this;
 
     this.container = new PIXI.Container();
     this.container.interactive = true;
-    this.entityConfig.container.addChild(this.container);
+    this._entityConfig.container.addChild(this.container);
 
     this.sequenceManager = new SequenceManager();
 
@@ -66,10 +66,10 @@ export default class Level extends entity.ParallelEntity {
     // background images
     {
       const background = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources["images/background.jpg"].texture
+        this._entityConfig.app.loader.resources["images/background.jpg"].texture
       );
       const particles = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources[
+        this._entityConfig.app.loader.resources[
           "images/particles_background.png"
         ].texture
       );
@@ -78,19 +78,19 @@ export default class Level extends entity.ParallelEntity {
     }
 
     // add to entities path, grid and the test sequenceManager
-    this.addEntity(
+    this._activateChildEntity(
       this.grid,
       entity.extendConfig({
         container: this.container,
       })
     );
-    this.addEntity(
+    this._activateChildEntity(
       this.path,
       entity.extendConfig({
         container: this.container,
       })
     );
-    this.addEntity(
+    this._activateChildEntity(
       this.sequenceManager,
       entity.extendConfig({
         container: this.container,
@@ -101,8 +101,8 @@ export default class Level extends entity.ParallelEntity {
     {
       this.goButton = new PIXI.Container();
       this.goButton.position.set(
-        this.entityConfig.app.view.width * 0.75,
-        this.entityConfig.app.view.height - 90
+        this._entityConfig.app.view.width * 0.75,
+        this._entityConfig.app.view.height - 90
       );
       this.goButton.interactive = true;
       this.goButton.buttonMode = true;
@@ -127,7 +127,7 @@ export default class Level extends entity.ParallelEntity {
     // foreground images
     {
       const particles2 = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources[
+        this._entityConfig.app.loader.resources[
           "images/particles_foreground.png"
         ].texture
       );
@@ -144,7 +144,7 @@ export default class Level extends entity.ParallelEntity {
       }
 
       const membrane = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources["images/membrane.png"].texture
+        this._entityConfig.app.loader.resources["images/membrane.png"].texture
       );
       membrane.position.set(0, 300);
       this.container.addChild(membrane);
@@ -152,7 +152,7 @@ export default class Level extends entity.ParallelEntity {
 
     this.inventory = new Inventory();
 
-    this.addEntity(
+    this._activateChildEntity(
       this.inventory,
       entity.extendConfig({
         container: this.container,
@@ -169,7 +169,7 @@ export default class Level extends entity.ParallelEntity {
       const swapBonus = new Bonus(
         "swap",
         new PIXI.Sprite(
-          this.entityConfig.app.loader.resources[
+          this._entityConfig.app.loader.resources[
             "images/bonus_swap.png"
           ].texture
         ),
@@ -190,7 +190,7 @@ export default class Level extends entity.ParallelEntity {
     // adding viruses (test)
     {
       const virus = util.makeAnimatedSprite(
-        this.entityConfig.app.loader.resources["images/mini_bob_idle.json"]
+        this._entityConfig.app.loader.resources["images/mini_bob_idle.json"]
       );
       virus.animationSpeed = 25 / 60;
       virus.scale.set(0.6);
@@ -214,7 +214,7 @@ export default class Level extends entity.ParallelEntity {
   }
 
   _teardown() {
-    this.entityConfig.container.removeChild(this.container);
+    this._entityConfig.container.removeChild(this.container);
 
     this.path = null;
     this.grid = null;
@@ -230,7 +230,7 @@ export default class Level extends entity.ParallelEntity {
       } else {
         // TODO: add confirm dialog "Are you sure?"
 
-        this.addEntity(
+        this._activateChildEntity(
           new entity.EntitySequence([
             new entity.FunctionCallEntity(() => this.grid.regenerate(5)),
             new entity.WaitingEntity(1200),
@@ -250,7 +250,7 @@ export default class Level extends entity.ParallelEntity {
 
   private _endTurn(): void {
     if (this.grid.isGameOver()) {
-      this.requestedTransition = "game_over";
+      this._transition = entity.makeTransition("game_over");
       return;
     }
 
@@ -274,7 +274,7 @@ export default class Level extends entity.ParallelEntity {
     }
 
     if (actions.length > 0) {
-      this.addEntity(new entity.EntitySequence(actions));
+      this._activateChildEntity(new entity.EntitySequence(actions));
     }
   }
 
@@ -326,7 +326,7 @@ export default class Level extends entity.ParallelEntity {
     const newNucleotides = this.grid.fillHoles();
 
     // Wait for a second, then continue
-    this.addEntity(
+    this._activateChildEntity(
       new entity.EntitySequence([
         new entity.WaitingEntity(1000),
         new entity.FunctionCallEntity(() => {
@@ -341,13 +341,13 @@ export default class Level extends entity.ParallelEntity {
 
   private _onInfection(infectionCount = 1): void {
     if (this.grid.isGameOver()) {
-      this.requestedTransition = "game_over";
+      this._transition = entity.makeTransition("game_over");
       return;
     }
 
     const infectionSequence = this.grid.infect(infectionCount * 5);
 
-    this.addEntity(
+    this._activateChildEntity(
       new entity.EntitySequence([
         infectionSequence,
         new entity.FunctionCallEntity(() => {
@@ -364,7 +364,7 @@ export default class Level extends entity.ParallelEntity {
    */
   private _makeHair(angle: number, scale: number): PIXI.AnimatedSprite {
     const hair = util.makeAnimatedSprite(
-      this.entityConfig.app.loader.resources["images/hair.json"]
+      this._entityConfig.app.loader.resources["images/hair.json"]
     );
     hair.animationSpeed = 25 / 60;
 
@@ -383,7 +383,7 @@ export default class Level extends entity.ParallelEntity {
     const centerY = 340 + radius;
     hair.position.set(
       radius * Math.cos(angle + Math.PI / 2) +
-        this.entityConfig.app.view.width / 2,
+        this._entityConfig.app.view.width / 2,
       centerY - radius * Math.sin(angle + Math.PI / 2)
     );
     hair.rotation = -angle;
