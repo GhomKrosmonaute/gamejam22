@@ -133,6 +133,12 @@ export default class Level extends entity.CompositeEntity {
       );
       this.container.addChild(particles2);
 
+      const membrane = new PIXI.Sprite(
+        this._entityConfig.app.loader.resources["images/membrane.png"].texture
+      );
+      membrane.position.set(0, 300);
+      this.container.addChild(membrane);
+
       // Make hair
       for (let i = 0; i < hairCount; i++) {
         this.container.addChild(
@@ -142,12 +148,6 @@ export default class Level extends entity.CompositeEntity {
           )
         );
       }
-
-      const membrane = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources["images/membrane.png"].texture
-      );
-      membrane.position.set(0, 300);
-      this.container.addChild(membrane);
     }
 
     this.inventory = new Inventory();
@@ -380,7 +380,7 @@ export default class Level extends entity.CompositeEntity {
     hair.anchor.set(0.5, 1);
 
     const radius = 1337;
-    const centerY = 340 + radius;
+    const centerY = 313 + radius;
     hair.position.set(
       radius * Math.cos(angle + Math.PI / 2) +
         this._entityConfig.app.view.width / 2,
