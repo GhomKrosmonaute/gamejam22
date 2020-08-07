@@ -380,7 +380,7 @@ export default class Level extends entity.CompositeEntity {
     hair.anchor.set(0.5, 1);
 
     const radius = 1337;
-    const centerY = 313 + radius;
+    const centerY = 320 + radius;
     hair.position.set(
       radius * Math.cos(angle + Math.PI / 2) +
         this._entityConfig.app.view.width / 2,
