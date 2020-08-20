@@ -84,7 +84,7 @@ export default class Sequence extends entity.CompositeEntity {
     const segment = this.getMatchingSegment(signature);
 
     for (const n of this.nucleotides) {
-      n.setFilter("glow", segment && segment.includes(n));
+      n.isHighlighted = segment && segment.includes(n);
     }
   }
 

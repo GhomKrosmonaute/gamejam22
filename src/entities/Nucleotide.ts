@@ -1,4 +1,6 @@
 import * as PIXI from "pixi.js";
+import { GlowFilter } from "@pixi/filter-glow";
+
 import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
@@ -11,16 +13,18 @@ import * as game from "../game";
 
 export type State = "missing" | "present" | "infected" | "inactive";
 
+const glowFilter = new GlowFilter();
+
 /** Represent a nucleotide */
 export default class Nucleotide extends entity.CompositeEntity {
   public type: utils.NucleotideType = "normal";
   public colorName: utils.ColorName = utils.getRandomColorName();
   public isHovered = false;
-  public filterFlags: { [key: string]: boolean } = {};
   public shakeAmount: number;
 
   private _container: PIXI.Container;
   private _state: State;
+  private _isHighlighted: boolean;
   private nucleotideAnimation: PIXI.AnimatedSprite = null;
   private holeSprite: PIXI.Sprite = null;
   private infectionSprite: PIXI.Sprite = null;
@@ -42,6 +46,8 @@ export default class Nucleotide extends entity.CompositeEntity {
 
   _setup() {
     this._state = "missing";
+    this._isHighlighted = false;
+    this.shakeAmount = 0;
 
     this._container = new PIXI.Container();
     this._container.rotation = this.rotation;
@@ -49,8 +55,6 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._refreshScale();
 
     this._entityConfig.container.addChild(this._container);
-
-    this.shakeAmount = 0;
   }
 
   _update(frameInfo: entity.FrameInfo) {
@@ -82,14 +86,19 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this._container);
   }
 
-  // TODO: move to a private function system that just sets highlight mode or not
-  setFilter(name: string, value: boolean) {
+  get isHighlighted(): boolean {
+    return this._isHighlighted;
+  }
+  set isHighlighted(isHighlighted: boolean) {
     if (!this.nucleotideAnimation) return;
 
-    this.filterFlags[name] = value;
-    this.nucleotideAnimation.filters = Object.entries(this.filterFlags)
-      .filter((e) => e[1])
-      .map((e) => game.filters[e[0]]);
+    if (isHighlighted && !this._isHighlighted) {
+      this.nucleotideAnimation.filters = [glowFilter];
+    } else if (!isHighlighted && this._isHighlighted) {
+      this.nucleotideAnimation.filters = [];
+    }
+
+    this._isHighlighted = isHighlighted;
   }
 
   get infected(): boolean {

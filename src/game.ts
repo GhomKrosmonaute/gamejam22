@@ -1,6 +1,4 @@
 import * as PIXI from "pixi.js";
-import { OutlineFilter } from "@pixi/filter-outline";
-import { GlowFilter } from "@pixi/filter-glow";
 
 import * as booyah from "booyah/src/booyah";
 import * as entity from "booyah/src/entity";
@@ -10,13 +8,6 @@ import Level from "./scenes/Level";
 export const width = 1080;
 export const height = 1920;
 export const size = new PIXI.Point(width, height);
-
-// TODO: copy filters to the specific modules that use them
-export const filters: { [key: string]: any } = {
-  glow40: new GlowFilter({ distance: 40 }),
-  glow: new GlowFilter(),
-  outline: new OutlineFilter(3, 0xffee00ff),
-};
 
 class LevelMenu extends entity.EntityBase {
   private container: PIXI.Container;
