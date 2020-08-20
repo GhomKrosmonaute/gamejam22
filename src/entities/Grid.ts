@@ -380,7 +380,7 @@ export default class Grid extends entity.CompositeEntity {
       sequence.push(
         new entity.FunctionCallEntity(() => (infections[i].state = "infected"))
       );
-      sequence.push(new entity.WaitingEntity(500));
+      sequence.push(new entity.WaitingEntity(1000));
     }
 
     return new entity.EntitySequence(sequence);

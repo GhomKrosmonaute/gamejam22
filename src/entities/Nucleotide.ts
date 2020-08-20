@@ -17,6 +17,7 @@ export default class Nucleotide extends entity.CompositeEntity {
   public colorName: utils.ColorName = utils.getRandomColorName();
   public isHovered = false;
   public filterFlags: { [key: string]: boolean } = {};
+  public shakeAmount: number;
 
   private _container: PIXI.Container;
   private _state: State;
@@ -48,18 +49,31 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._refreshScale();
 
     this._entityConfig.container.addChild(this._container);
+
+    this.shakeAmount = 0;
   }
 
   _update(frameInfo: entity.FrameInfo) {
-    for (const vector in this.floating) {
-      const v = vector as "x" | "y";
-      if (this.floating[v]) {
-        const cos = Math.cos(
-          this.floatingShift[v] +
-            frameInfo.timeSinceStart * this.floatingSpeed[v]
-        );
-        const add = cos * this.floatingAmplitude[v];
-        this._container[v] = this.position[v] + add * 200;
+    if (this.shakeAmount > 0) {
+      const angle = Math.random() * 2 * Math.PI;
+      this._container.position.x =
+        this.position.x + this.shakeAmount * Math.cos(angle);
+      this._container.position.y =
+        this.position.y + this.shakeAmount * Math.sin(angle);
+    } else {
+      for (const vector in this.floating) {
+        const v = vector as "x" | "y";
+        if (this.floating[v]) {
+          const cos = Math.cos(
+            this.floatingShift[v] +
+              frameInfo.timeSinceStart * this.floatingSpeed[v]
+          );
+          const add = cos * this.floatingAmplitude[v];
+          this._container[v] = this.position[v] + add * 200;
+        } else {
+          this._container.position.x = this.position.x;
+          this._container.position.y = this.position.y;
+        }
       }
     }
   }
@@ -134,12 +148,12 @@ export default class Nucleotide extends entity.CompositeEntity {
       // Freeze animation
       this.nucleotideAnimation.stop();
 
-      // Create mask, that also does the black flash effect
+      // Create mask
       const mask = new PIXI.Graphics();
       mask.beginFill(0x000001);
       mask.drawCircle(0, 0, this.fullRadius);
       mask.endFill();
-      this._container.addChild(mask);
+      // this._container.addChild(mask);
 
       // Overlay infection
       const fullColorName = utils.fullColorNames[this.colorName];
@@ -162,9 +176,14 @@ export default class Nucleotide extends entity.CompositeEntity {
 
       this._activateChildEntity(
         new entity.EntitySequence([
-          // Briefly flash
-          new entity.WaitingEntity(100),
+          // Briefly shake
+          new entity.FunctionCallEntity(() => (this.shakeAmount = 5)),
+          new entity.WaitingEntity(1000),
+
           new entity.FunctionCallEntity(() => {
+            this.shakeAmount = 0;
+
+            this._container.addChild(mask);
             this.infectionSprite.mask = mask;
             this.infectionSprite.visible = true;
           }),
