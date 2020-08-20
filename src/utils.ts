@@ -1,15 +1,14 @@
 import * as PIXI from "pixi.js";
 import * as geom from "booyah/src/geom";
 
-export type NucleotideState = "scissors" | "hole" | "bonus" | "normal";
-export const nucleotideStates: NucleotideState[] = [
+export type NucleotideType = "scissors" | "bonus" | "normal";
+export const nucleotideTypes: NucleotideType[] = [
   "scissors",
-  "hole",
   "bonus",
   "normal",
 ];
-export function getRandomNucleotideState(): NucleotideState {
-  return nucleotideStates[Math.floor(Math.random() * nucleotideStates.length)];
+export function getRandomNucleotideType(): NucleotideType {
+  return nucleotideTypes[Math.floor(Math.random() * nucleotideTypes.length)];
 }
 
 // TODO: Use string enum here?

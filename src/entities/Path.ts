@@ -10,7 +10,7 @@ import Level from "../scenes/Level";
  * Emits:
  * - updated
  * */
-export default class Path extends entity.Entity {
+export default class Path extends entity.EntityBase {
   public items: Nucleotide[] = [];
   public graphics = new PIXI.Graphics();
   public isValidSequence = false;
@@ -27,11 +27,11 @@ export default class Path extends entity.Entity {
   _setup() {
     this.graphics.x = this.x;
     this.graphics.y = this.y;
-    this.entityConfig.container.addChild(this.graphics);
+    this._entityConfig.container.addChild(this.graphics);
   }
 
   _teardown() {
-    this.entityConfig.container.removeChild(this.graphics);
+    this._entityConfig.container.removeChild(this.graphics);
   }
 
   get signature(): string {
@@ -45,11 +45,11 @@ export default class Path extends entity.Entity {
 
   /** only nucleotides */
   get nucleotides(): Nucleotide[] {
-    return this.items.filter((n) => n.state !== "scissors");
+    return this.items.filter((n) => n.type !== "scissors");
   }
 
   get scissors(): Nucleotide[] {
-    return this.items.filter((n) => n.state === "scissors");
+    return this.items.filter((n) => n.type === "scissors");
   }
 
   get maxLength(): number {
@@ -67,7 +67,7 @@ export default class Path extends entity.Entity {
   }
 
   startAt(n: Nucleotide): boolean {
-    if (n.state === "hole") return false;
+    if (n.state === "missing") return false;
 
     // check the cancellation & cancel to previous nucleotide
     const index = this.items.indexOf(n);
@@ -92,13 +92,13 @@ export default class Path extends entity.Entity {
 
   add(n: Nucleotide): boolean {
     // not add scissors on first position
-    if (this.first && this.first.state === "scissors") {
+    if (this.first && this.first.type === "scissors") {
       this.remove();
       return false;
     }
 
     // Ignore holes
-    if (n.state === "hole") return false;
+    if (n.state === "missing") return false;
 
     // Don't start new paths
     if (this.items.length === 0) return false;
@@ -146,7 +146,7 @@ export default class Path extends entity.Entity {
   }
 
   crunch() {
-    this.items.forEach((n) => (n.state = "hole"));
+    this.items.forEach((n) => (n.state = "missing"));
     this.emit("updated");
     this.refresh();
   }

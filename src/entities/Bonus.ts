@@ -4,7 +4,7 @@ import * as utils from "../utils";
 import * as game from "../game";
 import Nucleotide from "./Nucleotide";
 
-export default class Bonus extends entity.Entity {
+export default class Bonus extends entity.EntityBase {
   public targets: Nucleotide[] = [];
   public countText = new PIXI.Text("1", {
     fill: "#FFFFFF",
@@ -29,16 +29,16 @@ export default class Bonus extends entity.Entity {
     this.sprite.interactive = true;
     this.sprite.buttonMode = true;
     this.countText.anchor.set(0.5);
-    this.entityConfig.container.addChild(this.sprite);
-    this.entityConfig.container.addChild(this.countText);
+    this._entityConfig.container.addChild(this.sprite);
+    this._entityConfig.container.addChild(this.countText);
     this.refresh();
   }
 
   _update() {}
 
   _teardown() {
-    this.entityConfig.container.removeChild(this.sprite);
-    this.entityConfig.container.removeChild(this.countText);
+    this._entityConfig.container.removeChild(this.sprite);
+    this._entityConfig.container.removeChild(this.countText);
   }
 
   get count(): number {
@@ -69,7 +69,7 @@ export default class Bonus extends entity.Entity {
       }
     } else if (this.usageStyle === "drag & drop on neighbor") {
       if (this.targets.length === 2) {
-        const neighborIndex = this.entityConfig.level.grid.getNeighborIndex(
+        const neighborIndex = this._entityConfig.level.grid.getNeighborIndex(
           this.targets[0],
           this.targets[1]
         );

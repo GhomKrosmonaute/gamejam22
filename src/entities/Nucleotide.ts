@@ -1,36 +1,54 @@
 import * as PIXI from "pixi.js";
 import * as _ from "underscore";
+
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
+import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
+
 import * as utils from "../utils";
 import * as game from "../game";
 
+export type State = "missing" | "present" | "infected";
+
 /** Represent a nucleotide */
-export default class Nucleotide extends entity.Entity {
-  public state: utils.NucleotideState = "normal";
+export default class Nucleotide extends entity.CompositeEntity {
+  public type: utils.NucleotideType = "normal";
   public colorName: utils.ColorName = utils.getRandomColorName();
   public isHovered = false;
-  public sprite: PIXI.AnimatedSprite | PIXI.Sprite = null;
   public filterFlags: { [key: string]: boolean } = {};
 
+  private _container: PIXI.Container;
+  private _state: State;
+  private nucleotideAnimation: PIXI.AnimatedSprite = null;
+  private holeSprite: PIXI.Sprite = null;
+  private infectionSprite: PIXI.Sprite = null;
   private _radius: number;
-  private isInfected = false;
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
   private floatingShift = new PIXI.Point();
   private floatingSpeed = new PIXI.Point();
   private floatingAmplitude = new PIXI.Point();
 
   constructor(
-    radius: number,
+    public readonly fullRadius: number,
     public position = new PIXI.Point(),
     public rotation = 0
   ) {
     super();
 
-    this._radius = radius;
+    this._radius = fullRadius;
   }
 
-  _setup() {}
+  _setup() {
+    this._state = "missing";
+
+    this._container = new PIXI.Container();
+    this._container.rotation = this.rotation;
+    this._container.position.copyFrom(this.position);
+    this._refreshScale();
+
+    this._entityConfig.container.addChild(this._container);
+  }
 
   _update(frameInfo: entity.FrameInfo) {
     for (const vector in this.floating) {
@@ -41,29 +59,27 @@ export default class Nucleotide extends entity.Entity {
             frameInfo.timeSinceStart * this.floatingSpeed[v]
         );
         const add = cos * this.floatingAmplitude[v];
-        this.sprite[v] = this.position[v] + add * 200;
+        this._container[v] = this.position[v] + add * 200;
       }
     }
   }
 
   _teardown() {
-    if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
+    this._entityConfig.container.removeChild(this._container);
   }
 
+  // TODO: move to a private function system that just sets highlight mode or not
   setFilter(name: string, value: boolean) {
+    if (!this.nucleotideAnimation) return;
+
     this.filterFlags[name] = value;
-    this.sprite.filters = Object.entries(this.filterFlags)
+    this.nucleotideAnimation.filters = Object.entries(this.filterFlags)
       .filter((e) => e[1])
       .map((e) => game.filters[e[0]]);
   }
 
-  set infected(isInfected: boolean) {
-    this.isInfected = isInfected;
-    this.setFilter("outline", isInfected);
-  }
-
   get infected(): boolean {
-    return this.isInfected;
+    return this._state === "infected";
   }
 
   setFloating(
@@ -90,45 +106,129 @@ export default class Nucleotide extends entity.Entity {
     return new PIXI.Point(this.width * (3 / 4), this.height);
   }
 
-  refresh() {
-    if (this.sprite) this.entityConfig.container.removeChild(this.sprite);
+  get state(): State {
+    return this._state;
+  }
+  set state(newState: State) {
+    if (newState === this._state) return;
 
-    if (this.state === "hole")
-      this.sprite = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources["images/hole.png"].texture
+    if (newState === "missing") {
+      // Remove previous graphics
+      if (this.nucleotideAnimation) {
+        this._container.removeChild(this.nucleotideAnimation);
+        this.nucleotideAnimation = null;
+      }
+      if (this.infectionSprite) {
+        this._container.removeChild(this.infectionSprite);
+        this.infectionSprite = null;
+      }
+
+      // TODO: do animation
+
+      this.holeSprite = new PIXI.Sprite(
+        this._entityConfig.app.loader.resources["images/hole.png"].texture
       );
-    else if (this.state === "normal") {
-      const animatedSprite = util.makeAnimatedSprite(
-        this.entityConfig.app.loader.resources[
+      this.holeSprite.anchor.set(0.5, 0.5);
+      this._container.addChild(this.holeSprite);
+    } else if (newState === "infected") {
+      // Freeze animation
+      this.nucleotideAnimation.stop();
+
+      // Create mask, that also does the black flash effect
+      const mask = new PIXI.Graphics();
+      mask.beginFill(0x000001);
+      mask.drawCircle(0, 0, this.fullRadius);
+      mask.endFill();
+      this._container.addChild(mask);
+
+      // Overlay infection
+      this.infectionSprite = new PIXI.Sprite(
+        this._entityConfig.app.loader.resources[
+          `images/infection_${this.colorName}.png`
+        ].texture
+      );
+      this.infectionSprite.anchor.set(0.5, 0.5);
+      this.infectionSprite.visible = false;
+      this._container.addChild(this.infectionSprite);
+
+      // Make infection "grow"
+      const radiusTween = new tween.Tween({
+        from: 0,
+        to: 1,
+        easing: easing.linear,
+      });
+      this._on(radiusTween, "updatedValue", (value) => mask.scale.set(value));
+
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          // Briefly flash
+          new entity.WaitingEntity(100),
+          new entity.FunctionCallEntity(() => {
+            this.infectionSprite.mask = mask;
+            this.infectionSprite.visible = true;
+          }),
+
+          radiusTween,
+
+          // Remove mask and infection
+          new entity.FunctionCallEntity(() => {
+            this.infectionSprite.mask = null;
+            this._container.removeChild(mask);
+
+            this._container.removeChild(this.nucleotideAnimation);
+            this.nucleotideAnimation = null;
+          }),
+        ])
+      );
+    } else if (this._state === "missing") {
+      // Remove hole sprite
+      this._container.removeChild(this.holeSprite);
+      this.holeSprite = null;
+
+      // Create animated sprite
+      this.nucleotideAnimation = this._createAnimatedSprite();
+      this._container.addChild(this.nucleotideAnimation);
+      this._refreshScale();
+
+      // Trigger "generation" animation
+      const radiusTween = new tween.Tween({
+        obj: this,
+        property: "radius",
+        from: 0,
+        to: this.fullRadius,
+        easing: easing.easeOutBounce,
+      });
+      this._activateChildEntity(radiusTween);
+    }
+
+    this._state = newState;
+  }
+
+  private _createAnimatedSprite(): PIXI.AnimatedSprite {
+    let animatedSprite: PIXI.AnimatedSprite;
+    if (this.type === "normal") {
+      animatedSprite = util.makeAnimatedSprite(
+        this._entityConfig.app.loader.resources[
           "images/nucleotide_" + this.colorName + ".json"
         ]
       );
       animatedSprite.animationSpeed = 25 / 60;
       // Start on a random frame
       animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
-
-      this.sprite = animatedSprite;
-    } else {
-      const animatedSprite = util.makeAnimatedSprite(
-        this.entityConfig.app.loader.resources["images/" + this.state + ".json"]
+    } else if (this.type === "scissors") {
+      animatedSprite = util.makeAnimatedSprite(
+        this._entityConfig.app.loader.resources["images/scissors.json"]
       );
       animatedSprite.animationSpeed = 25 / 60;
       // Start on a random frame
       animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
-
-      this.sprite = animatedSprite;
+    } else {
+      throw new Error("Unhandled type");
     }
 
-    // reset infected filter
-    this.infected = this.infected;
+    animatedSprite.anchor.set(0.5, 0.5);
 
-    this.sprite.rotation = this.rotation;
-    this.sprite.position.copyFrom(this.position);
-    this.sprite.anchor.set(0.5, 0.5);
-
-    this._refreshScale();
-
-    this.entityConfig.container.addChild(this.sprite);
+    return animatedSprite;
   }
 
   static getNucleotideDimensionsByRadius(radius: number) {
@@ -151,12 +251,9 @@ export default class Nucleotide extends entity.Entity {
     this._refreshScale();
   }
 
-  private _refreshScale() {
-    // TODO: is this necessary?
-    // const scale = this.state === "scissors" ? 0.74 : 0.9;
-
+  private _refreshScale(): void {
     // Native sprite size is 136 x 129 px
     const scale = (0.85 * this.width) / 136;
-    this.sprite.scale.set(scale);
+    this._container.scale.set(scale);
   }
 }

@@ -2,8 +2,8 @@ import * as PIXI from "pixi.js";
 import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
-import * as tween from "booyah/src/tween";
-import * as easing from "booyah/src/easing";
+import * as util from "booyah/src/util";
+import * as geom from "booyah/src/geom";
 
 import * as utils from "../utils";
 import * as game from "../game";
@@ -17,8 +17,11 @@ import Nucleotide from "../entities/Nucleotide";
 export type LevelVariant = "turnBased" | "continuous" | "long";
 
 const dropSpeed = 0.001;
+const hairCount = 40;
+const hairMinScale = 0.3;
+const hairMaxScale = 0.45;
 
-export default class Level extends entity.ParallelEntity {
+export default class Level extends entity.CompositeEntity {
   public container: PIXI.Container;
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: SequenceManager;
@@ -39,11 +42,11 @@ export default class Level extends entity.ParallelEntity {
   }
 
   _setup() {
-    this.entityConfig.level = this;
+    this._entityConfig.level = this;
 
     this.container = new PIXI.Container();
     this.container.interactive = true;
-    this.entityConfig.container.addChild(this.container);
+    this._entityConfig.container.addChild(this.container);
 
     this.sequenceManager = new SequenceManager();
 
@@ -63,10 +66,10 @@ export default class Level extends entity.ParallelEntity {
     // background images
     {
       const background = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources["images/background.jpg"].texture
+        this._entityConfig.app.loader.resources["images/background.jpg"].texture
       );
       const particles = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources[
+        this._entityConfig.app.loader.resources[
           "images/particles_background.png"
         ].texture
       );
@@ -75,19 +78,19 @@ export default class Level extends entity.ParallelEntity {
     }
 
     // add to entities path, grid and the test sequenceManager
-    this.addEntity(
+    this._activateChildEntity(
       this.grid,
       entity.extendConfig({
         container: this.container,
       })
     );
-    this.addEntity(
+    this._activateChildEntity(
       this.path,
       entity.extendConfig({
         container: this.container,
       })
     );
-    this.addEntity(
+    this._activateChildEntity(
       this.sequenceManager,
       entity.extendConfig({
         container: this.container,
@@ -98,8 +101,8 @@ export default class Level extends entity.ParallelEntity {
     {
       this.goButton = new PIXI.Container();
       this.goButton.position.set(
-        this.entityConfig.app.view.width * 0.75,
-        this.entityConfig.app.view.height - 90
+        this._entityConfig.app.view.width * 0.75,
+        this._entityConfig.app.view.height - 90
       );
       this.goButton.interactive = true;
       this.goButton.buttonMode = true;
@@ -124,21 +127,32 @@ export default class Level extends entity.ParallelEntity {
     // foreground images
     {
       const particles2 = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources[
+        this._entityConfig.app.loader.resources[
           "images/particles_foreground.png"
         ].texture
       );
       this.container.addChild(particles2);
 
       const membrane = new PIXI.Sprite(
-        this.entityConfig.app.loader.resources["images/membrane.png"].texture
+        this._entityConfig.app.loader.resources["images/membrane.png"].texture
       );
+      membrane.position.set(0, 300);
       this.container.addChild(membrane);
+
+      // Make hair
+      for (let i = 0; i < hairCount; i++) {
+        this.container.addChild(
+          this._makeHair(
+            geom.degreesToRadians(geom.lerp(-23, 24, i / hairCount)),
+            geom.lerp(hairMaxScale, hairMinScale, Math.random())
+          )
+        );
+      }
     }
 
     this.inventory = new Inventory();
 
-    this.addEntity(
+    this._activateChildEntity(
       this.inventory,
       entity.extendConfig({
         container: this.container,
@@ -167,7 +181,7 @@ export default class Level extends entity.ParallelEntity {
       const swapBonus = new Bonus(
         "swap",
         new PIXI.Sprite(
-          this.entityConfig.app.loader.resources[
+          this._entityConfig.app.loader.resources[
             "images/bonus_swap.png"
           ].texture
         ),
@@ -185,6 +199,20 @@ export default class Level extends entity.ParallelEntity {
       });
     }
 
+    // adding viruses (test)
+    {
+      const virus = util.makeAnimatedSprite(
+        this._entityConfig.app.loader.resources["images/mini_bob_idle.json"]
+      );
+      virus.animationSpeed = 25 / 60;
+      virus.scale.set(0.6);
+      virus.anchor.set(0.5, 1);
+      virus.position.set(300, 400);
+      virus.play();
+
+      this.container.addChild(virus);
+    }
+
     this._refresh();
   }
 
@@ -198,7 +226,7 @@ export default class Level extends entity.ParallelEntity {
   }
 
   _teardown() {
-    this.entityConfig.container.removeChild(this.container);
+    this._entityConfig.container.removeChild(this.container);
 
     this.path = null;
     this.grid = null;
@@ -206,7 +234,6 @@ export default class Level extends entity.ParallelEntity {
   }
 
   private _onGo(): void {
-    if (this.state !== "crunch") return;
     if (this.path.items.length > 0) return;
 
     if (this.levelVariant === "turnBased") {
@@ -215,10 +242,16 @@ export default class Level extends entity.ParallelEntity {
       } else {
         // TODO: add confirm dialog "Are you sure?"
 
-        this.grid.regenerate(5);
-
-        this._endTurn();
-        this._refresh();
+        this._activateChildEntity(
+          new entity.EntitySequence([
+            new entity.FunctionCallEntity(() => this.grid.regenerate(5)),
+            new entity.WaitingEntity(1200),
+            new entity.FunctionCallEntity(() => {
+              this._endTurn();
+              this._refresh();
+            }),
+          ])
+        );
       }
     } else {
       // As if the sequence dropped all the way down
@@ -228,30 +261,33 @@ export default class Level extends entity.ParallelEntity {
   }
 
   private _endTurn(): void {
-    if (!this.grid.safetyNucleotides.some((n) => !n.infected)) {
-      this.requestedTransition = "game_over";
+    if (this.grid.isGameOver()) {
+      this._transition = entity.makeTransition("game_over");
+      return;
     }
+
+    // Create a list of "actions" that will take place at the end of calling this function
+    let actions = [];
 
     const countSequences = this.sequenceManager.countSequences();
     if (countSequences > 0) {
-      const countInfects = countSequences * 5;
-      _.chain(this.grid.safetyNucleotides)
-        .filter((n) => !n.infected)
-        .shuffle()
-        .take(countInfects)
-        .forEach((n) => (n.infected = true));
+      const infectionSequence = this.grid.infect(countSequences * 5);
+      actions.push(infectionSequence);
     }
 
     if (countSequences < 3) {
-      const length = utils.random(3, 4);
-      this.sequenceManager.add(length);
-      this.sequenceManager.distributeSequences();
+      actions.push(
+        new entity.FunctionCallEntity(() => {
+          const length = utils.random(3, 4);
+          this.sequenceManager.add(length);
+          this.sequenceManager.distributeSequences();
+        })
+      );
     }
 
-    console.log(
-      this.grid.safetyNucleotides.filter((n) => n.infected).length,
-      "infected nucleotides"
-    );
+    if (actions.length > 0) {
+      this._activateChildEntity(new entity.EntitySequence(actions));
+    }
   }
 
   private _attemptCrunch(): void {
@@ -269,8 +305,6 @@ export default class Level extends entity.ParallelEntity {
 
     this.path.crunch();
     this.path.remove();
-
-    this.grid.refresh();
 
     if (this.levelVariant === "continuous") this._regenerate();
     else if (
@@ -303,42 +337,69 @@ export default class Level extends entity.ParallelEntity {
 
     const newNucleotides = this.grid.fillHoles();
 
-    // Setup growing animation
-    const radiusTween = new tween.Tween({
-      from: 0,
-      to: this.grid.nucleotideRadius,
-      easing: easing.easeOutBounce,
-    });
-    this._on(radiusTween, "updatedValue", (radius) => {
-      for (const n of newNucleotides) n.radius = radius;
-    });
-    const tweenAnimation = new entity.EntitySequence([
-      radiusTween,
-      new entity.FunctionCallEntity(() => {
-        this.state = "crunch";
+    // Wait for a second, then continue
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        new entity.WaitingEntity(1000),
+        new entity.FunctionCallEntity(() => {
+          this.state = "crunch";
 
-        this._endTurn();
-        this._refresh();
-
-        this.removeEntity(tweenAnimation);
-      }),
-    ]);
-    this.addEntity(tweenAnimation);
+          this._endTurn();
+          this._refresh();
+        }),
+      ])
+    );
   }
 
   private _onInfection(infectionCount = 1): void {
-    if (!this.grid.safetyNucleotides.some((n) => !n.infected)) {
-      this.requestedTransition = "game_over";
+    if (this.grid.isGameOver()) {
+      this._transition = entity.makeTransition("game_over");
+      return;
     }
 
-    const countInfects = infectionCount * 5;
-    _.chain(this.grid.safetyNucleotides)
-      .filter((n) => !n.infected)
-      .shuffle()
-      .take(countInfects)
-      .forEach((n) => (n.infected = true));
+    const infectionSequence = this.grid.infect(infectionCount * 5);
 
-    const length = utils.random(3, 4);
-    this.sequenceManager.add(length);
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        infectionSequence,
+        new entity.FunctionCallEntity(() => {
+          const length = utils.random(3, 4);
+          this.sequenceManager.add(length);
+        }),
+      ])
+    );
+  }
+
+  /**
+   *
+   * @param angle in radians
+   */
+  private _makeHair(angle: number, scale: number): PIXI.AnimatedSprite {
+    const hair = util.makeAnimatedSprite(
+      this._entityConfig.app.loader.resources["images/hair.json"]
+    );
+    hair.animationSpeed = 25 / 60;
+
+    // Make hair ping-pong
+    hair.loop = false;
+    hair.onComplete = () => {
+      hair.animationSpeed *= -1;
+      hair.play();
+    };
+    hair.play();
+
+    hair.scale.set(scale);
+    hair.anchor.set(0.5, 1);
+
+    const radius = 1337;
+    const centerY = 320 + radius;
+    hair.position.set(
+      radius * Math.cos(angle + Math.PI / 2) +
+        this._entityConfig.app.view.width / 2,
+      centerY - radius * Math.sin(angle + Math.PI / 2)
+    );
+    hair.rotation = -angle;
+
+    return hair;
   }
 }

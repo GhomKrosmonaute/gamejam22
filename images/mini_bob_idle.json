@@ -1,0 +1,167 @@
+{"frames": {
+
+"mini_bob_no_mouv_01.png":
+{
+	"frame": {"x":629,"y":1,"w":207,"h":313},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":906,"y":708,"w":207,"h":313},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_02.png":
+{
+	"frame": {"x":629,"y":1,"w":207,"h":313},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":906,"y":708,"w":207,"h":313},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_03.png":
+{
+	"frame": {"x":629,"y":1,"w":207,"h":313},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":906,"y":708,"w":207,"h":313},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_04.png":
+{
+	"frame": {"x":1,"y":1,"w":207,"h":316},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":906,"y":705,"w":207,"h":316},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_05.png":
+{
+	"frame": {"x":1,"y":1,"w":207,"h":316},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":906,"y":705,"w":207,"h":316},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_06.png":
+{
+	"frame": {"x":210,"y":1,"w":207,"h":315},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":906,"y":706,"w":207,"h":315},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_07.png":
+{
+	"frame": {"x":210,"y":1,"w":207,"h":315},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":906,"y":706,"w":207,"h":315},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_08.png":
+{
+	"frame": {"x":419,"y":1,"w":208,"h":314},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":905,"y":707,"w":208,"h":314},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_09.png":
+{
+	"frame": {"x":419,"y":1,"w":208,"h":314},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":905,"y":707,"w":208,"h":314},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_10.png":
+{
+	"frame": {"x":630,"y":210,"w":208,"h":312},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":905,"y":709,"w":208,"h":312},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_11.png":
+{
+	"frame": {"x":630,"y":210,"w":208,"h":312},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":905,"y":709,"w":208,"h":312},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_12.png":
+{
+	"frame": {"x":1,"y":319,"w":208,"h":308},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":905,"y":713,"w":208,"h":308},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_13.png":
+{
+	"frame": {"x":1,"y":319,"w":208,"h":308},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":905,"y":713,"w":208,"h":308},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_14.png":
+{
+	"frame": {"x":630,"y":420,"w":208,"h":299},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":905,"y":722,"w":208,"h":299},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_15.png":
+{
+	"frame": {"x":630,"y":420,"w":208,"h":299},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":905,"y":722,"w":208,"h":299},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_16.png":
+{
+	"frame": {"x":211,"y":318,"w":208,"h":302},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":905,"y":719,"w":208,"h":302},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_17.png":
+{
+	"frame": {"x":211,"y":318,"w":208,"h":302},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":905,"y":719,"w":208,"h":302},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_18.png":
+{
+	"frame": {"x":421,"y":317,"w":207,"h":311},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":906,"y":710,"w":207,"h":311},
+	"sourceSize": {"w":1920,"h":1080}
+},
+"mini_bob_no_mouv_19.png":
+{
+	"frame": {"x":421,"y":317,"w":207,"h":311},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":906,"y":710,"w":207,"h":311},
+	"sourceSize": {"w":1920,"h":1080}
+}},
+"animations": {
+	"mini_bob_no_mouv": ["mini_bob_no_mouv_01.png","mini_bob_no_mouv_02.png","mini_bob_no_mouv_03.png","mini_bob_no_mouv_04.png","mini_bob_no_mouv_05.png","mini_bob_no_mouv_06.png","mini_bob_no_mouv_07.png","mini_bob_no_mouv_08.png","mini_bob_no_mouv_09.png","mini_bob_no_mouv_10.png","mini_bob_no_mouv_11.png","mini_bob_no_mouv_12.png","mini_bob_no_mouv_13.png","mini_bob_no_mouv_14.png","mini_bob_no_mouv_15.png","mini_bob_no_mouv_16.png","mini_bob_no_mouv_17.png","mini_bob_no_mouv_18.png","mini_bob_no_mouv_19.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "mini_bob_idle.png",
+	"format": "RGBA8888",
+	"size": {"w":943,"h":629},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:7acbd78ac485551cadee145b718614cf:4d2f68ccf9fc133757cce033c6e48655:ecdafb9830ecd0ad662caa70ca9282b5$"
+}
+}

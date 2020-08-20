@@ -12,7 +12,7 @@ import Nucleotide from "./Nucleotide";
  *  - pointerup()
  *
  */
-export default class Grid extends entity.ParallelEntity {
+export default class Grid extends entity.CompositeEntity {
   public container: PIXI.Container;
   public nucleotides: Nucleotide[] = [];
   public nucleotideContainer: PIXI.Container;
@@ -44,7 +44,7 @@ export default class Grid extends entity.ParallelEntity {
       "pointermove",
       (e: PIXI.InteractionEvent) => (this._lastPointerPos = e.data.global)
     );
-    this.entityConfig.container.addChild(this.container);
+    this._entityConfig.container.addChild(this.container);
 
     // Add background to get pointer events
     {
@@ -53,8 +53,8 @@ export default class Grid extends entity.ParallelEntity {
       bg.drawRect(
         0,
         0,
-        this.entityConfig.app.view.width,
-        this.entityConfig.app.view.height
+        this._entityConfig.app.view.width,
+        this._entityConfig.app.view.height
       );
       bg.endFill();
       this.container.addChild(bg);
@@ -75,7 +75,7 @@ export default class Grid extends entity.ParallelEntity {
         n.setFloating("y", 0.001, 0.018);
         n.setFloating("x", 0.0007, 0.018);
         this.generateNucleotide(n);
-        this.addEntity(
+        this._activateChildEntity(
           n,
           entity.extendConfig({
             container: this.nucleotideContainer,
@@ -86,7 +86,8 @@ export default class Grid extends entity.ParallelEntity {
     }
 
     this.addScissors(this.safetyNucleotides);
-    this.refresh();
+
+    this.safetyNucleotides.forEach((n) => (n.state = "present"));
   }
 
   _update() {
@@ -98,11 +99,11 @@ export default class Grid extends entity.ParallelEntity {
     if (!hovered) return;
 
     // update path with hovered
-    this.entityConfig.level.path.add(hovered);
+    this._entityConfig.level.path.add(hovered);
   }
 
   _teardown() {
-    this.entityConfig.container.removeChild(this.container);
+    this._entityConfig.container.removeChild(this.container);
     this.container = null;
 
     this.nucleotides = [];
@@ -116,11 +117,11 @@ export default class Grid extends entity.ParallelEntity {
     );
     if (!hovered) return;
 
-    const focused = this.entityConfig.level.inventory.focused;
+    const focused = this._entityConfig.level.inventory.focused;
 
     if (!focused)
       // update path with hovered
-      this.entityConfig.level.path.startAt(hovered);
+      this._entityConfig.level.path.startAt(hovered);
     // use bonus
     else focused.use(hovered);
   }
@@ -137,13 +138,12 @@ export default class Grid extends entity.ParallelEntity {
 
   addScissors(among: Nucleotide[]) {
     const safe = this.safetyNucleotides;
-    while (safe.filter((n) => n.state === "scissors").length < this.cutCount) {
+    while (safe.filter((n) => n.type === "scissors").length < this.cutCount) {
       let randomIndex;
       do {
         randomIndex = Math.floor(Math.random() * among.length);
-      } while (among[randomIndex].state === "scissors");
-      among[randomIndex].state = "scissors";
-      among[randomIndex].refresh();
+      } while (among[randomIndex].type === "scissors");
+      among[randomIndex].type = "scissors";
     }
   }
 
@@ -196,25 +196,28 @@ export default class Grid extends entity.ParallelEntity {
 
   slide(neighborIndex: utils.NeighborIndex) {
     const opposedNeighborIndex = utils.opposedIndexOf(neighborIndex);
-    const oldHoles = this.safetyNucleotides.filter((n) => n.state === "hole");
+    const oldHoles = this.safetyNucleotides.filter(
+      (n) => n.state === "missing"
+    );
     for (const nucleotide of this.safetyNucleotides) {
-      if (nucleotide.state === "hole") {
+      if (nucleotide.state === "missing") {
         this.generateNucleotide(nucleotide);
         this.recursiveSwap(nucleotide, opposedNeighborIndex);
       }
     }
 
     this.addScissors(oldHoles);
-    this.refresh();
+    // this.refresh();
   }
 
   fillHoles(): Nucleotide[] {
-    const holes = this.safetyNucleotides.filter((n) => n.state === "hole");
+    const holes = this.safetyNucleotides.filter((n) => n.state === "missing");
     for (const nucleotide of holes) {
       this.generateNucleotide(nucleotide);
     }
     this.addScissors(holes);
-    this.refresh();
+
+    holes.forEach((n) => (n.state = "present"));
 
     return holes;
   }
@@ -230,10 +233,6 @@ export default class Grid extends entity.ParallelEntity {
     const oldPosition = n1.position.clone();
     n1.position.copyFrom(n2.position);
     n2.position.copyFrom(oldPosition);
-
-    // refresh
-    n1.refresh();
-    n2.refresh();
   }
 
   recursiveSwap(n: Nucleotide, neighborIndex: utils.NeighborIndex) {
@@ -321,28 +320,66 @@ export default class Grid extends entity.ParallelEntity {
     return gridPos;
   }
 
-  refresh() {
-    for (const n of this.safetyNucleotides) n.refresh();
-  }
-
   containsHoles(): boolean {
-    return this.safetyNucleotides.some((n) => n.state === "hole");
+    return this.safetyNucleotides.some((n) => n.state === "missing");
   }
 
   /**
    * Regenerate a certain number of nucleotides
    */
   regenerate(n: number): void {
-    _.chain(this.safetyNucleotides)
+    // Pick a certain number of non-infected nucleotides
+    // @ts-ignore
+    const nucleotides: Nucleotide[] = _.chain(this.safetyNucleotides)
+      // @ts-ignore
+      .filter({ state: "present" })
       .shuffle()
       .take(n)
-      .each(this.generateNucleotide);
+      .value();
 
-    this.refresh();
+    // Make them dissapear
+    nucleotides.forEach((n) => {
+      n.state = "missing";
+      this.generateNucleotide(n);
+    });
+
+    this.addScissors(nucleotides);
+
+    nucleotides.forEach((n) => (n.state = "present"));
   }
 
   generateNucleotide(nucleotide: Nucleotide) {
-    nucleotide.state = "normal";
+    nucleotide.type = "normal";
     nucleotide.colorName = utils.getRandomColorName();
+  }
+
+  isGameOver(): boolean {
+    return !this.safetyNucleotides.some(
+      (n) => n.state === "present" && n.type === "normal"
+    );
+  }
+
+  /**
+   * Returns an entity sequence that gradually infects each of the nucleotides
+   * @param count
+   */
+  infect(count: number): entity.EntitySequence {
+    // @ts-ignore
+    const infections: Nucleotide[] = _.chain(this.safetyNucleotides)
+      .filter((n) => n.state === "present" && n.type === "normal")
+      .shuffle()
+      .take(count)
+      .value();
+
+    // Stagger infections after the other
+    const sequence: entity.Entity[] = [];
+    for (let i = 0; i < infections.length; i++) {
+      sequence.push(
+        new entity.FunctionCallEntity(() => (infections[i].state = "infected"))
+      );
+      sequence.push(new entity.WaitingEntity(500));
+    }
+
+    return new entity.EntitySequence(sequence);
   }
 }
