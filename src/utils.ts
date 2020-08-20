@@ -12,11 +12,18 @@ export function getRandomNucleotideType(): NucleotideType {
 }
 
 // TODO: Use string enum here?
-export type ColorName = "blue" | "red" | "green" | "yellow";
-export const colorNames: ColorName[] = ["blue", "red", "green", "yellow"];
+export type ColorName = "b" | "r" | "g" | "y";
+export const colorNames: ColorName[] = ["b", "r", "g", "y"];
 export function getRandomColorName(): ColorName {
   return colorNames[Math.floor(Math.random() * colorNames.length)];
 }
+
+export const fullColorNames: { [k in ColorName]: string } = {
+  b: "blue",
+  r: "red",
+  g: "green",
+  y: "yellow",
+};
 
 export type PartyState = "crunch" | "regenerate" | "bonus";
 

@@ -35,7 +35,7 @@ export default class Path extends entity.EntityBase {
   }
 
   get signature(): string {
-    return this.nucleotides.join(",");
+    return this.nucleotides.map((n) => n.toString()).join("");
   }
 
   /** The real length without cuts */
@@ -64,6 +64,14 @@ export default class Path extends entity.EntityBase {
 
   get last(): Nucleotide | null {
     return this.items[this.items.length - 1];
+  }
+
+  correctlyContainsScissors(): boolean {
+    return (
+      this.scissors.length > 0 &&
+      this.last.type !== "scissors" &&
+      this.first.type !== "scissors"
+    );
   }
 
   startAt(n: Nucleotide): boolean {

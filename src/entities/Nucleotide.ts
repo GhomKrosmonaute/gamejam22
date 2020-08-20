@@ -142,9 +142,10 @@ export default class Nucleotide extends entity.CompositeEntity {
       this._container.addChild(mask);
 
       // Overlay infection
+      const fullColorName = utils.fullColorNames[this.colorName];
       this.infectionSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
-          `images/infection_${this.colorName}.png`
+          `images/infection_${fullColorName}.png`
         ].texture
       );
       this.infectionSprite.anchor.set(0.5, 0.5);
@@ -207,9 +208,10 @@ export default class Nucleotide extends entity.CompositeEntity {
   private _createAnimatedSprite(): PIXI.AnimatedSprite {
     let animatedSprite: PIXI.AnimatedSprite;
     if (this.type === "normal") {
+      const fullColorName = utils.fullColorNames[this.colorName];
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources[
-          "images/nucleotide_" + this.colorName + ".json"
+          `images/nucleotide_${fullColorName}.json`
         ]
       );
       animatedSprite.animationSpeed = 25 / 60;

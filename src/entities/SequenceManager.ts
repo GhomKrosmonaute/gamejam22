@@ -69,11 +69,15 @@ export default class SequenceManager extends entity.CompositeEntity {
 
   /** remove all validated sequences */
   crunch(path: Path) {
+    if (!this.matchesSequence(path)) return;
+
+    const validationMethod =
+      this._entityConfig.level.levelVariant === "long" ? "partial" : "full";
     const signature = path.signature;
     const newSequences: Sequence[] = [];
     let crunched = false;
     for (const s of this.sequences) {
-      if (s.validate(signature)) {
+      if (s.validate(signature, validationMethod)) {
         this._deactivateChildEntity(s);
         crunched = true;
         this.emit("crunch", s);
@@ -145,11 +149,18 @@ export default class SequenceManager extends entity.CompositeEntity {
 
   matchesSequence(path: Path): boolean {
     // TODO: perhaps this should only work if one and only one sequence matches?
-    return (
-      path.scissors.length > 0 &&
-      path.last.type !== "scissors" &&
-      this.sequences.some((s) => s.validate(path.signature))
-    );
+
+    if (this._entityConfig.level.levelVariant === "long") {
+      return (
+        path.length > 2 &&
+        this.sequences.some((s) => s.validate(path.signature, "partial"))
+      );
+    } else {
+      return (
+        path.correctlyContainsScissors() &&
+        this.sequences.some((s) => s.validate(path.signature, "full"))
+      );
+    }
   }
 
   updateHighlighting(path: Path) {

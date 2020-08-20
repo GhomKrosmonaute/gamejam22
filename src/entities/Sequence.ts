@@ -1,5 +1,7 @@
 import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
+import * as util from "booyah/src/util";
+
 import * as game from "../game";
 import * as utils from "../utils";
 import Nucleotide from "./Nucleotide";
@@ -51,25 +53,27 @@ export default class Sequence extends entity.CompositeEntity {
 
   validate(
     signature: string,
-    validationMode: "full" | "partial" = "full"
+    validationMethod: "full" | "partial" = "full"
   ): boolean {
-    // if(validationMode === "full") {
-    return signature === this.toString() || signature === this.toString(true);
-    // } else {
-    //   const thisSignature = this.toString();
-
-    // }
+    const sequenceSignature = this.toString();
+    if (validationMethod === "full") {
+      return (
+        signature === sequenceSignature ||
+        signature === util.reverseString(sequenceSignature)
+      );
+    } else {
+      return (
+        sequenceSignature.includes(signature) ||
+        util.reverseString(sequenceSignature).includes(signature)
+      );
+    }
   }
 
   refresh() {
     this.container.position.copyFrom(this.position);
   }
 
-  // TODO: use single letters, without comma
-  toString(reverse = false): string {
-    return (!!reverse
-      ? this.nucleotides.slice(0).reverse()
-      : this.nucleotides
-    ).join(",");
+  toString(): string {
+    return this.nucleotides.map((n) => n.toString()).join("");
   }
 }

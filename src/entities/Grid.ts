@@ -136,7 +136,10 @@ export default class Grid extends entity.CompositeEntity {
     return this.nucleotides.filter((n) => n !== undefined);
   }
 
+  /** Does nothing in "long" mode **/
   addScissors(among: Nucleotide[]) {
+    if (this._entityConfig.level.levelVariant === "long") return;
+
     const safe = this.safetyNucleotides;
     while (safe.filter((n) => n.type === "scissors").length < this.cutCount) {
       let randomIndex;
