@@ -5,7 +5,7 @@ import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as geom from "booyah/src/geom";
 
-import * as utils from "../utils";
+import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
 import Grid from "../entities/Grid";
 import Path from "../entities/Path";
@@ -13,6 +13,7 @@ import SequenceManager from "../entities/SequenceManager";
 import Inventory from "../entities/Inventory";
 import Bonus from "../entities/Bonus";
 import Nucleotide from "../entities/Nucleotide";
+import * as virus from "../entities/virus";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
 
@@ -28,7 +29,7 @@ export default class Level extends entity.CompositeEntity {
   public inventory: Inventory;
   public path: Path;
   public grid: Grid;
-  public state: utils.PartyState = "crunch";
+  public state: crisprUtil.PartyState = "crunch";
 
   public readonly colCount = 7;
   public readonly rowCount = 7;
@@ -189,18 +190,12 @@ export default class Level extends entity.CompositeEntity {
     }
 
     // adding viruses (test)
-    {
-      const virus = util.makeAnimatedSprite(
-        this._entityConfig.app.loader.resources["images/mini_bob_idle.json"]
-      );
-      virus.animationSpeed = 25 / 60;
-      virus.scale.set(0.6);
-      virus.anchor.set(0.5, 1);
-      virus.position.set(300, 400);
-      virus.play();
-
-      this.container.addChild(virus);
-    }
+    this._activateChildEntity(
+      new virus.Virus(),
+      entity.extendConfig({
+        container: this.container,
+      })
+    );
 
     this._refresh();
   }
@@ -293,9 +288,9 @@ export default class Level extends entity.CompositeEntity {
   private _pickSequenceLength(): number {
     switch (this.levelVariant) {
       case "turnBased":
-        return utils.random(4, 7);
+        return crisprUtil.random(4, 7);
       case "continuous":
-        return utils.random(3, 4);
+        return crisprUtil.random(3, 4);
       case "long":
         return 13;
     }

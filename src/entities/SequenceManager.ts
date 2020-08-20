@@ -3,7 +3,7 @@ import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
 
-import * as utils from "../utils";
+import * as crisprUtil from "../crisprUtil";
 import Sequence from "./Sequence";
 import Path from "./Path";
 import Nucleotide from "./Nucleotide";
@@ -144,7 +144,7 @@ export default class SequenceManager extends entity.CompositeEntity {
       const { width } = Nucleotide.getNucleotideDimensionsByRadius(
         s.nucleotideRadius
       );
-      s.position.y = utils.map(
+      s.position.y = crisprUtil.map(
         i,
         0,
         this.sequences.length,

@@ -3,7 +3,7 @@ import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 
 import * as game from "../game";
-import * as utils from "../utils";
+import * as crisprUtil from "../crisprUtil";
 import Nucleotide from "./Nucleotide";
 
 /** Represent a sequence dropped by virus */
@@ -29,7 +29,7 @@ export default class Sequence extends entity.CompositeEntity {
     for (let i = 0; i < this.baseLength; i++) {
       const n = new Nucleotide(
         this.nucleotideRadius,
-        new PIXI.Point(i * width * 0.8, utils.approximate(height * 0.05)),
+        new PIXI.Point(i * width * 0.8, crisprUtil.approximate(height * 0.05)),
         Math.random()
       );
       n.setFloating("y");

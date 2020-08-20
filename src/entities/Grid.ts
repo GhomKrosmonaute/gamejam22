@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js";
 import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
-import * as utils from "../utils";
+import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
 import Level from "../scenes/Level";
 import Nucleotide from "./Nucleotide";
@@ -187,7 +187,7 @@ export default class Grid extends entity.CompositeEntity {
 
   checkHovered(n: Nucleotide): boolean {
     return (
-      utils.dist(
+      crisprUtil.dist(
         n.position.x + this.x,
         n.position.y + this.y,
         this._lastPointerPos.x,
@@ -197,8 +197,8 @@ export default class Grid extends entity.CompositeEntity {
     );
   }
 
-  slide(neighborIndex: utils.NeighborIndex) {
-    const opposedNeighborIndex = utils.opposedIndexOf(neighborIndex);
+  slide(neighborIndex: crisprUtil.NeighborIndex) {
+    const opposedNeighborIndex = crisprUtil.opposedIndexOf(neighborIndex);
     const oldHoles = this.safetyNucleotides.filter(
       (n) => n.state === "missing"
     );
@@ -238,7 +238,7 @@ export default class Grid extends entity.CompositeEntity {
     n2.position.copyFrom(oldPosition);
   }
 
-  recursiveSwap(n: Nucleotide, neighborIndex: utils.NeighborIndex) {
+  recursiveSwap(n: Nucleotide, neighborIndex: crisprUtil.NeighborIndex) {
     // get the neighbor of n
     const nn = this.getNeighbor(n, neighborIndex);
     if (nn) {
@@ -252,7 +252,7 @@ export default class Grid extends entity.CompositeEntity {
 
   getNeighbor(
     n: Nucleotide,
-    neighborIndex: utils.NeighborIndex
+    neighborIndex: crisprUtil.NeighborIndex
   ): Nucleotide | null {
     return this.safetyNucleotides.find((nn) => {
       return this.getNeighborIndex(n, nn) === neighborIndex;
@@ -262,14 +262,14 @@ export default class Grid extends entity.CompositeEntity {
   /** get all neighbors of nucleotide */
   getNeighbors(n: Nucleotide): Nucleotide[] {
     const neighbors: Nucleotide[] = [];
-    for (const neighborIndex of utils.NeighborIndexes)
+    for (const neighborIndex of crisprUtil.NeighborIndexes)
       neighbors.push(this.getNeighbor(n, neighborIndex));
     return neighbors;
   }
 
   getNeighborsInLine(
     n: Nucleotide,
-    neighborIndex: utils.NeighborIndex
+    neighborIndex: crisprUtil.NeighborIndex
   ): Nucleotide[] {
     const neighbor = this.getNeighbor(n, neighborIndex);
     if (!neighbor) return [];
@@ -277,9 +277,12 @@ export default class Grid extends entity.CompositeEntity {
   }
 
   /** @returns {number} - -1 if is not a neighbor or the neighbor index */
-  getNeighborIndex(n: Nucleotide, n2: Nucleotide): utils.NeighborIndex | -1 {
+  getNeighborIndex(
+    n: Nucleotide,
+    n2: Nucleotide
+  ): crisprUtil.NeighborIndex | -1 {
     if (!n || !n2) return -1;
-    for (const neighborIndex of utils.NeighborIndexes) {
+    for (const neighborIndex of crisprUtil.NeighborIndexes) {
       if (
         this.getNeighborGridPosition(n, neighborIndex).equals(
           this.getGridPositionOf(n2)
@@ -292,7 +295,7 @@ export default class Grid extends entity.CompositeEntity {
 
   getNeighborGridPosition(
     n: Nucleotide,
-    neighborIndex: utils.NeighborIndex
+    neighborIndex: crisprUtil.NeighborIndex
   ): PIXI.Point {
     const gridPos = this.getGridPositionOf(n);
     const evenCol = this.isOnEvenCol(n);
@@ -353,7 +356,7 @@ export default class Grid extends entity.CompositeEntity {
 
   generateNucleotide(nucleotide: Nucleotide) {
     nucleotide.type = "normal";
-    nucleotide.colorName = utils.getRandomColorName();
+    nucleotide.colorName = crisprUtil.getRandomColorName();
   }
 
   isGameOver(): boolean {

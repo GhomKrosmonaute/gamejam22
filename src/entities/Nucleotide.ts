@@ -8,7 +8,7 @@ import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
-import * as utils from "../utils";
+import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
 
 export type State = "missing" | "present" | "infected" | "inactive";
@@ -17,8 +17,8 @@ const glowFilter = new GlowFilter();
 
 /** Represent a nucleotide */
 export default class Nucleotide extends entity.CompositeEntity {
-  public type: utils.NucleotideType = "normal";
-  public colorName: utils.ColorName = utils.getRandomColorName();
+  public type: crisprUtil.NucleotideType = "normal";
+  public colorName: crisprUtil.ColorName = crisprUtil.getRandomColorName();
   public isHovered = false;
   public shakeAmount: number;
 
@@ -165,7 +165,7 @@ export default class Nucleotide extends entity.CompositeEntity {
       // this._container.addChild(mask);
 
       // Overlay infection
-      const fullColorName = utils.fullColorNames[this.colorName];
+      const fullColorName = crisprUtil.fullColorNames[this.colorName];
       this.infectionSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
           `images/infection_${fullColorName}.png`
@@ -240,7 +240,7 @@ export default class Nucleotide extends entity.CompositeEntity {
   private _createAnimatedSprite(): PIXI.AnimatedSprite {
     let animatedSprite: PIXI.AnimatedSprite;
     if (this.type === "normal") {
-      const fullColorName = utils.fullColorNames[this.colorName];
+      const fullColorName = crisprUtil.fullColorNames[this.colorName];
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources[
           `images/nucleotide_${fullColorName}.json`

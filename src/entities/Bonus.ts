@@ -2,7 +2,7 @@ import * as PIXI from "pixi.js";
 import { GlowFilter } from "@pixi/filter-glow";
 
 import * as entity from "booyah/src/entity";
-import * as utils from "../utils";
+import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
 import Nucleotide from "./Nucleotide";
 
@@ -23,7 +23,7 @@ export default class Bonus extends entity.EntityBase {
   constructor(
     public name: string,
     public sprite: PIXI.Sprite,
-    public usageStyle: utils.BonusUsageStyle
+    public usageStyle: crisprUtil.BonusUsageStyle
   ) {
     super();
   }
