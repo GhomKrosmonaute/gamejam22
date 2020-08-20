@@ -160,18 +160,7 @@ export default class Level extends entity.CompositeEntity {
     );
 
     // adding sequences for tests
-    switch (this.levelVariant) {
-      case "turnBased":
-      case "continuous": {
-        this.sequenceManager.add(3);
-        break;
-      }
-
-      case "long": {
-        this.sequenceManager.add(10);
-        break;
-      }
-    }
+    this.sequenceManager.add(this._pickSequenceLength());
 
     if (this.levelVariant === "turnBased")
       this.sequenceManager.distributeSequences();
@@ -236,7 +225,7 @@ export default class Level extends entity.CompositeEntity {
   private _onGo(): void {
     if (this.path.items.length > 0) return;
 
-    if (this.levelVariant === "turnBased") {
+    if (this.levelVariant === "turnBased" || this.levelVariant === "long") {
       if (this.grid.containsHoles()) {
         this._regenerate();
       } else {
@@ -275,10 +264,10 @@ export default class Level extends entity.CompositeEntity {
       actions.push(infectionSequence);
     }
 
-    if (countSequences < 3) {
+    if (countSequences < this.sequenceCountLimit) {
       actions.push(
         new entity.FunctionCallEntity(() => {
-          const length = utils.random(3, 4);
+          const length = this._pickSequenceLength();
           this.sequenceManager.add(length);
           this.sequenceManager.distributeSequences();
         })
@@ -290,6 +279,29 @@ export default class Level extends entity.CompositeEntity {
     }
   }
 
+  get sequenceCountLimit(): number {
+    switch (this.levelVariant) {
+      case "turnBased":
+        return 3;
+      case "continuous":
+        return 1;
+      case "long":
+        return 1;
+    }
+  }
+
+  private _pickSequenceLength(): number {
+    switch (this.levelVariant) {
+      case "turnBased":
+        return utils.random(4, 7);
+      case "continuous":
+        return utils.random(3, 4);
+      case "long":
+        return 13;
+    }
+  }
+
+  // TODO: refactor this as a separate object, using the strategy pattern
   private _attemptCrunch(): void {
     if (
       this.path.items.length === 0 ||
@@ -303,14 +315,11 @@ export default class Level extends entity.CompositeEntity {
       this.sequenceManager.distributeSequences();
     }
 
+    // Makes holes in the grid that corresponds to the used nucleotides
     this.path.crunch();
     this.path.remove();
 
-    if (this.levelVariant === "continuous") this._regenerate();
-    else if (
-      this.levelVariant === "turnBased" &&
-      this.sequenceManager.countSequences() === 0
-    ) {
+    if (this.sequenceManager.countSequences() === 0) {
       this._regenerate();
     }
   }
@@ -363,7 +372,7 @@ export default class Level extends entity.CompositeEntity {
       new entity.EntitySequence([
         infectionSequence,
         new entity.FunctionCallEntity(() => {
-          const length = utils.random(3, 4);
+          const length = this._pickSequenceLength();
           this.sequenceManager.add(length);
         }),
       ])

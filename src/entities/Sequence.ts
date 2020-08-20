@@ -69,6 +69,40 @@ export default class Sequence extends entity.CompositeEntity {
     }
   }
 
+  /**
+   * Make the nucleotides that match the signature inactive
+   * @param signature
+   */
+  deactivateSegment(signature: string): boolean {
+    // Try forwards
+    let sequenceSignature = this.toString();
+    let index = sequenceSignature.indexOf(signature);
+    if (index !== -1) {
+      for (let i = 0; i < signature.length; i++) {
+        this.nucleotides[index + i].state = "inactive";
+      }
+      return true;
+    }
+
+    // Try backwards
+    sequenceSignature = util.reverseString(sequenceSignature);
+    index = sequenceSignature.indexOf(signature);
+    if (index !== -1) {
+      for (let i = 0; i < signature.length; i++) {
+        this.nucleotides[sequenceSignature.length - 1 - index - i].state =
+          "inactive";
+      }
+      return true;
+    }
+
+    // No match found
+    return false;
+  }
+
+  isInactive(): boolean {
+    return !this.nucleotides.some((n) => n.state !== "inactive");
+  }
+
   refresh() {
     this.container.position.copyFrom(this.position);
   }

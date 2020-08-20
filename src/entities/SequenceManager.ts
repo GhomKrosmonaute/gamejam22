@@ -71,25 +71,33 @@ export default class SequenceManager extends entity.CompositeEntity {
   crunch(path: Path) {
     if (!this.matchesSequence(path)) return;
 
-    const validationMethod =
-      this._entityConfig.level.levelVariant === "long" ? "partial" : "full";
     const signature = path.signature;
-    const newSequences: Sequence[] = [];
-    let crunched = false;
+    const removedSequences: Sequence[] = [];
     for (const s of this.sequences) {
-      if (s.validate(signature, validationMethod)) {
-        this._deactivateChildEntity(s);
-        crunched = true;
-        this.emit("crunch", s);
-      } else newSequences.push(s);
+      if (this._entityConfig.level.levelVariant === "long") {
+        if (s.validate(signature, "partial")) {
+          s.deactivateSegment(path.signature);
+
+          if (s.isInactive()) {
+            removedSequences.push(s);
+          }
+        }
+      } else if (s.validate(signature)) {
+        removedSequences.push(s);
+      }
     }
 
-    if (crunched) path.items.forEach((n) => (n.state = "missing"));
+    if (removedSequences.length > 0) {
+      for (const s of removedSequences) {
+        this._deactivateChildEntity(s);
+        this.emit("crunch", s);
+      }
 
-    if (newSequences.length !== this.sequences.length) {
-      this.sequences = newSequences;
+      this.sequences = _.difference(this.sequences, removedSequences);
       this.refresh();
     }
+
+    // if (crunched) path.items.forEach((n) => (n.state = "missing"));
   }
 
   /**

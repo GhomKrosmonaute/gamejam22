@@ -9,7 +9,7 @@ import * as easing from "booyah/src/easing";
 import * as utils from "../utils";
 import * as game from "../game";
 
-export type State = "missing" | "present" | "infected";
+export type State = "missing" | "present" | "infected" | "inactive";
 
 /** Represent a nucleotide */
 export default class Nucleotide extends entity.CompositeEntity {
@@ -181,6 +181,10 @@ export default class Nucleotide extends entity.CompositeEntity {
           }),
         ])
       );
+    } else if (newState === "inactive") {
+      // Freeze animation and grey it out
+      this.nucleotideAnimation.stop();
+      this.nucleotideAnimation.tint = 0x333333;
     } else if (this._state === "missing") {
       // Remove hole sprite
       this._container.removeChild(this.holeSprite);
@@ -241,7 +245,13 @@ export default class Nucleotide extends entity.CompositeEntity {
   }
 
   toString(): string {
-    return this.colorName;
+    if (this._state === "inactive") {
+      return "i";
+    } else if (this._state === "missing") {
+      return "m";
+    } else {
+      return this.colorName;
+    }
   }
 
   get radius(): number {
