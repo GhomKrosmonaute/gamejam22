@@ -171,19 +171,9 @@ export default class SequenceManager extends entity.CompositeEntity {
     }
   }
 
-  updateHighlighting(path: Path) {
-    for (const s of this.sequences) {
-      const highlight = SequenceManager.matches(
-        path.nucleotides,
-        s.nucleotides
-      );
-      if (SequenceManager.canMatch(path.nucleotides, s.nucleotides)) {
-        for (const n of s.nucleotides)
-          n.setFilter("glow", highlight.includes(n));
-      } else {
-        for (const n of s.nucleotides) n.setFilter("glow", false);
-      }
-    }
+  updateHighlighting(path: Path): void {
+    const signature = path.signature;
+    this.sequences.forEach((s) => s.highlightSegment(signature));
   }
 
   countSequences(): number {
@@ -192,45 +182,5 @@ export default class SequenceManager extends entity.CompositeEntity {
 
   refresh(): void {
     this.sequences.forEach((s) => s.refresh());
-  }
-
-  static matches(tested: Nucleotide[], pattern: Nucleotide[]): Nucleotide[] {
-    const left: Nucleotide[] = [],
-      right: Nucleotide[] = [];
-
-    let leftEnd = false,
-      rightEnd = false;
-
-    for (let i = 0; i < pattern.length; i++) {
-      if (!tested[i]) break;
-
-      if (!leftEnd) {
-        if (tested[i].colorName === pattern[i].colorName) left.push(pattern[i]);
-        else leftEnd = true;
-      }
-
-      if (!rightEnd) {
-        if (tested[i].colorName === pattern[pattern.length - (i + 1)].colorName)
-          right.push(pattern[pattern.length - (i + 1)]);
-        else rightEnd = true;
-      }
-    }
-
-    return left.length >= right.length ? left : right;
-  }
-
-  static canMatch(tested: Nucleotide[], pattern: Nucleotide[]): boolean {
-    const reversedTested = tested.slice(0).reverse();
-    const reversedPattern = pattern.slice(0).reverse();
-    return (
-      pattern.join(",").startsWith(tested.join(",")) ||
-      pattern.join(",").startsWith(reversedTested.join(",")) ||
-      pattern.join(",").endsWith(tested.join(",")) ||
-      pattern.join(",").endsWith(reversedTested.join(",")) ||
-      reversedPattern.join(",").endsWith(tested.join(",")) ||
-      reversedPattern.join(",").endsWith(reversedTested.join(",")) ||
-      reversedPattern.join(",").startsWith(tested.join(",")) ||
-      reversedPattern.join(",").startsWith(reversedTested.join(","))
-    );
   }
 }

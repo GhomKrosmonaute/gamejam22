@@ -74,29 +74,40 @@ export default class Sequence extends entity.CompositeEntity {
    * @param signature
    */
   deactivateSegment(signature: string): boolean {
+    const segment = this.getMatchingSegment(signature);
+    if (!segment) return false;
+
+    segment.forEach((n) => (n.state = "inactive"));
+  }
+
+  highlightSegment(signature: string = ""): void {
+    const segment = this.getMatchingSegment(signature);
+
+    for (const n of this.nucleotides) {
+      n.setFilter("glow", segment && segment.includes(n));
+    }
+  }
+
+  getMatchingSegment(signature: string): Nucleotide[] | null {
     // Try forwards
     let sequenceSignature = this.toString();
     let index = sequenceSignature.indexOf(signature);
     if (index !== -1) {
-      for (let i = 0; i < signature.length; i++) {
-        this.nucleotides[index + i].state = "inactive";
-      }
-      return true;
+      return util.subarray(this.nucleotides, index, signature.length);
     }
 
     // Try backwards
     sequenceSignature = util.reverseString(sequenceSignature);
     index = sequenceSignature.indexOf(signature);
     if (index !== -1) {
-      for (let i = 0; i < signature.length; i++) {
-        this.nucleotides[sequenceSignature.length - 1 - index - i].state =
-          "inactive";
-      }
-      return true;
+      return util.subarray(
+        this.nucleotides,
+        sequenceSignature.length - 1 - index,
+        -signature.length
+      );
     }
 
-    // No match found
-    return false;
+    return null;
   }
 
   isInactive(): boolean {
