@@ -4,6 +4,7 @@ import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as geom from "booyah/src/geom";
+import * as tween from "booyah/src/tween";
 
 import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
@@ -190,12 +191,47 @@ export default class Level extends entity.CompositeEntity {
     }
 
     // adding viruses (test)
-    this._activateChildEntity(
-      new virus.Virus(),
-      entity.extendConfig({
+    {
+      const v = new virus.Virus();
+      v.state = "walk";
+      const config = entity.extendConfig({
         container: this.container,
-      })
-    );
+      });
+
+      this._activateChildEntity(v, config);
+
+      const sequence = new entity.EntitySequence(
+        [
+          new tween.Tween({
+            obj: v,
+            property: "angle",
+            from: geom.degreesToRadians(25),
+            to: geom.degreesToRadians(0),
+            duration: 1000,
+          }),
+          new entity.FunctionCallEntity(() => {
+            v.state = "idle";
+          }),
+          new entity.WaitingEntity(1000),
+          new entity.FunctionCallEntity(() => {
+            v.state = "sting";
+          }),
+          new entity.WaitingEntity(1000),
+          new entity.FunctionCallEntity(() => {
+            v.state = "walk";
+          }),
+          new tween.Tween({
+            obj: v,
+            property: "angle",
+            from: geom.degreesToRadians(0),
+            to: geom.degreesToRadians(25),
+            duration: 1000,
+          }),
+        ],
+        { loop: true }
+      );
+      const moveVirus = this._activateChildEntity(sequence, config);
+    }
 
     this._refresh();
   }
@@ -395,14 +431,16 @@ export default class Level extends entity.CompositeEntity {
     hair.scale.set(scale);
     hair.anchor.set(0.5, 1);
 
-    const radius = 1337;
-    const centerY = 320 + radius;
-    hair.position.set(
-      radius * Math.cos(angle + Math.PI / 2) +
-        this._entityConfig.app.view.width / 2,
-      centerY - radius * Math.sin(angle + Math.PI / 2)
-    );
-    hair.rotation = -angle;
+    // const radius = 1337;
+    // const centerY = 320 + radius;
+    // hair.position.set(
+    //   radius * Math.cos(angle + Math.PI / 2) +
+    //     this._entityConfig.app.view.width / 2,
+    //   centerY - radius * Math.sin(angle + Math.PI / 2)
+    // );
+    // hair.rotation = -angle;
+
+    crisprUtil.positionAlongMembrane(hair, angle);
 
     return hair;
   }

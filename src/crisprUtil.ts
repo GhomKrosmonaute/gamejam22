@@ -110,3 +110,16 @@ export function approximate(base: number, shift?: number): number {
   if (typeof shift === "undefined") return random(-base, base);
   return random(base - shift, base + shift);
 }
+
+export function positionAlongMembrane(
+  displayObject: PIXI.DisplayObject,
+  angle: number
+): void {
+  const radius = 1337;
+  const centerY = 320 + radius;
+  displayObject.position.set(
+    radius * Math.cos(angle + Math.PI / 2) + 1080 / 2,
+    centerY - radius * Math.sin(angle + Math.PI / 2)
+  );
+  displayObject.rotation = -angle;
+}
