@@ -209,12 +209,13 @@ export default class Level extends entity.CompositeEntity {
             to: geom.degreesToRadians(0),
             duration: 1000,
           }),
-          new entity.FunctionCallEntity(() => {
-            v.state = "idle";
-          }),
           new entity.WaitingEntity(1000),
           new entity.FunctionCallEntity(() => {
             v.state = "sting";
+          }),
+          new entity.WaitingEntity(3000),
+          new entity.FunctionCallEntity(() => {
+            v.state = "idle";
           }),
           new entity.WaitingEntity(1000),
           new entity.FunctionCallEntity(() => {
