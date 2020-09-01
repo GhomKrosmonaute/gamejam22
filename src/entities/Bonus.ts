@@ -17,13 +17,13 @@ export default class Bonus extends entity.EntityBase {
     strokeThickness: 10,
   });
 
-  private _count = 1;
   private isFocused = false;
 
   constructor(
     public name: string,
     public sprite: PIXI.Sprite,
-    public usageStyle: crisprUtil.BonusUsageStyle
+    public usageStyle: crisprUtil.BonusUsageStyle,
+    private _count = 1
   ) {
     super();
   }
@@ -35,7 +35,7 @@ export default class Bonus extends entity.EntityBase {
     this.countText.anchor.set(0.5);
     this._entityConfig.container.addChild(this.sprite);
     this._entityConfig.container.addChild(this.countText);
-    this.refresh();
+    this.countUpdate();
   }
 
   _update() {}
@@ -51,7 +51,7 @@ export default class Bonus extends entity.EntityBase {
 
   set count(count: number) {
     this._count = count;
-    this.refresh();
+    this.countUpdate();
   }
 
   get focused(): boolean {
@@ -91,8 +91,8 @@ export default class Bonus extends entity.EntityBase {
     }
   }
 
-  refresh() {
-    this.countText.position.set(this.sprite.x + 200, this.sprite.y + 200);
+  countUpdate() {
+    this.countText.position.set(this.sprite.x + 60, this.sprite.y + 60);
     if (this._count < 2) {
       this.countText.visible = false;
     } else {

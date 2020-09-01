@@ -37,8 +37,8 @@ export default class Inventory extends entity.CompositeEntity {
     bonus.sprite.scale.set(0.75);
     bonus.sprite.anchor.set(0.5);
     bonus.sprite.position.set(
-      100 + this.bonuses.length * 100,
-      this._entityConfig.app.view.height - 100
+      130 + this.bonuses.length * 100,
+      this._entityConfig.app.view.height * 0.93
     );
 
     this._on(bonus.sprite, "pointerup", () => this.focus(bonus));

@@ -99,6 +99,11 @@ const graphicalAssets = [
   "images/infection_blue.png",
   "images/infection_green.png",
   "images/infection_yellow.png",
+  "images/hud_bonus_background.png",
+  "images/hud_go_button.png",
+  "images/hud_gauge_background.png",
+  "images/hud_gauge_bar.png",
+  "images/hud_gauge_foreground.png",
 
   // animated sprites
   "images/nucleotide_red.json",
@@ -115,7 +120,7 @@ const graphicalAssets = [
 const entityInstallers: any = [
   // audio.installJukebox,
   // audio.installFxMachine,
-  // booyah.installMenu,
+  booyah.installMenu,
 ];
 
 booyah.go({
@@ -125,4 +130,7 @@ booyah.go({
   entityInstallers,
   screenSize: new PIXI.Point(width, height),
   graphicalAssets,
+  graphics: {
+    menu: "images/hud_menu_button.png",
+  }
 });

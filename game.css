@@ -35,6 +35,7 @@ body {
 }*/
 
 #game-parent {
+
   position: relative;
 
   height: 540px; /*! fallback */
@@ -48,6 +49,9 @@ body {
   -moz-user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
+
+  min-height: 100vh;
+  max-width: 100vw;
 }
 
 #game-parent:fullscreen {
@@ -71,7 +75,6 @@ body {
 
   height: 540px; /* fallback */
   height: calc((9 / 16) * 100vw);
-  max-height: calc(100vh - 80px);
 
   /* Center the element
      Based on https://css-tricks.com/centering-percentage-widthheight-elements/ */
@@ -82,6 +85,9 @@ body {
   -ms-transform: translate(-50%, 0);
 
   background-color: black;
+
+  min-height: 100vh;
+  max-width: 100vw;
 }
 
 #game-parent:fullscreen {

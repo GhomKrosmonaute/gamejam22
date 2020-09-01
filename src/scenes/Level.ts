@@ -38,6 +38,10 @@ export default class Level extends entity.CompositeEntity {
 
   private goButton: PIXI.Container & { text?: PIXI.Text };
   private crunchCount: number = 0;
+  private gaugeBackground: PIXI.Sprite
+  private gaugeBar: PIXI.Sprite
+  private gaugeForeground: PIXI.Sprite
+  private bonusBackground: PIXI.Sprite
 
   constructor(public readonly levelVariant: LevelVariant) {
     super();
@@ -99,33 +103,6 @@ export default class Level extends entity.CompositeEntity {
       })
     );
 
-    // adding go button
-    {
-      this.goButton = new PIXI.Container();
-      this.goButton.position.set(
-        this._entityConfig.app.view.width * 0.75,
-        this._entityConfig.app.view.height - 90
-      );
-      this.goButton.interactive = true;
-      this.goButton.buttonMode = true;
-      this._on(this.goButton, "pointerup", this._onGo);
-      this.container.addChild(this.goButton);
-
-      const bg = new PIXI.Graphics()
-        .beginFill(0xaaaaaa)
-        .drawRect(-250, -50, 500, 100)
-        .endFill();
-
-      this.goButton.addChild(bg);
-
-      this.goButton.text = new PIXI.Text("GO", {
-        fill: "#000000",
-        fontSize: "50px",
-      });
-      this.goButton.text.anchor.set(0.5);
-      this.goButton.addChild(this.goButton.text);
-    }
-
     // foreground images
     {
       const particles2 = new PIXI.Sprite(
@@ -149,6 +126,75 @@ export default class Level extends entity.CompositeEntity {
             geom.lerp(hairMaxScale, hairMinScale, Math.random())
           )
         );
+      }
+    }
+
+    // GUI/HUD
+    {
+      // GO button
+      {
+        this.goButton = new PIXI.Sprite(
+          this._entityConfig.app.loader.resources[
+            "images/hud_go_button.png"
+            ].texture
+        );
+        this.goButton.position.set(
+          this._entityConfig.app.view.width * 0.734,
+          this._entityConfig.app.view.height * 0.8715
+        );
+        this.goButton.interactive = true;
+        this.goButton.buttonMode = true;
+        this._on(this.goButton, "pointerup", this._onGo);
+        this.container.addChild(this.goButton);
+
+        this.goButton.text = new PIXI.Text("GO", {
+          fill: "#000000",
+          fontSize: "50px",
+        });
+        this.goButton.text.position.set(
+          this.goButton.width / 2,
+          this.goButton.height / 2
+        )
+        this.goButton.text.anchor.set(.5)
+        this.goButton.addChild(this.goButton.text);
+      }
+
+      // Gauge bar (score/exp?)
+      {
+        this.gaugeBackground = new PIXI.Sprite(
+          this._entityConfig.app.loader.resources[
+            "images/hud_gauge_background.png"
+          ].texture
+        );
+        this.gaugeBar = new PIXI.Sprite(
+          this._entityConfig.app.loader.resources[
+            "images/hud_gauge_bar.png"
+            ].texture
+        );
+        this.gaugeForeground = new PIXI.Sprite(
+          this._entityConfig.app.loader.resources[
+            "images/hud_gauge_foreground.png"
+            ].texture
+        );
+        this.container.addChild(this.gaugeBackground)
+        this.container.addChild(this.gaugeBar)
+        this.container.addChild(this.gaugeForeground)
+      }
+
+      // Bonus
+      {
+        this.bonusBackground = new PIXI.Sprite(
+          this._entityConfig.app.loader.resources[
+            "images/hud_bonus_background.png"
+          ].texture
+        )
+        this.bonusBackground.position.set(
+          this._entityConfig.app.view.width * 0.07,
+          this._entityConfig.app.view.height * 0.88
+        )
+        this.bonusBackground.scale.set(0.65)
+        // todo: continue
+        this.container.addChild(this.bonusBackground)
       }
     }
 
@@ -178,6 +224,8 @@ export default class Level extends entity.CompositeEntity {
         ),
         "drag & drop"
       );
+      this.inventory.add(swapBonus);
+      this.inventory.add(swapBonus);
       this.inventory.add(swapBonus);
       this._on(swapBonus, "trigger", (n1: Nucleotide, n2: Nucleotide) => {
         // todo: make animated swap function on grid
