@@ -12,9 +12,9 @@ export default class Bonus extends entity.EntityBase {
   public targets: Nucleotide[] = [];
   public countText = new PIXI.Text("1", {
     fill: "#FFFFFF",
-    fontSize: "80px",
+    fontSize: "60px",
     stroke: "#000000",
-    strokeThickness: 10,
+    strokeThickness: 6,
   });
 
   private isFocused = false;
@@ -33,8 +33,8 @@ export default class Bonus extends entity.EntityBase {
     this.sprite.interactive = true;
     this.sprite.buttonMode = true;
     this.countText.anchor.set(0.5);
+    this.sprite.addChild(this.countText)
     this._entityConfig.container.addChild(this.sprite);
-    this._entityConfig.container.addChild(this.countText);
     this.countUpdate();
   }
 
@@ -42,7 +42,6 @@ export default class Bonus extends entity.EntityBase {
 
   _teardown() {
     this._entityConfig.container.removeChild(this.sprite);
-    this._entityConfig.container.removeChild(this.countText);
   }
 
   get count(): number {
@@ -92,7 +91,7 @@ export default class Bonus extends entity.EntityBase {
   }
 
   countUpdate() {
-    this.countText.position.set(this.sprite.x + 60, this.sprite.y + 60);
+    this.countText.position.set(50, 50);
     if (this._count < 2) {
       this.countText.visible = false;
     } else {

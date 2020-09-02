@@ -34,10 +34,10 @@ export default class Inventory extends entity.CompositeEntity {
       bonus.count++;
       return;
     }
-    bonus.sprite.scale.set(0.75);
+    bonus.sprite.scale.set(0.5);
     bonus.sprite.anchor.set(0.5);
     bonus.sprite.position.set(
-      130 + this.bonuses.length * 100,
+      150 + this.bonuses.length * 100,
       this._entityConfig.app.view.height * 0.93
     );
 
