@@ -81,8 +81,7 @@ export default class Bonus<
     if (isFocused) {
       if (this.triggerEventName === "click") {
         this._selected = false;
-        // @ts-ignore
-        this.trigger();
+        this.emit("trigger");
       } else {
         this.sprite.filters = [glowFilter];
       }
