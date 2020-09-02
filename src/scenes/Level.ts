@@ -1,5 +1,5 @@
 import * as PIXI from "pixi.js";
-import * as _ from "underscore";
+import { GlowFilter } from "@pixi/filter-glow";
 
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
@@ -13,7 +13,6 @@ import Path from "../entities/Path";
 import SequenceManager from "../entities/SequenceManager";
 import Inventory from "../entities/Inventory";
 import Bonus from "../entities/Bonus";
-import Nucleotide from "../entities/Nucleotide";
 import * as virus from "../entities/virus";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
@@ -22,6 +21,8 @@ const dropSpeed = 0.001;
 const hairCount = 40;
 const hairMinScale = 0.3;
 const hairMaxScale = 0.45;
+
+const glowFilter = new GlowFilter();
 
 export default class Level extends entity.CompositeEntity {
   public container: PIXI.Container;
@@ -32,16 +33,20 @@ export default class Level extends entity.CompositeEntity {
   public grid: Grid;
   public state: crisprUtil.PartyState = "crunch";
 
+  public swapBonus: Bonus<"clickTwoNucleotides">;
+  public shieldBonus: Bonus<"clickOneNucleotide">;
+  public healBonus: Bonus<"click">;
+
   public readonly colCount = 7;
   public readonly rowCount = 7;
   public readonly cutCount = 6;
 
   private goButton: PIXI.Container & { text?: PIXI.Text };
   private crunchCount: number = 0;
-  private gaugeBackground: PIXI.Sprite
-  private gaugeBar: PIXI.Sprite
-  private gaugeForeground: PIXI.Sprite
-  private bonusBackground: PIXI.Sprite
+  private gaugeBackground: PIXI.Sprite;
+  private gaugeBar: PIXI.Sprite;
+  private gaugeForeground: PIXI.Sprite;
+  private bonusBackground: PIXI.Sprite;
 
   constructor(public readonly levelVariant: LevelVariant) {
     super();
@@ -136,7 +141,7 @@ export default class Level extends entity.CompositeEntity {
         this.goButton = new PIXI.Sprite(
           this._entityConfig.app.loader.resources[
             "images/hud_go_button.png"
-            ].texture
+          ].texture
         );
         this.goButton.position.set(
           this._entityConfig.app.view.width * 0.734,
@@ -154,8 +159,8 @@ export default class Level extends entity.CompositeEntity {
         this.goButton.text.position.set(
           this.goButton.width / 2,
           this.goButton.height / 2
-        )
-        this.goButton.text.anchor.set(.5)
+        );
+        this.goButton.text.anchor.set(0.5);
         this.goButton.addChild(this.goButton.text);
       }
 
@@ -169,16 +174,16 @@ export default class Level extends entity.CompositeEntity {
         this.gaugeBar = new PIXI.Sprite(
           this._entityConfig.app.loader.resources[
             "images/hud_gauge_bar.png"
-            ].texture
+          ].texture
         );
         this.gaugeForeground = new PIXI.Sprite(
           this._entityConfig.app.loader.resources[
             "images/hud_gauge_foreground.png"
-            ].texture
+          ].texture
         );
-        this.container.addChild(this.gaugeBackground)
-        this.container.addChild(this.gaugeBar)
-        this.container.addChild(this.gaugeForeground)
+        this.container.addChild(this.gaugeBackground);
+        this.container.addChild(this.gaugeBar);
+        this.container.addChild(this.gaugeForeground);
       }
 
       // Bonus
@@ -187,18 +192,18 @@ export default class Level extends entity.CompositeEntity {
           this._entityConfig.app.loader.resources[
             "images/hud_bonus_background.png"
           ].texture
-        )
+        );
         this.bonusBackground.position.set(
           this._entityConfig.app.view.width * 0.07,
           this._entityConfig.app.view.height * 0.88
-        )
-        this.bonusBackground.scale.set(0.65)
+        );
+        this.bonusBackground.scale.set(0.65);
         // todo: continue
-        this.container.addChild(this.bonusBackground)
+        this.container.addChild(this.bonusBackground);
       }
     }
 
-    this.inventory = new Inventory();
+    this.inventory = new Inventory(this);
 
     this._activateChildEntity(
       this.inventory,
@@ -213,28 +218,70 @@ export default class Level extends entity.CompositeEntity {
     if (this.levelVariant === "turnBased")
       this.sequenceManager.distributeSequences();
 
-    // adding bonus
+    // create bonuses
     {
-      const swapBonus = new Bonus(
-        "swap",
-        new PIXI.Sprite(
-          this._entityConfig.app.loader.resources[
-            "images/bonus_swap.png"
-          ].texture
-        ),
-        "drag & drop"
-      );
-      this.inventory.add(swapBonus);
-      this.inventory.add(swapBonus);
-      this.inventory.add(swapBonus);
-      this._on(swapBonus, "trigger", (n1: Nucleotide, n2: Nucleotide) => {
-        // todo: make animated swap function on grid
-        this.grid.swap(n1, n2);
-      });
+      // swap
+      {
+        this.swapBonus = new Bonus(
+          "swap",
+          new PIXI.Sprite(
+            this._entityConfig.app.loader.resources[
+              "images/bonus_swap.png"
+            ].texture
+          ),
+          "clickTwoNucleotides",
+          (n1, n2) => {
+            // todo: make animated swap function on grid
+            this.grid.swap(n1, n2);
+          }
+        );
+      }
+      // shield
+      {
+        this.shieldBonus = new Bonus(
+          "shield",
+          new PIXI.Sprite(
+            this._entityConfig.app.loader.resources[
+              "images/bonus_shield.png"
+            ].texture
+          ),
+          "clickOneNucleotide",
+          (n) => {
+            n.shield = true;
+            this.grid.getNeighbors(n).forEach((nn) => (nn.shield = true));
+          }
+        );
+      }
+      // heal
+      {
+        this.healBonus = new Bonus(
+          "heal",
+          new PIXI.Sprite(
+            this._entityConfig.app.loader.resources[
+              "images/bonus_heal.png"
+            ].texture
+          ),
+          "click",
+          () => {
+            // regenerate 30 nucleotides
+            this.grid.regenerate(30, (n) => !n.shield);
+            this.goButtonLocked = true;
+            setTimeout(() => {
+              this.goButtonLocked = false;
+            }, 1000);
+          }
+        );
+      }
+    }
 
+    // adding bonuses
+    {
+      this.inventory.add(this.swapBonus, 5);
+      this.inventory.add(this.shieldBonus, 5);
+      this.inventory.add(this.healBonus, 5);
       this._on(this.sequenceManager, "crunch", () => {
         this.crunchCount++;
-        if (this.crunchCount % 2 === 0) this.inventory.add(swapBonus);
+        if (this.crunchCount % 2 === 0) this.inventory.add(this.swapBonus);
       });
     }
 
@@ -303,6 +350,8 @@ export default class Level extends entity.CompositeEntity {
   }
 
   private _onGo(): void {
+    if (this.goButtonLocked) return;
+
     if (this.path.items.length > 0) return;
 
     if (this.levelVariant === "turnBased" || this.levelVariant === "long") {
@@ -313,7 +362,13 @@ export default class Level extends entity.CompositeEntity {
 
         this._activateChildEntity(
           new entity.EntitySequence([
-            new entity.FunctionCallEntity(() => this.grid.regenerate(5)),
+            new entity.FunctionCallEntity(() => {
+              this.goButtonLocked = true;
+              this.grid.regenerate(
+                5,
+                (n) => !n.shield && n.state === "present"
+              );
+            }),
             new entity.WaitingEntity(1200),
             new entity.FunctionCallEntity(() => {
               this._endTurn();
@@ -329,6 +384,16 @@ export default class Level extends entity.CompositeEntity {
     }
   }
 
+  get goButtonLocked(): boolean {
+    return !this.goButton.buttonMode;
+  }
+
+  set goButtonLocked(value: boolean) {
+    this.goButton.buttonMode = !value;
+    this.goButton.interactive = !value;
+    this.goButton.text.style.fill = !value ? "#000000" : "#4e535d";
+  }
+
   private _endTurn(): void {
     if (this.grid.isGameOver()) {
       this._transition = entity.makeTransition("game_over");
@@ -336,7 +401,7 @@ export default class Level extends entity.CompositeEntity {
     }
 
     // Create a list of "actions" that will take place at the end of calling this function
-    let actions = [];
+    let actions: entity.Entity[] = [];
 
     const countSequences = this.sequenceManager.countSequences();
     if (countSequences > 0) {
@@ -353,6 +418,12 @@ export default class Level extends entity.CompositeEntity {
         })
       );
     }
+
+    actions.push(
+      new entity.FunctionCallEntity(() => {
+        this.goButtonLocked = false;
+      })
+    );
 
     if (actions.length > 0) {
       this._activateChildEntity(new entity.EntitySequence(actions));
@@ -450,10 +521,14 @@ export default class Level extends entity.CompositeEntity {
 
     this._activateChildEntity(
       new entity.EntitySequence([
+        new entity.FunctionCallEntity(() => {
+          this.goButtonLocked = true;
+        }),
         infectionSequence,
         new entity.FunctionCallEntity(() => {
           const length = this._pickSequenceLength();
           this.sequenceManager.add(length);
+          this.goButtonLocked = false;
         }),
       ])
     );

@@ -1,14 +1,18 @@
 import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
-import * as game from "../game";
 import Bonus from "./Bonus";
+import Level from "../scenes/Level";
 
 export default class Inventory extends entity.CompositeEntity {
   public container: PIXI.Container;
   public sprite: PIXI.Sprite;
   public arrowButton: PIXI.Container;
-  public bonuses: Bonus[] = [];
+  public bonuses: Bonus<any>[] = [];
   public isOpened = false;
+
+  constructor(public level: Level) {
+    super();
+  }
 
   _setup() {
     this.container = new PIXI.Container();
@@ -25,29 +29,26 @@ export default class Inventory extends entity.CompositeEntity {
     // todo: check mouse position to focus bonus or not
   }
 
-  get focused(): Bonus | null {
+  get focused(): Bonus<any> | null {
     return this.bonuses.find((b) => b.focused);
   }
 
-  add(bonus: Bonus) {
+  add(bonus: Bonus<any>, count = 1) {
     if (this.bonuses.includes(bonus)) {
-      bonus.count++;
+      bonus.count += count;
       return;
     }
     bonus.sprite.scale.set(0.5);
     bonus.sprite.anchor.set(0.5);
     bonus.sprite.position.set(
-      150 + this.bonuses.length * 100,
-      this._entityConfig.app.view.height * 0.93
+      160 + this.bonuses.length * 190,
+      this._entityConfig.app.view.height * 0.935
     );
+    bonus.count = count;
 
     this._on(bonus.sprite, "pointerup", () => this.focus(bonus));
-    this._on(bonus, "trigger", () => {
-      this.focus();
-      bonus.count--;
-      if (bonus.count === 0) {
-        this.remove(bonus);
-      }
+    this._on(bonus, "removeFromInventory", () => {
+      this.remove(bonus);
     });
     this.bonuses.push(bonus);
     this._activateChildEntity(
@@ -58,14 +59,15 @@ export default class Inventory extends entity.CompositeEntity {
     );
   }
 
-  remove(bonus: Bonus) {
+  remove(bonus: Bonus<any>) {
     this._off(bonus);
     this.bonuses = this.bonuses.filter((b) => b !== bonus);
     this.container.removeChild(bonus.sprite);
     this._deactivateChildEntity(bonus);
   }
 
-  focus(bonus?: Bonus) {
+  focus(bonus?: Bonus<any>) {
+    if (this.level.goButtonLocked) return;
     if (bonus && bonus.focused) bonus.focused = false;
     else for (const b of this.bonuses) b.focused = b === bonus;
   }

@@ -147,6 +147,7 @@ export default class Grid extends entity.CompositeEntity {
         randomIndex = Math.floor(Math.random() * among.length);
       } while (among[randomIndex].type === "scissors");
       among[randomIndex].type = "scissors";
+      among[randomIndex].shield = false;
     }
   }
 
@@ -333,17 +334,17 @@ export default class Grid extends entity.CompositeEntity {
   /**
    * Regenerate a certain number of nucleotides
    */
-  regenerate(n: number): void {
+  regenerate(n: number, filter: (n: Nucleotide) => boolean): void {
     // Pick a certain number of non-infected nucleotides
     // @ts-ignore
     const nucleotides: Nucleotide[] = _.chain(this.safetyNucleotides)
       // @ts-ignore
-      .filter({ state: "present" })
+      .filter(filter)
       .shuffle()
       .take(n)
       .value();
 
-    // Make them dissapear
+    // Make them disappear
     nucleotides.forEach((n) => {
       n.state = "missing";
       this.generateNucleotide(n);
@@ -372,7 +373,7 @@ export default class Grid extends entity.CompositeEntity {
   infect(count: number): entity.EntitySequence {
     // @ts-ignore
     const infections: Nucleotide[] = _.chain(this.safetyNucleotides)
-      .filter((n) => n.state === "present" && n.type === "normal")
+      .filter((n) => n.state === "present" && n.type === "normal" && !n.shield)
       .shuffle()
       .take(count)
       .value();

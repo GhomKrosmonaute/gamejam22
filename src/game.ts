@@ -95,6 +95,8 @@ const graphicalAssets = [
   "images/arrow.png",
   "images/circle.png",
   "images/bonus_swap.png",
+  "images/bonus_shield.png",
+  "images/bonus_heal.png",
   "images/infection_red.png",
   "images/infection_blue.png",
   "images/infection_green.png",
@@ -132,5 +134,5 @@ booyah.go({
   graphicalAssets,
   graphics: {
     menu: "images/hud_menu_button.png",
-  }
+  },
 });

@@ -27,11 +27,6 @@ export const fullColorNames: { [k in ColorName]: string } = {
 
 export type PartyState = "crunch" | "regenerate" | "bonus";
 
-export type BonusUsageStyle =
-  | "drag & drop"
-  | "drag & drop on neighbor"
-  | "click";
-
 /** from 0 to 5, start on top */
 export type NeighborIndex = 0 | 1 | 2 | 3 | 4 | 5;
 export const NeighborIndexes: NeighborIndex[] = [0, 1, 2, 3, 4, 5];

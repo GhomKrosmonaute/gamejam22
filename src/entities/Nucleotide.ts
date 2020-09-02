@@ -21,6 +21,7 @@ export default class Nucleotide extends entity.CompositeEntity {
   public colorName: crisprUtil.ColorName = crisprUtil.getRandomColorName();
   public isHovered = false;
   public shakeAmount: number;
+  public shieldSprite: PIXI.Sprite;
 
   private _container: PIXI.Container;
   private _state: State;
@@ -29,6 +30,7 @@ export default class Nucleotide extends entity.CompositeEntity {
   private holeSprite: PIXI.Sprite = null;
   private infectionSprite: PIXI.Sprite = null;
   private _radius: number;
+  private _shield = false;
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
   private floatingShift = new PIXI.Point();
   private floatingSpeed = new PIXI.Point();
@@ -53,6 +55,14 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._container.rotation = this.rotation;
     this._container.position.copyFrom(this.position);
     this._refreshScale();
+
+    this.shieldSprite = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources["images/bonus_shield.png"].texture
+    );
+    this.shieldSprite.anchor.set(0.5);
+    this.shieldSprite.scale.set(0.5);
+    this.shieldSprite.visible = false;
+    this._container.addChild(this.shieldSprite);
 
     this._entityConfig.container.addChild(this._container);
   }
@@ -105,6 +115,16 @@ export default class Nucleotide extends entity.CompositeEntity {
     return this._state === "infected";
   }
 
+  get shield(): boolean {
+    return this._shield;
+  }
+
+  set shield(value: boolean) {
+    if (value && this.type === "scissors") return;
+    this._shield = value;
+    this.shieldSprite.visible = this._shield;
+  }
+
   setFloating(
     vector: "x" | "y",
     speed = 0.0005,
@@ -154,6 +174,11 @@ export default class Nucleotide extends entity.CompositeEntity {
       this.holeSprite.anchor.set(0.5, 0.5);
       this._container.addChild(this.holeSprite);
     } else if (newState === "infected") {
+      if (this.shield) {
+        this.shield = false;
+        return;
+      }
+
       // Freeze animation
       this.nucleotideAnimation.stop();
 
@@ -220,7 +245,7 @@ export default class Nucleotide extends entity.CompositeEntity {
 
       // Create animated sprite
       this.nucleotideAnimation = this._createAnimatedSprite();
-      this._container.addChild(this.nucleotideAnimation);
+      this._container.addChildAt(this.nucleotideAnimation, 0);
       this._refreshScale();
 
       // Trigger "generation" animation
