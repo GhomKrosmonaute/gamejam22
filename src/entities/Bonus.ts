@@ -24,7 +24,7 @@ export default class Bonus<
     strokeThickness: 13,
   });
 
-  private _focused = false;
+  private _selected = false;
   private _count = 1;
 
   constructor(
@@ -63,15 +63,15 @@ export default class Bonus<
     this.countUpdate();
   }
 
-  get focused(): boolean {
-    return this._focused;
+  get selected(): boolean {
+    return this._selected;
   }
 
-  set focused(isFocused: boolean) {
-    this._focused = isFocused;
+  set selected(isFocused: boolean) {
+    this._selected = isFocused;
     if (isFocused) {
       if (this.triggerEventName === "click") {
-        this._focused = false;
+        this._selected = false;
         // @ts-ignore
         this.trigger();
       } else {
@@ -113,7 +113,7 @@ export default class Bonus<
   }
 
   trigger(...args: BonusTriggerEvents[TriggerEventName]) {
-    this.focused = false;
+    this.selected = false;
     this.onTrigger(...args);
     this.count--;
   }
@@ -127,7 +127,7 @@ export default class Bonus<
       this.countText.text = String(this._count);
     }
     if (this._count === 0) {
-      this.emit("removeFromInventory");
+      this.emit("empty");
     }
   }
 }

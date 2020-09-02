@@ -203,7 +203,7 @@ export default class Level extends entity.CompositeEntity {
       }
     }
 
-    this.inventory = new Inventory(this);
+    this.inventory = new Inventory();
 
     this._activateChildEntity(
       this.inventory,
@@ -265,9 +265,9 @@ export default class Level extends entity.CompositeEntity {
           () => {
             // regenerate 30 nucleotides
             this.grid.regenerate(30, (n) => !n.shield);
-            this.goButtonLocked = true;
+            this.isGuiLocked = true;
             setTimeout(() => {
-              this.goButtonLocked = false;
+              this.isGuiLocked = false;
             }, 1000);
           }
         );
@@ -350,7 +350,7 @@ export default class Level extends entity.CompositeEntity {
   }
 
   private _onGo(): void {
-    if (this.goButtonLocked) return;
+    if (this.isGuiLocked) return;
 
     if (this.path.items.length > 0) return;
 
@@ -363,7 +363,7 @@ export default class Level extends entity.CompositeEntity {
         this._activateChildEntity(
           new entity.EntitySequence([
             new entity.FunctionCallEntity(() => {
-              this.goButtonLocked = true;
+              this.isGuiLocked = true;
               this.grid.regenerate(
                 5,
                 (n) => !n.shield && n.state === "present"
@@ -384,11 +384,11 @@ export default class Level extends entity.CompositeEntity {
     }
   }
 
-  get goButtonLocked(): boolean {
+  get isGuiLocked(): boolean {
     return !this.goButton.buttonMode;
   }
 
-  set goButtonLocked(value: boolean) {
+  set isGuiLocked(value: boolean) {
     this.goButton.buttonMode = !value;
     this.goButton.interactive = !value;
     this.goButton.text.style.fill = !value ? "#000000" : "#4e535d";
@@ -421,7 +421,7 @@ export default class Level extends entity.CompositeEntity {
 
     actions.push(
       new entity.FunctionCallEntity(() => {
-        this.goButtonLocked = false;
+        this.isGuiLocked = false;
       })
     );
 
@@ -522,13 +522,13 @@ export default class Level extends entity.CompositeEntity {
     this._activateChildEntity(
       new entity.EntitySequence([
         new entity.FunctionCallEntity(() => {
-          this.goButtonLocked = true;
+          this.isGuiLocked = true;
         }),
         infectionSequence,
         new entity.FunctionCallEntity(() => {
           const length = this._pickSequenceLength();
           this.sequenceManager.add(length);
-          this.goButtonLocked = false;
+          this.isGuiLocked = false;
         }),
       ])
     );

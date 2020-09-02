@@ -1,7 +1,6 @@
 import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import Bonus from "./Bonus";
-import Level from "../scenes/Level";
 
 export default class Inventory extends entity.CompositeEntity {
   public container: PIXI.Container;
@@ -10,7 +9,7 @@ export default class Inventory extends entity.CompositeEntity {
   public bonuses: Bonus<any>[] = [];
   public isOpened = false;
 
-  constructor(public level: Level) {
+  constructor() {
     super();
   }
 
@@ -30,7 +29,7 @@ export default class Inventory extends entity.CompositeEntity {
   }
 
   get focused(): Bonus<any> | null {
-    return this.bonuses.find((b) => b.focused);
+    return this.bonuses.find((b) => b.selected);
   }
 
   add(bonus: Bonus<any>, count = 1) {
@@ -46,8 +45,8 @@ export default class Inventory extends entity.CompositeEntity {
     );
     bonus.count = count;
 
-    this._on(bonus.sprite, "pointerup", () => this.focus(bonus));
-    this._on(bonus, "removeFromInventory", () => {
+    this._on(bonus.sprite, "pointerup", () => this.selected(bonus));
+    this._on(bonus, "empty", () => {
       this.remove(bonus);
     });
     this.bonuses.push(bonus);
@@ -66,9 +65,10 @@ export default class Inventory extends entity.CompositeEntity {
     this._deactivateChildEntity(bonus);
   }
 
-  focus(bonus?: Bonus<any>) {
-    if (this.level.goButtonLocked) return;
-    if (bonus && bonus.focused) bonus.focused = false;
-    else for (const b of this.bonuses) b.focused = b === bonus;
+  selected(bonus?: Bonus<any>) {
+    if (this._entityConfig.level.isGuiLocked) return;
+
+    if (bonus && bonus.selected) bonus.selected = false;
+    else for (const b of this.bonuses) b.selected = b === bonus;
   }
 }
