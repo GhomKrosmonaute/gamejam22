@@ -1,5 +1,4 @@
 import * as PIXI from "pixi.js";
-import * as geom from "booyah/src/geom";
 
 export type NucleotideType = "scissors" | "bonus" | "normal";
 export const nucleotideTypes: NucleotideType[] = [

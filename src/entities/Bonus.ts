@@ -24,18 +24,23 @@ export default class Bonus<
     strokeThickness: 13,
   });
 
-  private _focused = false;
+  private _selected = false;
   private _count = 1;
 
   constructor(
     public name: string,
     public sprite: PIXI.Sprite,
-    private triggerEventName: TriggerEventName,
-    private onTrigger: (
+    private triggerEventName: TriggerEventName
+  ) {
+    super();
+  }
+
+  onTrigger(
+    callback: (
       ...args: BonusTriggerEvents[TriggerEventName]
     ) => any | Promise<any>
   ) {
-    super();
+    this._on(this, "trigger", callback);
   }
 
   _setup() {
@@ -46,6 +51,10 @@ export default class Bonus<
     this.sprite.addChild(this.countText);
     this._entityConfig.container.addChild(this.sprite);
     this.countUpdate();
+    this.onTrigger(() => {
+      this.selected = false;
+      this.count--;
+    });
   }
 
   _update() {}
@@ -63,17 +72,16 @@ export default class Bonus<
     this.countUpdate();
   }
 
-  get focused(): boolean {
-    return this._focused;
+  get selected(): boolean {
+    return this._selected;
   }
 
-  set focused(isFocused: boolean) {
-    this._focused = isFocused;
+  set selected(isFocused: boolean) {
+    this._selected = isFocused;
     if (isFocused) {
       if (this.triggerEventName === "click") {
-        this._focused = false;
-        // @ts-ignore
-        this.trigger();
+        this._selected = false;
+        this.emit("trigger");
       } else {
         this.sprite.filters = [glowFilter];
       }
@@ -86,8 +94,7 @@ export default class Bonus<
     this.targets.push(n);
     if (this.triggerEventName === "clickTwoNucleotides") {
       if (this.targets.length === 2) {
-        // @ts-ignore
-        this.trigger(...this.targets.slice(0));
+        this.emit("trigger", ...this.targets.slice(0));
         this.targets = [];
       }
     } else if (this.triggerEventName === "clickTwoNeighbors") {
@@ -100,22 +107,16 @@ export default class Bonus<
           this.targets.pop();
         } else {
           // @ts-ignore
-          this.trigger(...this.targets.slice(0));
+          this.emit("trigger", ...this.targets.slice(0));
           this.targets = [];
         }
       }
     } else {
       // this.triggerEventName === "clickOneNucleotide"
       // @ts-ignore
-      this.trigger(this.targets[0]);
+      this.emit("trigger", this.targets[0]);
       this.targets = [];
     }
-  }
-
-  trigger(...args: BonusTriggerEvents[TriggerEventName]) {
-    this.focused = false;
-    this.onTrigger(...args);
-    this.count--;
   }
 
   countUpdate() {
@@ -127,7 +128,7 @@ export default class Bonus<
       this.countText.text = String(this._count);
     }
     if (this._count === 0) {
-      this.emit("removeFromInventory");
+      this.emit("empty");
     }
   }
 }

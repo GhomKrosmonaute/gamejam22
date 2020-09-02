@@ -277,6 +277,10 @@ export default class Grid extends entity.CompositeEntity {
     return [neighbor, ...this.getNeighborsInLine(neighbor, neighborIndex)];
   }
 
+  getStar(n: Nucleotide): Nucleotide[][] {
+    return this.getNeighbors(n).map(this.getNeighborsInLine);
+  }
+
   /** @returns {number} - -1 if is not a neighbor or the neighbor index */
   getNeighborIndex(
     n: Nucleotide,

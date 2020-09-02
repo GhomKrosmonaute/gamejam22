@@ -14,6 +14,7 @@ import SequenceManager from "../entities/SequenceManager";
 import Inventory from "../entities/Inventory";
 import Bonus from "../entities/Bonus";
 import * as virus from "../entities/virus";
+import {doc} from "prettier";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
 
@@ -42,7 +43,8 @@ export default class Level extends entity.CompositeEntity {
   public readonly cutCount = 6;
 
   private goButton: PIXI.Container & { text?: PIXI.Text };
-  private crunchCount: number = 0;
+  private crunchCount = 0;
+  private gaugeBarBaseWidth: number
   private gaugeBackground: PIXI.Sprite;
   private gaugeBar: PIXI.Sprite;
   private gaugeForeground: PIXI.Sprite;
@@ -184,6 +186,7 @@ export default class Level extends entity.CompositeEntity {
         this.container.addChild(this.gaugeBackground);
         this.container.addChild(this.gaugeBar);
         this.container.addChild(this.gaugeForeground);
+        this.gaugeBarBaseWidth = this.gaugeBar.width
       }
 
       // Bonus
@@ -203,7 +206,7 @@ export default class Level extends entity.CompositeEntity {
       }
     }
 
-    this.inventory = new Inventory(this);
+    this.inventory = new Inventory();
 
     this._activateChildEntity(
       this.inventory,
@@ -229,12 +232,13 @@ export default class Level extends entity.CompositeEntity {
               "images/bonus_swap.png"
             ].texture
           ),
-          "clickTwoNucleotides",
-          (n1, n2) => {
-            // todo: make animated swap function on grid
-            this.grid.swap(n1, n2);
-          }
+          "clickTwoNucleotides"
         );
+
+        this.swapBonus.onTrigger((n1, n2) => {
+          // todo: make animated swap function on grid
+          this.grid.swap(n1, n2);
+        });
       }
       // shield
       {
@@ -245,12 +249,13 @@ export default class Level extends entity.CompositeEntity {
               "images/bonus_shield.png"
             ].texture
           ),
-          "clickOneNucleotide",
-          (n) => {
-            n.shield = true;
-            this.grid.getNeighbors(n).forEach((nn) => (nn.shield = true));
-          }
+          "clickOneNucleotide"
         );
+
+        this.shieldBonus.onTrigger((n) => {
+          n.shield = true;
+          this.grid.getNeighbors(n).forEach((nn) => (nn.shield = true));
+        });
       }
       // heal
       {
@@ -261,16 +266,17 @@ export default class Level extends entity.CompositeEntity {
               "images/bonus_heal.png"
             ].texture
           ),
-          "click",
-          () => {
-            // regenerate 30 nucleotides
-            this.grid.regenerate(30, (n) => !n.shield);
-            this.goButtonLocked = true;
-            setTimeout(() => {
-              this.goButtonLocked = false;
-            }, 1000);
-          }
+          "click"
         );
+
+        this.healBonus.onTrigger(() => {
+          // regenerate 30 nucleotides
+          this.grid.regenerate(30, (n) => !n.shield);
+          this.isGuiLocked = true;
+          setTimeout(() => {
+            this.isGuiLocked = false;
+          }, 1000);
+        });
       }
     }
 
@@ -349,8 +355,18 @@ export default class Level extends entity.CompositeEntity {
     this.sequenceManager = null;
   }
 
+  /**
+   * Set value of gauge bar (value/maxValue) (default: value %)
+   * @param {number} value - The new value of gauge bar
+   * @param {number} maxValue - The max bound of the new value (default 100)
+   */
+  setGaugeBarValue(value: number, maxValue: number = 100){
+    this.gaugeBar.width = crisprUtil.map(value, 0, maxValue, 0, this.gaugeBarBaseWidth)
+    this.gaugeBar.position.set(crisprUtil.map(value, 0, 100, 200, 0), 0)
+  }
+
   private _onGo(): void {
-    if (this.goButtonLocked) return;
+    if (this.isGuiLocked) return;
 
     if (this.path.items.length > 0) return;
 
@@ -363,7 +379,7 @@ export default class Level extends entity.CompositeEntity {
         this._activateChildEntity(
           new entity.EntitySequence([
             new entity.FunctionCallEntity(() => {
-              this.goButtonLocked = true;
+              this.isGuiLocked = true;
               this.grid.regenerate(
                 5,
                 (n) => !n.shield && n.state === "present"
@@ -384,11 +400,11 @@ export default class Level extends entity.CompositeEntity {
     }
   }
 
-  get goButtonLocked(): boolean {
+  get isGuiLocked(): boolean {
     return !this.goButton.buttonMode;
   }
 
-  set goButtonLocked(value: boolean) {
+  set isGuiLocked(value: boolean) {
     this.goButton.buttonMode = !value;
     this.goButton.interactive = !value;
     this.goButton.text.style.fill = !value ? "#000000" : "#4e535d";
@@ -421,7 +437,7 @@ export default class Level extends entity.CompositeEntity {
 
     actions.push(
       new entity.FunctionCallEntity(() => {
-        this.goButtonLocked = false;
+        this.isGuiLocked = false;
       })
     );
 
@@ -522,13 +538,13 @@ export default class Level extends entity.CompositeEntity {
     this._activateChildEntity(
       new entity.EntitySequence([
         new entity.FunctionCallEntity(() => {
-          this.goButtonLocked = true;
+          this.isGuiLocked = true;
         }),
         infectionSequence,
         new entity.FunctionCallEntity(() => {
           const length = this._pickSequenceLength();
           this.sequenceManager.add(length);
-          this.goButtonLocked = false;
+          this.isGuiLocked = false;
         }),
       ])
     );
@@ -542,7 +558,7 @@ export default class Level extends entity.CompositeEntity {
     const hair = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources["images/hair.json"]
     );
-    hair.animationSpeed = 25 / 60;
+    hair.animationSpeed = (24 + angle) / 60;
 
     // Make hair ping-pong
     hair.loop = false;
