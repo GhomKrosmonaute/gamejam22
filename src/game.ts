@@ -122,7 +122,7 @@ const graphicalAssets = [
 const entityInstallers: any = [
   // audio.installJukebox,
   // audio.installFxMachine,
-  booyah.installMenu,
+  booyah.makeInstallMenu({ menuButtonPosition: new PIXI.Point(width, 0) }),
 ];
 
 booyah.go({
