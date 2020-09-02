@@ -14,6 +14,7 @@ import SequenceManager from "../entities/SequenceManager";
 import Inventory from "../entities/Inventory";
 import Bonus from "../entities/Bonus";
 import * as virus from "../entities/virus";
+import {doc} from "prettier";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
 
@@ -42,7 +43,8 @@ export default class Level extends entity.CompositeEntity {
   public readonly cutCount = 6;
 
   private goButton: PIXI.Container & { text?: PIXI.Text };
-  private crunchCount: number = 0;
+  private crunchCount = 0;
+  private gaugeBarBaseWidth: number
   private gaugeBackground: PIXI.Sprite;
   private gaugeBar: PIXI.Sprite;
   private gaugeForeground: PIXI.Sprite;
@@ -184,6 +186,7 @@ export default class Level extends entity.CompositeEntity {
         this.container.addChild(this.gaugeBackground);
         this.container.addChild(this.gaugeBar);
         this.container.addChild(this.gaugeForeground);
+        this.gaugeBarBaseWidth = this.gaugeBar.width
       }
 
       // Bonus
@@ -350,6 +353,16 @@ export default class Level extends entity.CompositeEntity {
     this.path = null;
     this.grid = null;
     this.sequenceManager = null;
+  }
+
+  /**
+   * Set value of gauge bar (value/maxValue) (default: value %)
+   * @param {number} value - The new value of gauge bar
+   * @param {number} maxValue - The max bound of the new value (default 100)
+   */
+  setGaugeBarValue(value: number, maxValue: number = 100){
+    this.gaugeBar.width = crisprUtil.map(value, 0, maxValue, 0, this.gaugeBarBaseWidth)
+    this.gaugeBar.position.set(crisprUtil.map(value, 0, 100, 200, 0), 0)
   }
 
   private _onGo(): void {
