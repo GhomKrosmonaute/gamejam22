@@ -30,12 +30,17 @@ export default class Bonus<
   constructor(
     public name: string,
     public sprite: PIXI.Sprite,
-    private triggerEventName: TriggerEventName,
-    private onTrigger: (
+    private triggerEventName: TriggerEventName
+  ) {
+    super();
+  }
+
+  onTrigger(
+    callback: (
       ...args: BonusTriggerEvents[TriggerEventName]
     ) => any | Promise<any>
   ) {
-    super();
+    this._on(this, "trigger", callback);
   }
 
   _setup() {
@@ -46,6 +51,10 @@ export default class Bonus<
     this.sprite.addChild(this.countText);
     this._entityConfig.container.addChild(this.sprite);
     this.countUpdate();
+    this.onTrigger(() => {
+      this.selected = false;
+      this.count--;
+    });
   }
 
   _update() {}
@@ -86,8 +95,7 @@ export default class Bonus<
     this.targets.push(n);
     if (this.triggerEventName === "clickTwoNucleotides") {
       if (this.targets.length === 2) {
-        // @ts-ignore
-        this.trigger(...this.targets.slice(0));
+        this.emit("trigger", ...this.targets.slice(0));
         this.targets = [];
       }
     } else if (this.triggerEventName === "clickTwoNeighbors") {
@@ -100,22 +108,16 @@ export default class Bonus<
           this.targets.pop();
         } else {
           // @ts-ignore
-          this.trigger(...this.targets.slice(0));
+          this.emit("trigger", ...this.targets.slice(0));
           this.targets = [];
         }
       }
     } else {
       // this.triggerEventName === "clickOneNucleotide"
       // @ts-ignore
-      this.trigger(this.targets[0]);
+      this.emit("trigger", this.targets[0]);
       this.targets = [];
     }
-  }
-
-  trigger(...args: BonusTriggerEvents[TriggerEventName]) {
-    this.selected = false;
-    this.onTrigger(...args);
-    this.count--;
   }
 
   countUpdate() {

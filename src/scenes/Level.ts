@@ -229,12 +229,13 @@ export default class Level extends entity.CompositeEntity {
               "images/bonus_swap.png"
             ].texture
           ),
-          "clickTwoNucleotides",
-          (n1, n2) => {
-            // todo: make animated swap function on grid
-            this.grid.swap(n1, n2);
-          }
+          "clickTwoNucleotides"
         );
+
+        this.swapBonus.onTrigger((n1, n2) => {
+          // todo: make animated swap function on grid
+          this.grid.swap(n1, n2);
+        });
       }
       // shield
       {
@@ -245,12 +246,13 @@ export default class Level extends entity.CompositeEntity {
               "images/bonus_shield.png"
             ].texture
           ),
-          "clickOneNucleotide",
-          (n) => {
-            n.shield = true;
-            this.grid.getNeighbors(n).forEach((nn) => (nn.shield = true));
-          }
+          "clickOneNucleotide"
         );
+
+        this.shieldBonus.onTrigger((n) => {
+          n.shield = true;
+          this.grid.getNeighbors(n).forEach((nn) => (nn.shield = true));
+        });
       }
       // heal
       {
@@ -261,16 +263,17 @@ export default class Level extends entity.CompositeEntity {
               "images/bonus_heal.png"
             ].texture
           ),
-          "click",
-          () => {
-            // regenerate 30 nucleotides
-            this.grid.regenerate(30, (n) => !n.shield);
-            this.isGuiLocked = true;
-            setTimeout(() => {
-              this.isGuiLocked = false;
-            }, 1000);
-          }
+          "click"
         );
+
+        this.healBonus.onTrigger(() => {
+          // regenerate 30 nucleotides
+          this.grid.regenerate(30, (n) => !n.shield);
+          this.isGuiLocked = true;
+          setTimeout(() => {
+            this.isGuiLocked = false;
+          }, 1000);
+        });
       }
     }
 
@@ -542,7 +545,7 @@ export default class Level extends entity.CompositeEntity {
     const hair = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources["images/hair.json"]
     );
-    hair.animationSpeed = 25 / 60;
+    hair.animationSpeed = (24 + angle) / 60;
 
     // Make hair ping-pong
     hair.loop = false;
