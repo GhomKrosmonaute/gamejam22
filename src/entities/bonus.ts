@@ -29,6 +29,9 @@ export class SwapBonus extends Bonus {
       this.basePosition.copyFrom(n1._container.position);
 
       level.grid.once("drop", () => {
+        if(!this.dragging)
+          return this._transition = entity.makeTransition();
+
         this.dragging._container.position.copyFrom(this.basePosition);
         this.dragging = null;
 

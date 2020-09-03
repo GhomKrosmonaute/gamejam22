@@ -81,6 +81,17 @@ export default class Inventory extends entity.CompositeEntity {
   selection(name: string) {
     const level: Level = this._entityConfig.level;
 
+    if(name === this.selected){
+      const bonus = this.getSelectedBonus()
+      if(bonus){
+        this._deactivateChildEntity(bonus)
+      }
+      this.sprites[name].filters = [];
+      level.isGuiLocked = false
+      this.selected = null
+      return
+    }
+
     if (level.isGuiLocked) return;
     else level.isGuiLocked = true;
 
