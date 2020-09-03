@@ -21,7 +21,6 @@ export default class Nucleotide extends entity.CompositeEntity {
   public colorName: crisprUtil.ColorName = crisprUtil.getRandomColorName();
   public isHovered = false;
   public shakeAmount: number;
-  public shieldSprite: PIXI.Sprite;
 
   private _container: PIXI.Container;
   private _state: State;
@@ -55,14 +54,6 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._container.rotation = this.rotation;
     this._container.position.copyFrom(this.position);
     this._refreshScale();
-
-    this.shieldSprite = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/bonus_shield.png"].texture
-    );
-    this.shieldSprite.anchor.set(0.5);
-    this.shieldSprite.scale.set(0.5);
-    this.shieldSprite.visible = false;
-    this._container.addChild(this.shieldSprite);
 
     this._entityConfig.container.addChild(this._container);
   }
@@ -122,7 +113,6 @@ export default class Nucleotide extends entity.CompositeEntity {
   set shield(value: boolean) {
     if (value && this.type === "scissors") return;
     this._shield = value;
-    this.shieldSprite.visible = this._shield;
   }
 
   setFloating(
