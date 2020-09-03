@@ -21,7 +21,8 @@ export default class Nucleotide extends entity.CompositeEntity {
   public isHovered = false;
   public shakeAmount: number;
 
-  private _container: PIXI.Container;
+  public _container: PIXI.Container;
+
   private _state: State;
   private _isHighlighted: boolean;
   private nucleotideAnimation: PIXI.AnimatedSprite = null;

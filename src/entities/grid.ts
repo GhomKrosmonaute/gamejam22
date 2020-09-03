@@ -129,7 +129,7 @@ export default class Grid extends entity.CompositeEntity {
     this._isPointerDown = false;
 
     this.emit("pointerup");
-    this.emit("drop", e);
+    this.emit("drop");
   }
 
   get nucleotides(): Nucleotide[] {
@@ -286,7 +286,7 @@ export default class Grid extends entity.CompositeEntity {
     const branches = this.getStarBranches(n);
     let index = 0;
     while (branches.some((b, i) => b.length > stages.length)) {
-      stages.push([...branches.map((b) => b[index])]);
+      stages.push([...branches.map((b) => b[index]).filter((n) => n)]);
       index++;
     }
     return stages;

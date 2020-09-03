@@ -100,6 +100,12 @@ export class SequenceManager extends entity.CompositeEntity {
     // if (crunched) path.items.forEach((n) => (n.state = "missing"));
   }
 
+  removeSequence(s: Sequence) {
+    this._deactivateChildEntity(s);
+    this.sequences = this.sequences.filter((ss) => ss !== s);
+    this.refresh();
+  }
+
   /**
    * In the case that sequences fall continuously, makes them fall a bit.
    * Removes sequences that reached the bottom, and returns them.
@@ -186,7 +192,7 @@ export class SequenceManager extends entity.CompositeEntity {
 }
 
 /** Represent a sequence dropped by virus */
-export default class Sequence extends entity.CompositeEntity {
+export class Sequence extends entity.CompositeEntity {
   public nucleotides: Nucleotide[] = [];
   public container: PIXI.Container;
   public nucleotideRadius = game.width * 0.04;
@@ -200,8 +206,10 @@ export default class Sequence extends entity.CompositeEntity {
 
   _setup() {
     this.container = new PIXI.Container();
+    this.container.interactive = true;
     this.container.position.copyFrom(this.position);
     this._entityConfig.container.addChild(this.container);
+    this._on(this.container, "pointerup", () => this.emit("click"));
     const { width, height } = Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
     );

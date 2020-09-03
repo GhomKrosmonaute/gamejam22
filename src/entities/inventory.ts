@@ -3,8 +3,9 @@ import * as entity from "booyah/src/entity";
 import * as bonus from "./bonus";
 
 import { GlowFilter } from "@pixi/filter-glow";
+import Level from "../scenes/level";
 
-const glowFilter = new GlowFilter();
+const glowFilter = new GlowFilter({ distance: 20, color: 0x000000 });
 
 export default class Inventory extends entity.CompositeEntity {
   public container: PIXI.Container;
@@ -78,7 +79,10 @@ export default class Inventory extends entity.CompositeEntity {
   }
 
   selection(name: string) {
-    if (this._entityConfig.level.isGuiLocked) return;
+    const level: Level = this._entityConfig.level;
+
+    if (level.isGuiLocked) return;
+    else level.isGuiLocked = true;
 
     this.selected = name;
 
