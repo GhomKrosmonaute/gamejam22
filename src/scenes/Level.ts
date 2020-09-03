@@ -40,11 +40,13 @@ export default class Level extends entity.CompositeEntity {
 
   private goButton: PIXI.Container & { text?: PIXI.Text };
   private crunchCount = 0;
-  private gaugeBarBaseWidth: number;
-  private gaugeBackground: PIXI.Sprite;
+  private gauge: PIXI.Container;
+  private gaugeText: PIXI.Text;
   private gaugeBar: PIXI.Sprite;
+  private gaugeBackground: PIXI.Sprite;
   private gaugeForeground: PIXI.Sprite;
   private bonusBackground: PIXI.Sprite;
+  private gaugeBarBaseWidth: number;
 
   constructor(public readonly levelVariant: LevelVariant) {
     super();
@@ -152,7 +154,7 @@ export default class Level extends entity.CompositeEntity {
 
         this.goButton.text = new PIXI.Text("GO", {
           fill: "#000000",
-          fontSize: "50px",
+          fontSize: "70px",
           fontFamily: "Cardenio Modern Bold"
         });
         this.goButton.text.position.set(
@@ -165,6 +167,7 @@ export default class Level extends entity.CompositeEntity {
 
       // Gauge bar (score/exp?)
       {
+        this.gauge = new PIXI.Container()
         this.gaugeBackground = new PIXI.Sprite(
           this._entityConfig.app.loader.resources[
             "images/hud_gauge_background.png"
@@ -180,9 +183,21 @@ export default class Level extends entity.CompositeEntity {
             "images/hud_gauge_foreground.png"
           ].texture
         );
-        this.container.addChild(this.gaugeBackground);
-        this.container.addChild(this.gaugeBar);
-        this.container.addChild(this.gaugeForeground);
+        this.gaugeText = new PIXI.Text("", {
+          fill: "#000000",
+          fontSize: "40px",
+          fontFamily: "Cardenio Modern Bold"
+        })
+        this.gaugeText.anchor.set(.5)
+        this.gaugeText.position.set(110,110);
+
+        this.gauge.addChild(this.gaugeBackground)
+        this.gauge.addChild(this.gaugeBar)
+        this.gauge.addChild(this.gaugeForeground)
+        this.gauge.addChild(this.gaugeText);
+
+        this.container.addChild(this.gauge);
+
         this.gaugeBarBaseWidth = this.gaugeBar.width;
 
         this.setGaugeBarValue(0);
@@ -369,6 +384,8 @@ export default class Level extends entity.CompositeEntity {
       true
     );
     this.gaugeBar.position.set(crisprUtil.mapProportion(value, 0, 100, 200, 0), 0);
+    this.gaugeText.text = value + " pts"
+    // todo: how to animate this change?
   }
 
   private _onGo(): void {
