@@ -80,7 +80,7 @@ export function random(min?: number[] | number, max?: number): number {
   }
 }
 
-export function map(
+export function mapProportion(
   n: number,
   start1: number,
   stop1: number,

@@ -363,14 +363,15 @@ export default class Level extends entity.CompositeEntity {
    * @param {number} maxValue - The max bound of the new value (default 100)
    */
   setGaugeBarValue(value: number, maxValue: number = 100) {
-    this.gaugeBar.width = crisprUtil.map(
+    this.gaugeBar.width = crisprUtil.mapProportion(
       value,
       0,
       maxValue,
       0,
-      this.gaugeBarBaseWidth
+      this.gaugeBarBaseWidth,
+      true
     );
-    this.gaugeBar.position.set(crisprUtil.map(value, 0, 100, 200, 0), 0);
+    this.gaugeBar.position.set(crisprUtil.mapProportion(value, 0, 100, 200, 0), 0);
   }
 
   private _onGo(): void {
