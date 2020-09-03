@@ -7,11 +7,11 @@ import * as tween from "booyah/src/tween";
 
 import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
-import Grid from "../entities/Grid";
-import Path from "../entities/Path";
-import SequenceManager from "../entities/SequenceManager";
-import Inventory from "../entities/Inventory";
-import Bonus from "../entities/Bonus";
+import Grid from "../entities/grid";
+import Path from "../entities/path";
+import * as sequence from "../entities/sequence";
+import Inventory from "../entities/inventory";
+import * as bonus from "../entities/bonus";
 import * as virus from "../entities/virus";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
@@ -24,15 +24,15 @@ const hairMaxScale = 0.45;
 export default class Level extends entity.CompositeEntity {
   public container: PIXI.Container;
   public nucleotideRadius = game.width / 13.44;
-  public sequenceManager: SequenceManager;
+  public sequenceManager: sequence.SequenceManager;
   public inventory: Inventory;
   public path: Path;
   public grid: Grid;
   public state: crisprUtil.PartyState = "crunch";
 
-  public swapBonus: Bonus<"clickTwoNucleotides">;
-  public shieldBonus: Bonus<"clickOneNucleotide">;
-  public healBonus: Bonus<"click">;
+  public swapBonus = new bonus.SwapBonus();
+  public starBonus = new bonus.StarBonus();
+  public killBonus = new bonus.KillBonus();
 
   public readonly colCount = 7;
   public readonly rowCount = 7;
@@ -59,7 +59,7 @@ export default class Level extends entity.CompositeEntity {
     this.container.interactive = true;
     this._entityConfig.container.addChild(this.container);
 
-    this.sequenceManager = new SequenceManager();
+    this.sequenceManager = new sequence.SequenceManager();
 
     // instancing path system
     this.path = new Path(this);
@@ -155,7 +155,7 @@ export default class Level extends entity.CompositeEntity {
         this.goButton.text = new PIXI.Text("GO", {
           fill: "#000000",
           fontSize: "70px",
-          fontFamily: "Cardenio Modern Bold"
+          fontFamily: "Cardenio Modern Bold",
         });
         this.goButton.text.position.set(
           this.goButton.width / 2,
@@ -167,7 +167,7 @@ export default class Level extends entity.CompositeEntity {
 
       // Gauge bar (score/exp?)
       {
-        this.gauge = new PIXI.Container()
+        this.gauge = new PIXI.Container();
         this.gaugeBackground = new PIXI.Sprite(
           this._entityConfig.app.loader.resources[
             "images/hud_gauge_background.png"
@@ -186,14 +186,14 @@ export default class Level extends entity.CompositeEntity {
         this.gaugeText = new PIXI.Text("", {
           fill: "#000000",
           fontSize: "40px",
-          fontFamily: "Cardenio Modern Bold"
-        })
-        this.gaugeText.anchor.set(.5)
-        this.gaugeText.position.set(110,110);
+          fontFamily: "Cardenio Modern Bold",
+        });
+        this.gaugeText.anchor.set(0.5);
+        this.gaugeText.position.set(110, 110);
 
-        this.gauge.addChild(this.gaugeBackground)
-        this.gauge.addChild(this.gaugeBar)
-        this.gauge.addChild(this.gaugeForeground)
+        this.gauge.addChild(this.gaugeBackground);
+        this.gauge.addChild(this.gaugeBar);
+        this.gauge.addChild(this.gaugeForeground);
         this.gauge.addChild(this.gaugeText);
 
         this.container.addChild(this.gauge);
@@ -235,70 +235,11 @@ export default class Level extends entity.CompositeEntity {
     if (this.levelVariant === "turnBased")
       this.sequenceManager.distributeSequences();
 
-    // create bonuses
-    {
-      // swap
-      {
-        this.swapBonus = new Bonus(
-          "swap",
-          new PIXI.Sprite(
-            this._entityConfig.app.loader.resources[
-              "images/bonus_swap.png"
-            ].texture
-          ),
-          "clickTwoNucleotides"
-        );
-
-        this.swapBonus.onTrigger((n1, n2) => {
-          // todo: make animated swap function on grid
-          this.grid.swap(n1, n2);
-        });
-      }
-      // shield
-      {
-        this.shieldBonus = new Bonus(
-          "shield",
-          new PIXI.Sprite(
-            this._entityConfig.app.loader.resources[
-              "images/bonus_shield.png"
-            ].texture
-          ),
-          "clickOneNucleotide"
-        );
-
-        this.shieldBonus.onTrigger((n) => {
-          n.shield = true;
-          this.grid.getNeighbors(n).forEach((nn) => (nn.shield = true));
-        });
-      }
-      // heal
-      {
-        this.healBonus = new Bonus(
-          "heal",
-          new PIXI.Sprite(
-            this._entityConfig.app.loader.resources[
-              "images/bonus_heal.png"
-            ].texture
-          ),
-          "click"
-        );
-
-        this.healBonus.onTrigger(() => {
-          // regenerate 30 nucleotides
-          this.grid.regenerate(30, (n) => !n.shield);
-          this.isGuiLocked = true;
-          setTimeout(() => {
-            this.isGuiLocked = false;
-          }, 1000);
-        });
-      }
-    }
-
     // adding bonuses
     {
       this.inventory.add(this.swapBonus, 5);
-      this.inventory.add(this.shieldBonus, 5);
-      this.inventory.add(this.healBonus, 5);
+      this.inventory.add(this.starBonus, 5);
+      this.inventory.add(this.killBonus, 5);
       this._on(this.sequenceManager, "crunch", () => {
         this.crunchCount++;
         if (this.crunchCount % 2 === 0) this.inventory.add(this.swapBonus);
@@ -383,8 +324,11 @@ export default class Level extends entity.CompositeEntity {
       this.gaugeBarBaseWidth,
       true
     );
-    this.gaugeBar.position.set(crisprUtil.mapProportion(value, 0, 100, 200, 0), 0);
-    this.gaugeText.text = value + " pts"
+    this.gaugeBar.position.set(
+      crisprUtil.mapProportion(value, 0, 100, 200, 0),
+      0
+    );
+    this.gaugeText.text = value + " pts";
     // todo: how to animate this change?
   }
 

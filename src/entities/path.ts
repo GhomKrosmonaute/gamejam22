@@ -2,8 +2,8 @@ import * as PIXI from "pixi.js";
 import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
 import * as game from "../game";
-import Nucleotide from "./Nucleotide";
-import Level from "../scenes/Level";
+import Nucleotide from "./nucleotide";
+import Level from "../scenes/level";
 
 /**
  * Represent the user path to validate sequences

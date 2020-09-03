@@ -3,7 +3,7 @@ import * as PIXI from "pixi.js";
 import * as booyah from "booyah/src/booyah";
 import * as entity from "booyah/src/entity";
 
-import Level from "./scenes/Level";
+import Level from "./scenes/level";
 
 export const width = 1080;
 export const height = 1920;
@@ -119,10 +119,7 @@ const graphicalAssets = [
   "images/mini_bob_walk.json",
 ];
 
-const fontAssets = [
-  "Cardenio Modern Bold",
-  "Cardenio Modern Regular"
-]
+const fontAssets = ["Cardenio Modern Bold", "Cardenio Modern Regular"];
 
 const entityInstallers: any = [
   // audio.installJukebox,
@@ -140,5 +137,5 @@ booyah.go({
   fontAssets,
   graphics: {
     menu: "images/hud_menu_button.png",
-  }
+  },
 });

@@ -1,10 +1,6 @@
 import * as PIXI from "pixi.js";
-import * as _ from "underscore";
-
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
-import * as geom from "booyah/src/geom";
-
 import * as crisprUtil from "../crisprUtil";
 
 export type State = "walk" | "idle" | "sting";
