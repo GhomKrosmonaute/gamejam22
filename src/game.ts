@@ -119,6 +119,11 @@ const graphicalAssets = [
   "images/mini_bob_walk.json",
 ];
 
+const fontAssets = [
+  "Cardenio Modern Bold",
+  "Cardenio Modern Regular"
+]
+
 const entityInstallers: any = [
   // audio.installJukebox,
   // audio.installFxMachine,
@@ -132,7 +137,8 @@ booyah.go({
   entityInstallers,
   screenSize: new PIXI.Point(width, height),
   graphicalAssets,
+  fontAssets,
   graphics: {
     menu: "images/hud_menu_button.png",
-  },
+  }
 });

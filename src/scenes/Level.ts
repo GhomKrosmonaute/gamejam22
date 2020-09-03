@@ -1,5 +1,4 @@
 import * as PIXI from "pixi.js";
-import { GlowFilter } from "@pixi/filter-glow";
 
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
@@ -14,7 +13,6 @@ import SequenceManager from "../entities/SequenceManager";
 import Inventory from "../entities/Inventory";
 import Bonus from "../entities/Bonus";
 import * as virus from "../entities/virus";
-import { doc } from "prettier";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
 
@@ -22,8 +20,6 @@ const dropSpeed = 0.001;
 const hairCount = 40;
 const hairMinScale = 0.3;
 const hairMaxScale = 0.45;
-
-const glowFilter = new GlowFilter();
 
 export default class Level extends entity.CompositeEntity {
   public container: PIXI.Container;
@@ -157,6 +153,7 @@ export default class Level extends entity.CompositeEntity {
         this.goButton.text = new PIXI.Text("GO", {
           fill: "#000000",
           fontSize: "50px",
+          fontFamily: "Cardenio Modern Bold"
         });
         this.goButton.text.position.set(
           this.goButton.width / 2,

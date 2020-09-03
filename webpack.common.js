@@ -49,7 +49,6 @@ module.exports = {
           ),
           to: "booyah/images",
         },
-        // Copy Booyah assets
         {
           from: path.resolve(
             require.resolve("booyah/package.json"),
@@ -61,10 +60,14 @@ module.exports = {
         // Copy CSS
         { from: "*.css" },
 
-        // copy game image assets
+        // Copy game assets
         {
           from: "images",
           to: "images",
+        },
+        {
+          from: "fonts",
+          to: "fonts",
         },
       ],
     }),
