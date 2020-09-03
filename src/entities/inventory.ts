@@ -11,7 +11,7 @@ export default class Inventory extends entity.CompositeEntity {
   public bonuses: bonus.Bonus[] = [];
   public counts: { [k: string]: number } = {};
   public sprites: { [k: string]: PIXI.Sprite | PIXI.AnimatedSprite } = {};
-  public selected: string
+  public selected: string;
 
   constructor() {
     super();
@@ -46,9 +46,9 @@ export default class Inventory extends entity.CompositeEntity {
       return;
     }
     const sprite = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-            `images/bonus_${bonus.name}.png`
-            ].texture
+      this._entityConfig.app.loader.resources[
+        `images/bonus_${bonus.name}.png`
+      ].texture
     );
     sprite.scale.set(0.5);
     sprite.anchor.set(0.5);
@@ -57,8 +57,8 @@ export default class Inventory extends entity.CompositeEntity {
       160 + this.bonuses.length * 190,
       this._entityConfig.app.view.height * 0.935
     );
-    this.sprites[bonus.name] = sprite
-    this.container.addChild(sprite)
+    this.sprites[bonus.name] = sprite;
+    this.container.addChild(sprite);
 
     this.counts[bonus.name] = count;
 
@@ -82,16 +82,16 @@ export default class Inventory extends entity.CompositeEntity {
 
     this.selected = name;
 
-    for(const n in this.sprites) {
-      this.sprites[n].filters = []
+    for (const n in this.sprites) {
+      this.sprites[n].filters = [];
     }
     this.sprites[name].filters = [glowFilter];
 
     this._activateChildEntity(
-        this.getSelectedBonus(),
-        entity.extendConfig({
-          container: this.container,
-        })
+      this.getSelectedBonus(),
+      entity.extendConfig({
+        container: this.container,
+      })
     );
   }
 }

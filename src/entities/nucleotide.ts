@@ -158,11 +158,10 @@ export default class Nucleotide extends entity.CompositeEntity {
       // TODO: do animation
 
       this.holeSprite = new PIXI.Sprite(
-          this._entityConfig.app.loader.resources["images/hole.png"].texture
+        this._entityConfig.app.loader.resources["images/hole.png"].texture
       );
       this.holeSprite.anchor.set(0.5, 0.5);
       this._container.addChild(this.holeSprite);
-
     } else if (newState === "infected") {
       if (this.shield) {
         this.shield = false;
@@ -247,7 +246,7 @@ export default class Nucleotide extends entity.CompositeEntity {
         easing: easing.easeOutBounce,
       });
       this._activateChildEntity(radiusTween);
-    } else if (this._state === "infected"){
+    } else if (this._state === "infected") {
       // Remove hole sprite
       this._container.removeChild(this.infectionSprite);
       this.infectionSprite = null;
@@ -285,6 +284,7 @@ export default class Nucleotide extends entity.CompositeEntity {
     }
 
     animatedSprite.anchor.set(0.5, 0.5);
+    //animatedSprite.interactive = true
 
     return animatedSprite;
   }

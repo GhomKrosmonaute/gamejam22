@@ -4,7 +4,6 @@ import * as entity from "booyah/src/entity";
 import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
 import Nucleotide from "./nucleotide";
-import {NeighborIndex} from "../crisprUtil";
 
 /** Represent the game nucleotides grid
  *
@@ -14,7 +13,7 @@ import {NeighborIndex} from "../crisprUtil";
  */
 export default class Grid extends entity.CompositeEntity {
   public container: PIXI.Container;
-  public nucleotides: Nucleotide[] = [];
+  public allNucleotides: Nucleotide[] = [];
   public nucleotideContainer: PIXI.Container;
   public x = game.width * 0.09;
   public y = game.height * 0.4;
@@ -64,7 +63,7 @@ export default class Grid extends entity.CompositeEntity {
     this.nucleotideContainer.position.set(this.x, this.y);
     this.container.addChild(this.nucleotideContainer);
 
-    this.nucleotides.length = this.colCount * this.rowCount;
+    this.allNucleotides.length = this.colCount * this.rowCount;
     for (let x = 0; x < this.colCount; x++) {
       for (let y = 0; y < this.rowCount; y++) {
         if (x % 2 === 0 && y === this.rowCount - 1) continue;
@@ -81,19 +80,19 @@ export default class Grid extends entity.CompositeEntity {
             container: this.nucleotideContainer,
           })
         );
-        this.nucleotides[y * this.colCount + x] = n;
+        this.allNucleotides[y * this.colCount + x] = n;
       }
     }
 
-    this.addScissors(this.safetyNucleotides);
+    this.addScissors(this.nucleotides);
 
-    this.safetyNucleotides.forEach((n) => (n.state = "present"));
+    this.nucleotides.forEach((n) => (n.state = "present"));
   }
 
   _update() {
     if (!this._isPointerDown) return;
 
-    const hovered: Nucleotide = this.safetyNucleotides.find((n) =>
+    const hovered: Nucleotide = this.nucleotides.find((n) =>
       this.checkHovered(n)
     );
     if (!hovered) return;
@@ -106,16 +105,16 @@ export default class Grid extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this.container);
     this.container = null;
 
-    this.nucleotides = [];
+    this.allNucleotides = [];
   }
 
-  private _onPointerDown(e: PIXI.InteractionEvent) {
+  private _onPointerDown() {
     this._isPointerDown = true;
 
-    const hovered: Nucleotide = this.safetyNucleotides.find((n) =>
-      this.checkHovered(n)
-    );
+    const hovered: Nucleotide = this.getHovered();
     if (!hovered) return;
+
+    this.emit("drag", hovered);
 
     const focused = this._entityConfig.level.inventory.focused;
 
@@ -130,17 +129,18 @@ export default class Grid extends entity.CompositeEntity {
     this._isPointerDown = false;
 
     this.emit("pointerup");
+    this.emit("drop", e);
   }
 
-  get safetyNucleotides(): Nucleotide[] {
-    return this.nucleotides.filter((n) => n !== undefined);
+  get nucleotides(): Nucleotide[] {
+    return this.allNucleotides.filter((n) => n !== undefined);
   }
 
   /** Does nothing in "long" mode **/
   addScissors(among: Nucleotide[]) {
     if (this._entityConfig.level.levelVariant === "long") return;
 
-    const safe = this.safetyNucleotides;
+    const safe = this.nucleotides;
     while (safe.filter((n) => n.type === "scissors").length < this.cutCount) {
       let randomIndex;
       do {
@@ -156,11 +156,11 @@ export default class Grid extends entity.CompositeEntity {
   }
 
   getNucleotideFromGridPosition(gridPos: PIXI.Point): Nucleotide | null {
-    return this.nucleotides[gridPos.y * this.colCount + gridPos.x];
+    return this.allNucleotides[gridPos.y * this.colCount + gridPos.x];
   }
 
   getGridPositionOf(n: Nucleotide): PIXI.Point | null {
-    const index = this.nucleotides.indexOf(n);
+    const index = this.allNucleotides.indexOf(n);
     if (index === -1) return null;
     const x = index % this.colCount;
     const y = Math.floor(index / this.colCount);
@@ -181,9 +181,7 @@ export default class Grid extends entity.CompositeEntity {
   }
 
   getHovered(): Nucleotide | null {
-    return this.safetyNucleotides.find((nucleotide) =>
-      this.checkHovered(nucleotide)
-    );
+    return this.nucleotides.find((nucleotide) => this.checkHovered(nucleotide));
   }
 
   checkHovered(n: Nucleotide): boolean {
@@ -200,10 +198,8 @@ export default class Grid extends entity.CompositeEntity {
 
   slide(neighborIndex: crisprUtil.NeighborIndex) {
     const opposedNeighborIndex = crisprUtil.opposedIndexOf(neighborIndex);
-    const oldHoles = this.safetyNucleotides.filter(
-      (n) => n.state === "missing"
-    );
-    for (const nucleotide of this.safetyNucleotides) {
+    const oldHoles = this.nucleotides.filter((n) => n.state === "missing");
+    for (const nucleotide of this.nucleotides) {
       if (nucleotide.state === "missing") {
         this.generateNucleotide(nucleotide);
         this.recursiveSwap(nucleotide, opposedNeighborIndex);
@@ -215,7 +211,7 @@ export default class Grid extends entity.CompositeEntity {
   }
 
   fillHoles(): Nucleotide[] {
-    const holes = this.safetyNucleotides.filter((n) => n.state === "missing");
+    const holes = this.nucleotides.filter((n) => n.state === "missing");
     for (const nucleotide of holes) {
       this.generateNucleotide(nucleotide);
     }
@@ -228,10 +224,10 @@ export default class Grid extends entity.CompositeEntity {
 
   swap(n1: Nucleotide, n2: Nucleotide) {
     // swap grid indexes
-    const index1 = this.nucleotides.indexOf(n1);
-    const index2 = this.nucleotides.indexOf(n2);
-    this.nucleotides[index1] = n2;
-    this.nucleotides[index2] = n1;
+    const index1 = this.allNucleotides.indexOf(n1);
+    const index2 = this.allNucleotides.indexOf(n2);
+    this.allNucleotides[index1] = n2;
+    this.allNucleotides[index2] = n1;
 
     // swap absolute positions
     const oldPosition = n1.position.clone();
@@ -255,7 +251,7 @@ export default class Grid extends entity.CompositeEntity {
     n: Nucleotide,
     neighborIndex: crisprUtil.NeighborIndex
   ): Nucleotide | null {
-    return this.safetyNucleotides.find((nn) => {
+    return this.nucleotides.find((nn) => {
       return this.getNeighborIndex(n, nn) === neighborIndex;
     });
   }
@@ -278,22 +274,22 @@ export default class Grid extends entity.CompositeEntity {
   }
 
   getStarBranches(n: Nucleotide): Nucleotide[][] {
-    const branches: Nucleotide[][] = []
-    for(let i=0; i<6; i++){
-      branches.push(this.getNeighborsInLine(n, i as NeighborIndex))
+    const branches: Nucleotide[][] = [];
+    for (let i = 0; i < 6; i++) {
+      branches.push(this.getNeighborsInLine(n, i as crisprUtil.NeighborIndex));
     }
-    return branches
+    return branches;
   }
 
   getStarStages(n: Nucleotide): Nucleotide[][] {
-    const stages: Nucleotide[][] = []
-    const branches = this.getStarBranches(n)
-    let index = 0
-    while (branches.some((b, i) => b.length > stages.length)){
-      stages.push([...branches.map(b => b[index])])
-      index ++
+    const stages: Nucleotide[][] = [];
+    const branches = this.getStarBranches(n);
+    let index = 0;
+    while (branches.some((b, i) => b.length > stages.length)) {
+      stages.push([...branches.map((b) => b[index])]);
+      index++;
     }
-    return stages
+    return stages;
   }
 
   /** @returns {number} - -1 if is not a neighbor or the neighbor index */
@@ -347,7 +343,7 @@ export default class Grid extends entity.CompositeEntity {
   }
 
   containsHoles(): boolean {
-    return this.safetyNucleotides.some((n) => n.state === "missing");
+    return this.nucleotides.some((n) => n.state === "missing");
   }
 
   /**
@@ -356,7 +352,7 @@ export default class Grid extends entity.CompositeEntity {
   regenerate(n: number, filter: (n: Nucleotide) => boolean): void {
     // Pick a certain number of non-infected nucleotides
     // @ts-ignore
-    const nucleotides: Nucleotide[] = _.chain(this.safetyNucleotides)
+    const nucleotides: Nucleotide[] = _.chain(this.nucleotides)
       // @ts-ignore
       .filter(filter)
       .shuffle()
@@ -380,7 +376,7 @@ export default class Grid extends entity.CompositeEntity {
   }
 
   isGameOver(): boolean {
-    return !this.safetyNucleotides.some(
+    return !this.nucleotides.some(
       (n) => n.state === "present" && n.type === "normal"
     );
   }
@@ -391,7 +387,7 @@ export default class Grid extends entity.CompositeEntity {
    */
   infect(count: number): entity.EntitySequence {
     // @ts-ignore
-    const infections: Nucleotide[] = _.chain(this.safetyNucleotides)
+    const infections: Nucleotide[] = _.chain(this.nucleotides)
       .filter((n) => n.state === "present" && n.type === "normal" && !n.shield)
       .shuffle()
       .take(count)
