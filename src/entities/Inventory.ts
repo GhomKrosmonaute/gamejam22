@@ -28,7 +28,7 @@ export default class Inventory extends entity.CompositeEntity {
     // todo: check mouse position to focus bonus or not
   }
 
-  get focused(): Bonus<any> | null {
+  get selected(): Bonus<any> | null {
     return this.bonuses.find((b) => b.selected);
   }
 
@@ -45,7 +45,7 @@ export default class Inventory extends entity.CompositeEntity {
     );
     bonus.count = count;
 
-    this._on(bonus.sprite, "pointerup", () => this.selected(bonus));
+    this._on(bonus.sprite, "pointerup", () => this.selection(bonus));
     this._on(bonus, "empty", () => {
       this.remove(bonus);
     });
@@ -65,7 +65,7 @@ export default class Inventory extends entity.CompositeEntity {
     this._deactivateChildEntity(bonus);
   }
 
-  selected(bonus?: Bonus<any>) {
+  selection(bonus?: Bonus<any>) {
     if (this._entityConfig.level.isGuiLocked) return;
 
     if (bonus && bonus.selected) bonus.selected = false;
