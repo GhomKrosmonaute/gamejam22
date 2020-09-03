@@ -9,7 +9,6 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as crisprUtil from "../crisprUtil";
-import * as game from "../game";
 
 export type State = "missing" | "present" | "infected" | "inactive";
 
@@ -159,10 +158,11 @@ export default class Nucleotide extends entity.CompositeEntity {
       // TODO: do animation
 
       this.holeSprite = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources["images/hole.png"].texture
+          this._entityConfig.app.loader.resources["images/hole.png"].texture
       );
       this.holeSprite.anchor.set(0.5, 0.5);
       this._container.addChild(this.holeSprite);
+
     } else if (newState === "infected") {
       if (this.shield) {
         this.shield = false;
@@ -247,6 +247,15 @@ export default class Nucleotide extends entity.CompositeEntity {
         easing: easing.easeOutBounce,
       });
       this._activateChildEntity(radiusTween);
+    } else if (this._state === "infected"){
+      // Remove hole sprite
+      this._container.removeChild(this.infectionSprite);
+      this.infectionSprite = null;
+
+      // Create animated sprite
+      this.nucleotideAnimation = this._createAnimatedSprite();
+      this._container.addChildAt(this.nucleotideAnimation, 0);
+      this._refreshScale();
     }
 
     this._state = newState;

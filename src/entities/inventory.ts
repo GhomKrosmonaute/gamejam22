@@ -2,11 +2,16 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as bonus from "./bonus";
 
+import { GlowFilter } from "@pixi/filter-glow";
+
+const glowFilter = new GlowFilter();
+
 export default class Inventory extends entity.CompositeEntity {
   public container: PIXI.Container;
   public bonuses: bonus.Bonus[] = [];
   public counts: { [k: string]: number } = {};
   public sprites: { [k: string]: PIXI.Sprite | PIXI.AnimatedSprite } = {};
+  public selected: string
 
   constructor() {
     super();
@@ -31,8 +36,8 @@ export default class Inventory extends entity.CompositeEntity {
     this.remove(name);
   }
 
-  get selected(): bonus.Bonus | null {
-    return this.bonuses.find((b) => b.selected);
+  getSelectedBonus(): bonus.Bonus | null {
+    return this.bonuses.find((b) => b.name === this.selected);
   }
 
   add(bonus: bonus.Bonus, count = 1) {
@@ -40,17 +45,21 @@ export default class Inventory extends entity.CompositeEntity {
       this.counts[bonus.name] += count;
       return;
     }
-    this.sprites[bonus.name] = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        `images/bonus_${bonus.name}.png`
-      ].texture
+    const sprite = new PIXI.Sprite(
+        this._entityConfig.app.loader.resources[
+            `images/bonus_${bonus.name}.png`
+            ].texture
     );
-    this.sprites[bonus.name].scale.set(0.5);
-    this.sprites[bonus.name].anchor.set(0.5);
-    this.sprites[bonus.name].position.set(
+    sprite.scale.set(0.5);
+    sprite.anchor.set(0.5);
+    sprite.interactive = true;
+    sprite.position.set(
       160 + this.bonuses.length * 190,
       this._entityConfig.app.view.height * 0.935
     );
+    this.sprites[bonus.name] = sprite
+    this.container.addChild(sprite)
+
     this.counts[bonus.name] = count;
 
     this._on(this.sprites[bonus.name], "pointerup", () =>
@@ -58,12 +67,6 @@ export default class Inventory extends entity.CompositeEntity {
     );
 
     this.bonuses.push(bonus);
-    this._activateChildEntity(
-      bonus,
-      entity.extendConfig({
-        container: this.container,
-      })
-    );
   }
 
   remove(name: string) {
@@ -77,14 +80,18 @@ export default class Inventory extends entity.CompositeEntity {
   selection(name: string) {
     if (this._entityConfig.level.isGuiLocked) return;
 
-    const bonus = this.bonuses.find((b) => b.name === name);
+    this.selected = name;
 
-    if (bonus && bonus.selected) {
-      bonus.selected = false;
-    } else {
-      for (const b of this.bonuses) {
-        b.selected = b === bonus;
-      }
+    for(const n in this.sprites) {
+      this.sprites[n].filters = []
     }
+    this.sprites[name].filters = [glowFilter];
+
+    this._activateChildEntity(
+        this.getSelectedBonus(),
+        entity.extendConfig({
+          container: this.container,
+        })
+    );
   }
 }

@@ -4,6 +4,7 @@ import * as entity from "booyah/src/entity";
 import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
 import Nucleotide from "./nucleotide";
+import {NeighborIndex} from "../crisprUtil";
 
 /** Represent the game nucleotides grid
  *
@@ -276,8 +277,23 @@ export default class Grid extends entity.CompositeEntity {
     return [neighbor, ...this.getNeighborsInLine(neighbor, neighborIndex)];
   }
 
-  getStar(n: Nucleotide): Nucleotide[][] {
-    return this.getNeighbors(n).map(this.getNeighborsInLine);
+  getStarBranches(n: Nucleotide): Nucleotide[][] {
+    const branches: Nucleotide[][] = []
+    for(let i=0; i<6; i++){
+      branches.push(this.getNeighborsInLine(n, i as NeighborIndex))
+    }
+    return branches
+  }
+
+  getStarStages(n: Nucleotide): Nucleotide[][] {
+    const stages: Nucleotide[][] = []
+    const branches = this.getStarBranches(n)
+    let index = 0
+    while (branches.some((b, i) => b.length > stages.length)){
+      stages.push([...branches.map(b => b[index])])
+      index ++
+    }
+    return stages
   }
 
   /** @returns {number} - -1 if is not a neighbor or the neighbor index */
