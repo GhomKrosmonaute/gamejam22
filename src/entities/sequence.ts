@@ -10,6 +10,7 @@ import * as anim from "../animation";
 
 import Nucleotide from "./nucleotide";
 import Path from "./path";
+import Level from "../scenes/level";
 
 /**
  * emits:
@@ -92,8 +93,10 @@ export class SequenceManager extends entity.CompositeEntity {
 
     if (removedSequences.length > 0) {
       for (const s of removedSequences) {
-        this._deactivateChildEntity(s);
         this.emit("crunch", s);
+        this.removeSequence(s, () => {
+
+        });
       }
 
       this.sequences = _.difference(this.sequences, removedSequences);
@@ -103,10 +106,13 @@ export class SequenceManager extends entity.CompositeEntity {
     // if (crunched) path.items.forEach((n) => (n.state = "missing"));
   }
 
-  removeSequence(s: Sequence) {
-    this._deactivateChildEntity(s);
-    this.sequences = this.sequences.filter((ss) => ss !== s);
-    this.refresh();
+  removeSequence(s: Sequence, callback: () => any) {
+    s.down(() => {
+      this._deactivateChildEntity(s);
+      this.sequences = this.sequences.filter((ss) => ss !== s);
+      this.refresh();
+      callback()
+    })
   }
 
   /**
@@ -207,6 +213,10 @@ export class Sequence extends entity.CompositeEntity {
     super();
   }
 
+  get level(): Level {
+    return this._entityConfig.level
+  }
+
   _setup() {
     this.container = new PIXI.Container();
     this.container.interactive = true;
@@ -241,6 +251,28 @@ export class Sequence extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this.container);
     this.container = null;
     this.nucleotides = [];
+  }
+
+  down(callback?: () => any){
+    this._activateChildEntity(
+      new entity.EntitySequence(
+        this.nucleotides
+          .map<any>((n) => {
+            return [
+              new entity.FunctionCallEntity(() => {
+                this._activateChildEntity(anim.down(n.sprite, 50))
+              }),
+              new entity.WaitingEntity(50),
+            ]
+          })
+          .flat()
+          .concat([
+            new entity.FunctionCallEntity(() => {
+              if(callback) callback();
+            }),
+          ])
+      )
+    );
   }
 
   validate(

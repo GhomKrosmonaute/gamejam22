@@ -160,26 +160,7 @@ export class KillBonus extends Bonus {
     this.level.sequenceManager.container.buttonMode = true;
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
-      this._activateChildEntity(
-        new entity.EntitySequence(
-          s.nucleotides
-            .map<any>((n) => {
-              return [
-                new entity.FunctionCallEntity(() => {
-                  this._activateChildEntity(anim.down(n.sprite, 50))
-                }),
-                new entity.WaitingEntity(50),
-              ]
-            })
-            .flat()
-            .concat([
-              new entity.FunctionCallEntity(() => {
-                this.level.sequenceManager.removeSequence(s);
-                this.end();
-              }),
-            ])
-        )
-      );
+      this.level.sequenceManager.removeSequence(s, () => this.end());
     });
   }
 
