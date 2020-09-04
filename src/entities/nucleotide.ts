@@ -115,6 +115,47 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._shield = value;
   }
 
+  get sprite(): PIXI.Sprite | PIXI.AnimatedSprite {
+    return this.holeSprite || this.infectionSprite || this.nucleotideAnimation;
+  }
+
+  bubble(time: number, callback?: (n: Nucleotide) => any) {
+    this.scaleAnimation(1, 1.3, time * 0.33, 4, (n) => {
+      n.scaleAnimation(1.3, 1, time * 0.66, 4, callback);
+    });
+  }
+
+  scaleAnimation(
+    from: number,
+    to: number,
+    time: number,
+    stepCount: number,
+    callback?: (n: Nucleotide) => any
+  ) {
+    this._activateChildEntity(
+      new entity.EntitySequence(
+        new Array(stepCount)
+          .fill(0)
+          .map((value, step) => {
+            return [
+              new entity.FunctionCallEntity(() => {
+                this.sprite.scale.set(
+                  crisprUtil.mapProportion(step, 0, stepCount, from, to)
+                );
+              }),
+              new entity.WaitingEntity(time / stepCount),
+            ];
+          })
+          .flat()
+          .concat([
+            new entity.FunctionCallEntity(() => {
+              if (callback) callback(this);
+            }),
+          ])
+      )
+    );
+  }
+
   setFloating(
     vector: "x" | "y",
     speed = 0.0005,

@@ -34,9 +34,9 @@ export class SwapBonus extends Bonus {
   downNucleotide(n: Nucleotide): null {
     if (n) {
       this.level.grid.setAbsolutePositionFromGridPosition(n);
-      n.shakeAmount = 0
+      n.shakeAmount = 0;
     }
-    return null
+    return null;
   }
 
   protected _setup() {
@@ -48,6 +48,13 @@ export class SwapBonus extends Bonus {
         if (!this.dragged || !this.hovered) return this.abort();
 
         this.level.grid.swap(this.dragged, this.hovered);
+
+        this.hovered.bubble(
+          150,
+          function () {
+            this.bubble(150);
+          }.bind(this.dragged)
+        );
 
         this.end();
       });
@@ -77,8 +84,8 @@ export class SwapBonus extends Bonus {
   }
 
   protected _teardown() {
-    this.dragged = this.downNucleotide(this.dragged)
-    this.hovered = this.downNucleotide(this.hovered)
+    this.dragged = this.downNucleotide(this.dragged);
+    this.hovered = this.downNucleotide(this.hovered);
   }
 }
 
@@ -86,33 +93,56 @@ export class StarBonus extends Bonus {
   name = "star";
 
   protected _setup() {
-    const delay = 50;
+    const delay = 200;
 
     this._once(this.level.grid, "drag", (target: Nucleotide) => {
-      target.state = "present";
+      const stages = this.level.grid.getStarStages(target);
 
-      const propagation = this.level.grid
-        .getStarStages(target)
-        .map((stage) => {
+      target.shakeAmount = 7;
+
+      const propagation = [
+        new entity.WaitingEntity(delay * 2),
+        ...stages.map((stage) => {
           return [
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
-                n.state = "present";
-                n.shakeAmount = 10;
+                n.shakeAmount = 2;
               }
             }),
             new entity.WaitingEntity(delay),
+          ];
+        }),
+        new entity.FunctionCallEntity(() => {
+          target.state = "present";
+          target.bubble(delay / 2);
+        }),
+        new entity.WaitingEntity(delay / 2),
+        new entity.FunctionCallEntity(() => (target.shakeAmount = 0)),
+        ...stages.map((stage, index) => {
+          return [
+            new entity.FunctionCallEntity(() => {
+              for (const n of stage) {
+                n.shakeAmount = 10 - index;
+              }
+            }),
+            new entity.WaitingEntity(delay / 3),
+            new entity.FunctionCallEntity(() => {
+              for (const n of stage) {
+                n.state = "present";
+                n.bubble(delay / 3);
+              }
+            }),
+            new entity.WaitingEntity(delay / 3),
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
                 n.shakeAmount = 0;
               }
             }),
           ];
-        })
-        .flat();
+        }),
+      ].flat();
 
       const sequence = new entity.EntitySequence([
-        new entity.WaitingEntity(delay),
         ...propagation,
         new entity.FunctionCallEntity(() => this.end()),
       ]);
@@ -129,10 +159,26 @@ export class KillBonus extends Bonus {
     this.level.sequenceManager.container.buttonMode = true;
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
-      // todo: make animation for removing
-      this.level.sequenceManager.removeSequence(s);
-
-      this.end();
+      this._activateChildEntity(
+        new entity.EntitySequence(
+          s.nucleotides
+            .map((n) => {
+              return [
+                new entity.FunctionCallEntity(() => {
+                  n.scaleAnimation(1, 0, 50, 10);
+                }),
+                new entity.WaitingEntity(80),
+              ];
+            })
+            .flat()
+            .concat([
+              new entity.FunctionCallEntity(() => {
+                this.level.sequenceManager.removeSequence(s);
+                this.end();
+              }),
+            ])
+        )
+      );
     });
   }
 
@@ -166,10 +212,6 @@ export class BonusesManager extends entity.CompositeEntity {
 
   _teardown() {
     this.container = null;
-  }
-
-  _onPointerUp() {
-    // todo: check mouse position to focus bonus or not
   }
 
   getSelectedBonus(): Bonus | null {
