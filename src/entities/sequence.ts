@@ -94,9 +94,7 @@ export class SequenceManager extends entity.CompositeEntity {
     if (removedSequences.length > 0) {
       for (const s of removedSequences) {
         this.emit("crunch", s);
-        this.removeSequence(s, () => {
-
-        });
+        this.removeSequence(s, () => {});
       }
 
       this.sequences = _.difference(this.sequences, removedSequences);
@@ -111,8 +109,8 @@ export class SequenceManager extends entity.CompositeEntity {
       this._deactivateChildEntity(s);
       this.sequences = this.sequences.filter((ss) => ss !== s);
       this.refresh();
-      callback()
-    })
+      callback();
+    });
   }
 
   /**
@@ -214,7 +212,7 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   get level(): Level {
-    return this._entityConfig.level
+    return this._entityConfig.level;
   }
 
   _setup() {
@@ -253,22 +251,31 @@ export class Sequence extends entity.CompositeEntity {
     this.nucleotides = [];
   }
 
-  down(callback?: () => any){
+  down(callback?: () => any) {
+    const allSink: Promise<void>[] = [];
     this._activateChildEntity(
       new entity.EntitySequence(
         this.nucleotides
           .map<any>((n) => {
             return [
               new entity.FunctionCallEntity(() => {
-                this._activateChildEntity(anim.down(n.sprite, 50))
+                allSink.push(
+                  new Promise((resolve) => {
+                    this._activateChildEntity(
+                      anim.sink(n.sprite, 500, 30, resolve)
+                    );
+                  })
+                );
               }),
-              new entity.WaitingEntity(50),
-            ]
+              new entity.WaitingEntity(200),
+            ];
           })
           .flat()
           .concat([
             new entity.FunctionCallEntity(() => {
-              if(callback) callback();
+              Promise.all(allSink).then(() => {
+                if (callback) callback();
+              });
             }),
           ])
       )

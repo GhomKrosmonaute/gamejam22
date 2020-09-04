@@ -36,7 +36,7 @@ export default class Path extends entity.CompositeEntity {
   }
 
   get level(): Level {
-    return this._entityConfig.level
+    return this._entityConfig.level;
   }
 
   get signature(): string {
@@ -162,24 +162,26 @@ export default class Path extends entity.CompositeEntity {
   }
 
   crunch() {
-    this.level.isGuiLocked = true
+    this.level.isGuiLocked = true;
     this._activateChildEntity(
       new entity.EntitySequence([
-        ...this.items.map<any>((item) => {
-          return [
-            new entity.FunctionCallEntity(() => {
-              this._activateChildEntity(anim.down(item.sprite, 100))
-            }),
-            new entity.WaitingEntity(50),
-          ]
-        }).flat(),
+        ...this.items
+          .map<any>((item) => {
+            return [
+              new entity.FunctionCallEntity(() => {
+                this._activateChildEntity(anim.down(item.sprite, 100, 4));
+              }),
+              new entity.WaitingEntity(50),
+            ];
+          })
+          .flat(),
         new entity.FunctionCallEntity(() => {
           this.items.forEach((n) => (n.state = "missing"));
-          this.level.isGuiLocked = false
+          this.level.isGuiLocked = false;
         }),
       ])
-    )
-    this.remove()
+    );
+    this.remove();
   }
 
   toString(reverse = false) {

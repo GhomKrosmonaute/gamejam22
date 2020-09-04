@@ -50,10 +50,13 @@ export class SwapBonus extends Bonus {
 
         this.level.grid.swap(this.dragged, this.hovered);
 
-        this.hovered.bubble(150).catch()
-        setTimeout(function(){
-          this.bubble(150).catch()
-        }.bind(this.dragged), 100)
+        this.hovered.bubble(150).catch();
+        setTimeout(
+          function () {
+            this.bubble(150).catch();
+          }.bind(this.dragged),
+          100
+        );
 
         this.end();
       });
@@ -115,7 +118,7 @@ export class StarBonus extends Bonus {
           target.state = "present";
         }),
         new entity.FunctionCallEntity(() => {
-          this._activateChildEntity(anim.bubble(target.sprite, delay / 2));
+          this._activateChildEntity(anim.bubble(target.sprite, delay / 2, 4));
         }),
         new entity.WaitingEntity(delay / 2),
         new entity.FunctionCallEntity(() => (target.shakeAmount = 0)),
