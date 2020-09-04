@@ -31,6 +31,14 @@ export class SwapBonus extends Bonus {
   hovered: Nucleotide | null = null;
   basePosition = new PIXI.Point();
 
+  downNucleotide(n: Nucleotide): null {
+    if (n) {
+      this.level.grid.setAbsolutePositionFromGridPosition(n);
+      n.shakeAmount = 0
+    }
+    return null
+  }
+
   protected _setup() {
     this._once(this.level.grid, "drag", (n1: Nucleotide) => {
       this.dragged = n1;
@@ -69,14 +77,8 @@ export class SwapBonus extends Bonus {
   }
 
   protected _teardown() {
-    if (this.dragged) {
-      this.level.grid.setAbsolutePositionFromGridPosition(this.dragged);
-      this.dragged = null;
-    }
-    if (this.hovered) {
-      this.level.grid.setAbsolutePositionFromGridPosition(this.hovered);
-      this.hovered = null;
-    }
+    this.dragged = this.downNucleotide(this.dragged)
+    this.hovered = this.downNucleotide(this.hovered)
   }
 }
 

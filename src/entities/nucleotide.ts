@@ -202,7 +202,7 @@ export default class Nucleotide extends entity.CompositeEntity {
         new entity.EntitySequence([
           // Briefly shake
           new entity.FunctionCallEntity(() => (this.shakeAmount = 5)),
-          new entity.WaitingEntity(1000),
+          new entity.WaitingEntity(100),
 
           new entity.FunctionCallEntity(() => {
             this.shakeAmount = 0;
