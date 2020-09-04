@@ -15,36 +15,33 @@ export abstract class Bonus extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  protected _teardown() {
-    this.level.isGuiLocked = false;
-    this.level.inventory.sprites[this.name].filters = [];
-    this.level.inventory.selected = null;
-    this.level.sequenceManager.container.buttonMode = false;
+  end() {
+    this._transition = entity.makeTransition();
+  }
+
+  abort() {
+    this.level.bonusesManager.counts[this.name]++;
+    this.end();
   }
 }
 
 export class SwapBonus extends Bonus {
   name = "swap";
-  dragging: Nucleotide | null = null;
+  dragged: Nucleotide | null = null;
+  hovered: Nucleotide | null = null;
   basePosition = new PIXI.Point();
 
   protected _setup() {
     this._once(this.level.grid, "drag", (n1: Nucleotide) => {
-      this.dragging = n1;
+      this.dragged = n1;
       this.basePosition.copyFrom(n1.position);
 
       this._once(this.level.grid, "drop", () => {
-        if (!this.dragging) return (this._transition = entity.makeTransition());
+        if (!this.dragged || !this.hovered) return this.abort();
 
-        this.dragging = null;
+        this.level.grid.swap(this.dragged, this.hovered);
 
-        const n2 = this.level.grid.getAllHovered().filter(n => n !== n1)[0];
-
-        n1.position.copyFrom(this.basePosition)
-
-        this.level.grid.swap(n1, n2);
-
-        this._transition = entity.makeTransition();
+        this.end();
       });
     });
   }
@@ -52,11 +49,33 @@ export class SwapBonus extends Bonus {
   protected _update() {
     const mouse: PIXI.Point = this.level.grid.lastPointerPos;
 
-    if (this.dragging) {
-      this.dragging.position.x = mouse.x - this.level.grid.x;
-      this.dragging.position.y = mouse.y - this.level.grid.y;
+    if (this.dragged) {
+      this.dragged.position.x = mouse.x - this.level.grid.x;
+      this.dragged.position.y = mouse.y - this.level.grid.y;
 
-      // todo: auto-swap preview
+      const hovered = this.level.grid
+        .getAllHovered()
+        .filter((n) => n !== this.dragged)[0];
+
+      if (hovered && hovered !== this.hovered) {
+        if (this.hovered) {
+          this.level.grid.setAbsolutePositionFromGridPosition(this.hovered);
+          this.level.grid.setAbsolutePositionFromGridPosition(this.dragged);
+        }
+        this.hovered = hovered;
+        this.level.grid.swapAbsolutePosition(this.hovered, this.dragged);
+      }
+    }
+  }
+
+  protected _teardown() {
+    if (this.dragged) {
+      this.level.grid.setAbsolutePositionFromGridPosition(this.dragged);
+      this.dragged = null;
+    }
+    if (this.hovered) {
+      this.level.grid.setAbsolutePositionFromGridPosition(this.hovered);
+      this.hovered = null;
     }
   }
 }
@@ -65,7 +84,7 @@ export class StarBonus extends Bonus {
   name = "star";
 
   protected _setup() {
-    const delay = 250;
+    const delay = 100;
 
     this._once(this.level.grid, "drag", (target: Nucleotide) => {
       target.state = "present";
@@ -87,9 +106,7 @@ export class StarBonus extends Bonus {
       const sequence = new entity.EntitySequence([
         new entity.WaitingEntity(delay),
         ...propagation,
-        new entity.FunctionCallEntity(() => {
-          this._transition = entity.makeTransition();
-        }),
+        new entity.FunctionCallEntity(() => this.end()),
       ]);
 
       this._activateChildEntity(sequence);
@@ -107,8 +124,12 @@ export class KillBonus extends Bonus {
       // todo: make animation for removing
       this.level.sequenceManager.removeSequence(s);
 
-      this._transition = entity.makeTransition();
+      this.end();
     });
+  }
+
+  protected _teardown() {
+    this.level.sequenceManager.container.buttonMode = false;
   }
 }
 
@@ -126,6 +147,11 @@ export class BonusesManager extends entity.CompositeEntity {
   _setup() {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
+    this._on(this, "deactivatedChildEntity", (bonus: Bonus) => {
+      bonus.level.isGuiLocked = false;
+      bonus.level.bonusesManager.sprites[bonus.name].filters = [];
+      bonus.level.bonusesManager.selected = null;
+    });
   }
 
   _update() {}
@@ -136,10 +162,6 @@ export class BonusesManager extends entity.CompositeEntity {
 
   _onPointerUp() {
     // todo: check mouse position to focus bonus or not
-  }
-
-  _onBonusUsed(name: string) {
-    this.remove(name);
   }
 
   getSelectedBonus(): Bonus | null {
@@ -175,22 +197,12 @@ export class BonusesManager extends entity.CompositeEntity {
     this.bonuses.push(bonus);
   }
 
-  remove(name: string) {
-    const bonus = this.bonuses.find((b) => b.name === name);
-    this._off(bonus);
-    this.bonuses = this.bonuses.filter((b) => b !== bonus);
-    this.container.removeChild(this.sprites[name]);
-    this._deactivateChildEntity(bonus);
-  }
-
   selection(name: string) {
     const level: Level = this._entityConfig.level;
 
     if (name === this.selected) {
       const bonus = this.getSelectedBonus();
-      if (bonus) {
-        this._deactivateChildEntity(bonus);
-      }
+      if (bonus) bonus.abort();
       return;
     }
 

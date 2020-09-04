@@ -24,7 +24,7 @@ export default class Level extends entity.CompositeEntity {
   public container: PIXI.Container;
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: sequence.SequenceManager;
-  public inventory: bonuses.BonusesManager;
+  public bonusesManager: bonuses.BonusesManager;
   public path: Path;
   public grid: Grid;
   public state: crisprUtil.PartyState = "crunch";
@@ -218,10 +218,10 @@ export default class Level extends entity.CompositeEntity {
       }
     }
 
-    this.inventory = new bonuses.BonusesManager();
+    this.bonusesManager = new bonuses.BonusesManager();
 
     this._activateChildEntity(
-      this.inventory,
+      this.bonusesManager,
       entity.extendConfig({
         container: this.container,
       })
@@ -235,12 +235,12 @@ export default class Level extends entity.CompositeEntity {
 
     // adding bonuses
     {
-      this.inventory.add(this.swapBonus, 5);
-      this.inventory.add(this.starBonus, 5);
-      this.inventory.add(this.killBonus, 5);
+      this.bonusesManager.add(this.swapBonus, 5);
+      this.bonusesManager.add(this.starBonus, 5);
+      this.bonusesManager.add(this.killBonus, 5);
       this._on(this.sequenceManager, "crunch", () => {
         this.crunchCount++;
-        if (this.crunchCount % 2 === 0) this.inventory.add(this.swapBonus);
+        if (this.crunchCount % 2 === 0) this.bonusesManager.add(this.swapBonus);
       });
     }
 

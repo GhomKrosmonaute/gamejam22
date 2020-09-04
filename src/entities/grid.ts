@@ -116,7 +116,7 @@ export default class Grid extends entity.CompositeEntity {
 
     this.emit("drag", hovered);
 
-    const focused = this._entityConfig.level.inventory.focused;
+    const focused = this._entityConfig.level.bonusesManager.focused;
 
     if (!focused)
       // update path with hovered
@@ -167,6 +167,12 @@ export default class Grid extends entity.CompositeEntity {
     return new PIXI.Point(x, y);
   }
 
+  setAbsolutePositionFromGridPosition(n: Nucleotide) {
+    n.position.copyFrom(
+      this.getAbsolutePositionFromGridPosition(this.getGridPositionOf(n))
+    );
+  }
+
   getAbsolutePositionFromGridPosition(gridPos: PIXI.Point): PIXI.Point {
     const { width, height, dist } = Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
@@ -185,7 +191,9 @@ export default class Grid extends entity.CompositeEntity {
   }
 
   getAllHovered(): Nucleotide[] {
-    return this.nucleotides.filter((nucleotide) => this.checkHovered(nucleotide));
+    return this.nucleotides.filter((nucleotide) =>
+      this.checkHovered(nucleotide)
+    );
   }
 
   checkHovered(n: Nucleotide): boolean {
@@ -233,7 +241,10 @@ export default class Grid extends entity.CompositeEntity {
     this.allNucleotides[index1] = n2;
     this.allNucleotides[index2] = n1;
 
-    // swap absolute positions
+    this.swapAbsolutePosition(n1, n2);
+  }
+
+  swapAbsolutePosition(n1: Nucleotide, n2: Nucleotide) {
     const oldPosition = n1.position.clone();
     n1.position.copyFrom(n2.position);
     n2.position.copyFrom(oldPosition);
