@@ -1,6 +1,4 @@
 import * as PIXI from "pixi.js";
-import { GlowFilter } from "@pixi/filter-glow";
-
 import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
@@ -8,11 +6,14 @@ import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
+import * as anim from "../animation";
 import * as crisprUtil from "../crisprUtil";
 
-export type State = "missing" | "present" | "infected" | "inactive";
+import { GlowFilter } from "@pixi/filter-glow";
 
 const glowFilter = new GlowFilter();
+
+export type State = "missing" | "present" | "infected" | "inactive";
 
 /** Represent a nucleotide */
 export default class Nucleotide extends entity.CompositeEntity {
@@ -119,41 +120,10 @@ export default class Nucleotide extends entity.CompositeEntity {
     return this.holeSprite || this.infectionSprite || this.nucleotideAnimation;
   }
 
-  bubble(time: number, callback?: (n: Nucleotide) => any) {
-    this.scaleAnimation(1, 1.3, time * 0.33, 4, (n) => {
-      n.scaleAnimation(1.3, 1, time * 0.66, 4, callback);
-    });
-  }
-
-  scaleAnimation(
-    from: number,
-    to: number,
-    time: number,
-    stepCount: number,
-    callback?: (n: Nucleotide) => any
-  ) {
-    this._activateChildEntity(
-      new entity.EntitySequence(
-        new Array(stepCount)
-          .fill(0)
-          .map((value, step) => {
-            return [
-              new entity.FunctionCallEntity(() => {
-                this.sprite.scale.set(
-                  crisprUtil.mapProportion(step, 0, stepCount, from, to)
-                );
-              }),
-              new entity.WaitingEntity(time / stepCount),
-            ];
-          })
-          .flat()
-          .concat([
-            new entity.FunctionCallEntity(() => {
-              if (callback) callback(this);
-            }),
-          ])
-      )
-    );
+  async bubble(time: number){
+    return new Promise(resolve => {
+      this._activateChildEntity(anim.bubble(this.sprite, time / 3, resolve))
+    })
   }
 
   setFloating(

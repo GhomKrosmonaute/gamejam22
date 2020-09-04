@@ -5,6 +5,7 @@ import * as sequence from "./sequence";
 import * as PIXI from "pixi.js";
 
 import { GlowFilter } from "@pixi/filter-glow";
+import * as anim from "../animation";
 
 const glowFilter = new GlowFilter({ distance: 20, color: 0x000000 });
 
@@ -49,12 +50,10 @@ export class SwapBonus extends Bonus {
 
         this.level.grid.swap(this.dragged, this.hovered);
 
-        this.hovered.bubble(
-          150,
-          function () {
-            this.bubble(150);
-          }.bind(this.dragged)
-        );
+        this.hovered.bubble(150).catch()
+        setTimeout(function(){
+          this.bubble(150).catch()
+        }.bind(this.dragged), 100)
 
         this.end();
       });
@@ -114,7 +113,9 @@ export class StarBonus extends Bonus {
         }),
         new entity.FunctionCallEntity(() => {
           target.state = "present";
-          target.bubble(delay / 2);
+        }),
+        new entity.FunctionCallEntity(() => {
+          this._activateChildEntity(anim.bubble(target.sprite, delay / 2));
         }),
         new entity.WaitingEntity(delay / 2),
         new entity.FunctionCallEntity(() => (target.shakeAmount = 0)),
@@ -129,7 +130,7 @@ export class StarBonus extends Bonus {
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
                 n.state = "present";
-                n.bubble(delay / 3);
+                n.bubble(delay / 3).catch();
               }
             }),
             new entity.WaitingEntity(delay / 3),
@@ -162,13 +163,13 @@ export class KillBonus extends Bonus {
       this._activateChildEntity(
         new entity.EntitySequence(
           s.nucleotides
-            .map((n) => {
+            .map<any>((n) => {
               return [
                 new entity.FunctionCallEntity(() => {
-                  n.scaleAnimation(1, 0, 50, 10);
+                  this._activateChildEntity(anim.down(n.sprite, 50))
                 }),
-                new entity.WaitingEntity(80),
-              ];
+                new entity.WaitingEntity(50),
+              ]
             })
             .flat()
             .concat([
@@ -193,10 +194,6 @@ export class BonusesManager extends entity.CompositeEntity {
   public counts: { [k: string]: number } = {};
   public sprites: { [k: string]: PIXI.Sprite | PIXI.AnimatedSprite } = {};
   public selected: string;
-
-  constructor() {
-    super();
-  }
 
   _setup() {
     this.container = new PIXI.Container();

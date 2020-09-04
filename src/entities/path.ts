@@ -4,13 +4,14 @@ import * as entity from "booyah/src/entity";
 import * as game from "../game";
 import Nucleotide from "./nucleotide";
 import Level from "../scenes/level";
+import * as anim from "../animation";
 
 /**
  * Represent the user path to validate sequences
  * Emits:
  * - updated
  * */
-export default class Path extends entity.EntityBase {
+export default class Path extends entity.CompositeEntity {
   public items: Nucleotide[] = [];
   public graphics = new PIXI.Graphics();
   public isValidSequence = false;
@@ -20,7 +21,7 @@ export default class Path extends entity.EntityBase {
   public y = game.height * 0.4;
 
   // TODO: remove dependency on Level
-  constructor(public level: Level) {
+  constructor() {
     super();
   }
 
@@ -32,6 +33,10 @@ export default class Path extends entity.EntityBase {
 
   _teardown() {
     this._entityConfig.container.removeChild(this.graphics);
+  }
+
+  get level(): Level {
+    return this._entityConfig.level
   }
 
   get signature(): string {
@@ -157,9 +162,24 @@ export default class Path extends entity.EntityBase {
   }
 
   crunch() {
-    this.items.forEach((n) => (n.state = "missing"));
-    this.emit("updated");
-    this.refresh();
+    this.level.isGuiLocked = true
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        ...this.items.map<any>((item) => {
+          return [
+            new entity.FunctionCallEntity(() => {
+              this._activateChildEntity(anim.down(item.sprite, 100))
+            }),
+            new entity.WaitingEntity(50),
+          ]
+        }).flat(),
+        new entity.FunctionCallEntity(() => {
+          this.items.forEach((n) => (n.state = "missing"));
+          this.level.isGuiLocked = false
+        }),
+      ])
+    )
+    this.remove()
   }
 
   toString(reverse = false) {

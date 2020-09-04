@@ -60,7 +60,7 @@ export default class Level extends entity.CompositeEntity {
     this.sequenceManager = new sequence.SequenceManager();
 
     // instancing path system
-    this.path = new Path(this);
+    this.path = new Path();
     this._on(this.path, "updated", this._refresh);
 
     // generating nucleotide grid

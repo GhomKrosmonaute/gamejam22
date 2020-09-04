@@ -1,12 +1,15 @@
+import * as _ from "underscore";
 import * as PIXI from "pixi.js";
+
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 
 import * as game from "../game";
 import * as crisprUtil from "../crisprUtil";
+import * as anim from "../animation";
+
 import Nucleotide from "./nucleotide";
 import Path from "./path";
-import * as _ from "underscore";
 
 /**
  * emits:
