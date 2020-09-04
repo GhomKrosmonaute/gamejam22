@@ -10,8 +10,7 @@ import * as game from "../game";
 import Grid from "../entities/grid";
 import Path from "../entities/path";
 import * as sequence from "../entities/sequence";
-import Inventory from "../entities/inventory";
-import * as bonus from "../entities/bonus";
+import * as bonuses from "../entities/bonus";
 import * as virus from "../entities/virus";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
@@ -25,14 +24,14 @@ export default class Level extends entity.CompositeEntity {
   public container: PIXI.Container;
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: sequence.SequenceManager;
-  public inventory: Inventory;
+  public inventory: bonuses.BonusesManager;
   public path: Path;
   public grid: Grid;
   public state: crisprUtil.PartyState = "crunch";
 
-  public swapBonus = new bonus.SwapBonus();
-  public starBonus = new bonus.StarBonus();
-  public killBonus = new bonus.KillBonus();
+  public swapBonus = new bonuses.SwapBonus();
+  public starBonus = new bonuses.StarBonus();
+  public killBonus = new bonuses.KillBonus();
 
   public readonly colCount = 7;
   public readonly rowCount = 7;
@@ -56,7 +55,6 @@ export default class Level extends entity.CompositeEntity {
     this._entityConfig.level = this;
 
     this.container = new PIXI.Container();
-    this.container.interactive = true;
     this._entityConfig.container.addChild(this.container);
 
     this.sequenceManager = new sequence.SequenceManager();
@@ -220,7 +218,7 @@ export default class Level extends entity.CompositeEntity {
       }
     }
 
-    this.inventory = new Inventory();
+    this.inventory = new bonuses.BonusesManager();
 
     this._activateChildEntity(
       this.inventory,

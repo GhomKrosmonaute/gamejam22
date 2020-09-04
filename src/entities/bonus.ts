@@ -4,15 +4,21 @@ import Nucleotide from "./nucleotide";
 import * as sequence from "./sequence";
 import * as PIXI from "pixi.js";
 
+import { GlowFilter } from "@pixi/filter-glow";
+
+const glowFilter = new GlowFilter({ distance: 20, color: 0x000000 });
+
 export abstract class Bonus extends entity.CompositeEntity {
   public name: string = "";
 
+  get level(): Level {
+    return this._entityConfig.level;
+  }
+
   protected _teardown() {
-    const level: Level = this._entityConfig.level;
+    this.level.isGuiLocked = false;
 
-    level.isGuiLocked = false;
-
-    level.inventory.sprites[this.name].filters = [];
+    this.level.inventory.sprites[this.name].filters = [];
   }
 }
 
@@ -22,26 +28,24 @@ export class SwapBonus extends Bonus {
   basePosition = new PIXI.Point();
 
   protected _setup() {
-    const level: Level = this._entityConfig.level;
-
-    level.grid.once("drag", (n1: Nucleotide) => {
+    this._once(this.level.grid, "drag", (n1: Nucleotide) => {
       this.dragging = n1;
       this.basePosition.copyFrom(n1._container.position);
 
-      level.grid.once("drop", () => {
+      this._once(this.level.grid, "drop", () => {
         if(!this.dragging)
           return this._transition = entity.makeTransition();
 
         this.dragging._container.position.copyFrom(this.basePosition);
         this.dragging = null;
 
-        const n2 = level.grid.getHovered();
+        const n2 = this.level.grid.getHovered();
 
-        level.grid.swap(n1, n2);
+        this.level.grid.swap(n1, n2);
 
         this._transition = entity.makeTransition();
       });
-    });
+    })
   }
 
   protected _update() {
@@ -59,14 +63,12 @@ export class StarBonus extends Bonus {
   name = "star";
 
   protected _setup() {
-    const level: Level = this._entityConfig.level;
-
     const delay = 250;
 
-    level.grid.once("drag", (target: Nucleotide) => {
+    this._once(this.level.grid, "drag", (target: Nucleotide) => {
       target.state = "present";
 
-      const propagation = level.grid
+      const propagation = this.level.grid
         .getStarStages(target)
         .map((stage) => {
           return [
@@ -97,13 +99,121 @@ export class KillBonus extends Bonus {
   name = "kill";
 
   protected _setup() {
-    const level: Level = this._entityConfig.level;
+    this.level.sequenceManager.container.buttonMode = true
 
-    level.sequenceManager.once("click", (s: sequence.Sequence) => {
+    this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
       // todo: make animation for removing
-      level.sequenceManager.removeSequence(s);
+      this.level.sequenceManager.removeSequence(s);
 
       this._transition = entity.makeTransition();
     });
+  }
+
+  protected _teardown() {
+    this.level.sequenceManager.container.buttonMode = false
+  }
+}
+
+export class BonusesManager extends entity.CompositeEntity {
+  public container: PIXI.Container;
+  public bonuses: Bonus[] = [];
+  public counts: { [k: string]: number } = {};
+  public sprites: { [k: string]: PIXI.Sprite | PIXI.AnimatedSprite } = {};
+  public selected: string;
+
+  constructor() {
+    super();
+  }
+
+  _setup() {
+    this.container = new PIXI.Container();
+    this._entityConfig.container.addChild(this.container);
+  }
+
+  _update() {}
+
+  _teardown() {
+    this.container = null;
+  }
+
+  _onPointerUp() {
+    // todo: check mouse position to focus bonus or not
+  }
+
+  _onBonusUsed(name: string) {
+    this.remove(name);
+  }
+
+  getSelectedBonus(): Bonus | null {
+    return this.bonuses.find((b) => b.name === this.selected);
+  }
+
+  add(bonus: Bonus, count = 1) {
+    if (this.bonuses.includes(bonus)) {
+      this.counts[bonus.name] += count;
+      return;
+    }
+    const sprite = new PIXI.Sprite(
+        this._entityConfig.app.loader.resources[
+            `images/bonus_${bonus.name}.png`
+            ].texture
+    );
+    sprite.scale.set(0.5);
+    sprite.anchor.set(0.5);
+    sprite.interactive = true;
+    sprite.position.set(
+        160 + this.bonuses.length * 190,
+        this._entityConfig.app.view.height * 0.935
+    );
+    this.sprites[bonus.name] = sprite;
+    this.container.addChild(sprite);
+
+    this.counts[bonus.name] = count;
+
+    this._on(this.sprites[bonus.name], "pointerup", () =>
+        this.selection(bonus.name)
+    );
+
+    this.bonuses.push(bonus);
+  }
+
+  remove(name: string) {
+    const bonus = this.bonuses.find((b) => b.name === name);
+    this._off(bonus);
+    this.bonuses = this.bonuses.filter((b) => b !== bonus);
+    this.container.removeChild(this.sprites[name]);
+    this._deactivateChildEntity(bonus);
+  }
+
+  selection(name: string) {
+    const level: Level = this._entityConfig.level;
+
+    if(name === this.selected){
+      const bonus = this.getSelectedBonus()
+      if(bonus){
+        this._deactivateChildEntity(bonus)
+      }
+      this.sprites[name].filters = [];
+      level.isGuiLocked = false
+      this.selected = null
+      return
+    }
+
+    if (level.isGuiLocked) return;
+    else level.isGuiLocked = true;
+
+    this.selected = name;
+
+    for (const n in this.sprites) {
+      this.sprites[n].filters = [];
+    }
+    this.sprites[name].filters = [glowFilter];
+
+    this._activateChildEntity(
+        this.getSelectedBonus(),
+        entity.extendConfig({
+          container: this.container,
+        })
+    );
   }
 }

@@ -18,6 +18,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
   _setup() {
     this.container = new PIXI.Container();
+    this.container.interactive = true;
     this._entityConfig.container.addChild(this.container);
   }
 

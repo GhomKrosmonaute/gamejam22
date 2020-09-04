@@ -75,7 +75,10 @@ export default class Path extends entity.EntityBase {
   }
 
   startAt(n: Nucleotide): boolean {
-    if (n.state === "missing") return false;
+    if (
+        n.state === "missing" ||
+        this._entityConfig.level.isGuiLocked
+    ) return false;
 
     // check the cancellation & cancel to previous nucleotide
     const index = this.items.indexOf(n);
@@ -99,6 +102,8 @@ export default class Path extends entity.EntityBase {
   }
 
   add(n: Nucleotide): boolean {
+    if(this._entityConfig.level.isGuiLocked) return false;
+
     // not add scissors on first position
     if (this.first && this.first.type === "scissors") {
       this.remove();
