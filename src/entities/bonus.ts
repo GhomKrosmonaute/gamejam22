@@ -84,7 +84,7 @@ export class StarBonus extends Bonus {
   name = "star";
 
   protected _setup() {
-    const delay = 100;
+    const delay = 50;
 
     this._once(this.level.grid, "drag", (target: Nucleotide) => {
       target.state = "present";
@@ -96,9 +96,15 @@ export class StarBonus extends Bonus {
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
                 n.state = "present";
+                n.shakeAmount = 10;
               }
             }),
             new entity.WaitingEntity(delay),
+            new entity.FunctionCallEntity(() => {
+              for (const n of stage) {
+                n.shakeAmount = 0;
+              }
+            }),
           ];
         })
         .flat();
