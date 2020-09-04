@@ -19,7 +19,7 @@ export default class Grid extends entity.CompositeEntity {
   public y = game.height * 0.4;
 
   private _isPointerDown: boolean;
-  private _lastPointerPos: PIXI.Point;
+  public lastPointerPos: PIXI.Point;
 
   constructor(
     public colCount: number,
@@ -41,7 +41,7 @@ export default class Grid extends entity.CompositeEntity {
     this._on(
       this.container,
       "pointermove",
-      (e: PIXI.InteractionEvent) => (this._lastPointerPos = e.data.global)
+      (e: PIXI.InteractionEvent) => (this.lastPointerPos = e.data.global)
     );
     this._entityConfig.container.addChild(this.container);
 
@@ -184,13 +184,17 @@ export default class Grid extends entity.CompositeEntity {
     return this.nucleotides.find((nucleotide) => this.checkHovered(nucleotide));
   }
 
+  getAllHovered(): Nucleotide[] {
+    return this.nucleotides.filter((nucleotide) => this.checkHovered(nucleotide));
+  }
+
   checkHovered(n: Nucleotide): boolean {
     return (
       crisprUtil.dist(
         n.position.x + this.x,
         n.position.y + this.y,
-        this._lastPointerPos.x,
-        this._lastPointerPos.y
+        this.lastPointerPos.x,
+        this.lastPointerPos.y
       ) <
       n.radius * 0.86
     );

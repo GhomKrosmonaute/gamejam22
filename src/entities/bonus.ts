@@ -31,15 +31,16 @@ export class SwapBonus extends Bonus {
   protected _setup() {
     this._once(this.level.grid, "drag", (n1: Nucleotide) => {
       this.dragging = n1;
-      this.basePosition.copyFrom(n1._container.position);
+      this.basePosition.copyFrom(n1.position);
 
       this._once(this.level.grid, "drop", () => {
         if (!this.dragging) return (this._transition = entity.makeTransition());
 
-        this.dragging._container.position.copyFrom(this.basePosition);
         this.dragging = null;
 
-        const n2 = this.level.grid.getHovered();
+        const n2 = this.level.grid.getAllHovered().filter(n => n !== n1)[0];
+
+        n1.position.copyFrom(this.basePosition)
 
         this.level.grid.swap(n1, n2);
 
@@ -49,12 +50,13 @@ export class SwapBonus extends Bonus {
   }
 
   protected _update() {
-    const mouse: PIXI.Point = this._entityConfig.level.grid._lastPointerPos;
+    const mouse: PIXI.Point = this.level.grid.lastPointerPos;
 
-    // if drag, move nucleotide and auto-swap
     if (this.dragging) {
-      this.dragging.position.x = mouse.x - this.basePosition.x;
-      this.dragging.position.y = mouse.y - this.basePosition.y;
+      this.dragging.position.x = mouse.x - this.level.grid.x;
+      this.dragging.position.y = mouse.y - this.level.grid.y;
+
+      // todo: auto-swap preview
     }
   }
 }
