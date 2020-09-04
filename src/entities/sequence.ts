@@ -18,7 +18,6 @@ export class SequenceManager extends entity.CompositeEntity {
 
   _setup() {
     this.container = new PIXI.Container();
-    this.container.interactive = true;
     this._entityConfig.container.addChild(this.container);
   }
 
@@ -210,7 +209,9 @@ export class Sequence extends entity.CompositeEntity {
     this.container.interactive = true;
     this.container.position.copyFrom(this.position);
     this._entityConfig.container.addChild(this.container);
-    this._on(this.container, "pointerup", () => this.emit("click"));
+    this._on(this.container, "pointerup", () => {
+      this._entityConfig.level.sequenceManager.emit("click", this);
+    });
     const { width, height } = Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
     );

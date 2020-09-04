@@ -17,8 +17,9 @@ export abstract class Bonus extends entity.CompositeEntity {
 
   protected _teardown() {
     this.level.isGuiLocked = false;
-
     this.level.inventory.sprites[this.name].filters = [];
+    this.level.inventory.selected = null;
+    this.level.sequenceManager.container.buttonMode = false;
   }
 }
 
@@ -33,8 +34,7 @@ export class SwapBonus extends Bonus {
       this.basePosition.copyFrom(n1._container.position);
 
       this._once(this.level.grid, "drop", () => {
-        if(!this.dragging)
-          return this._transition = entity.makeTransition();
+        if (!this.dragging) return (this._transition = entity.makeTransition());
 
         this.dragging._container.position.copyFrom(this.basePosition);
         this.dragging = null;
@@ -45,7 +45,7 @@ export class SwapBonus extends Bonus {
 
         this._transition = entity.makeTransition();
       });
-    })
+    });
   }
 
   protected _update() {
@@ -99,7 +99,7 @@ export class KillBonus extends Bonus {
   name = "kill";
 
   protected _setup() {
-    this.level.sequenceManager.container.buttonMode = true
+    this.level.sequenceManager.container.buttonMode = true;
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
       // todo: make animation for removing
@@ -107,10 +107,6 @@ export class KillBonus extends Bonus {
 
       this._transition = entity.makeTransition();
     });
-  }
-
-  protected _teardown() {
-    this.level.sequenceManager.container.buttonMode = false
   }
 }
 
@@ -154,16 +150,16 @@ export class BonusesManager extends entity.CompositeEntity {
       return;
     }
     const sprite = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-            `images/bonus_${bonus.name}.png`
-            ].texture
+      this._entityConfig.app.loader.resources[
+        `images/bonus_${bonus.name}.png`
+      ].texture
     );
     sprite.scale.set(0.5);
     sprite.anchor.set(0.5);
     sprite.interactive = true;
     sprite.position.set(
-        160 + this.bonuses.length * 190,
-        this._entityConfig.app.view.height * 0.935
+      160 + this.bonuses.length * 190,
+      this._entityConfig.app.view.height * 0.935
     );
     this.sprites[bonus.name] = sprite;
     this.container.addChild(sprite);
@@ -171,7 +167,7 @@ export class BonusesManager extends entity.CompositeEntity {
     this.counts[bonus.name] = count;
 
     this._on(this.sprites[bonus.name], "pointerup", () =>
-        this.selection(bonus.name)
+      this.selection(bonus.name)
     );
 
     this.bonuses.push(bonus);
@@ -188,15 +184,12 @@ export class BonusesManager extends entity.CompositeEntity {
   selection(name: string) {
     const level: Level = this._entityConfig.level;
 
-    if(name === this.selected){
-      const bonus = this.getSelectedBonus()
-      if(bonus){
-        this._deactivateChildEntity(bonus)
+    if (name === this.selected) {
+      const bonus = this.getSelectedBonus();
+      if (bonus) {
+        this._deactivateChildEntity(bonus);
       }
-      this.sprites[name].filters = [];
-      level.isGuiLocked = false
-      this.selected = null
-      return
+      return;
     }
 
     if (level.isGuiLocked) return;
@@ -210,10 +203,10 @@ export class BonusesManager extends entity.CompositeEntity {
     this.sprites[name].filters = [glowFilter];
 
     this._activateChildEntity(
-        this.getSelectedBonus(),
-        entity.extendConfig({
-          container: this.container,
-        })
+      this.getSelectedBonus(),
+      entity.extendConfig({
+        container: this.container,
+      })
     );
   }
 }
