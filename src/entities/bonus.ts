@@ -15,7 +15,7 @@ export abstract class Bonus extends entity.CompositeEntity {
 
   end() {
     this._transition = entity.makeTransition();
-    this.updateDisabled = false
+    this.updateDisabled = false;
   }
 
   abort() {
@@ -39,7 +39,6 @@ export class SwapBonus extends Bonus {
   }
 
   protected _setup() {
-
     this._once(this.level.grid, "drag", (n1: Nucleotide) => {
       this.dragged = n1;
       this.basePosition.copyFrom(n1.position);
@@ -47,19 +46,21 @@ export class SwapBonus extends Bonus {
       this._once(this.level.grid, "drop", () => {
         if (!this.dragged || !this.hovered) return this.abort();
 
-        this.updateDisabled = true
+        this.updateDisabled = true;
         this.level.grid.swap(this.dragged, this.hovered, false);
-        this._activateChildEntity(anim.swap(this.dragged, this.hovered, 50, 10, () => {
-          this.hovered.bubble(150).catch();
-          this.dragged.bubble(150).catch();
-          this.end();
-        }));
+        this._activateChildEntity(
+          anim.swap(this.dragged, this.hovered, 50, 10, () => {
+            this.hovered.bubble(150).catch();
+            this.dragged.bubble(150).catch();
+            this.end();
+          })
+        );
       });
     });
   }
 
   protected _update() {
-    if(this.updateDisabled) return
+    if (this.updateDisabled) return;
 
     const mouse: PIXI.Point = this.level.grid.lastPointerPos;
 
@@ -76,14 +77,14 @@ export class SwapBonus extends Bonus {
           this.level.grid.setAbsolutePositionFromGridPosition(this.hovered);
           this.level.grid.setAbsolutePositionFromGridPosition(this.dragged);
         }
-        this.level.grid.nucleotides.forEach(n => {
-          n.shakeAmount = 0
-          n.sprite.scale.set(1)
-        })
+        this.level.grid.nucleotides.forEach((n) => {
+          n.shakeAmount = 0;
+          n.sprite.scale.set(1);
+        });
         this.hovered = hovered;
-        this.hovered.shakeAmount = 5
-        this.hovered.sprite.scale.set(1.2)
-        this.level.grid.swapAbsolutePosition(this.hovered, this.dragged)
+        this.hovered.shakeAmount = 5;
+        this.hovered.sprite.scale.set(1.2);
+        this.level.grid.swapAbsolutePosition(this.hovered, this.dragged);
         // this._activateChildEntity(
         //   anim.swap(this.hovered, this.dragged, 50, 10)
         // )
@@ -101,7 +102,6 @@ export class StarBonus extends Bonus {
   name = "star";
 
   protected _setup() {
-
     const delay = 200;
 
     this._once(this.level.grid, "drag", (target: Nucleotide) => {
@@ -167,7 +167,6 @@ export class KillBonus extends Bonus {
   name = "kill";
 
   protected _setup() {
-
     this.level.sequenceManager.container.buttonMode = true;
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
@@ -187,53 +186,55 @@ export class BonusesManager extends entity.CompositeEntity {
   public sprites: { [k: string]: anim.Sprite } = {};
   public basePosition: { [k: string]: PIXI.Point } = {};
   public selected: string;
-  public shakeAmount = 3
+  public shakeAmount = 3;
 
   _setup() {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
     this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
-      if(bonus instanceof Bonus){
+      if (bonus instanceof Bonus) {
         bonus.level.isGuiLocked = false;
         bonus.level.bonusesManager.sprites[bonus.name].filters = [];
         bonus.level.bonusesManager.selected = null;
-        this.sprites[bonus.name].position.copyFrom(this.basePosition[bonus.name]);
+        this.sprites[bonus.name].position.copyFrom(
+          this.basePosition[bonus.name]
+        );
         this._activateChildEntity(
           anim.fromTo(
             this.sprites[bonus.name],
-            (value, target) => (target.scale.set(value)),
+            (value, target) => target.scale.set(value),
             {
-              from: .7,
-              to: .5,
+              from: 0.7,
+              to: 0.5,
               time: 20,
-              stepCount: 3
+              stepCount: 3,
             }
           )
-        )
+        );
       }
     });
 
     this._on(this, "activatedChildEntity", (bonus: entity.EntityBase) => {
-      if(bonus instanceof Bonus){
+      if (bonus instanceof Bonus) {
         this._activateChildEntity(
           anim.fromTo(
             this.sprites[bonus.name],
-            (value, target) => (target.scale.set(value)),
+            (value, target) => target.scale.set(value),
             {
-              from: .5,
-              to: .7,
+              from: 0.5,
+              to: 0.7,
               time: 20,
-              stepCount: 3
+              stepCount: 3,
             }
           )
-        )
+        );
       }
-    })
+    });
   }
 
   _update() {
-    const bonus = this.getSelectedBonus()
-    if(bonus){
+    const bonus = this.getSelectedBonus();
+    if (bonus) {
       const angle = Math.random() * 2 * Math.PI;
       this.sprites[bonus.name].position.x =
         this.basePosition[bonus.name].x + this.shakeAmount * Math.cos(angle);
@@ -258,7 +259,7 @@ export class BonusesManager extends entity.CompositeEntity {
     const position = new PIXI.Point(
       160 + this.bonuses.length * 190,
       this._entityConfig.app.view.height * 0.935
-    )
+    );
     const sprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         `images/bonus_${bonus.name}.png`
@@ -295,7 +296,7 @@ export class BonusesManager extends entity.CompositeEntity {
 
     this.selected = name;
 
-    const bonus = this.getSelectedBonus()
+    const bonus = this.getSelectedBonus();
 
     this._activateChildEntity(
       bonus,

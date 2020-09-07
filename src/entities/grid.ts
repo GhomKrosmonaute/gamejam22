@@ -253,13 +253,13 @@ export default class Grid extends entity.CompositeEntity {
     this.allNucleotides[index1] = n2;
     this.allNucleotides[index2] = n1;
 
-    if(swapAbsoluteToo) this.swapAbsolutePosition(n1, n2);
+    if (swapAbsoluteToo) this.swapAbsolutePosition(n1, n2);
   }
 
   swapAbsolutePosition(n1: Nucleotide, n2: Nucleotide) {
-    const tempN1Pos = n1.position.clone()
-    n1.position.copyFrom(n2.position)
-    n2.position.copyFrom(tempN1Pos)
+    const tempN1Pos = n1.position.clone();
+    n1.position.copyFrom(n2.position);
+    n2.position.copyFrom(tempN1Pos);
   }
 
   // fixAbsolutePosition(n: Nucleotide){
