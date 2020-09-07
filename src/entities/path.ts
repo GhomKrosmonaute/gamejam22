@@ -172,7 +172,16 @@ export default class Path extends entity.CompositeEntity {
             const color = item.state === "infected" ? 0xffc802 : "white";
             return [
               new entity.FunctionCallEntity(() => {
-                this._activateChildEntity(anim.down(item.sprite, 100, 4));
+                this._activateChildEntity(
+                  anim.down(
+                    item.sprite,
+                    100,
+                    4,
+                    function () {
+                      this.state = "missing";
+                    }.bind(item)
+                  )
+                );
                 this._activateChildEntity(
                   anim.textFadeUp(
                     this.level.grid.nucleotideContainer,
@@ -194,7 +203,6 @@ export default class Path extends entity.CompositeEntity {
           })
           .flat(),
         new entity.FunctionCallEntity(() => {
-          this.items.forEach((n) => (n.state = "missing"));
           this.level.isGuiLocked = false;
         }),
       ])
