@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import * as anim from "./animation";
 
 export type NucleotideType = "scissors" | "bonus" | "normal";
 export const nucleotideTypes: NucleotideType[] = [

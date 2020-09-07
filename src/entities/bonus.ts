@@ -1,16 +1,13 @@
+import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import Level from "../scenes/level";
 import Nucleotide from "./nucleotide";
 import * as sequence from "./sequence";
-import * as PIXI from "pixi.js";
-
-import { GlowFilter } from "@pixi/filter-glow";
 import * as anim from "../animation";
-
-const glowFilter = new GlowFilter({ distance: 20, color: 0x000000 });
 
 export abstract class Bonus extends entity.CompositeEntity {
   public name: string = "";
+  public updateDisabled = false;
 
   get level(): Level {
     return this._entityConfig.level;
@@ -18,6 +15,7 @@ export abstract class Bonus extends entity.CompositeEntity {
 
   end() {
     this._transition = entity.makeTransition();
+    this.updateDisabled = false
   }
 
   abort() {
@@ -41,6 +39,7 @@ export class SwapBonus extends Bonus {
   }
 
   protected _setup() {
+
     this._once(this.level.grid, "drag", (n1: Nucleotide) => {
       this.dragged = n1;
       this.basePosition.copyFrom(n1.position);
@@ -48,22 +47,20 @@ export class SwapBonus extends Bonus {
       this._once(this.level.grid, "drop", () => {
         if (!this.dragged || !this.hovered) return this.abort();
 
-        this.level.grid.swap(this.dragged, this.hovered);
-
-        this.hovered.bubble(150).catch();
-        setTimeout(
-          function () {
-            this.bubble(150).catch();
-          }.bind(this.dragged),
-          100
-        );
-
-        this.end();
+        this.updateDisabled = true
+        this.level.grid.swap(this.dragged, this.hovered, false);
+        this._activateChildEntity(anim.swap(this.dragged, this.hovered, 50, 10, () => {
+          this.hovered.bubble(150).catch();
+          this.dragged.bubble(150).catch();
+          this.end();
+        }));
       });
     });
   }
 
   protected _update() {
+    if(this.updateDisabled) return
+
     const mouse: PIXI.Point = this.level.grid.lastPointerPos;
 
     if (this.dragged) {
@@ -79,8 +76,17 @@ export class SwapBonus extends Bonus {
           this.level.grid.setAbsolutePositionFromGridPosition(this.hovered);
           this.level.grid.setAbsolutePositionFromGridPosition(this.dragged);
         }
+        this.level.grid.nucleotides.forEach(n => {
+          n.shakeAmount = 0
+          n.sprite.scale.set(1)
+        })
         this.hovered = hovered;
-        this.level.grid.swapAbsolutePosition(this.hovered, this.dragged);
+        this.hovered.shakeAmount = 5
+        this.hovered.sprite.scale.set(1.2)
+        this.level.grid.swapAbsolutePosition(this.hovered, this.dragged)
+        // this._activateChildEntity(
+        //   anim.swap(this.hovered, this.dragged, 50, 10)
+        // )
       }
     }
   }
@@ -95,6 +101,7 @@ export class StarBonus extends Bonus {
   name = "star";
 
   protected _setup() {
+
     const delay = 200;
 
     this._once(this.level.grid, "drag", (target: Nucleotide) => {
@@ -160,6 +167,7 @@ export class KillBonus extends Bonus {
   name = "kill";
 
   protected _setup() {
+
     this.level.sequenceManager.container.buttonMode = true;
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
@@ -176,20 +184,63 @@ export class BonusesManager extends entity.CompositeEntity {
   public container: PIXI.Container;
   public bonuses: Bonus[] = [];
   public counts: { [k: string]: number } = {};
-  public sprites: { [k: string]: PIXI.Sprite | PIXI.AnimatedSprite } = {};
+  public sprites: { [k: string]: anim.Sprite } = {};
+  public basePosition: { [k: string]: PIXI.Point } = {};
   public selected: string;
+  public shakeAmount = 3
 
   _setup() {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
-    this._on(this, "deactivatedChildEntity", (bonus: Bonus) => {
-      bonus.level.isGuiLocked = false;
-      bonus.level.bonusesManager.sprites[bonus.name].filters = [];
-      bonus.level.bonusesManager.selected = null;
+    this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
+      if(bonus instanceof Bonus){
+        bonus.level.isGuiLocked = false;
+        bonus.level.bonusesManager.sprites[bonus.name].filters = [];
+        bonus.level.bonusesManager.selected = null;
+        this.sprites[bonus.name].position.copyFrom(this.basePosition[bonus.name]);
+        this._activateChildEntity(
+          anim.fromTo(
+            this.sprites[bonus.name],
+            (value, target) => (target.scale.set(value)),
+            {
+              from: .7,
+              to: .5,
+              time: 20,
+              stepCount: 3
+            }
+          )
+        )
+      }
     });
+
+    this._on(this, "activatedChildEntity", (bonus: entity.EntityBase) => {
+      if(bonus instanceof Bonus){
+        this._activateChildEntity(
+          anim.fromTo(
+            this.sprites[bonus.name],
+            (value, target) => (target.scale.set(value)),
+            {
+              from: .5,
+              to: .7,
+              time: 20,
+              stepCount: 3
+            }
+          )
+        )
+      }
+    })
   }
 
-  _update() {}
+  _update() {
+    const bonus = this.getSelectedBonus()
+    if(bonus){
+      const angle = Math.random() * 2 * Math.PI;
+      this.sprites[bonus.name].position.x =
+        this.basePosition[bonus.name].x + this.shakeAmount * Math.cos(angle);
+      this.sprites[bonus.name].position.y =
+        this.basePosition[bonus.name].y + this.shakeAmount * Math.sin(angle);
+    }
+  }
 
   _teardown() {
     this.container = null;
@@ -204,6 +255,10 @@ export class BonusesManager extends entity.CompositeEntity {
       this.counts[bonus.name] += count;
       return;
     }
+    const position = new PIXI.Point(
+      160 + this.bonuses.length * 190,
+      this._entityConfig.app.view.height * 0.935
+    )
     const sprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         `images/bonus_${bonus.name}.png`
@@ -212,10 +267,8 @@ export class BonusesManager extends entity.CompositeEntity {
     sprite.scale.set(0.5);
     sprite.anchor.set(0.5);
     sprite.interactive = true;
-    sprite.position.set(
-      160 + this.bonuses.length * 190,
-      this._entityConfig.app.view.height * 0.935
-    );
+    sprite.position.copyFrom(position);
+    this.basePosition[bonus.name] = position;
     this.sprites[bonus.name] = sprite;
     this.container.addChild(sprite);
 
@@ -242,13 +295,10 @@ export class BonusesManager extends entity.CompositeEntity {
 
     this.selected = name;
 
-    for (const n in this.sprites) {
-      this.sprites[n].filters = [];
-    }
-    this.sprites[name].filters = [glowFilter];
+    const bonus = this.getSelectedBonus()
 
     this._activateChildEntity(
-      this.getSelectedBonus(),
+      bonus,
       entity.extendConfig({
         container: this.container,
       })

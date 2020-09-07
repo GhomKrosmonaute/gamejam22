@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
 import * as crisprUtil from "../crisprUtil";
+import * as anim from "../animation";
 import * as game from "../game";
 import Nucleotide from "./nucleotide";
 
@@ -173,6 +174,17 @@ export default class Grid extends entity.CompositeEntity {
     );
   }
 
+  // getGridPositionFromAbsolutePosition(pos: PIXI.Point): PIXI.Point {
+  //   const { width, height, dist } = Nucleotide.getNucleotideDimensionsByRadius(
+  //     this.nucleotideRadius
+  //   );
+  //   const x = Math.floor((width / 2 + pos.x) / dist.x )
+  //   const y = (x % 2 === 0)
+  //     ? Math.floor( (pos.y / height) + height / 2 )
+  //     : Math.floor(pos.y / height)
+  //   return new PIXI.Point(x, y);
+  // }
+
   getAbsolutePositionFromGridPosition(gridPos: PIXI.Point): PIXI.Point {
     const { width, height, dist } = Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
@@ -234,21 +246,29 @@ export default class Grid extends entity.CompositeEntity {
     return holes;
   }
 
-  swap(n1: Nucleotide, n2: Nucleotide) {
+  swap(n1: Nucleotide, n2: Nucleotide, swapAbsoluteToo = true) {
     // swap grid indexes
     const index1 = this.allNucleotides.indexOf(n1);
     const index2 = this.allNucleotides.indexOf(n2);
     this.allNucleotides[index1] = n2;
     this.allNucleotides[index2] = n1;
 
-    this.swapAbsolutePosition(n1, n2);
+    if(swapAbsoluteToo) this.swapAbsolutePosition(n1, n2);
   }
 
   swapAbsolutePosition(n1: Nucleotide, n2: Nucleotide) {
-    const oldPosition = n1.position.clone();
-    n1.position.copyFrom(n2.position);
-    n2.position.copyFrom(oldPosition);
+    const tempN1Pos = n1.position.clone()
+    n1.position.copyFrom(n2.position)
+    n2.position.copyFrom(tempN1Pos)
   }
+
+  // fixAbsolutePosition(n: Nucleotide){
+  //   n.position.copyFrom(
+  //     this.getAbsolutePositionFromGridPosition(
+  //       this.getGridPositionFromAbsolutePosition(n.position)
+  //     )
+  //   )
+  // }
 
   recursiveSwap(n: Nucleotide, neighborIndex: crisprUtil.NeighborIndex) {
     // get the neighbor of n
