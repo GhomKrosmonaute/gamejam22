@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
 import * as game from "../game";
+import * as crisprUtil from "../crisprUtil";
 import Nucleotide from "./nucleotide";
 import Level from "../scenes/level";
 import * as anim from "../animation";
@@ -166,10 +167,27 @@ export default class Path extends entity.CompositeEntity {
     this._activateChildEntity(
       new entity.EntitySequence([
         ...this.items
-          .map<any>((item) => {
+          .map<any>((item, i) => {
+            const score = item.state === "infected" ? (i + 1) * 2 : i + 1;
+            const color = item.state === "infected" ? 0xffc802 : "white";
             return [
               new entity.FunctionCallEntity(() => {
                 this._activateChildEntity(anim.down(item.sprite, 100, 4));
+                this._activateChildEntity(
+                  anim.textFadeUp(
+                    this.level.grid.nucleotideContainer,
+                    new PIXI.Text(`+ ${score}`, {
+                      fill: color,
+                      stroke: "black",
+                      strokeThickness: 10,
+                      fontSize: 80 + score * 5,
+                    }),
+                    500,
+                    10,
+                    item.position.clone()
+                  )
+                );
+                this.level.addScore(score);
               }),
               new entity.WaitingEntity(50),
             ];
