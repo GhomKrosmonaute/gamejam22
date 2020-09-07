@@ -256,9 +256,27 @@ export class Sequence extends entity.CompositeEntity {
     this._activateChildEntity(
       new entity.EntitySequence(
         this.nucleotides
-          .map<any>((n) => {
+          .map<any>((n, i) => {
+            const score = i + 1;
             return [
               new entity.FunctionCallEntity(() => {
+                allSink.push(
+                  new Promise((resolve) => {
+                    this._activateChildEntity(
+                      anim.textFadeUp(
+                        this.container,
+                        crisprUtil.makeText(`+ ${score}`, null, 70 + 4 * i),
+                        300,
+                        10,
+                        new PIXI.Point(n.position.x, n.position.y - 50),
+                        () => {
+                          this.level.addScore(score);
+                          resolve();
+                        }
+                      )
+                    );
+                  })
+                );
                 allSink.push(
                   new Promise((resolve) => {
                     this._activateChildEntity(

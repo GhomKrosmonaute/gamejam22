@@ -118,3 +118,15 @@ export function positionAlongMembrane(
   );
   displayObject.rotation = -angle;
 }
+
+export function makeText(
+  text: string,
+  color?: string | number,
+  size: number = 70
+) {
+  return new PIXI.Text(text, {
+    fill: color ?? 0xffffff,
+    fontFamily: "Cardenio Modern Bold",
+    fontSize: size + "px",
+  });
+}

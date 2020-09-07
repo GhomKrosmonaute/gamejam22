@@ -122,7 +122,9 @@ export default class Nucleotide extends entity.CompositeEntity {
 
   async bubble(time: number) {
     return new Promise((resolve) => {
-      this._activateChildEntity(anim.bubble(this.sprite, time / 3, 5, resolve));
+      this._activateChildEntity(
+        anim.bubble(this.sprite, 1.3, time / 3, 5, resolve)
+      );
     });
   }
 

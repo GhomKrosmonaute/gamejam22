@@ -3,7 +3,11 @@ import * as entity from "booyah/dist/entity";
 import * as crisprUtil from "./crisprUtil";
 import Nucleotide from "./entities/nucleotide";
 
-export type Sprite = PIXI.AnimatedSprite | PIXI.Sprite | PIXI.Container;
+export type Sprite =
+  | PIXI.AnimatedSprite
+  | PIXI.Sprite
+  | PIXI.Container
+  | PIXI.Text;
 
 export type AnimationCallback = (...targets: any) => any;
 
@@ -61,44 +65,14 @@ export function swap(
   const n1Position = n1.position.clone();
   const n2Position = n2.position.clone();
   return new entity.ParallelEntity([
-    // n1 X
-    fromTo(n1, (value) => (n1.position.x = value), {
-      from: n1Position.x,
-      to: n2Position.x,
-      time,
-      stepCount,
-    }),
-    // n1 Y
-    fromTo(n1, (value) => (n1.position.y = value), {
-      from: n1Position.y,
-      to: n2Position.y,
-      time,
-      stepCount,
-    }),
-    // n2 X
-    fromTo(n1, (value) => (n2.position.x = value), {
-      from: n2Position.x,
-      to: n1Position.x,
-      time,
-      stepCount,
-    }),
-    // n2 Y
-    fromTo(
-      n1,
-      (value) => (n2.position.y = value),
-      {
-        from: n2Position.y,
-        to: n1Position.y,
-        time,
-        stepCount,
-      },
-      callback
-    ),
+    move(n1.position, n1Position, n2Position, time, stepCount),
+    move(n2.position, n2Position, n1Position, time, stepCount, callback),
   ]);
 }
 
 export function bubble(
   sprite: Sprite,
+  to: number,
   time: number,
   stepCount: number,
   callback?: AnimationCallback
@@ -106,14 +80,14 @@ export function bubble(
   return new entity.EntitySequence([
     fromTo(sprite, (value) => sprite.scale.set(value), {
       from: 1,
-      to: 1.3,
+      to,
       time: time * 0.33,
       stepCount,
     }),
     fromTo(
       sprite,
       (value) => sprite.scale.set(value),
-      { from: 1.3, to: 1, time: time * 0.66, stepCount },
+      { from: to, to: 1, time: time * 0.66, stepCount },
       callback
     ),
   ]);
@@ -163,17 +137,70 @@ export function sink(
   ]);
 }
 
-export function textFadeUp(
-  text: string,
-  color: string | number,
+export function popup(sprite: Sprite, callback?: AnimationCallback) {
+  const time = 150;
+  const stepCount = 30;
+  return new entity.EntitySequence([
+    fromTo(sprite, (value) => sprite.scale.set(value), {
+      to: 1.3,
+      time: time * 0.7,
+      stepCount: stepCount * 0.7,
+    }),
+    fromTo(
+      sprite,
+      (value) => sprite.scale.set(value),
+      { from: 1.3, to: 1, time: time * 0.3, stepCount: stepCount * 0.3 },
+      callback
+    ),
+  ]);
+}
+
+export function move(
+  target: PIXI.Point,
+  from: PIXI.Point,
+  to: PIXI.Point,
   time: number,
   stepCount: number,
-  position = new PIXI.Point()
+  callback?: AnimationCallback
 ) {
-  const pixiText = new PIXI.Text(text, {
-    fill: color,
-    fontFamily: "Cardenio Modern Bold",
-    fontSize: "70px",
-  });
-  return new entity.EntitySequence([]);
+  return new entity.ParallelEntity([
+    fromTo(target, (value) => (target.y = value), {
+      from: from.y,
+      to: to.y,
+      time,
+      stepCount,
+    }),
+    // n2 X
+    fromTo(
+      target,
+      (value) => (target.x = value),
+      {
+        from: from.x,
+        to: to.x,
+        time,
+        stepCount,
+      },
+      callback
+    ),
+  ]);
+}
+
+export function textFadeUp(
+  container: PIXI.Container,
+  text: PIXI.Text,
+  time: number,
+  stepCount: number,
+  from = new PIXI.Point(),
+  callback?: AnimationCallback
+) {
+  const shift = 50;
+  const to = new PIXI.Point(from.x, from.y - shift);
+  container.addChild(text);
+  return new entity.ParallelEntity([
+    sink(text, time, stepCount),
+    move(text.position, from, to, time, stepCount, () => {
+      container.removeChild(text);
+      if (callback) callback(text);
+    }),
+  ]);
 }

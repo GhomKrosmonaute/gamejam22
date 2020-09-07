@@ -6,6 +6,7 @@ import * as geom from "booyah/src/geom";
 import * as tween from "booyah/src/tween";
 
 import * as crisprUtil from "../crisprUtil";
+import * as anim from "../animation";
 import * as game from "../game";
 import Grid from "../entities/grid";
 import Path from "../entities/path";
@@ -46,6 +47,9 @@ export default class Level extends entity.CompositeEntity {
   private gaugeForeground: PIXI.Sprite;
   private bonusBackground: PIXI.Sprite;
   private gaugeBarBaseWidth: number;
+  private gaugeTriggered = false;
+
+  private score = 0;
 
   constructor(public readonly levelVariant: LevelVariant) {
     super();
@@ -150,11 +154,7 @@ export default class Level extends entity.CompositeEntity {
         this._on(this.goButton, "pointerup", this._onGo);
         this.container.addChild(this.goButton);
 
-        this.goButton.text = new PIXI.Text("GO", {
-          fill: "#000000",
-          fontSize: "70px",
-          fontFamily: "Cardenio Modern Bold",
-        });
+        this.goButton.text = crisprUtil.makeText("GO", 0x000000);
         this.goButton.text.position.set(
           this.goButton.width / 2,
           this.goButton.height / 2
@@ -181,11 +181,7 @@ export default class Level extends entity.CompositeEntity {
             "images/hud_gauge_foreground.png"
           ].texture
         );
-        this.gaugeText = new PIXI.Text("", {
-          fill: "#000000",
-          fontSize: "40px",
-          fontFamily: "Cardenio Modern Bold",
-        });
+        this.gaugeText = crisprUtil.makeText("", 0x000000, 40);
         this.gaugeText.anchor.set(0.5);
         this.gaugeText.position.set(110, 110);
 
@@ -328,6 +324,19 @@ export default class Level extends entity.CompositeEntity {
     );
     this.gaugeText.text = value + " pts";
     // todo: how to animate this change?
+  }
+
+  addScore(score: number) {
+    this.score += score;
+    this.setGaugeBarValue(this.score);
+    if (!this.gaugeTriggered) {
+      this.gaugeTriggered = true;
+      this._activateChildEntity(
+        anim.bubble(this.gauge, 1.1, 50, 3, () => {
+          this.gaugeTriggered = false;
+        })
+      );
+    }
   }
 
   private _onGo(): void {
