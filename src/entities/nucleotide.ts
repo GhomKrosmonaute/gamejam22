@@ -20,7 +20,7 @@ export default class Nucleotide extends entity.CompositeEntity {
   public type: crisprUtil.NucleotideType = "normal";
   public colorName: crisprUtil.ColorName = crisprUtil.getRandomColorName();
   public isHovered = false;
-  public shakeAmount: number;
+  public shakeAmounts: { [k: string]: number };
 
   public _container: PIXI.Container;
 
@@ -30,7 +30,6 @@ export default class Nucleotide extends entity.CompositeEntity {
   private holeSprite: PIXI.Sprite = null;
   private infectionSprite: PIXI.Sprite = null;
   private _radius: number;
-  private _shield = false;
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
   private floatingShift = new PIXI.Point();
   private floatingSpeed = new PIXI.Point();
@@ -49,7 +48,7 @@ export default class Nucleotide extends entity.CompositeEntity {
   _setup() {
     this._state = "missing";
     this._isHighlighted = false;
-    this.shakeAmount = 0;
+    this.shakeAmounts = {};
 
     this._container = new PIXI.Container();
     this._container.rotation = this.rotation;
@@ -60,12 +59,15 @@ export default class Nucleotide extends entity.CompositeEntity {
   }
 
   _update(frameInfo: entity.FrameInfo) {
-    if (this.shakeAmount > 0) {
-      const angle = Math.random() * 2 * Math.PI;
-      this._container.position.x =
-        this.position.x + this.shakeAmount * Math.cos(angle);
-      this._container.position.y =
-        this.position.y + this.shakeAmount * Math.sin(angle);
+    const shakes = Object.values(this.shakeAmounts).sort((a, b) => {
+      return a - b;
+    });
+    if (shakes.length > 0 && Math.max(...shakes) > 0) {
+      for (const shake of shakes) {
+        const angle = Math.random() * 2 * Math.PI;
+        this._container.position.x = this.position.x + shake * Math.cos(angle);
+        this._container.position.y = this.position.y + shake * Math.sin(angle);
+      }
     } else {
       for (const vector in this.floating) {
         const v = vector as "x" | "y";
@@ -105,15 +107,6 @@ export default class Nucleotide extends entity.CompositeEntity {
 
   get infected(): boolean {
     return this._state === "infected";
-  }
-
-  get shield(): boolean {
-    return this._shield;
-  }
-
-  set shield(value: boolean) {
-    if (value && this.type === "scissors") return;
-    this._shield = value;
   }
 
   get sprite(): PIXI.Sprite | PIXI.AnimatedSprite {
@@ -177,11 +170,6 @@ export default class Nucleotide extends entity.CompositeEntity {
       this.holeSprite.anchor.set(0.5, 0.5);
       this._container.addChild(this.holeSprite);
     } else if (newState === "infected") {
-      if (this.shield) {
-        this.shield = false;
-        return;
-      }
-
       // Freeze animation
       this.nucleotideAnimation.stop();
 
@@ -214,11 +202,13 @@ export default class Nucleotide extends entity.CompositeEntity {
       this._activateChildEntity(
         new entity.EntitySequence([
           // Briefly shake
-          new entity.FunctionCallEntity(() => (this.shakeAmount = 5)),
+          new entity.FunctionCallEntity(
+            () => (this.shakeAmounts.infection = 6)
+          ),
           new entity.WaitingEntity(100),
 
           new entity.FunctionCallEntity(() => {
-            this.shakeAmount = 0;
+            this.shakeAmounts.infection = 3;
 
             this._container.addChild(mask);
             this.infectionSprite.mask = mask;
@@ -261,6 +251,8 @@ export default class Nucleotide extends entity.CompositeEntity {
       });
       this._activateChildEntity(radiusTween);
     } else if (this._state === "infected") {
+      delete this.shakeAmounts.infection;
+
       // Remove hole sprite
       this._container.removeChild(this.infectionSprite);
       this.infectionSprite = null;

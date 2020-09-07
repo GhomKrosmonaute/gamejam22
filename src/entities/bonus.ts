@@ -33,7 +33,7 @@ export class SwapBonus extends Bonus {
   downNucleotide(n: Nucleotide): null {
     if (n) {
       this.level.grid.setAbsolutePositionFromGridPosition(n);
-      n.shakeAmount = 0;
+      delete n.shakeAmounts.swap;
     }
     return null;
   }
@@ -78,11 +78,11 @@ export class SwapBonus extends Bonus {
           this.level.grid.setAbsolutePositionFromGridPosition(this.dragged);
         }
         this.level.grid.nucleotides.forEach((n) => {
-          n.shakeAmount = 0;
+          delete n.shakeAmounts.swap;
           n.sprite.scale.set(1);
         });
         this.hovered = hovered;
-        this.hovered.shakeAmount = 5;
+        this.hovered.shakeAmounts.swap = 5;
         this.hovered.sprite.scale.set(1.2);
         this.level.grid.swapAbsolutePosition(this.hovered, this.dragged);
         // this._activateChildEntity(
@@ -107,7 +107,7 @@ export class StarBonus extends Bonus {
     this._once(this.level.grid, "drag", (target: Nucleotide) => {
       const stages = this.level.grid.getStarStages(target);
 
-      target.shakeAmount = 7;
+      target.shakeAmounts.star = 7;
 
       const propagation = [
         new entity.WaitingEntity(delay * 2),
@@ -115,7 +115,7 @@ export class StarBonus extends Bonus {
           return [
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
-                n.shakeAmount = 2;
+                n.shakeAmounts.star = 2;
               }
             }),
             new entity.WaitingEntity(delay),
@@ -130,12 +130,12 @@ export class StarBonus extends Bonus {
           );
         }),
         new entity.WaitingEntity(delay / 2),
-        new entity.FunctionCallEntity(() => (target.shakeAmount = 0)),
+        new entity.FunctionCallEntity(() => (target.shakeAmounts.star = 0)),
         ...stages.map((stage, index) => {
           return [
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
-                n.shakeAmount = 10 - index;
+                n.shakeAmounts.star = 10 - index;
               }
             }),
             new entity.WaitingEntity(delay / 3),
@@ -148,7 +148,7 @@ export class StarBonus extends Bonus {
             new entity.WaitingEntity(delay / 3),
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
-                n.shakeAmount = 0;
+                delete n.shakeAmounts.star;
               }
             }),
           ];

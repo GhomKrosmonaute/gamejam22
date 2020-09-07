@@ -130,3 +130,11 @@ export function makeText(
     fontSize: size + "px",
   });
 }
+
+const _debugged: string[] = [];
+export function debug(name: string, ...any: any) {
+  if (!_debugged.includes(name)) {
+    _debugged.push(name);
+    console.log(name, ...any);
+  }
+}

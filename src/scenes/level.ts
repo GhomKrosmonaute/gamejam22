@@ -354,10 +354,7 @@ export default class Level extends entity.CompositeEntity {
           new entity.EntitySequence([
             new entity.FunctionCallEntity(() => {
               this.isGuiLocked = true;
-              this.grid.regenerate(
-                5,
-                (n) => !n.shield && n.state === "present"
-              );
+              this.grid.regenerate(5, (n) => n.state === "present");
             }),
             new entity.WaitingEntity(1200),
             new entity.FunctionCallEntity(() => {

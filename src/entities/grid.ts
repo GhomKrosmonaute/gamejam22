@@ -147,7 +147,6 @@ export default class Grid extends entity.CompositeEntity {
         randomIndex = Math.floor(Math.random() * among.length);
       } while (among[randomIndex].type === "scissors");
       among[randomIndex].type = "scissors";
-      among[randomIndex].shield = false;
     }
   }
 
@@ -422,7 +421,7 @@ export default class Grid extends entity.CompositeEntity {
   infect(count: number): entity.EntitySequence {
     // @ts-ignore
     const infections: Nucleotide[] = _.chain(this.nucleotides)
-      .filter((n) => n.state === "present" && n.type === "normal" && !n.shield)
+      .filter((n) => n.state === "present" && n.type === "normal")
       .shuffle()
       .take(count)
       .value();
