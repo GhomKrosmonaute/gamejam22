@@ -179,13 +179,13 @@ export default class Nucleotide extends entity.CompositeEntity {
         this.infectionSprite = null;
       }
 
-      // TODO: do animation
-
       this.holeSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources["images/hole.png"].texture
       );
       this.holeSprite.anchor.set(0.5, 0.5);
+
       this._activateChildEntity(anim.popup(this.holeSprite));
+
       this._container.addChild(this.holeSprite);
     } else if (newState === "infected") {
       // Freeze animation
