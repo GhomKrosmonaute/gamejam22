@@ -72,7 +72,7 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   /** remove all validated sequences */
-  crunch(path: Path) {
+  crunch(path: Path, callback?: () => any) {
     if (this.matchesSequence(path) !== true) return;
 
     const signature = path.signature;
@@ -94,7 +94,7 @@ export class SequenceManager extends entity.CompositeEntity {
     if (removedSequences.length > 0) {
       for (const s of removedSequences) {
         this.emit("crunch", s);
-        this.removeSequence(s, () => {});
+        this.removeSequence(s, callback);
       }
 
       this.sequences = _.difference(this.sequences, removedSequences);
@@ -104,12 +104,12 @@ export class SequenceManager extends entity.CompositeEntity {
     // if (crunched) path.items.forEach((n) => (n.state = "missing"));
   }
 
-  removeSequence(s: Sequence, callback: () => any) {
+  removeSequence(s: Sequence, callback?: () => any) {
     s.down(() => {
       this._deactivateChildEntity(s);
       this.sequences = this.sequences.filter((ss) => ss !== s);
       this.refresh();
-      callback();
+      if (callback) callback();
     });
   }
 

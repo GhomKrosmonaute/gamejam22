@@ -454,10 +454,11 @@ export default class Level extends entity.CompositeEntity {
       return;
     }
 
-    this.sequenceManager.crunch(this.path);
-    if (this.levelVariant === "turnBased") {
-      this.sequenceManager.distributeSequences();
-    }
+    this.sequenceManager.crunch(this.path, () => {
+      if (this.levelVariant === "turnBased") {
+        this.sequenceManager.distributeSequences();
+      }
+    });
 
     // Makes holes in the grid that corresponds to the used nucleotides
     this.path.crunch();

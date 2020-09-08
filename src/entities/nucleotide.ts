@@ -22,12 +22,11 @@ export default class Nucleotide extends entity.CompositeEntity {
   public isHovered = false;
   public isHearthBeatActive = false;
   public shakeAmounts: { [k: string]: number };
-
+  public pointSprites: PIXI.Sprite[] = [];
   public _container: PIXI.Container;
 
   private _state: State;
   private _isHighlighted: boolean;
-  private pointSprite: PIXI.Sprite = null;
   private nucleotideAnimation: PIXI.AnimatedSprite = null;
   private holeSprite: PIXI.Sprite = null;
   private infectionSprite: PIXI.Sprite = null;
@@ -58,6 +57,19 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._refreshScale();
 
     this._entityConfig.container.addChild(this._container);
+
+    crisprUtil.NeighborIndexes.forEach((i) => {
+      this.pointSprites[i] = new PIXI.Sprite(
+        this._entityConfig.app.loader.resources[
+          `images/path_point_to_${i}.png`
+        ].texture
+      );
+      this.pointSprites[i].scale.set(1.1);
+      this.pointSprites[i].anchor.set(0.5);
+      this.pointSprites[i].visible = false;
+      this.pointSprites[i].filters = [];
+      this._container.addChildAt(this.pointSprites[i], 0);
+    });
   }
 
   _update(frameInfo: entity.FrameInfo) {
@@ -289,20 +301,6 @@ export default class Nucleotide extends entity.CompositeEntity {
     }
 
     this._state = newState;
-  }
-
-  public pointTo(index: crisprUtil.NeighborIndex | -1) {
-    this._container.removeChild(this.pointSprite);
-    if (index > -1) {
-      this.pointSprite = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          `images/path_point_to_${index}.png`
-        ].texture
-      );
-      this.pointSprite.scale.set(1.1);
-      this.pointSprite.anchor.set(0.5);
-      this._container.addChild(this.pointSprite);
-    }
   }
 
   public generateColor() {

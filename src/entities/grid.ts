@@ -405,7 +405,7 @@ export default class Grid extends entity.CompositeEntity {
 
   generateNucleotide(nucleotide: Nucleotide) {
     nucleotide.type = "normal";
-    nucleotide.generateColor()
+    nucleotide.generateColor();
   }
 
   isGameOver(): boolean {

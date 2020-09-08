@@ -1,8 +1,6 @@
 import * as PIXI from "pixi.js";
 import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
-import * as game from "../game";
-import * as crisprUtil from "../crisprUtil";
 import Nucleotide from "./nucleotide";
 import Level from "../scenes/level";
 import * as anim from "../animation";
@@ -124,8 +122,6 @@ export default class Path extends entity.CompositeEntity {
   }
 
   refresh() {
-    let last: Nucleotide = null;
-
     // for each nucleotide in path
     for (const n of this.level.grid.nucleotides.sort((a, b) => {
       return this.items.indexOf(a) - this.items.indexOf(b);
@@ -134,18 +130,22 @@ export default class Path extends entity.CompositeEntity {
         n.sprite.scale.set(1.1);
         n.shakeAmounts.path = 3;
 
-        if (last) {
-          let neighborIndex = this.level.grid.getNeighborIndex(last, n);
-          last.pointTo(neighborIndex);
-          if (this.items.indexOf(n) === this.items.length - 1)
-            n.pointTo(neighborIndex);
-        }
-
-        last = n;
+        const neighbors = this.level.grid.getNeighbors(n);
+        neighbors.forEach((nn, i) => {
+          if (nn) {
+            n.pointSprites[i].visible = !(
+              this.items.includes(nn) &&
+              (this.items.indexOf(nn) === this.items.indexOf(n) - 1 ||
+                this.items.indexOf(nn) === this.items.indexOf(n) + 1)
+            );
+          } else {
+            n.pointSprites[i].visible = true;
+          }
+        });
       } else {
         delete n.shakeAmounts.path;
         n.sprite.scale.set(1);
-        n.pointTo(-1);
+        n.pointSprites.forEach((sprite) => (sprite.visible = false));
       }
     }
   }
