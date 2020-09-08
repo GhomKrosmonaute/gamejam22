@@ -306,9 +306,7 @@ export default class Nucleotide extends entity.CompositeEntity {
   }
 
   public generateColor() {
-    this.colorName = ["r", "b", "g", "y"][
-      Math.floor(Math.random() * 4)
-    ] as crisprUtil.ColorName;
+    this.colorName = crisprUtil.getRandomColorName();
   }
 
   private _createAnimatedSprite(): PIXI.AnimatedSprite {
@@ -335,7 +333,7 @@ export default class Nucleotide extends entity.CompositeEntity {
       throw new Error("Unhandled type");
     }
 
-    animatedSprite.anchor.set(0.5, 0.5);
+    animatedSprite.anchor.set(0.5);
     //animatedSprite.interactive = true
 
     return animatedSprite;

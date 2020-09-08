@@ -405,7 +405,7 @@ export default class Grid extends entity.CompositeEntity {
 
   generateNucleotide(nucleotide: Nucleotide) {
     nucleotide.type = "normal";
-    nucleotide.colorName = crisprUtil.getRandomColorName();
+    nucleotide.generateColor()
   }
 
   isGameOver(): boolean {
