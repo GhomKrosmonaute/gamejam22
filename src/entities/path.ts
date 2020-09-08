@@ -169,7 +169,8 @@ export default class Path extends entity.CompositeEntity {
         ...this.items
           .map<any>((item, i) => {
             const score = item.infected ? (i + 1) * 2 : i + 1;
-            const color = item.infected ? 0xffc802 : "white";
+            const fill = item.infected ? item.fullColorName : "#ffeccc";
+            const stroke = item.infected ? "#ffc200" : "black";
             const time = item.infected ? 1000 : 500;
             return [
               new entity.FunctionCallEntity(() => {
@@ -187,10 +188,10 @@ export default class Path extends entity.CompositeEntity {
                   anim.textFadeUp(
                     this.level.grid.nucleotideContainer,
                     new PIXI.Text(`+ ${score}`, {
-                      fill: color,
-                      stroke: "black",
+                      fill,
+                      stroke,
                       strokeThickness: 10,
-                      fontSize: 90 + score * 5,
+                      fontSize: 90 + score * 4,
                       fontFamily: "Cardenio Modern Bold",
                     }),
                     time,

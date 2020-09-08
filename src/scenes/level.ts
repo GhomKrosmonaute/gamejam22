@@ -449,7 +449,7 @@ export default class Level extends entity.CompositeEntity {
   private _attemptCrunch(): void {
     if (
       this.path.items.length === 0 ||
-      !this.sequenceManager.matchesSequence(this.path)
+      this.sequenceManager.matchesSequence(this.path) !== true
     ) {
       return;
     }
@@ -468,16 +468,22 @@ export default class Level extends entity.CompositeEntity {
     }
   }
 
+  public setGoButtonText(text: string) {
+    this.goButton.text.style.fontSize = text.length > 6 ? 50 : 70;
+    this.goButton.text.text = text;
+  }
+
   private _refresh(): void {
     if (this.path.items.length > 0) {
       this.goButton.interactive = false;
-      if (this.sequenceManager.matchesSequence(this.path)) {
-        this.goButton.text.text = "CRUNCH";
+      const match = this.sequenceManager.matchesSequence(this.path);
+      if (match === true) {
+        this.setGoButtonText("CRUNCH");
       } else {
-        this.goButton.text.text = "INVALID SEQUENCE";
+        this.setGoButtonText(match);
       }
     } else {
-      this.goButton.text.text = "SKIP";
+      this.setGoButtonText("SKIP");
       this.goButton.interactive = true;
     }
     this.sequenceManager.updateHighlighting(this.path);

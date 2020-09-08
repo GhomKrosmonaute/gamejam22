@@ -128,6 +128,7 @@ export function makeText(
     fill: color ?? 0xffffff,
     fontFamily: "Cardenio Modern Bold",
     fontSize: size + "px",
+    align: "center",
   });
 }
 

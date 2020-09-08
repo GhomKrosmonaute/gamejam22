@@ -120,6 +120,10 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._isHighlighted = isHighlighted;
   }
 
+  get fullColorName(): string {
+    return crisprUtil.fullColorNames[this.colorName] || "white";
+  }
+
   get infected(): boolean {
     return this._state === "infected";
   }
@@ -179,6 +183,8 @@ export default class Nucleotide extends entity.CompositeEntity {
         this.infectionSprite = null;
       }
 
+      this.colorName = null;
+
       this.holeSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources["images/hole.png"].texture
       );
@@ -199,10 +205,9 @@ export default class Nucleotide extends entity.CompositeEntity {
       // this._container.addChild(mask);
 
       // Overlay infection
-      const fullColorName = crisprUtil.fullColorNames[this.colorName];
       this.infectionSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
-          `images/infection_${fullColorName}.png`
+          `images/infection_${this.fullColorName}.png`
         ].texture
       );
       this.infectionSprite.anchor.set(0.5, 0.5);
@@ -213,7 +218,7 @@ export default class Nucleotide extends entity.CompositeEntity {
       const radiusTween = new tween.Tween({
         from: 0,
         to: 1,
-        easing: easing.linear,
+        easing: easing.easeOutCubic,
       });
       this._on(radiusTween, "updatedValue", (value) => mask.scale.set(value));
 
@@ -288,16 +293,16 @@ export default class Nucleotide extends entity.CompositeEntity {
   private _createAnimatedSprite(): PIXI.AnimatedSprite {
     let animatedSprite: PIXI.AnimatedSprite;
     if (this.type === "normal") {
-      const fullColorName = crisprUtil.fullColorNames[this.colorName];
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources[
-          `images/nucleotide_${fullColorName}.json`
+          `images/nucleotide_${this.fullColorName}.json`
         ]
       );
       animatedSprite.animationSpeed = 25 / 60;
       // Start on a random frame
       animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
     } else if (this.type === "scissors") {
+      this.colorName = null;
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources["images/scissors.json"]
       );

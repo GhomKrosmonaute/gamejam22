@@ -73,7 +73,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
   /** remove all validated sequences */
   crunch(path: Path) {
-    if (!this.matchesSequence(path)) return;
+    if (this.matchesSequence(path) !== true) return;
 
     const signature = path.signature;
     const removedSequences: Sequence[] = [];
@@ -168,19 +168,21 @@ export class SequenceManager extends entity.CompositeEntity {
     });
   }
 
-  matchesSequence(path: Path): boolean {
+  matchesSequence(path: Path): string | true {
     // TODO: perhaps this should only work if one and only one sequence matches?
 
     if (this._entityConfig.level.levelVariant === "long") {
       return (
-        path.length > 2 &&
-        this.sequences.some((s) => s.validate(path.signature, "partial"))
+        (path.length > 2 &&
+          this.sequences.some((s) => s.validate(path.signature, "partial"))) ||
+        "NO\nMATCH"
       );
     } else {
-      return (
-        path.correctlyContainsScissors() &&
-        this.sequences.some((s) => s.validate(path.signature, "full"))
-      );
+      if (!path.correctlyContainsScissors()) return "MISSING\nSCISSORS";
+      if (!this.sequences.some((s) => s.validate(path.signature, "full"))) {
+        return "NO\nMATCH";
+      }
+      return true;
     }
   }
 
@@ -256,7 +258,7 @@ export class Sequence extends entity.CompositeEntity {
     this._activateChildEntity(
       new entity.EntitySequence(
         this.nucleotides
-          .map<any>((n, i) => {
+          .map<any>((n, i, all) => {
             const score = i + 1;
             return [
               new entity.FunctionCallEntity(() => {
@@ -280,7 +282,19 @@ export class Sequence extends entity.CompositeEntity {
                 allSink.push(
                   new Promise((resolve) => {
                     this._activateChildEntity(
-                      anim.sink(n.sprite, 500, 30, resolve)
+                      new entity.ParallelEntity([
+                        anim.move(
+                          n.position,
+                          n.position.clone(),
+                          new PIXI.Point(
+                            n.position.x + (all.length / 2) * 25 - i * 25,
+                            n.position.y
+                          ),
+                          500,
+                          20
+                        ),
+                        anim.sink(n.sprite, 500, 30, resolve),
+                      ])
                     );
                   })
                 );
