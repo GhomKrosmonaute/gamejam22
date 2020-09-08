@@ -478,7 +478,7 @@ export default class Level extends entity.CompositeEntity {
       this.goButton.interactive = false;
       const match = this.sequenceManager.matchesSequence(this.path);
       if (match === true) {
-        this.setGoButtonText("CRUNCH");
+        this.setGoButtonText("MATCH");
       } else {
         this.setGoButtonText(match);
       }

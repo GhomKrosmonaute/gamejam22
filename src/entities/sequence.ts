@@ -178,10 +178,10 @@ export class SequenceManager extends entity.CompositeEntity {
         "NO\nMATCH"
       );
     } else {
-      if (!path.correctlyContainsScissors()) return "MISSING\nSCISSORS";
       if (!this.sequences.some((s) => s.validate(path.signature, "full"))) {
         return "NO\nMATCH";
       }
+      if (!path.correctlyContainsScissors()) return "MISSING\nSCISSORS";
       return true;
     }
   }
@@ -290,7 +290,7 @@ export class Sequence extends entity.CompositeEntity {
                             from: n.position.x,
                             to: n.position.x + (all.length / 2) * 25 - i * 25,
                             time: 500,
-                            stepCount: 20
+                            stepCount: 20,
                           }
                         ),
                         anim.sink(n.sprite, 500, 30, resolve),

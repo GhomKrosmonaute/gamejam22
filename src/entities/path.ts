@@ -193,6 +193,8 @@ export default class Path extends entity.CompositeEntity {
                       strokeThickness: 10,
                       fontSize: 90 + score * 4,
                       fontFamily: "Cardenio Modern Bold",
+                      dropShadow: true,
+                      dropShadowBlur: 10,
                     }),
                     time,
                     40,
