@@ -12,12 +12,19 @@ import * as anim from "../animation";
  * */
 export default class Path extends entity.CompositeEntity {
   public items: Nucleotide[] = [];
+  public graphics = new PIXI.Graphics();
   public isValidSequence = false;
 
   protected _setup() {
+    this.graphics.position.copyFrom(this.level.grid);
+    this._entityConfig.container.addChild(this.graphics);
     this._on(this, "updated", () => {
       this.refresh();
     });
+  }
+
+  protected _teardown() {
+    (this._entityConfig.container as PIXI.Container).removeChild(this.graphics);
   }
 
   get level(): Level {
@@ -122,6 +129,9 @@ export default class Path extends entity.CompositeEntity {
   }
 
   refresh() {
+    this.graphics.clear();
+    this.graphics.removeChildren();
+    let last: Nucleotide = null;
     // for each nucleotide in path
     for (const n of this.level.grid.nucleotides.sort((a, b) => {
       return this.items.indexOf(a) - this.items.indexOf(b);
@@ -130,22 +140,38 @@ export default class Path extends entity.CompositeEntity {
         n.sprite.scale.set(1.1);
         n.shakeAmounts.path = 3;
 
-        const neighbors = this.level.grid.getNeighbors(n);
-        neighbors.forEach((nn, i) => {
-          if (nn) {
-            n.pointSprites[i].visible = !(
-              this.items.includes(nn) &&
-              (this.items.indexOf(nn) === this.items.indexOf(n) - 1 ||
-                this.items.indexOf(nn) === this.items.indexOf(n) + 1)
-            );
-          } else {
-            n.pointSprites[i].visible = true;
-          }
-        });
+        // const neighbors = this.level.grid.getNeighbors(n);
+        // neighbors.forEach((nn, i) => {
+        //   if (nn) {
+        //     n.pathBorders[i].visible = !(
+        //       this.items.includes(nn) &&
+        //       (this.items.indexOf(nn) === this.items.indexOf(n) - 1 ||
+        //         this.items.indexOf(nn) === this.items.indexOf(n) + 1)
+        //     );
+        //   } else {
+        //     n.pathBorders[i].visible = true;
+        //   }
+        // });
+
+        if (last) {
+          last.pointTo(this.level.grid.getNeighborIndex(last, n));
+        }
+
+        this.graphics
+          .beginFill(0x000000)
+          .drawEllipse(
+            n.position.x,
+            n.position.y,
+            n.width * 0.2,
+            n.height * 0.2
+          );
+
+        last = n;
       } else {
         delete n.shakeAmounts.path;
         n.sprite.scale.set(1);
-        n.pointSprites.forEach((sprite) => (sprite.visible = false));
+        // n.pathBorders.forEach((sprite) => (sprite.visible = false));
+        n.pathArrow.visible = false;
       }
     }
   }

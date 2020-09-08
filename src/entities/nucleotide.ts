@@ -10,6 +10,7 @@ import * as anim from "../animation";
 import * as crisprUtil from "../crisprUtil";
 
 import { GlowFilter } from "@pixi/filter-glow";
+import Level from "../scenes/level";
 
 const glowFilter = new GlowFilter();
 
@@ -17,13 +18,14 @@ export type State = "missing" | "present" | "infected" | "inactive";
 
 /** Represent a nucleotide */
 export default class Nucleotide extends entity.CompositeEntity {
+  public _container: PIXI.Container;
   public type: crisprUtil.NucleotideType = "normal";
   public colorName: crisprUtil.ColorName = crisprUtil.getRandomColorName();
   public isHovered = false;
   public isHearthBeatActive = false;
   public shakeAmounts: { [k: string]: number };
-  public pointSprites: PIXI.Sprite[] = [];
-  public _container: PIXI.Container;
+  public pathBorders: PIXI.Sprite[] = [];
+  public pathArrow: PIXI.Sprite;
 
   private _state: State;
   private _isHighlighted: boolean;
@@ -46,6 +48,10 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._radius = fullRadius;
   }
 
+  get level(): Level {
+    return this._entityConfig.level;
+  }
+
   _setup() {
     this._state = "missing";
     this._isHighlighted = false;
@@ -58,21 +64,33 @@ export default class Nucleotide extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this._container);
 
-    crisprUtil.NeighborIndexes.forEach((i) => {
-      this.pointSprites[i] = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          `images/path_point_to_${i}.png`
-        ].texture
-      );
-      this.pointSprites[i].scale.set(1.1);
-      this.pointSprites[i].anchor.set(0.5);
-      this.pointSprites[i].visible = false;
-      this.pointSprites[i].filters = [];
-      this._container.addChildAt(this.pointSprites[i], 0);
-    });
+    this.pathArrow = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources["images/path_arrow.jpg"].texture
+    );
+    this.pathArrow.visible = false;
+    this.pathArrow.scale.set(0.43);
+    this.pathArrow.anchor.set(0.5, 1);
+    this.pathArrow.position.copyFrom(this.position);
+
+    // crisprUtil.NeighborIndexes.forEach((i) => {
+    //   const pathBorder = new PIXI.Sprite(
+    //     this._entityConfig.app.loader.resources[
+    //       `images/path_border_${i}.png`
+    //     ].texture
+    //   )
+    //   pathBorder.scale.set(1.1);
+    //   pathBorder.anchor.set(0.5);
+    //   pathBorder.visible = false;
+    //   pathBorder.filters = [];
+    //   this.pathBorders[i] = pathBorder
+    //   this._container.addChildAt(this.pathBorders[i], 0);
+    // });
   }
 
   _update(frameInfo: entity.FrameInfo) {
+    this._container.position.copyFrom(this.position);
+    this.pathArrow.position.copyFrom(this.position);
+
     // infected hearth beat animation
     if (this.infected && !this.isHearthBeatActive) {
       this.isHearthBeatActive = true;
@@ -106,16 +124,15 @@ export default class Nucleotide extends entity.CompositeEntity {
           );
           const add = cos * this.floatingAmplitude[v];
           this._container[v] = this.position[v] + add * 200;
-        } else {
-          this._container.position.x = this.position.x;
-          this._container.position.y = this.position.y;
         }
       }
     }
   }
 
   _teardown() {
-    this._entityConfig.container.removeChild(this._container);
+    (this._entityConfig.container as PIXI.Container).removeChild(
+      this._container
+    );
   }
 
   get isHighlighted(): boolean {
@@ -163,6 +180,14 @@ export default class Nucleotide extends entity.CompositeEntity {
     this.floatingShift[vector] = shift;
     this.floatingSpeed[vector] = speed;
     this.floatingAmplitude[vector] = amplitude;
+  }
+
+  pointTo(index: crisprUtil.NeighborIndex | -1) {
+    if (index !== -1) {
+      this.pathArrow.angle = index * (360 / 6);
+      this.pathArrow.visible = true;
+      this.level.path.graphics.addChild(this.pathArrow);
+    }
   }
 
   get width(): number {

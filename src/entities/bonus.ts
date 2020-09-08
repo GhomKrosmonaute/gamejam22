@@ -41,6 +41,7 @@ export class SwapBonus extends Bonus {
   protected _setup() {
     this._once(this.level.grid, "drag", (n1: Nucleotide) => {
       this.dragged = n1;
+      this.dragged.pathArrow.visible = false;
       this.basePosition.copyFrom(n1.position);
 
       this._once(this.level.grid, "drop", () => {
@@ -196,8 +197,8 @@ export class BonusesManager extends entity.CompositeEntity {
     this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
       if (bonus instanceof Bonus) {
         bonus.level.isGuiLocked = false;
-        bonus.level.bonusesManager.sprites[bonus.name].filters = [];
-        bonus.level.bonusesManager.selected = null;
+        this.selected = null;
+        this.sprites[bonus.name].filters = [];
         this.sprites[bonus.name].position.copyFrom(
           this.basePosition[bonus.name]
         );
@@ -218,6 +219,8 @@ export class BonusesManager extends entity.CompositeEntity {
 
     this._on(this, "activatedChildEntity", (bonus: entity.EntityBase) => {
       if (bonus instanceof Bonus) {
+        bonus.level.isGuiLocked = true;
+        bonus.level.path.remove();
         this._activateChildEntity(
           anim.fromTo(
             this.sprites[bonus.name],
@@ -294,7 +297,6 @@ export class BonusesManager extends entity.CompositeEntity {
     }
 
     if (level.isGuiLocked) return;
-    else level.isGuiLocked = true;
 
     this.selected = name;
 
