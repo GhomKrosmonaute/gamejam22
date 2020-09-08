@@ -22,10 +22,8 @@ export function fromTo<Obj>(
   },
   callback?: (target: Obj) => any
 ) {
-  const startAt = Date.now();
-
-  if (options.from === undefined) options.from = 0;
-  if (options.to === undefined) options.to = 1;
+  options.from = options.from ?? 0;
+  options.to = options.to ?? 1;
 
   options.stepCount = Math.ceil(options.stepCount);
 

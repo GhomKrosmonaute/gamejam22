@@ -187,6 +187,8 @@ export default class Nucleotide extends entity.CompositeEntity {
       this.pathArrow.angle = index * (360 / 6);
       this.pathArrow.visible = true;
       this.level.path.graphics.addChild(this.pathArrow);
+    } else {
+      this.pathArrow.visible = false;
     }
   }
 
