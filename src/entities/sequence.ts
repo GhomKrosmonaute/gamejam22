@@ -283,15 +283,15 @@ export class Sequence extends entity.CompositeEntity {
                   new Promise((resolve) => {
                     this._activateChildEntity(
                       new entity.ParallelEntity([
-                        anim.move(
+                        anim.fromTo(
                           n.position,
-                          n.position.clone(),
-                          new PIXI.Point(
-                            n.position.x + (all.length / 2) * 25 - i * 25,
-                            n.position.y
-                          ),
-                          500,
-                          20
+                          (value) => (n.position.x = value),
+                          {
+                            from: n.position.x,
+                            to: n.position.x + (all.length / 2) * 25 - i * 25,
+                            time: 500,
+                            stepCount: 20
+                          }
                         ),
                         anim.sink(n.sprite, 500, 30, resolve),
                       ])
