@@ -22,8 +22,12 @@ export function fromTo<Obj>(
   },
   callback?: (target: Obj) => any
 ) {
+  const startAt = Date.now();
+
   if (options.from === undefined) options.from = 0;
   if (options.to === undefined) options.to = 1;
+
+  options.stepCount = Math.ceil(options.stepCount);
 
   return new entity.EntitySequence(
     new Array(options.stepCount)
@@ -50,6 +54,14 @@ export function fromTo<Obj>(
         new entity.FunctionCallEntity(() => {
           modifier(options.to, target);
           if (callback) callback(target);
+          // if(options.time < Date.now() - startAt){
+          //   console.warn(
+          //     "The time taken for the \"fromTo\" animation is",
+          //     (Date.now() - startAt) - options.time,
+          //     "ms too long.",
+          //     options
+          //   )
+          // }
         }),
       ])
   );
@@ -138,11 +150,11 @@ export function sink(
 }
 
 export function popup(sprite: Sprite, callback?: AnimationCallback) {
-  const time = 150;
-  const stepCount = 30;
+  const time = 100;
+  const stepCount = 6;
   return new entity.EntitySequence([
     fromTo(sprite, (value) => sprite.scale.set(value), {
-      to: 1.3,
+      to: 1.2,
       time: time * 0.7,
       stepCount: stepCount * 0.7,
     }),
@@ -195,6 +207,7 @@ export function textFadeUp(
 ) {
   const shift = 50;
   const to = new PIXI.Point(from.x, from.y - shift);
+  text.anchor.set(0.5);
   container.addChild(text);
   return new entity.ParallelEntity([
     sink(text, time, stepCount),
@@ -202,5 +215,46 @@ export function textFadeUp(
       container.removeChild(text);
       if (callback) callback(text);
     }),
+  ]);
+}
+
+export function hearthBeat(
+  sprite: Sprite,
+  time: number,
+  stepCount: number,
+  scale: number,
+  callback?: AnimationCallback
+) {
+  const updater = (value: number) => sprite.scale.set(value);
+  return new entity.EntitySequence([
+    fromTo(sprite, updater, {
+      from: 1,
+      to: scale,
+      time: time * 0.25,
+      stepCount: stepCount * 0.25,
+    }),
+    fromTo(sprite, updater, {
+      from: scale,
+      to: 1,
+      time: time * 0.25,
+      stepCount: stepCount * 0.25,
+    }),
+    fromTo(sprite, updater, {
+      from: 1,
+      to: scale,
+      time: time * 0.25,
+      stepCount: stepCount * 0.25,
+    }),
+    fromTo(
+      sprite,
+      updater,
+      {
+        from: scale,
+        to: 1,
+        time: time * 0.25,
+        stepCount: stepCount * 0.25,
+      },
+      callback
+    ),
   ]);
 }

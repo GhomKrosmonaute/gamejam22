@@ -8,11 +8,12 @@ import * as tween from "booyah/src/tween";
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animation";
 import * as game from "../game";
-import Grid from "../entities/grid";
-import Path from "../entities/path";
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
 import * as virus from "../entities/virus";
+
+import Grid from "../entities/grid";
+import Path from "../entities/path";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
 
@@ -50,6 +51,7 @@ export default class Level extends entity.CompositeEntity {
   private gaugeTriggered = false;
 
   private score = 0;
+  private maxScore = 1000;
 
   constructor(public readonly levelVariant: LevelVariant) {
     super();
@@ -309,30 +311,34 @@ export default class Level extends entity.CompositeEntity {
    * @param {number} value - The new value of gauge bar
    * @param {number} maxValue - The max bound of the new value (default 100)
    */
-  setGaugeBarValue(value: number, maxValue: number = 100) {
+  setGaugeBarValue(value: number) {
     this.gaugeBar.width = crisprUtil.mapProportion(
       value,
       0,
-      maxValue,
+      this.maxScore,
       0,
       this.gaugeBarBaseWidth,
       true
     );
     this.gaugeBar.position.set(
-      crisprUtil.mapProportion(value, 0, 100, 200, 0),
+      crisprUtil.mapProportion(value, 0, this.maxScore, 200, 0, true),
       0
     );
-    this.gaugeText.text = value + " pts";
-    // todo: how to animate this change?
+    this.gaugeText.text =
+      value > 999 ? Math.floor(value / 1000) + "k" : value + " pts";
   }
 
   addScore(score: number) {
-    this.score += score;
+    if (this.score + score > this.maxScore) {
+      this.score = this.maxScore;
+    } else {
+      this.score += score;
+    }
     this.setGaugeBarValue(this.score);
     if (!this.gaugeTriggered) {
       this.gaugeTriggered = true;
       this._activateChildEntity(
-        anim.bubble(this.gauge, 1.1, 50, 3, () => {
+        anim.bubble(this.gaugeText, 1.5, 50, 3, () => {
           this.gaugeTriggered = false;
         })
       );

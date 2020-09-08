@@ -168,8 +168,9 @@ export default class Path extends entity.CompositeEntity {
       new entity.EntitySequence([
         ...this.items
           .map<any>((item, i) => {
-            const score = item.state === "infected" ? (i + 1) * 2 : i + 1;
-            const color = item.state === "infected" ? 0xffc802 : "white";
+            const score = item.infected ? (i + 1) * 2 : i + 1;
+            const color = item.infected ? 0xffc802 : "white";
+            const time = item.infected ? 1000 : 500;
             return [
               new entity.FunctionCallEntity(() => {
                 this._activateChildEntity(
@@ -189,10 +190,11 @@ export default class Path extends entity.CompositeEntity {
                       fill: color,
                       stroke: "black",
                       strokeThickness: 10,
-                      fontSize: 80 + score * 5,
+                      fontSize: 90 + score * 5,
+                      fontFamily: "Cardenio Modern Bold",
                     }),
-                    500,
-                    10,
+                    time,
+                    40,
                     item.position.clone()
                   )
                 );

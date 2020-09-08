@@ -20,6 +20,7 @@ export default class Nucleotide extends entity.CompositeEntity {
   public type: crisprUtil.NucleotideType = "normal";
   public colorName: crisprUtil.ColorName = crisprUtil.getRandomColorName();
   public isHovered = false;
+  public isHearthBeatActive = false;
   public shakeAmounts: { [k: string]: number };
 
   public _container: PIXI.Container;
@@ -59,9 +60,22 @@ export default class Nucleotide extends entity.CompositeEntity {
   }
 
   _update(frameInfo: entity.FrameInfo) {
+    // infected hearth beat animation
+    if (this.infected && !this.isHearthBeatActive) {
+      this.isHearthBeatActive = true;
+      this._activateChildEntity(
+        anim.hearthBeat(this.sprite, 200, 10, 1.1, () => {
+          setTimeout(() => {
+            this.isHearthBeatActive = false;
+          }, 1500 + Math.random() * 500);
+        })
+      );
+    }
     const shakes = Object.values(this.shakeAmounts).sort((a, b) => {
       return a - b;
     });
+
+    // shakes animation
     if (shakes.length > 0 && Math.max(...shakes) > 0) {
       for (const shake of shakes) {
         const angle = Math.random() * 2 * Math.PI;
@@ -69,6 +83,7 @@ export default class Nucleotide extends entity.CompositeEntity {
         this._container.position.y = this.position.y + shake * Math.sin(angle);
       }
     } else {
+      // floating animation
       for (const vector in this.floating) {
         const v = vector as "x" | "y";
         if (this.floating[v]) {
@@ -152,6 +167,8 @@ export default class Nucleotide extends entity.CompositeEntity {
     if (newState === this._state) return;
 
     if (newState === "missing") {
+      delete this.shakeAmounts.infection;
+
       // Remove previous graphics
       if (this.nucleotideAnimation) {
         this._container.removeChild(this.nucleotideAnimation);
@@ -168,6 +185,7 @@ export default class Nucleotide extends entity.CompositeEntity {
         this._entityConfig.app.loader.resources["images/hole.png"].texture
       );
       this.holeSprite.anchor.set(0.5, 0.5);
+      this._activateChildEntity(anim.popup(this.holeSprite));
       this._container.addChild(this.holeSprite);
     } else if (newState === "infected") {
       // Freeze animation
@@ -208,7 +226,8 @@ export default class Nucleotide extends entity.CompositeEntity {
           new entity.WaitingEntity(100),
 
           new entity.FunctionCallEntity(() => {
-            this.shakeAmounts.infection = 3;
+            // this.shakeAmounts.infection = 3;
+            delete this.shakeAmounts.infection;
 
             this._container.addChild(mask);
             this.infectionSprite.mask = mask;
