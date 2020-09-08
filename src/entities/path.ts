@@ -14,26 +14,12 @@ import * as anim from "../animation";
  * */
 export default class Path extends entity.CompositeEntity {
   public items: Nucleotide[] = [];
-  public graphics = new PIXI.Graphics();
   public isValidSequence = false;
 
-  // TODO: refactor these to use the same as Grid
-  public x = game.width * 0.09;
-  public y = game.height * 0.4;
-
-  // TODO: remove dependency on Level
-  constructor() {
-    super();
-  }
-
-  _setup() {
-    this.graphics.x = this.x;
-    this.graphics.y = this.y;
-    this._entityConfig.container.addChild(this.graphics);
-  }
-
-  _teardown() {
-    this._entityConfig.container.removeChild(this.graphics);
+  protected _setup() {
+    this._on(this, "updated", () => {
+      this.refresh();
+    });
   }
 
   get level(): Level {
@@ -101,7 +87,6 @@ export default class Path extends entity.CompositeEntity {
     }
 
     this.emit("updated");
-    this.refresh();
     return true;
   }
 
@@ -130,35 +115,38 @@ export default class Path extends entity.CompositeEntity {
     this.items.push(n);
 
     this.emit("updated");
-    this.refresh();
     return true;
   }
 
   remove() {
     this.items = [];
     this.emit("updated");
-    this.refresh();
   }
 
   refresh() {
     let last: Nucleotide = null;
-    let color = this.isValidSequence ? 0xffffff : 0x000000;
-
-    this.graphics.clear();
 
     // for each nucleotide in path
-    for (const n of this.items) {
-      this.graphics
-        .beginFill(color)
-        .drawEllipse(n.position.x, n.position.y, n.width * 0.2, n.height * 0.2);
+    for (const n of this.level.grid.nucleotides.sort((a, b) => {
+      return this.items.indexOf(a) - this.items.indexOf(b);
+    })) {
+      if (this.items.includes(n)) {
+        n.sprite.scale.set(1.1);
+        n.shakeAmounts.path = 3;
 
-      if (last)
-        this.graphics
-          .lineStyle(5, color)
-          .moveTo(last.position.x, last.position.y)
-          .lineTo(n.position.x, n.position.y);
+        if (last) {
+          let neighborIndex = this.level.grid.getNeighborIndex(last, n);
+          last.pointTo(neighborIndex);
+          if (this.items.indexOf(n) === this.items.length - 1)
+            n.pointTo(neighborIndex);
+        }
 
-      last = n;
+        last = n;
+      } else {
+        delete n.shakeAmounts.path;
+        n.sprite.scale.set(1);
+        n.pointTo(-1);
+      }
     }
   }
 

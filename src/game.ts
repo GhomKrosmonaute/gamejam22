@@ -106,6 +106,12 @@ const graphicalAssets = [
   "images/hud_gauge_background.png",
   "images/hud_gauge_bar.png",
   "images/hud_gauge_foreground.png",
+  "images/path_point_to_0.png",
+  "images/path_point_to_1.png",
+  "images/path_point_to_2.png",
+  "images/path_point_to_3.png",
+  "images/path_point_to_4.png",
+  "images/path_point_to_5.png",
 
   // animated sprites
   "images/nucleotide_red.json",

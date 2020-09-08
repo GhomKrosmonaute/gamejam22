@@ -461,7 +461,6 @@ export default class Level extends entity.CompositeEntity {
 
     // Makes holes in the grid that corresponds to the used nucleotides
     this.path.crunch();
-    this.path.remove();
 
     if (this.sequenceManager.countSequences() === 0) {
       this._regenerate();

@@ -27,6 +27,7 @@ export default class Nucleotide extends entity.CompositeEntity {
 
   private _state: State;
   private _isHighlighted: boolean;
+  private pointSprite: PIXI.Sprite = null;
   private nucleotideAnimation: PIXI.AnimatedSprite = null;
   private holeSprite: PIXI.Sprite = null;
   private infectionSprite: PIXI.Sprite = null;
@@ -290,9 +291,30 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._state = newState;
   }
 
+  public pointTo(index: crisprUtil.NeighborIndex | -1) {
+    this._container.removeChild(this.pointSprite);
+    if (index > -1) {
+      this.pointSprite = new PIXI.Sprite(
+        this._entityConfig.app.loader.resources[
+          `images/path_point_to_${index}.png`
+        ].texture
+      );
+      this.pointSprite.scale.set(1.1);
+      this.pointSprite.anchor.set(0.5);
+      this._container.addChild(this.pointSprite);
+    }
+  }
+
+  public generateColor() {
+    this.colorName = ["r", "b", "g", "y"][
+      Math.floor(Math.random() * 4)
+    ] as crisprUtil.ColorName;
+  }
+
   private _createAnimatedSprite(): PIXI.AnimatedSprite {
     let animatedSprite: PIXI.AnimatedSprite;
     if (this.type === "normal") {
+      this.generateColor();
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources[
           `images/nucleotide_${this.fullColorName}.json`
