@@ -17,7 +17,18 @@ export default class Path extends entity.CompositeEntity {
 
   protected _setup() {
     this.graphics.position.copyFrom(this.level.grid);
+
+    // place the path below the grid
+    // this._entityConfig.container.addChildAt(
+    //   this.graphics,
+    //   this._entityConfig.container.children.indexOf(
+    //     this.level.grid.container
+    //   )
+    // );
+
+    // place the path above the grid
     this._entityConfig.container.addChild(this.graphics);
+
     this._on(this, "updated", () => {
       this.refresh();
     });

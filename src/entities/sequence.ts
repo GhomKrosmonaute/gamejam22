@@ -52,7 +52,12 @@ export class SequenceManager extends entity.CompositeEntity {
     }
   }
 
-  add(length: number) {
+  get level(): Level {
+    return this._entityConfig.level;
+  }
+
+  add(length?: number) {
+    length = length ?? this.level.pickSequenceLength();
     const s = new Sequence(length);
     const { width } = Nucleotide.getNucleotideDimensionsByRadius(
       s.nucleotideRadius

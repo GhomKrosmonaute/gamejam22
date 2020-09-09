@@ -1,5 +1,4 @@
 import * as PIXI from "pixi.js";
-import * as anim from "./animation";
 
 export type NucleotideType = "scissors" | "bonus" | "normal";
 export const nucleotideTypes: NucleotideType[] = [
@@ -25,7 +24,7 @@ export const fullColorNames: { [k in ColorName]: string } = {
   y: "yellow",
 };
 
-export type PartyState = "crunch" | "regenerate" | "bonus";
+export type LevelState = "crunch" | "regenerate" | "bonus";
 
 /** from 0 to 5, start on top */
 export type NeighborIndex = 0 | 1 | 2 | 3 | 4 | 5;

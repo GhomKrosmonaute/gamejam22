@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import { ShockwaveFilter } from "@pixi/filter-shockwave";
 
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
@@ -22,6 +23,10 @@ const hairCount = 40;
 const hairMinScale = 0.3;
 const hairMaxScale = 0.45;
 
+/**
+ * emit:
+ * - maxScoreReached
+ */
 export default class Level extends entity.CompositeEntity {
   public container: PIXI.Container;
   public nucleotideRadius = game.width / 13.44;
@@ -29,7 +34,7 @@ export default class Level extends entity.CompositeEntity {
   public bonusesManager: bonuses.BonusesManager;
   public path: Path;
   public grid: Grid;
-  public state: crisprUtil.PartyState = "crunch";
+  public state: crisprUtil.LevelState = "crunch";
 
   public swapBonus = new bonuses.SwapBonus();
   public starBonus = new bonuses.StarBonus();
@@ -197,6 +202,35 @@ export default class Level extends entity.CompositeEntity {
         this.gaugeBarBaseWidth = this.gaugeBar.width;
 
         this.setGaugeBarValue(0);
+
+        // setup shockwave on max score is reached
+        this._on(this, "maxScoreReached", () => {
+          const filter = new ShockwaveFilter(new PIXI.Point(110, 110), {
+            amplitude: this.gaugeBar.width / 5,
+            wavelength: 100,
+            brightness: 2,
+            radius: this.gaugeBar.width,
+          });
+          if (!this.gauge.filters) this.gauge.filters = [];
+          this.gauge.filters.push(filter);
+          this._activateChildEntity(
+            anim.fromTo(
+              filter,
+              (value, target) => (target.time = value),
+              {
+                from: 0,
+                to: 3,
+                time: 1,
+                stepCount: 30,
+              },
+              (target) => {
+                this.gauge.filters = this.gauge.filters.filter((f) => {
+                  return f !== target;
+                });
+              }
+            )
+          );
+        });
       }
 
       // Bonus
@@ -226,7 +260,7 @@ export default class Level extends entity.CompositeEntity {
     );
 
     // adding sequences for tests
-    this.sequenceManager.add(this._pickSequenceLength());
+    this.sequenceManager.add();
 
     if (this.levelVariant === "turnBased")
       this.sequenceManager.distributeSequences();
@@ -329,7 +363,10 @@ export default class Level extends entity.CompositeEntity {
   }
 
   addScore(score: number) {
-    if (this.score + score > this.maxScore) {
+    if (this.score === this.maxScore) {
+      return;
+    } else if (this.score + score >= this.maxScore) {
+      this.emit("maxScoreReached");
       this.score = this.maxScore;
     } else {
       this.score += score;
@@ -405,8 +442,7 @@ export default class Level extends entity.CompositeEntity {
     if (countSequences < this.sequenceCountLimit) {
       actions.push(
         new entity.FunctionCallEntity(() => {
-          const length = this._pickSequenceLength();
-          this.sequenceManager.add(length);
+          this.sequenceManager.add();
           this.sequenceManager.distributeSequences();
         })
       );
@@ -434,7 +470,7 @@ export default class Level extends entity.CompositeEntity {
     }
   }
 
-  private _pickSequenceLength(): number {
+  public pickSequenceLength(): number {
     switch (this.levelVariant) {
       case "turnBased":
         return crisprUtil.random(4, 7);
@@ -458,14 +494,13 @@ export default class Level extends entity.CompositeEntity {
       if (this.levelVariant === "turnBased") {
         this.sequenceManager.distributeSequences();
       }
+      if (this.sequenceManager.countSequences() === 0) {
+        this._regenerate();
+      }
     });
 
     // Makes holes in the grid that corresponds to the used nucleotides
     this.path.crunch();
-
-    if (this.sequenceManager.countSequences() === 0) {
-      this._regenerate();
-    }
   }
 
   public setGoButtonText(text: string) {
@@ -525,8 +560,7 @@ export default class Level extends entity.CompositeEntity {
         }),
         infectionSequence,
         new entity.FunctionCallEntity(() => {
-          const length = this._pickSequenceLength();
-          this.sequenceManager.add(length);
+          this.sequenceManager.add();
           this.isGuiLocked = false;
         }),
       ])

@@ -4,6 +4,7 @@ import Level from "../scenes/level";
 import Nucleotide from "./nucleotide";
 import * as sequence from "./sequence";
 import * as anim from "../animation";
+import * as crisprUtil from "../crisprUtil";
 
 export abstract class Bonus extends entity.CompositeEntity {
   public name: string = "";
@@ -173,7 +174,14 @@ export class KillBonus extends Bonus {
     this.level.sequenceManager.container.buttonMode = true;
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
-      this.level.sequenceManager.removeSequence(s, () => this.end());
+      this.level.sequenceManager.removeSequence(s, () => {
+        this.level.sequenceManager.add();
+
+        if (this.level.levelVariant === "turnBased") {
+          this.level.sequenceManager.distributeSequences();
+          this.end();
+        }
+      });
     });
   }
 
