@@ -56,8 +56,30 @@ export class SequenceManager extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
+  get sequenceCountLimit(): number {
+    switch (this.level.levelVariant) {
+      case "turnBased":
+        return 3;
+      case "continuous":
+        return 1;
+      case "long":
+        return 1;
+    }
+  }
+
+  private _pickSequenceLength(): number {
+    switch (this.level.levelVariant) {
+      case "turnBased":
+        return crisprUtil.random(4, 7);
+      case "continuous":
+        return crisprUtil.random(3, 4);
+      case "long":
+        return 13;
+    }
+  }
+
   add(length?: number) {
-    length = length ?? this.level.pickSequenceLength();
+    length = length ?? this._pickSequenceLength();
     const s = new Sequence(length);
     const { width } = Nucleotide.getNucleotideDimensionsByRadius(
       s.nucleotideRadius

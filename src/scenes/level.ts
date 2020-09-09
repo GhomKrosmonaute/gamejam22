@@ -439,7 +439,7 @@ export default class Level extends entity.CompositeEntity {
       actions.push(infectionSequence);
     }
 
-    if (countSequences < this.sequenceCountLimit) {
+    if (countSequences < this.sequenceManager.sequenceCountLimit) {
       actions.push(
         new entity.FunctionCallEntity(() => {
           this.sequenceManager.add();
@@ -456,28 +456,6 @@ export default class Level extends entity.CompositeEntity {
 
     if (actions.length > 0) {
       this._activateChildEntity(new entity.EntitySequence(actions));
-    }
-  }
-
-  get sequenceCountLimit(): number {
-    switch (this.levelVariant) {
-      case "turnBased":
-        return 3;
-      case "continuous":
-        return 1;
-      case "long":
-        return 1;
-    }
-  }
-
-  public pickSequenceLength(): number {
-    switch (this.levelVariant) {
-      case "turnBased":
-        return crisprUtil.random(4, 7);
-      case "continuous":
-        return crisprUtil.random(3, 4);
-      case "long":
-        return 13;
     }
   }
 
