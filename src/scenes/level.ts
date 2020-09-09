@@ -364,7 +364,6 @@ export class Level extends entity.CompositeEntity {
   }
 
   addScore(score: number) {
-    score = 10000;
     if (this.score === this.maxScore) {
       return;
     } else if (this.score + score >= this.maxScore) {

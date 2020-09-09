@@ -297,7 +297,7 @@ export class Sequence extends entity.CompositeEntity {
                     this._activateChildEntity(
                       anim.textFadeUp(
                         this.container,
-                        crisprUtil.makeText(`+ ${score}`, null, 70 + 4 * i),
+                        crisprUtil.makeText(`+ ${score}`, 0xffffff, 70 + 4 * i),
                         300,
                         10,
                         new PIXI.Point(n.position.x, n.position.y - 50),
