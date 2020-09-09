@@ -44,7 +44,7 @@ export function random(min?: number[] | number, max?: number): number {
   }
 }
 
-export function mapProportion(
+export function proportion(
   n: number,
   start1: number,
   stop1: number,
@@ -84,15 +84,17 @@ export function positionAlongMembrane(
 
 export function makeText(
   text: string,
-  color?: string | number,
-  size: number = 70
+  color: string | number = 0xffffff,
+  size: string | number = 70
 ) {
-  return new PIXI.Text(text, {
-    fill: color ?? 0xffffff,
+  const pixiText = new PIXI.Text(text, {
+    fill: color,
     fontFamily: "Cardenio Modern Bold",
-    fontSize: size + "px",
+    fontSize: size,
     align: "center",
   });
+  pixiText.anchor.set(0.5);
+  return pixiText;
 }
 
 const _debugged: string[] = [];

@@ -40,7 +40,9 @@ class LevelMenu extends entity.EntityBase {
   }
 
   _teardown(): void {
-    this._entityConfig.container.removeChild(this.container);
+    (this._entityConfig.container as PIXI.Container).removeChild(
+      this.container
+    );
   }
 
   private _makeButton(

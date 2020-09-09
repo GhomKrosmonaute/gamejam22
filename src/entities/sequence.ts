@@ -184,7 +184,7 @@ export class SequenceManager extends entity.CompositeEntity {
       const { width } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
         s.nucleotideRadius
       );
-      s.position.y = crisprUtil.mapProportion(
+      s.position.y = crisprUtil.proportion(
         i,
         0,
         this.sequences.length,

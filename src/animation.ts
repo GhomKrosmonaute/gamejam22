@@ -34,7 +34,7 @@ export function fromTo<Obj>(
         return [
           new entity.FunctionCallEntity(() => {
             modifier(
-              crisprUtil.mapProportion(
+              crisprUtil.proportion(
                 step,
                 0,
                 options.stepCount,

@@ -9,10 +9,10 @@ import * as tween from "booyah/src/tween";
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animation";
 import * as game from "../game";
+
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
 import * as virus from "../entities/virus";
-
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 
@@ -167,7 +167,6 @@ export class Level extends entity.CompositeEntity {
           this.goButton.width / 2,
           this.goButton.height / 2
         );
-        this.goButton.text.anchor.set(0.5);
         this.goButton.addChild(this.goButton.text);
       }
 
@@ -190,7 +189,6 @@ export class Level extends entity.CompositeEntity {
           ].texture
         );
         this.gaugeText = crisprUtil.makeText("", 0x000000, 40);
-        this.gaugeText.anchor.set(0.5);
         this.gaugeText.position.set(110, 110);
 
         this.gauge.addChild(this.gaugeBackground);
@@ -348,7 +346,7 @@ export class Level extends entity.CompositeEntity {
    * @param {number} maxValue - The max bound of the new value (default 100)
    */
   setGaugeBarValue(value: number) {
-    this.gaugeBar.width = crisprUtil.mapProportion(
+    this.gaugeBar.width = crisprUtil.proportion(
       value,
       0,
       this.maxScore,
@@ -357,7 +355,7 @@ export class Level extends entity.CompositeEntity {
       true
     );
     this.gaugeBar.position.set(
-      crisprUtil.mapProportion(value, 0, this.maxScore, 200, 0, true),
+      crisprUtil.proportion(value, 0, this.maxScore, 200, 0, true),
       0
     );
     this.gaugeText.text =
@@ -424,7 +422,7 @@ export class Level extends entity.CompositeEntity {
     this.goButton.buttonMode = !value;
     this.goButton.interactive = !value;
     this.goButton.text.style.fill = !value ? "#000000" : "#4e535d";
-    for(const bonusName in this.bonusesManager.sprites){
+    for (const bonusName in this.bonusesManager.sprites) {
       this.bonusesManager.sprites[bonusName].buttonMode = !value;
     }
   }
