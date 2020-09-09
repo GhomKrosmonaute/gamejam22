@@ -175,6 +175,10 @@ export class Path extends entity.CompositeEntity {
           );
         }
 
+        if (this.last === n) {
+          this.level.grid.pointTo(n, -1);
+        }
+
         this.graphics
           .beginFill(0x000000)
           .drawEllipse(
