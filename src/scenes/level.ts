@@ -322,6 +322,7 @@ export class Level extends entity.CompositeEntity {
     }
 
     this._refresh();
+    this.isGuiLocked = false;
   }
 
   _update() {
@@ -423,6 +424,9 @@ export class Level extends entity.CompositeEntity {
     this.goButton.buttonMode = !value;
     this.goButton.interactive = !value;
     this.goButton.text.style.fill = !value ? "#000000" : "#4e535d";
+    for(const bonusName in this.bonusesManager.sprites){
+      this.bonusesManager.sprites[bonusName].buttonMode = !value;
+    }
   }
 
   private _endTurn(): void {
