@@ -252,9 +252,10 @@ export class Grid extends entity.CompositeEntity {
     if (index !== -1) {
       n.pathArrow.angle = index * (360 / 6);
       n.pathArrow.visible = true;
-      n.level.path.graphics.addChild(n.pathArrow);
+      n.level.path.container.addChildAt(n.pathArrow, 0);
     } else {
       n.pathArrow.visible = false;
+      n.level.path.container.removeChild(n.pathArrow);
     }
   }
 

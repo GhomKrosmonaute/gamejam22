@@ -10,8 +10,6 @@ import * as anim from "../animations";
 import * as level from "../scenes/level";
 import * as filter from "../filters";
 
-const glowFilter = new filter.GlowFilter();
-
 export type NucleotideState = "missing" | "present" | "infected" | "inactive";
 
 export type NucleotideType = "scissors" | "bonus" | "normal";
@@ -47,7 +45,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public isHearthBeatActive = false;
   public shakeAmounts: { [k: string]: number };
   public pathBorders: PIXI.Sprite[] = [];
-  public pathArrow: PIXI.Sprite;
+  public pathArrow: PIXI.TilingSprite;
 
   private _state: NucleotideState;
   private _isHighlighted: boolean;
@@ -86,8 +84,10 @@ export class Nucleotide extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this._container);
 
-    this.pathArrow = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/path_arrow.jpg"].texture
+    this.pathArrow = new PIXI.TilingSprite(
+      this._entityConfig.app.loader.resources["images/path_arrow.jpg"].texture,
+      94,
+      300
     );
     this.pathArrow.visible = false;
     this.pathArrow.scale.set(0.43);
@@ -112,6 +112,11 @@ export class Nucleotide extends entity.CompositeEntity {
   _update(frameInfo: entity.FrameInfo) {
     this._container.position.copyFrom(this.position);
     this.pathArrow.position.copyFrom(this.position);
+
+    // move floor arrow
+    if (this.pathArrow.visible) {
+      this.pathArrow.tilePosition.y -= 3;
+    }
 
     // infected hearth beat animation
     if (this.infected && !this.isHearthBeatActive) {
@@ -164,7 +169,7 @@ export class Nucleotide extends entity.CompositeEntity {
     if (!this.nucleotideAnimation) return;
 
     if (isHighlighted && !this._isHighlighted) {
-      this.nucleotideAnimation.filters = [glowFilter];
+      this.nucleotideAnimation.filters = [new filter.GlowFilter()];
     } else if (!isHighlighted && this._isHighlighted) {
       this.nucleotideAnimation.filters = [];
     }

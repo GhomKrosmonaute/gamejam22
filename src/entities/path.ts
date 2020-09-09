@@ -4,19 +4,23 @@ import * as entity from "booyah/src/entity";
 import * as nucleotide from "./nucleotide";
 import * as level from "../scenes/level";
 import * as anim from "../animations";
+import * as filters from "../filters";
 
 /**
  * Represent the user path to validate sequences
  * Emits:
- * - updated
- * */
+ * - updated()
+ */
 export class Path extends entity.CompositeEntity {
   public items: nucleotide.Nucleotide[] = [];
   public graphics = new PIXI.Graphics();
+  public container = new PIXI.Container();
   public isValidSequence = false;
 
   protected _setup() {
-    this.graphics.position.copyFrom(this.level.grid);
+    this.container.position.copyFrom(this.level.grid);
+    this.container.addChild(this.graphics);
+    this.container.filters = [new filters.GlowFilter({ distance: 20 })];
 
     // place the path below the grid
     // this._entityConfig.container.addChildAt(
@@ -27,7 +31,7 @@ export class Path extends entity.CompositeEntity {
     // );
 
     // place the path above the grid
-    this._entityConfig.container.addChild(this.graphics);
+    this._entityConfig.container.addChild(this.container);
 
     this._on(this, "updated", () => {
       this.refresh();
@@ -176,8 +180,8 @@ export class Path extends entity.CompositeEntity {
           .drawEllipse(
             n.position.x,
             n.position.y,
-            n.width * 0.2,
-            n.height * 0.2
+            n.width * 0.19,
+            n.height * 0.19
           );
 
         last = n;
