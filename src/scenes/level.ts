@@ -1,5 +1,4 @@
 import * as PIXI from "pixi.js";
-import { ShockwaveFilter } from "@pixi/filter-shockwave";
 
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
@@ -7,8 +6,9 @@ import * as geom from "booyah/src/geom";
 import * as tween from "booyah/src/tween";
 
 import * as crisprUtil from "../crisprUtil";
-import * as anim from "../animation";
+import * as anim from "../animations";
 import * as game from "../game";
+import * as filters from "../filters";
 
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
@@ -26,7 +26,8 @@ const hairMaxScale = 0.45;
 
 /**
  * emit:
- * - maxScoreReached
+ * - maxScoreReached()
+ * - scoreUpdated(score: number)
  */
 export class Level extends entity.CompositeEntity {
   public container: PIXI.Container;
@@ -204,7 +205,7 @@ export class Level extends entity.CompositeEntity {
 
         // setup shockwave on max score is reached
         this._on(this, "maxScoreReached", () => {
-          const filter = new ShockwaveFilter(new PIXI.Point(110, 110), {
+          const filter = new filters.ShockwaveFilter(new PIXI.Point(110, 110), {
             amplitude: this.gaugeBar.width / 5,
             wavelength: 100,
             brightness: 2,
@@ -363,12 +364,14 @@ export class Level extends entity.CompositeEntity {
   }
 
   addScore(score: number) {
+    score = 10000;
     if (this.score === this.maxScore) {
       return;
     } else if (this.score + score >= this.maxScore) {
       this.emit("maxScoreReached");
       this.score = this.maxScore;
     } else {
+      this.emit("scoreUpdated", score);
       this.score += score;
     }
     this.setGaugeBarValue(this.score);

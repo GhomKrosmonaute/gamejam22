@@ -6,13 +6,11 @@ import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
-import * as anim from "../animation";
-import * as crisprUtil from "../crisprUtil";
-
-import { GlowFilter } from "@pixi/filter-glow";
+import * as anim from "../animations";
 import * as level from "../scenes/level";
+import * as filter from "../filters";
 
-const glowFilter = new GlowFilter();
+const glowFilter = new filter.GlowFilter();
 
 export type NucleotideState = "missing" | "present" | "infected" | "inactive";
 

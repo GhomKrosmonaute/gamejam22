@@ -3,7 +3,7 @@ import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
 import * as nucleotide from "./nucleotide";
 import * as level from "../scenes/level";
-import * as anim from "../animation";
+import * as anim from "../animations";
 
 /**
  * Represent the user path to validate sequences

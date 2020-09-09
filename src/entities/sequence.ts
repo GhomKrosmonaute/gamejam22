@@ -6,7 +6,7 @@ import * as util from "booyah/src/util";
 
 import * as game from "../game";
 import * as crisprUtil from "../crisprUtil";
-import * as anim from "../animation";
+import * as anim from "../animations";
 
 import * as nucleotide from "./nucleotide";
 import * as path from "./path";

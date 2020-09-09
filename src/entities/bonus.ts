@@ -3,7 +3,7 @@ import * as entity from "booyah/src/entity";
 import * as level from "../scenes/level";
 import * as nucleotide from "./nucleotide";
 import * as sequence from "./sequence";
-import * as anim from "../animation";
+import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
 
 export abstract class Bonus extends entity.CompositeEntity {
