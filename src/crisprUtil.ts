@@ -1,41 +1,5 @@
 import * as PIXI from "pixi.js";
 
-export type NucleotideType = "scissors" | "bonus" | "normal";
-export const nucleotideTypes: NucleotideType[] = [
-  "scissors",
-  "bonus",
-  "normal",
-];
-export function getRandomNucleotideType(): NucleotideType {
-  return nucleotideTypes[Math.floor(Math.random() * nucleotideTypes.length)];
-}
-
-// TODO: Use string enum here?
-export type ColorName = "b" | "r" | "g" | "y";
-export const colorNames: ColorName[] = ["b", "r", "g", "y"];
-export function getRandomColorName(): ColorName {
-  return colorNames[Math.floor(Math.random() * colorNames.length)];
-}
-
-export const fullColorNames: { [k in ColorName]: string } = {
-  b: "blue",
-  r: "red",
-  g: "green",
-  y: "yellow",
-};
-
-export type LevelState = "crunch" | "regenerate" | "bonus";
-
-/** from 0 to 5, start on top */
-export type NeighborIndex = 0 | 1 | 2 | 3 | 4 | 5;
-export const NeighborIndexes: NeighborIndex[] = [0, 1, 2, 3, 4, 5];
-
-export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
-  let opposedNeighborIndex = neighborIndex - 3;
-  if (opposedNeighborIndex < 0) opposedNeighborIndex += 6;
-  return opposedNeighborIndex as NeighborIndex;
-}
-
 export function dist(x1: PIXI.Point, y1: PIXI.Point): number;
 export function dist(x1: number, y1: number, x2: number, y2: number): number;
 export function dist(

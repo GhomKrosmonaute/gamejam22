@@ -10,24 +10,48 @@ import * as anim from "../animation";
 import * as crisprUtil from "../crisprUtil";
 
 import { GlowFilter } from "@pixi/filter-glow";
-import Level from "../scenes/level";
+import * as level from "../scenes/level";
 
 const glowFilter = new GlowFilter();
 
-export type State = "missing" | "present" | "infected" | "inactive";
+export type NucleotideState = "missing" | "present" | "infected" | "inactive";
+
+export type NucleotideType = "scissors" | "bonus" | "normal";
+export const nucleotideTypes: NucleotideType[] = [
+  "scissors",
+  "bonus",
+  "normal",
+];
+export function getRandomNucleotideType(): NucleotideType {
+  return nucleotideTypes[Math.floor(Math.random() * nucleotideTypes.length)];
+}
+
+// TODO: Use string enum here?
+export type ColorName = "b" | "r" | "g" | "y";
+export const colorNames: ColorName[] = ["b", "r", "g", "y"];
+export function getRandomColorName(): ColorName {
+  return colorNames[Math.floor(Math.random() * colorNames.length)];
+}
+
+export const fullColorNames: { [k in ColorName]: string } = {
+  b: "blue",
+  r: "red",
+  g: "green",
+  y: "yellow",
+};
 
 /** Represent a nucleotide */
-export default class Nucleotide extends entity.CompositeEntity {
+export class Nucleotide extends entity.CompositeEntity {
   public _container: PIXI.Container;
-  public type: crisprUtil.NucleotideType = "normal";
-  public colorName: crisprUtil.ColorName = crisprUtil.getRandomColorName();
+  public type: NucleotideType = "normal";
+  public colorName: ColorName = getRandomColorName();
   public isHovered = false;
   public isHearthBeatActive = false;
   public shakeAmounts: { [k: string]: number };
   public pathBorders: PIXI.Sprite[] = [];
   public pathArrow: PIXI.Sprite;
 
-  private _state: State;
+  private _state: NucleotideState;
   private _isHighlighted: boolean;
   private nucleotideAnimation: PIXI.AnimatedSprite = null;
   private holeSprite: PIXI.Sprite = null;
@@ -48,7 +72,7 @@ export default class Nucleotide extends entity.CompositeEntity {
     this._radius = fullRadius;
   }
 
-  get level(): Level {
+  get level(): level.Level {
     return this._entityConfig.level;
   }
 
@@ -151,7 +175,7 @@ export default class Nucleotide extends entity.CompositeEntity {
   }
 
   get fullColorName(): string {
-    return crisprUtil.fullColorNames[this.colorName] || "white";
+    return fullColorNames[this.colorName] || "white";
   }
 
   get infected(): boolean {
@@ -182,16 +206,6 @@ export default class Nucleotide extends entity.CompositeEntity {
     this.floatingAmplitude[vector] = amplitude;
   }
 
-  pointTo(index: crisprUtil.NeighborIndex | -1) {
-    if (index !== -1) {
-      this.pathArrow.angle = index * (360 / 6);
-      this.pathArrow.visible = true;
-      this.level.path.graphics.addChild(this.pathArrow);
-    } else {
-      this.pathArrow.visible = false;
-    }
-  }
-
   get width(): number {
     return 2 * this.radius;
   }
@@ -204,10 +218,10 @@ export default class Nucleotide extends entity.CompositeEntity {
     return new PIXI.Point(this.width * (3 / 4), this.height);
   }
 
-  get state(): State {
+  get state(): NucleotideState {
     return this._state;
   }
-  set state(newState: State) {
+  set state(newState: NucleotideState) {
     if (newState === this._state) return;
 
     if (newState === "missing") {
@@ -331,7 +345,7 @@ export default class Nucleotide extends entity.CompositeEntity {
   }
 
   public generateColor() {
-    this.colorName = crisprUtil.getRandomColorName();
+    this.colorName = getRandomColorName();
   }
 
   private _createAnimatedSprite(): PIXI.AnimatedSprite {

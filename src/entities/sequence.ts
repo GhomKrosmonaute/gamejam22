@@ -8,9 +8,9 @@ import * as game from "../game";
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animation";
 
-import Nucleotide from "./nucleotide";
-import Path from "./path";
-import Level from "../scenes/level";
+import * as nucleotide from "./nucleotide";
+import * as path from "./path";
+import * as level from "../scenes/level";
 
 /**
  * emits:
@@ -52,7 +52,7 @@ export class SequenceManager extends entity.CompositeEntity {
     }
   }
 
-  get level(): Level {
+  get level(): level.Level {
     return this._entityConfig.level;
   }
 
@@ -81,7 +81,7 @@ export class SequenceManager extends entity.CompositeEntity {
   add(length?: number) {
     length = length ?? this._pickSequenceLength();
     const s = new Sequence(length);
-    const { width } = Nucleotide.getNucleotideDimensionsByRadius(
+    const { width } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
       s.nucleotideRadius
     );
     s.position.set(
@@ -99,15 +99,15 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   /** remove all validated sequences */
-  crunch(path: Path, callback?: () => any) {
-    if (this.matchesSequence(path) !== true) return;
+  crunch(_path: path.Path, callback?: () => any) {
+    if (this.matchesSequence(_path) !== true) return;
 
-    const signature = path.signature;
+    const signature = _path.signature;
     const removedSequences: Sequence[] = [];
     for (const s of this.sequences) {
       if (this._entityConfig.level.levelVariant === "long") {
         if (s.validate(signature, "partial")) {
-          s.deactivateSegment(path.signature);
+          s.deactivateSegment(_path.signature);
 
           if (s.isInactive()) {
             removedSequences.push(s);
@@ -181,7 +181,7 @@ export class SequenceManager extends entity.CompositeEntity {
    */
   distributeSequences(): void {
     this.sequences.forEach((s, i) => {
-      const { width } = Nucleotide.getNucleotideDimensionsByRadius(
+      const { width } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
         s.nucleotideRadius
       );
       s.position.y = crisprUtil.mapProportion(
@@ -195,26 +195,26 @@ export class SequenceManager extends entity.CompositeEntity {
     });
   }
 
-  matchesSequence(path: Path): string | true {
+  matchesSequence(_path: path.Path): string | true {
     // TODO: perhaps this should only work if one and only one sequence matches?
 
     if (this._entityConfig.level.levelVariant === "long") {
       return (
-        (path.length > 2 &&
-          this.sequences.some((s) => s.validate(path.signature, "partial"))) ||
+        (_path.length > 2 &&
+          this.sequences.some((s) => s.validate(_path.signature, "partial"))) ||
         "NO\nMATCH"
       );
     } else {
-      if (!this.sequences.some((s) => s.validate(path.signature, "full"))) {
+      if (!this.sequences.some((s) => s.validate(_path.signature, "full"))) {
         return "NO\nMATCH";
       }
-      if (!path.correctlyContainsScissors()) return "MISSING\nSCISSORS";
+      if (!_path.correctlyContainsScissors()) return "MISSING\nSCISSORS";
       return true;
     }
   }
 
-  updateHighlighting(path: Path): void {
-    const signature = path.signature;
+  updateHighlighting(_path: path.Path): void {
+    const signature = _path.signature;
     this.sequences.forEach((s) => s.highlightSegment(signature));
   }
 
@@ -229,7 +229,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
 /** Represent a sequence dropped by virus */
 export class Sequence extends entity.CompositeEntity {
-  public nucleotides: Nucleotide[] = [];
+  public nucleotides: nucleotide.Nucleotide[] = [];
   public container: PIXI.Container;
   public nucleotideRadius = game.width * 0.04;
 
@@ -240,7 +240,7 @@ export class Sequence extends entity.CompositeEntity {
     super();
   }
 
-  get level(): Level {
+  get level(): level.Level {
     return this._entityConfig.level;
   }
 
@@ -252,11 +252,14 @@ export class Sequence extends entity.CompositeEntity {
     this._on(this.container, "pointerup", () => {
       this._entityConfig.level.sequenceManager.emit("click", this);
     });
-    const { width, height } = Nucleotide.getNucleotideDimensionsByRadius(
+    const {
+      width,
+      height,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
     );
     for (let i = 0; i < this.baseLength; i++) {
-      const n = new Nucleotide(
+      const n = new nucleotide.Nucleotide(
         this.nucleotideRadius,
         new PIXI.Point(i * width * 0.8, crisprUtil.approximate(height * 0.05)),
         Math.random()
@@ -378,7 +381,7 @@ export class Sequence extends entity.CompositeEntity {
     }
   }
 
-  getMatchingSegment(signature: string): Nucleotide[] | null {
+  getMatchingSegment(signature: string): nucleotide.Nucleotide[] | null {
     // Try forwards
     let sequenceSignature = this.toString();
     let index = sequenceSignature.indexOf(signature);

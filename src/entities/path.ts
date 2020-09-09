@@ -1,8 +1,8 @@
 import * as PIXI from "pixi.js";
 import * as _ from "underscore";
 import * as entity from "booyah/src/entity";
-import Nucleotide from "./nucleotide";
-import Level from "../scenes/level";
+import * as nucleotide from "./nucleotide";
+import * as level from "../scenes/level";
 import * as anim from "../animation";
 
 /**
@@ -10,8 +10,8 @@ import * as anim from "../animation";
  * Emits:
  * - updated
  * */
-export default class Path extends entity.CompositeEntity {
-  public items: Nucleotide[] = [];
+export class Path extends entity.CompositeEntity {
+  public items: nucleotide.Nucleotide[] = [];
   public graphics = new PIXI.Graphics();
   public isValidSequence = false;
 
@@ -38,7 +38,7 @@ export default class Path extends entity.CompositeEntity {
     (this._entityConfig.container as PIXI.Container).removeChild(this.graphics);
   }
 
-  get level(): Level {
+  get level(): level.Level {
     return this._entityConfig.level;
   }
 
@@ -52,11 +52,11 @@ export default class Path extends entity.CompositeEntity {
   }
 
   /** only nucleotides */
-  get nucleotides(): Nucleotide[] {
+  get nucleotides(): nucleotide.Nucleotide[] {
     return this.items.filter((n) => n.type !== "scissors");
   }
 
-  get scissors(): Nucleotide[] {
+  get scissors(): nucleotide.Nucleotide[] {
     return this.items.filter((n) => n.type === "scissors");
   }
 
@@ -66,11 +66,11 @@ export default class Path extends entity.CompositeEntity {
     );
   }
 
-  get first(): Nucleotide | null {
+  get first(): nucleotide.Nucleotide | null {
     return this.items[0];
   }
 
-  get last(): Nucleotide | null {
+  get last(): nucleotide.Nucleotide | null {
     return this.items[this.items.length - 1];
   }
 
@@ -82,7 +82,7 @@ export default class Path extends entity.CompositeEntity {
     );
   }
 
-  startAt(n: Nucleotide): boolean {
+  startAt(n: nucleotide.Nucleotide): boolean {
     if (n.state === "missing" || this._entityConfig.level.isGuiLocked)
       return false;
 
@@ -106,7 +106,7 @@ export default class Path extends entity.CompositeEntity {
     return true;
   }
 
-  add(n: Nucleotide): boolean {
+  add(n: nucleotide.Nucleotide): boolean {
     if (this._entityConfig.level.isGuiLocked) return false;
 
     // not add scissors on first position
@@ -142,7 +142,7 @@ export default class Path extends entity.CompositeEntity {
   refresh() {
     this.graphics.clear();
     this.graphics.removeChildren();
-    let last: Nucleotide = null;
+    let last: nucleotide.Nucleotide = null;
     // for each nucleotide in path
     for (const n of this.level.grid.nucleotides.sort((a, b) => {
       return this.items.indexOf(a) - this.items.indexOf(b);
@@ -165,7 +165,10 @@ export default class Path extends entity.CompositeEntity {
         // });
 
         if (last) {
-          last.pointTo(this.level.grid.getNeighborIndex(last, n));
+          this.level.grid.pointTo(
+            last,
+            this.level.grid.getNeighborIndex(last, n)
+          );
         }
 
         this.graphics

@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js";
 import * as entity from "booyah/dist/entity";
 import * as crisprUtil from "./crisprUtil";
-import Nucleotide from "./entities/nucleotide";
+import * as nucleotide from "./entities/nucleotide";
 
 export type Sprite =
   | PIXI.AnimatedSprite
@@ -66,8 +66,8 @@ export function fromTo<Obj>(
 }
 
 export function swap(
-  n1: Nucleotide,
-  n2: Nucleotide,
+  n1: nucleotide.Nucleotide,
+  n2: nucleotide.Nucleotide,
   time: number,
   stepCount: number,
   callback?: AnimationCallback

@@ -13,10 +13,11 @@ import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
 import * as virus from "../entities/virus";
 
-import Grid from "../entities/grid";
-import Path from "../entities/path";
+import * as grid from "../entities/grid";
+import * as path from "../entities/path";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
+export type LevelState = "crunch" | "regenerate" | "bonus";
 
 const dropSpeed = 0.001;
 const hairCount = 40;
@@ -27,14 +28,14 @@ const hairMaxScale = 0.45;
  * emit:
  * - maxScoreReached
  */
-export default class Level extends entity.CompositeEntity {
+export class Level extends entity.CompositeEntity {
   public container: PIXI.Container;
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
-  public path: Path;
-  public grid: Grid;
-  public state: crisprUtil.LevelState = "crunch";
+  public path: path.Path;
+  public grid: grid.Grid;
+  public state: LevelState = "crunch";
 
   public swapBonus = new bonuses.SwapBonus();
   public starBonus = new bonuses.StarBonus();
@@ -71,11 +72,11 @@ export default class Level extends entity.CompositeEntity {
     this.sequenceManager = new sequence.SequenceManager();
 
     // instancing path system
-    this.path = new Path();
+    this.path = new path.Path();
     this._on(this.path, "updated", this._refresh);
 
     // generating nucleotide grid
-    this.grid = new Grid(
+    this.grid = new grid.Grid(
       this.colCount,
       this.rowCount,
       this.cutCount,

@@ -1,7 +1,7 @@
 import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
-import Level from "../scenes/level";
-import Nucleotide from "./nucleotide";
+import * as level from "../scenes/level";
+import * as nucleotide from "./nucleotide";
 import * as sequence from "./sequence";
 import * as anim from "../animation";
 import * as crisprUtil from "../crisprUtil";
@@ -10,7 +10,7 @@ export abstract class Bonus extends entity.CompositeEntity {
   public name: string = "";
   public updateDisabled = false;
 
-  get level(): Level {
+  get level(): level.Level {
     return this._entityConfig.level;
   }
 
@@ -27,11 +27,11 @@ export abstract class Bonus extends entity.CompositeEntity {
 
 export class SwapBonus extends Bonus {
   name = "swap";
-  dragged: Nucleotide | null = null;
-  hovered: Nucleotide | null = null;
+  dragged: nucleotide.Nucleotide | null = null;
+  hovered: nucleotide.Nucleotide | null = null;
   basePosition = new PIXI.Point();
 
-  downNucleotide(n: Nucleotide): null {
+  downNucleotide(n: nucleotide.Nucleotide): null {
     if (n) {
       this.level.grid.setAbsolutePositionFromGridPosition(n);
       delete n.shakeAmounts.swap;
@@ -40,7 +40,7 @@ export class SwapBonus extends Bonus {
   }
 
   protected _setup() {
-    this._once(this.level.grid, "drag", (n1: Nucleotide) => {
+    this._once(this.level.grid, "drag", (n1: nucleotide.Nucleotide) => {
       this.dragged = n1;
       this.dragged.pathArrow.visible = false;
       this.basePosition.copyFrom(n1.position);
@@ -106,7 +106,7 @@ export class StarBonus extends Bonus {
   protected _setup() {
     const delay = 200;
 
-    this._once(this.level.grid, "drag", (target: Nucleotide) => {
+    this._once(this.level.grid, "drag", (target: nucleotide.Nucleotide) => {
       const stages = this.level.grid.getStarStages(target);
 
       target.shakeAmounts.star = 7;
@@ -296,7 +296,7 @@ export class BonusesManager extends entity.CompositeEntity {
   }
 
   selection(name: string) {
-    const level: Level = this._entityConfig.level;
+    const level: level.Level = this._entityConfig.level;
 
     if (name === this.selected) {
       const bonus = this.getSelectedBonus();

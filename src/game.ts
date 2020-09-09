@@ -3,7 +3,7 @@ import * as PIXI from "pixi.js";
 import * as booyah from "booyah/src/booyah";
 import * as entity from "booyah/src/entity";
 
-import Level from "./scenes/level";
+import * as level from "./scenes/level";
 
 export const width = 1080;
 export const height = 1920;
@@ -74,9 +74,9 @@ class LevelMenu extends entity.EntityBase {
 
 const gameStates = {
   start: new LevelMenu(),
-  turnBased: new Level("turnBased"),
-  continuous: new Level("continuous"),
-  long: new Level("long"),
+  turnBased: new level.Level("turnBased"),
+  continuous: new level.Level("continuous"),
+  long: new level.Level("long"),
 };
 
 let gameTransitions = {
