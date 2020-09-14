@@ -214,21 +214,17 @@ export class Level extends entity.CompositeEntity {
           if (!this.gauge.filters) this.gauge.filters = [];
           this.gauge.filters.push(filter);
           this._activateChildEntity(
-            anim.tweeny(
-              filter,
-              (value, target) => (target.time = value),
-              {
-                from: 0,
-                to: 3,
-                duration: 1,
-                stepCount: 30,
-              },
-              (target) => {
+            tween.tweeny({
+              from: 0,
+              to: 3,
+              duration: 1,
+              onUpdate: (value) => (filter.time = value),
+              onTeardown: () => {
                 this.gauge.filters = this.gauge.filters.filter((f) => {
-                  return f !== target;
+                  return f !== filter;
                 });
               }
-            )
+            })
           );
         });
       }
@@ -377,7 +373,7 @@ export class Level extends entity.CompositeEntity {
     if (!this.gaugeTriggered) {
       this.gaugeTriggered = true;
       this._activateChildEntity(
-        anim.bubble(this.gaugeText, 1.5, 50, 3, () => {
+        anim.bubble(this.gaugeText, 1.5, 50,() => {
           this.gaugeTriggered = false;
         })
       );
