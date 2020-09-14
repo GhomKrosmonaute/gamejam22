@@ -207,14 +207,13 @@ export class Path extends entity.CompositeEntity {
             const score = item.infected ? (i + 1) * 2 : i + 1;
             const fill = item.infected ? item.fullColorName : "#ffeccc";
             const stroke = item.infected ? "#ffc200" : "black";
-            const time = item.infected ? 1000 : 500;
+            const duration = item.infected ? 1000 : 500;
             return [
               new entity.FunctionCallEntity(() => {
                 this._activateChildEntity(
                   anim.down(
                     item.sprite,
                     100,
-                    4,
                     function () {
                       this.state = "missing";
                     }.bind(item)
@@ -232,8 +231,7 @@ export class Path extends entity.CompositeEntity {
                       dropShadow: true,
                       dropShadowBlur: 10,
                     }),
-                    time,
-                    40,
+                    duration,
                     item.position.clone()
                   )
                 );
