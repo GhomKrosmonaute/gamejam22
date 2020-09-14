@@ -213,7 +213,7 @@ export class Path extends entity.CompositeEntity {
                 this._activateChildEntity(
                   anim.down(
                     item.sprite,
-                    100,
+                    duration,
                     function () {
                       this.state = "missing";
                     }.bind(item)

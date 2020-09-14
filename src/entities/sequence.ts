@@ -317,7 +317,7 @@ export class Sequence extends entity.CompositeEntity {
                           from: n.position.x,
                           to: n.position.x + (all.length / 2) * 25 - i * 25,
                           duration: 500,
-                          onUpdate: (value) => (n.position.x = value)
+                          onUpdate: (value) => (n.position.x = value),
                         }),
                         anim.sink(n.sprite, 500, resolve),
                       ])

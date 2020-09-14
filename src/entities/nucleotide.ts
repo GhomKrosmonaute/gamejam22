@@ -189,10 +189,10 @@ export class Nucleotide extends entity.CompositeEntity {
     return this.holeSprite || this.infectionSprite || this.nucleotideAnimation;
   }
 
-  async bubble(time: number) {
+  async bubble(duration: number) {
     return new Promise((resolve) => {
       this._activateChildEntity(
-        anim.bubble(this.sprite, 1.3, 5, resolve)
+        anim.bubble(this.sprite, 1.3, duration, resolve)
       );
     });
   }

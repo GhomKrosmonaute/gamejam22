@@ -1,7 +1,11 @@
 import * as PIXI from "pixi.js";
+
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
+
 import * as nucleotide from "./entities/nucleotide";
+import { ensureProgram } from "ts-loader/dist/utils";
 
 export type Sprite =
   | PIXI.AnimatedSprite
@@ -15,13 +19,14 @@ export function swap(
   n1: nucleotide.Nucleotide,
   n2: nucleotide.Nucleotide,
   duration: number,
+  easing: easing.Easing,
   callback?: AnimationCallback
 ) {
   const n1Position = n1.position.clone();
   const n2Position = n2.position.clone();
   return new entity.ParallelEntity([
-    move(n1.position, n1Position, n2Position, duration),
-    move(n2.position, n2Position, n1Position, duration, callback),
+    move(n1.position, n1Position, n2Position, duration, easing),
+    move(n2.position, n2Position, n1Position, duration, easing, callback),
   ]);
 }
 
@@ -36,19 +41,19 @@ export function bubble(
       from: 1,
       to,
       duration: duration * 0.33,
+      easing: easing.easeInOutQuad,
       onUpdate: (value) => obj.scale.set(value),
     }),
-    tween.tweeny(
-      {
-        from: to,
-        to: 1,
-        duration: duration * 0.66,
-        onUpdate: (value) => obj.scale.set(value),
-        onTeardown: () => {
-          if(callback) callback(obj)
-        }
-      }
-    ),
+    tween.tweeny({
+      from: to,
+      to: 1,
+      duration: duration * 0.66,
+      easing: easing.easeOutQuart,
+      onUpdate: (value) => obj.scale.set(value),
+      onTeardown: () => {
+        if (callback) callback(obj);
+      },
+    }),
   ]);
 }
 
@@ -57,7 +62,7 @@ export function down(
   duration: number,
   callback?: AnimationCallback
 ) {
-  const onUpdate = (value: number) => obj.scale.set(value)
+  const onUpdate = (value: number) => obj.scale.set(value);
   return new entity.EntitySequence([
     tween.tweeny({
       from: 1,
@@ -71,8 +76,8 @@ export function down(
       duration: duration * 0.35,
       onUpdate,
       onTeardown: () => {
-        if(callback) callback(obj)
-      }
+        if (callback) callback(obj);
+      },
     }),
   ]);
 }
@@ -87,16 +92,19 @@ export function sink(
       from: 1,
       to: 0.5,
       duration,
+      easing: easing.easeInOutQuad,
       onUpdate: (value) => obj.scale.set(value),
     }),
     tween.tweeny({
       from: 1,
       to: 0,
       duration,
-      onUpdate: (value) => (obj.filters = [new PIXI.filters.AlphaFilter(value)]),
+      easing: easing.easeInOutQuad,
+      onUpdate: (value) =>
+        (obj.filters = [new PIXI.filters.AlphaFilter(value)]),
       onTeardown: () => {
-        if(callback) callback(obj)
-      }
+        if (callback) callback(obj);
+      },
     }),
   ]);
 }
@@ -107,16 +115,18 @@ export function popup(obj: PIXI.DisplayObject, callback?: AnimationCallback) {
     tween.tweeny({
       to: 1.2,
       duration: duration * 0.7,
-      onUpdate: (value) => obj.scale.set(value)
+      easing: easing.easeInOutExpo,
+      onUpdate: (value) => obj.scale.set(value),
     }),
     tween.tweeny({
       from: 1.3,
       to: 1,
       duration: duration * 0.3,
+      easing: easing.easeInOutCubic,
       onUpdate: (value) => obj.scale.set(value),
       onTeardown: () => {
-        if(callback) callback(obj)
-      }
+        if (callback) callback(obj);
+      },
     }),
   ]);
 }
@@ -126,6 +136,7 @@ export function move(
   from: PIXI.Point,
   to: PIXI.Point,
   duration: number,
+  easing: easing.Easing,
   callback?: AnimationCallback
 ) {
   return new entity.ParallelEntity([
@@ -133,16 +144,18 @@ export function move(
       from: from.y,
       to: to.y,
       duration,
-      onUpdate: (value) => (target.y = value)
+      easing,
+      onUpdate: (value) => (target.y = value),
     }),
     tween.tweeny({
       from: from.x,
       to: to.x,
       duration,
+      easing,
       onUpdate: (value) => (target.x = value),
       onTeardown: () => {
-        if(callback) callback(target)
-      }
+        if (callback) callback(target);
+      },
     }),
   ]);
 }
@@ -160,7 +173,7 @@ export function textFadeUp(
   container.addChild(text);
   return new entity.ParallelEntity([
     sink(text, duration),
-    move(text.position, from, to, duration, () => {
+    move(text.position, from, to, duration, easing.easeOutQuart, () => {
       container.removeChild(text);
       if (callback) callback(text);
     }),
@@ -199,8 +212,8 @@ export function hearthBeat(
       duration: duration * 0.25,
       onUpdate,
       onTeardown: () => {
-        if(callback) callback(obj)
-      }
+        if (callback) callback(obj);
+      },
     }),
   ]);
 }

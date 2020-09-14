@@ -223,7 +223,7 @@ export class Level extends entity.CompositeEntity {
                 this.gauge.filters = this.gauge.filters.filter((f) => {
                   return f !== filter;
                 });
-              }
+              },
             })
           );
         });
@@ -373,7 +373,7 @@ export class Level extends entity.CompositeEntity {
     if (!this.gaugeTriggered) {
       this.gaugeTriggered = true;
       this._activateChildEntity(
-        anim.bubble(this.gaugeText, 1.5, 50,() => {
+        anim.bubble(this.gaugeText, 1.5, 50, () => {
           this.gaugeTriggered = false;
         })
       );

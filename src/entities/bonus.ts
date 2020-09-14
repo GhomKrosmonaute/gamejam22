@@ -2,12 +2,13 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 
 import * as level from "../scenes/level";
 import * as nucleotide from "./nucleotide";
 import * as sequence from "./sequence";
 import * as anim from "../animations";
-import * as crisprUtil from "../crisprUtil";
+import * as crispUtil from "../crisprUtil";
 
 export abstract class Bonus extends entity.CompositeEntity {
   public name: string = "";
@@ -54,11 +55,24 @@ export class SwapBonus extends Bonus {
         this.updateDisabled = true;
         this.level.grid.swap(this.dragged, this.hovered, false);
         this._activateChildEntity(
-          anim.swap(this.dragged, this.hovered, 100, () => {
-            this.hovered.bubble(150).catch();
-            this.dragged.bubble(150).catch();
-            this.end();
-          })
+          anim.swap(
+            this.dragged,
+            this.hovered,
+            crispUtil.proportion(
+              crispUtil.dist(this.hovered.position, this.dragged.position),
+              0,
+              1000,
+              100,
+              500,
+              true
+            ),
+            easing.easeInBack,
+            () => {
+              this.hovered.bubble(150).catch();
+              this.dragged.bubble(150).catch();
+              this.end();
+            }
+          )
         );
       });
     });
@@ -130,9 +144,7 @@ export class StarBonus extends Bonus {
           target.state = "present";
         }),
         new entity.FunctionCallEntity(() => {
-          this._activateChildEntity(
-            anim.bubble(target.sprite, 1.3, delay / 2)
-          );
+          this._activateChildEntity(anim.bubble(target.sprite, 1.3, delay));
         }),
         new entity.WaitingEntity(delay / 2),
         new entity.FunctionCallEntity(() => (target.shakeAmounts.star = 0)),
@@ -147,7 +159,7 @@ export class StarBonus extends Bonus {
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
                 n.state = "present";
-                n.bubble(delay / 3).catch();
+                n.bubble(delay).catch();
               }
             }),
             new entity.WaitingEntity(delay / 3),
@@ -218,7 +230,7 @@ export class BonusesManager extends entity.CompositeEntity {
             from: 0.7,
             to: 0.5,
             duration: 20,
-            onUpdate: (value) => this.sprites[bonus.name].scale.set(value)
+            onUpdate: (value) => this.sprites[bonus.name].scale.set(value),
           })
         );
       }
@@ -233,7 +245,7 @@ export class BonusesManager extends entity.CompositeEntity {
             from: 0.5,
             to: 0.7,
             duration: 20,
-            onUpdate: (value) => this.sprites[bonus.name].scale.set(value)
+            onUpdate: (value) => this.sprites[bonus.name].scale.set(value),
           })
         );
       }
