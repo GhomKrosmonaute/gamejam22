@@ -214,13 +214,13 @@ export class Level extends entity.CompositeEntity {
           if (!this.gauge.filters) this.gauge.filters = [];
           this.gauge.filters.push(filter);
           this._activateChildEntity(
-            anim.fromTo(
+            anim.tweeny(
               filter,
               (value, target) => (target.time = value),
               {
                 from: 0,
                 to: 3,
-                time: 1,
+                duration: 1,
                 stepCount: 30,
               },
               (target) => {

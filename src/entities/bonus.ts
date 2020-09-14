@@ -211,13 +211,13 @@ export class BonusesManager extends entity.CompositeEntity {
           this.basePosition[bonus.name]
         );
         this._activateChildEntity(
-          anim.fromTo(
+          anim.tweeny(
             this.sprites[bonus.name],
             (value, target) => target.scale.set(value),
             {
               from: 0.7,
               to: 0.5,
-              time: 20,
+              duration: 20,
               stepCount: 3,
             }
           )
@@ -230,13 +230,13 @@ export class BonusesManager extends entity.CompositeEntity {
         bonus.level.isGuiLocked = true;
         bonus.level.path.remove();
         this._activateChildEntity(
-          anim.fromTo(
+          anim.tweeny(
             this.sprites[bonus.name],
             (value, target) => target.scale.set(value),
             {
               from: 0.5,
               to: 0.7,
-              time: 20,
+              duration: 20,
               stepCount: 3,
             }
           )

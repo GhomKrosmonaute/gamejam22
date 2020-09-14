@@ -1,6 +1,6 @@
 import * as PIXI from "pixi.js";
-import * as entity from "booyah/dist/entity";
-import * as crisprUtil from "./crisprUtil";
+import * as entity from "booyah/src/entity";
+import * as tween from "booyah/src/tween";
 import * as nucleotide from "./entities/nucleotide";
 
 export type Sprite =
@@ -11,157 +11,113 @@ export type Sprite =
 
 export type AnimationCallback = (...targets: any) => any;
 
-export function fromTo<Obj>(
-  target: Obj,
-  modifier: (value: number, target: Obj) => any,
-  options: {
-    from?: number;
-    to?: number;
-    time: number;
-    stepCount: number;
-  },
-  callback?: (target: Obj) => any
-) {
-  options.from = options.from ?? 0;
-  options.to = options.to ?? 1;
-
-  options.stepCount = Math.ceil(options.stepCount);
-
-  return new entity.EntitySequence(
-    new Array(options.stepCount)
-      .fill(0)
-      .map((value, step) => {
-        return [
-          new entity.FunctionCallEntity(() => {
-            modifier(
-              crisprUtil.proportion(
-                step,
-                0,
-                options.stepCount,
-                options.from,
-                options.to
-              ),
-              target
-            );
-          }),
-          new entity.WaitingEntity(options.time / options.stepCount),
-        ];
-      })
-      .flat()
-      .concat([
-        new entity.FunctionCallEntity(() => {
-          modifier(options.to, target);
-          if (callback) callback(target);
-          // if(options.time < Date.now() - startAt){
-          //   console.warn(
-          //     "The time taken for the \"fromTo\" animation is",
-          //     (Date.now() - startAt) - options.time,
-          //     "ms too long.",
-          //     options
-          //   )
-          // }
-        }),
-      ])
-  );
-}
-
 export function swap(
   n1: nucleotide.Nucleotide,
   n2: nucleotide.Nucleotide,
-  time: number,
-  stepCount: number,
+  duration: number,
   callback?: AnimationCallback
 ) {
   const n1Position = n1.position.clone();
   const n2Position = n2.position.clone();
   return new entity.ParallelEntity([
-    move(n1.position, n1Position, n2Position, time, stepCount),
-    move(n2.position, n2Position, n1Position, time, stepCount, callback),
+    move(n1.position, n1Position, n2Position, duration),
+    move(n2.position, n2Position, n1Position, duration, callback),
   ]);
 }
 
 export function bubble(
-  sprite: Sprite,
+  obj: PIXI.DisplayObject,
   to: number,
-  time: number,
-  stepCount: number,
+  duration: number,
   callback?: AnimationCallback
 ) {
   return new entity.EntitySequence([
-    fromTo(sprite, (value) => sprite.scale.set(value), {
+    tween.tweeny({
       from: 1,
       to,
-      time: time * 0.33,
-      stepCount,
+      duration: duration * 0.33,
+      onUpdate: (value) => obj.scale.set(value),
     }),
-    fromTo(
-      sprite,
-      (value) => sprite.scale.set(value),
-      { from: to, to: 1, time: time * 0.66, stepCount },
-      callback
+    tween.tweeny(
+      {
+        from: to,
+        to: 1,
+        duration: duration * 0.66,
+        onUpdate: (value) => obj.scale.set(value),
+        onTeardown: () => {
+          if(callback) callback(obj)
+        }
+      }
     ),
   ]);
 }
 
 export function down(
-  sprite: Sprite,
-  time: number,
-  stepCount: number,
+  obj: PIXI.DisplayObject,
+  duration: number,
   callback?: AnimationCallback
 ) {
+  const onUpdate = (value: number) => obj.scale.set(value)
   return new entity.EntitySequence([
-    fromTo(sprite, (value) => sprite.scale.set(value), {
+    tween.tweeny({
       from: 1,
       to: 1.2,
-      time: time * 0.65,
-      stepCount,
+      duration: duration * 0.65,
+      onUpdate,
     }),
-    fromTo(
-      sprite,
-      (value) => sprite.scale.set(value),
-      { from: 1.2, to: 0, time: time * 0.35, stepCount },
-      callback
-    ),
+    tween.tweeny({
+      from: 1.2,
+      to: 0,
+      duration: duration * 0.35,
+      onUpdate,
+      onTeardown: () => {
+        if(callback) callback(obj)
+      }
+    }),
   ]);
 }
 
 export function sink(
-  sprite: Sprite,
-  time: number,
-  stepCount: number,
+  obj: PIXI.DisplayObject,
+  duration: number,
   callback?: AnimationCallback
 ) {
   return new entity.ParallelEntity([
-    fromTo(sprite, (value) => sprite.scale.set(value), {
+    tween.tweeny({
       from: 1,
       to: 0.5,
-      time,
-      stepCount,
+      duration,
+      onUpdate: (value) => obj.scale.set(value),
     }),
-    fromTo(
-      sprite,
-      (value) => (sprite.filters = [new PIXI.filters.AlphaFilter(value)]),
-      { from: 1, to: 0, time, stepCount },
-      callback
-    ),
+    tween.tweeny({
+      from: 1,
+      to: 0,
+      duration,
+      onUpdate: (value) => (obj.filters = [new PIXI.filters.AlphaFilter(value)]),
+      onTeardown: () => {
+        if(callback) callback(obj)
+      }
+    }),
   ]);
 }
 
-export function popup(sprite: Sprite, callback?: AnimationCallback) {
-  const time = 100;
-  const stepCount = 6;
+export function popup(obj: PIXI.DisplayObject, callback?: AnimationCallback) {
+  const duration = 100;
   return new entity.EntitySequence([
-    fromTo(sprite, (value) => sprite.scale.set(value), {
+    tween.tweeny({
       to: 1.2,
-      time: time * 0.7,
-      stepCount: stepCount * 0.7,
+      duration: duration * 0.7,
+      onUpdate: (value) => obj.scale.set(value)
     }),
-    fromTo(
-      sprite,
-      (value) => sprite.scale.set(value),
-      { from: 1.3, to: 1, time: time * 0.3, stepCount: stepCount * 0.3 },
-      callback
-    ),
+    tween.tweeny({
+      from: 1.3,
+      to: 1,
+      duration: duration * 0.3,
+      onUpdate: (value) => obj.scale.set(value),
+      onTeardown: () => {
+        if(callback) callback(obj)
+      }
+    }),
   ]);
 }
 
@@ -169,37 +125,32 @@ export function move(
   target: PIXI.Point,
   from: PIXI.Point,
   to: PIXI.Point,
-  time: number,
-  stepCount: number,
+  duration: number,
   callback?: AnimationCallback
 ) {
   return new entity.ParallelEntity([
-    fromTo(target, (value) => (target.y = value), {
+    tween.tweeny({
       from: from.y,
       to: to.y,
-      time,
-      stepCount,
+      duration,
+      onUpdate: (value) => (target.y = value)
     }),
-    // n2 X
-    fromTo(
-      target,
-      (value) => (target.x = value),
-      {
-        from: from.x,
-        to: to.x,
-        time,
-        stepCount,
-      },
-      callback
-    ),
+    tween.tweeny({
+      from: from.x,
+      to: to.x,
+      duration,
+      onUpdate: (value) => (target.x = value),
+      onTeardown: () => {
+        if(callback) callback(target)
+      }
+    }),
   ]);
 }
 
 export function textFadeUp(
   container: PIXI.Container,
   text: PIXI.Text,
-  time: number,
-  stepCount: number,
+  duration: number,
   from = new PIXI.Point(),
   callback?: AnimationCallback
 ) {
@@ -208,8 +159,8 @@ export function textFadeUp(
   text.anchor.set(0.5);
   container.addChild(text);
   return new entity.ParallelEntity([
-    sink(text, time, stepCount),
-    move(text.position, from, to, time, stepCount, () => {
+    sink(text, duration),
+    move(text.position, from, to, duration, () => {
       container.removeChild(text);
       if (callback) callback(text);
     }),
@@ -217,42 +168,39 @@ export function textFadeUp(
 }
 
 export function hearthBeat(
-  sprite: Sprite,
-  time: number,
-  stepCount: number,
+  obj: PIXI.DisplayObject,
+  duration: number,
   scale: number,
   callback?: AnimationCallback
 ) {
-  const updater = (value: number) => sprite.scale.set(value);
+  const onUpdate = (value: number) => obj.scale.set(value);
   return new entity.EntitySequence([
-    fromTo(sprite, updater, {
+    tween.tweeny({
       from: 1,
       to: scale,
-      time: time * 0.25,
-      stepCount: stepCount * 0.25,
+      duration: duration * 0.25,
+      onUpdate,
     }),
-    fromTo(sprite, updater, {
+    tween.tweeny({
       from: scale,
       to: 1,
-      time: time * 0.25,
-      stepCount: stepCount * 0.25,
+      duration: duration * 0.25,
+      onUpdate,
     }),
-    fromTo(sprite, updater, {
+    tween.tweeny({
       from: 1,
       to: scale,
-      time: time * 0.25,
-      stepCount: stepCount * 0.25,
+      duration: duration * 0.25,
+      onUpdate,
     }),
-    fromTo(
-      sprite,
-      updater,
-      {
-        from: scale,
-        to: 1,
-        time: time * 0.25,
-        stepCount: stepCount * 0.25,
-      },
-      callback
-    ),
+    tween.tweeny({
+      from: scale,
+      to: 1,
+      duration: duration * 0.25,
+      onUpdate,
+      onTeardown: () => {
+        if(callback) callback(obj)
+      }
+    }),
   ]);
 }

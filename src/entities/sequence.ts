@@ -313,13 +313,13 @@ export class Sequence extends entity.CompositeEntity {
                   new Promise((resolve) => {
                     this._activateChildEntity(
                       new entity.ParallelEntity([
-                        anim.fromTo(
+                        anim.tweeny(
                           n.position,
                           (value) => (n.position.x = value),
                           {
                             from: n.position.x,
                             to: n.position.x + (all.length / 2) * 25 - i * 25,
-                            time: 500,
+                            duration: 500,
                             stepCount: 20,
                           }
                         ),
