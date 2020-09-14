@@ -122,7 +122,7 @@ export class Nucleotide extends entity.CompositeEntity {
     if (this.infected && !this.isHearthBeatActive) {
       this.isHearthBeatActive = true;
       this._activateChildEntity(
-        anim.hearthBeat(this.sprite, 200, 10, 1.1, () => {
+        anim.hearthBeat(this.sprite, 200, 1.1, () => {
           setTimeout(() => {
             this.isHearthBeatActive = false;
           }, 1500 + Math.random() * 500);
@@ -192,7 +192,7 @@ export class Nucleotide extends entity.CompositeEntity {
   async bubble(time: number) {
     return new Promise((resolve) => {
       this._activateChildEntity(
-        anim.bubble(this.sprite, 1.3, time / 3, 5, resolve)
+        anim.bubble(this.sprite, 1.3, 5, resolve)
       );
     });
   }
