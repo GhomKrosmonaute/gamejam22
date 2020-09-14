@@ -1,7 +1,6 @@
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
-import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as level from "../scenes/level";
@@ -12,7 +11,7 @@ import * as crispUtil from "../crisprUtil";
 
 export abstract class Bonus extends entity.CompositeEntity {
   public name: string = "";
-  public updateDisabled = false;
+  public isUpdateDisabled = false;
 
   get level(): level.Level {
     return this._entityConfig.level;
@@ -20,7 +19,7 @@ export abstract class Bonus extends entity.CompositeEntity {
 
   end() {
     this._transition = entity.makeTransition();
-    this.updateDisabled = false;
+    this.isUpdateDisabled = false;
   }
 
   abort() {
@@ -52,7 +51,7 @@ export class SwapBonus extends Bonus {
       this._once(this.level.grid, "drop", () => {
         if (!this.dragged || !this.hovered) return this.abort();
 
-        this.updateDisabled = true;
+        this.isUpdateDisabled = true;
         this.level.grid.swap(this.dragged, this.hovered, false);
         this._activateChildEntity(
           anim.swap(
@@ -79,7 +78,7 @@ export class SwapBonus extends Bonus {
   }
 
   protected _update() {
-    if (this.updateDisabled) return;
+    if (this.isUpdateDisabled) return;
 
     const mouse: PIXI.Point = this.level.grid.lastPointerPos;
 
@@ -226,7 +225,7 @@ export class BonusesManager extends entity.CompositeEntity {
           this.basePosition[bonus.name]
         );
         this._activateChildEntity(
-          tween.tweeny({
+          anim.tweeny({
             from: 0.7,
             to: 0.5,
             duration: 20,
@@ -241,7 +240,7 @@ export class BonusesManager extends entity.CompositeEntity {
         bonus.level.isGuiLocked = true;
         bonus.level.path.remove();
         this._activateChildEntity(
-          tween.tweeny({
+          anim.tweeny({
             from: 0.5,
             to: 0.7,
             duration: 20,

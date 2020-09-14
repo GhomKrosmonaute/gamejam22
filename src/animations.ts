@@ -5,7 +5,26 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as nucleotide from "./entities/nucleotide";
-import { ensureProgram } from "ts-loader/dist/utils";
+import {Tween} from "booyah/src/tween";
+
+/**
+ * Ghom's light tween method adaptation
+ */
+export function tweeny(
+  options: {
+    from?: number;
+    to?: number;
+    duration?: number;
+    easing?: (t: number) => number;
+    onUpdate?: (value: number) => any;
+    onTeardown?: () => any;
+  }
+) {
+  options.from = options.from ?? 0;
+  options.to = options.to ?? 1;
+
+  return new Tween(options)
+}
 
 export type Sprite =
   | PIXI.AnimatedSprite
@@ -37,14 +56,14 @@ export function bubble(
   callback?: AnimationCallback
 ) {
   return new entity.EntitySequence([
-    tween.tweeny({
+    tweeny({
       from: 1,
       to,
       duration: duration * 0.33,
       easing: easing.easeInOutQuad,
       onUpdate: (value) => obj.scale.set(value),
     }),
-    tween.tweeny({
+    tweeny({
       from: to,
       to: 1,
       duration: duration * 0.66,
@@ -64,13 +83,13 @@ export function down(
 ) {
   const onUpdate = (value: number) => obj.scale.set(value);
   return new entity.EntitySequence([
-    tween.tweeny({
+    tweeny({
       from: 1,
       to: 1.2,
       duration: duration * 0.65,
       onUpdate,
     }),
-    tween.tweeny({
+    tweeny({
       from: 1.2,
       to: 0,
       duration: duration * 0.35,
@@ -88,14 +107,14 @@ export function sink(
   callback?: AnimationCallback
 ) {
   return new entity.ParallelEntity([
-    tween.tweeny({
+    tweeny({
       from: 1,
       to: 0.5,
       duration,
       easing: easing.easeInOutQuad,
       onUpdate: (value) => obj.scale.set(value),
     }),
-    tween.tweeny({
+    tweeny({
       from: 1,
       to: 0,
       duration,
@@ -112,13 +131,13 @@ export function sink(
 export function popup(obj: PIXI.DisplayObject, callback?: AnimationCallback) {
   const duration = 100;
   return new entity.EntitySequence([
-    tween.tweeny({
+    tweeny({
       to: 1.2,
       duration: duration * 0.7,
       easing: easing.easeInOutExpo,
       onUpdate: (value) => obj.scale.set(value),
     }),
-    tween.tweeny({
+    tweeny({
       from: 1.3,
       to: 1,
       duration: duration * 0.3,
@@ -140,14 +159,14 @@ export function move(
   callback?: AnimationCallback
 ) {
   return new entity.ParallelEntity([
-    tween.tweeny({
+    tweeny({
       from: from.y,
       to: to.y,
       duration,
       easing,
       onUpdate: (value) => (target.y = value),
     }),
-    tween.tweeny({
+    tweeny({
       from: from.x,
       to: to.x,
       duration,
@@ -188,25 +207,25 @@ export function hearthBeat(
 ) {
   const onUpdate = (value: number) => obj.scale.set(value);
   return new entity.EntitySequence([
-    tween.tweeny({
+    tweeny({
       from: 1,
       to: scale,
       duration: duration * 0.25,
       onUpdate,
     }),
-    tween.tweeny({
+    tweeny({
       from: scale,
       to: 1,
       duration: duration * 0.25,
       onUpdate,
     }),
-    tween.tweeny({
+    tweeny({
       from: 1,
       to: scale,
       duration: duration * 0.25,
       onUpdate,
     }),
-    tween.tweeny({
+    tweeny({
       from: scale,
       to: 1,
       duration: duration * 0.25,

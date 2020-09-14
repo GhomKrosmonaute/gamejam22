@@ -214,7 +214,7 @@ export class Level extends entity.CompositeEntity {
           if (!this.gauge.filters) this.gauge.filters = [];
           this.gauge.filters.push(filter);
           this._activateChildEntity(
-            tween.tweeny({
+            anim.tweeny({
               from: 0,
               to: 3,
               duration: 1,

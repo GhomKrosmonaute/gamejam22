@@ -2,7 +2,6 @@ import * as _ from "underscore";
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
-import * as tween from "booyah/src/tween";
 import * as util from "booyah/src/util";
 
 import * as game from "../game";
@@ -313,7 +312,7 @@ export class Sequence extends entity.CompositeEntity {
                   new Promise((resolve) => {
                     this._activateChildEntity(
                       new entity.ParallelEntity([
-                        tween.tweeny({
+                        anim.tweeny({
                           from: n.position.x,
                           to: n.position.x + (all.length / 2) * 25 - i * 25,
                           duration: 500,
