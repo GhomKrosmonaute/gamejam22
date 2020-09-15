@@ -53,11 +53,15 @@ body {
 #game-parent {
   position: relative;
 
-  height: 540px; /*! fallback */
-  height: calc((9 / 16) * 100vw);
-  max-height: calc(100vh - 80px);
+  /*height: 540px; !*! fallback *!*/
+  /*height: calc((9 / 16) * 100vw);*/
+  /*max-height: calc(100vh - 80px);*/
 
-  width: 100%;
+  /*width: 100%;*/
+
+  height: calc((16 / 9) * 100vw);
+  max-height: calc(100vh - 50px);
+
   background-color: grey;
 
   user-select: none;
@@ -85,9 +89,11 @@ body {
 #game-parent canvas {
   position: absolute;
 
-  height: 540px; /* fallback */
-  height: calc((9 / 16) * 100vw);
-  max-height: calc(100vh - 80px);
+  /*height: 540px; !* fallback *!*/
+  /*height: calc((9 / 16) * 100vw);*/
+
+  height: calc((16 / 9) * 100vw);
+  max-height: calc(100vh - 50px);
 
   /* Center the element
      Based on https://css-tricks.com/centering-percentage-widthheight-elements/ */
