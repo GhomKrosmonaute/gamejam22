@@ -86,7 +86,7 @@ export class SwapBonus extends Bonus {
       this.dragged.position.y = mouse.y - this.level.grid.y;
 
       const hovered = this.level.grid
-        .getAllHovered()
+        .getAllHovered(0.86)
         .filter((n) => n !== this.dragged)[0];
 
       if (hovered && hovered !== this.hovered) {

@@ -101,7 +101,7 @@ export class Grid extends entity.CompositeEntity {
   _update() {
     if (!this.isPointerDown) return;
 
-    this.lastHovered = this.nucleotides.find(this.checkHovered.bind(this));
+    this.lastHovered = this.getHovered();
     if (this.lastHovered) this.level.path.add(this.lastHovered);
   }
 
@@ -116,18 +116,22 @@ export class Grid extends entity.CompositeEntity {
     this.isPointerDown = true;
     this.updateCursor(e);
 
-    const hovered = this.getHovered();
-    if (!hovered) return;
-
-    this.emit("drag", hovered);
+    let hovered: nucleotide.Nucleotide;
 
     const bonus = this.level.bonusesManager.getSelectedBonus();
-
     if (!bonus) {
+      hovered = this.getHovered();
+      if (!hovered) return;
+
       // update path with hovered
       const updated = this.level.path.startAt(hovered);
       if (updated) this.level.path.emit("updated");
+    } else {
+      hovered = this.getHovered();
+      if (!hovered) return;
     }
+
+    this.emit("drag", hovered);
   }
 
   private _onPointerUp(e: PIXI.InteractionEvent): void {
@@ -218,27 +222,36 @@ export class Grid extends entity.CompositeEntity {
     return new PIXI.Point(x, y);
   }
 
-  getHovered(): nucleotide.Nucleotide | null {
-    return this.nucleotides.find((nucleotide) => this.checkHovered(nucleotide));
+  getHovered(radiusRatio: number = 1): nucleotide.Nucleotide | null {
+    return this.nucleotides
+      .filter((n) => this.checkHovered(n, radiusRatio) !== false)
+      .sort((a, b) => {
+        return (
+          (this.checkHovered(a, radiusRatio) as number) -
+          (this.checkHovered(b, radiusRatio) as number)
+        );
+      })[0];
   }
 
-  getAllHovered(): nucleotide.Nucleotide[] {
-    return this.nucleotides.filter((nucleotide) =>
-      this.checkHovered(nucleotide)
+  getAllHovered(radiusRatio: number = 1): nucleotide.Nucleotide[] {
+    return this.nucleotides.filter(
+      (nucleotide) => this.checkHovered(nucleotide, radiusRatio) !== false
     );
   }
 
-  checkHovered(n: nucleotide.Nucleotide): boolean {
+  checkHovered(
+    n: nucleotide.Nucleotide,
+    radiusRatio: number = 1
+  ): false | number {
     if (!this.cursor) return false;
-    return (
-      crisprUtil.dist(
-        n.position.x + this.x,
-        n.position.y + this.y,
-        this.cursor.x,
-        this.cursor.y
-      ) <
-      n.radius * 0.86
+    const dist = crisprUtil.dist(
+      n.position.x + this.x,
+      n.position.y + this.y,
+      this.cursor.x,
+      this.cursor.y
     );
+    if (dist < n.radius * radiusRatio) return dist;
+    return false;
   }
 
   slide(neighborIndex: NeighborIndex) {
