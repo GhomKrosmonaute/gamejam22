@@ -51,7 +51,8 @@ export class Grid extends entity.CompositeEntity {
     this._on(
       this.container,
       "pointermove",
-      (e: PIXI.InteractionEvent) => (this.lastPointerPos = e.data.global || new PIXI.Point())
+      (e: PIXI.InteractionEvent) =>
+        (this.lastPointerPos = e.data.global || new PIXI.Point())
     );
     this._entityConfig.container.addChild(this.container);
 
@@ -161,8 +162,8 @@ export class Grid extends entity.CompositeEntity {
   }
 
   isOnEvenCol(n: nucleotide.Nucleotide): boolean {
-    const position = this.getGridPositionOf(n)
-    if(!position) return null
+    const position = this.getGridPositionOf(n);
+    if (!position) return null;
     return position.x % 2 === 0;
   }
 
@@ -225,7 +226,7 @@ export class Grid extends entity.CompositeEntity {
   }
 
   checkHovered(n: nucleotide.Nucleotide): boolean {
-    if(!this.lastPointerPos) return false
+    if (!this.lastPointerPos) return false;
     return (
       crisprUtil.dist(
         n.position.x + this.x,

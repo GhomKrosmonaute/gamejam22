@@ -103,6 +103,7 @@ export function sink(
   duration: number,
   callback?: AnimationCallback
 ) {
+  obj.filters = [new PIXI.filters.AlphaFilter(1)];
   return new entity.ParallelEntity([
     tweeny({
       from: 1,
@@ -117,7 +118,7 @@ export function sink(
       duration,
       easing: easing.easeInOutQuad,
       onUpdate: (value) =>
-        (obj.filters = [new PIXI.filters.AlphaFilter(value)]),
+        ((obj.filters[0] as PIXI.filters.AlphaFilter).alpha = value),
       onTeardown: () => {
         if (callback) callback(obj);
       },

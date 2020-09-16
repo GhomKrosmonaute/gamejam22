@@ -315,10 +315,10 @@ export class Sequence extends entity.CompositeEntity {
                         anim.tweeny({
                           from: n.position.x,
                           to: n.position.x + (all.length / 2) * 25 - i * 25,
-                          duration: 500,
+                          duration: 1000,
                           onUpdate: (value) => (n.position.x = value),
                         }),
-                        anim.sink(n.sprite, 500, resolve),
+                        anim.sink(n.sprite, 1000, resolve),
                       ])
                     );
                   })

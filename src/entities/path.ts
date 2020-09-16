@@ -10,12 +10,14 @@ import * as filters from "../filters";
  * Represent the user path to validate sequences
  * Emits:
  * - updated()
+ * - crunchAnimationFinished()
  */
 export class Path extends entity.CompositeEntity {
   public items: nucleotide.Nucleotide[] = [];
   public graphics = new PIXI.Graphics();
   public container = new PIXI.Container();
   public isValidSequence = false;
+  public isCrunchAnimationRunning = false;
 
   protected _setup() {
     this.container.position.copyFrom(this.level.grid);
@@ -198,11 +200,13 @@ export class Path extends entity.CompositeEntity {
     }
   }
 
-  crunch() {
+  crunch(callback?: () => any) {
+    this.isCrunchAnimationRunning = true;
     this.level.isGuiLocked = true;
+    const allCrunched: Promise<void>[] = [];
     this._activateChildEntity(
-      new entity.EntitySequence([
-        ...this.items
+      new entity.EntitySequence(
+        this.items
           .map<any>((item, i) => {
             const score = item.infected ? (i + 1) * 2 : i + 1;
             const fill = item.infected ? item.fullColorName : "#ffeccc";
@@ -210,14 +214,19 @@ export class Path extends entity.CompositeEntity {
             const duration = item.infected ? 1000 : 500;
             return [
               new entity.FunctionCallEntity(() => {
-                this._activateChildEntity(
-                  anim.down(
-                    item.sprite,
-                    duration,
-                    function () {
-                      this.state = "missing";
-                    }.bind(item)
-                  )
+                allCrunched.push(
+                  new Promise((resolve) => {
+                    this._activateChildEntity(
+                      anim.down(
+                        item.sprite,
+                        duration,
+                        function () {
+                          this.state = "missing";
+                          this.once("stateChanged", resolve);
+                        }.bind(item)
+                      )
+                    );
+                  })
                 );
                 this._activateChildEntity(
                   anim.textFadeUp(
@@ -240,11 +249,18 @@ export class Path extends entity.CompositeEntity {
               new entity.WaitingEntity(50),
             ];
           })
-          .flat(),
-        new entity.FunctionCallEntity(() => {
-          this.level.isGuiLocked = false;
-        }),
-      ])
+          .flat()
+          .concat([
+            new entity.FunctionCallEntity(() => {
+              Promise.all(allCrunched).then(() => {
+                this.level.isGuiLocked = false;
+                this.isCrunchAnimationRunning = false;
+                this.emit("crunchAnimationFinished");
+                if (callback) callback();
+              });
+            }),
+          ])
+      )
     );
     this.remove();
   }

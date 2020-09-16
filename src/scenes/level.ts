@@ -24,6 +24,8 @@ const hairCount = 40;
 const hairMinScale = 0.3;
 const hairMaxScale = 0.45;
 
+const DEBUG = true;
+
 /**
  * emit:
  * - maxScoreReached()
@@ -56,7 +58,6 @@ export class Level extends entity.CompositeEntity {
   private bonusBackground: PIXI.Sprite;
   private gaugeBarBaseWidth: number;
   private gaugeTriggered = false;
-
   private score = 0;
   private maxScore = 1000;
 
@@ -508,20 +509,28 @@ export class Level extends entity.CompositeEntity {
     this.state = "regenerate";
     this._refresh();
 
-    const newNucleotides = this.grid.fillHoles();
+    const regen = () => {
+      const newNucleotides = this.grid.fillHoles();
 
-    // Wait for a second, then continue
-    this._activateChildEntity(
-      new entity.EntitySequence([
-        new entity.WaitingEntity(1000),
-        new entity.FunctionCallEntity(() => {
-          this.state = "crunch";
+      // Wait for a second, then continue
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          new entity.WaitingEntity(1000),
+          new entity.FunctionCallEntity(() => {
+            this.state = "crunch";
 
-          this._endTurn();
-          this._refresh();
-        }),
-      ])
-    );
+            this._endTurn();
+            this._refresh();
+          }),
+        ])
+      );
+    };
+
+    if (this.path.isCrunchAnimationRunning) {
+      this._once(this.path, "crunchAnimationFinished", () => regen());
+    } else {
+      regen();
+    }
   }
 
   private _onInfection(infectionCount = 1): void {

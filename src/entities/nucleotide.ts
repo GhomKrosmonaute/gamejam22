@@ -36,7 +36,12 @@ export const fullColorNames: { [k in ColorName]: string } = {
   y: "yellow",
 };
 
-/** Represent a nucleotide */
+/**
+ * Represent a nucleotide
+ *
+ * Emits:
+ * - stateChanged( NucleotideState )
+ */
 export class Nucleotide extends entity.CompositeEntity {
   public _container: PIXI.Container;
   public type: NucleotideType = "normal";
@@ -225,9 +230,13 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._state;
   }
   set state(newState: NucleotideState) {
-    if (newState === this._state) return;
+    if (newState === this._state) {
+      this.emit("stateChanged", newState);
+      return;
+    }
 
     if (newState === "missing") {
+      this._state = newState;
       delete this.shakeAmounts.infection;
 
       // Remove previous graphics
@@ -245,9 +254,13 @@ export class Nucleotide extends entity.CompositeEntity {
       this.holeSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources["images/hole.png"].texture
       );
-      this.holeSprite.anchor.set(0.5, 0.5);
+      this.holeSprite.anchor.set(0.5);
 
-      this._activateChildEntity(anim.popup(this.holeSprite));
+      this._activateChildEntity(
+        anim.popup(this.holeSprite, () => {
+          this.emit("stateChanged", newState);
+        })
+      );
 
       this._container.addChild(this.holeSprite);
     } else if (newState === "infected") {
@@ -305,6 +318,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
             this._container.removeChild(this.nucleotideAnimation);
             this.nucleotideAnimation = null;
+            this.emit("stateChanged", newState);
           }),
         ])
       );
@@ -312,6 +326,8 @@ export class Nucleotide extends entity.CompositeEntity {
       // Freeze animation and grey it out
       this.nucleotideAnimation.stop();
       this.nucleotideAnimation.tint = 0x333333;
+
+      this.emit("stateChanged", newState);
     } else if (this._state === "missing") {
       // Remove hole sprite
       this._container.removeChild(this.holeSprite);
@@ -322,6 +338,8 @@ export class Nucleotide extends entity.CompositeEntity {
       this._container.addChildAt(this.nucleotideAnimation, 0);
       this._refreshScale();
 
+      this.emit("stateChanged", newState);
+
       // Trigger "generation" animation
       const radiusTween = new tween.Tween({
         obj: this,
@@ -329,6 +347,9 @@ export class Nucleotide extends entity.CompositeEntity {
         from: 0,
         to: this.fullRadius,
         easing: easing.easeOutBounce,
+        onTeardown: () => {
+          this.emit("stateChanged", newState);
+        },
       });
       this._activateChildEntity(radiusTween);
     } else if (this._state === "infected") {
@@ -342,6 +363,8 @@ export class Nucleotide extends entity.CompositeEntity {
       this.nucleotideAnimation = this._createAnimatedSprite();
       this._container.addChildAt(this.nucleotideAnimation, 0);
       this._refreshScale();
+
+      this.emit("stateChanged", newState);
     }
 
     this._state = newState;
