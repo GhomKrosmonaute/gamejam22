@@ -45,7 +45,6 @@ export class SwapBonus extends Bonus {
   protected _setup() {
     this._once(this.level.grid, "drag", (n1: nucleotide.Nucleotide) => {
       this.dragged = n1;
-      this.dragged.pathArrow.visible = false;
       this.basePosition.copyFrom(n1.position);
 
       this._once(this.level.grid, "drop", () => {

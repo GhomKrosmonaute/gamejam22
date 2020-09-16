@@ -4,7 +4,6 @@ import * as entity from "booyah/src/entity";
 import * as nucleotide from "./nucleotide";
 import * as level from "../scenes/level";
 import * as anim from "../animations";
-import * as filters from "../filters";
 
 /**
  * Represent the user path to validate sequences
@@ -14,15 +13,15 @@ import * as filters from "../filters";
  */
 export class Path extends entity.CompositeEntity {
   public items: nucleotide.Nucleotide[] = [];
-  public graphics = new PIXI.Graphics();
-  public container = new PIXI.Container();
+  //public graphics = new PIXI.Graphics();
+  //public container = new PIXI.Container();
   public isValidSequence = false;
   public isCrunchAnimationRunning = false;
 
   protected _setup() {
-    this.container.position.copyFrom(this.level.grid);
-    this.container.addChild(this.graphics);
-    this.container.filters = [new filters.GlowFilter({ distance: 20 })];
+    //this.container.position.copyFrom(this.level.grid);
+    //this.container.addChild(this.graphics);
+    //this.container.filters = [new filters.GlowFilter({ distance: 20 })];
 
     // place the path below the grid
     // this._entityConfig.container.addChildAt(
@@ -33,7 +32,7 @@ export class Path extends entity.CompositeEntity {
     // );
 
     // place the path above the grid
-    this._entityConfig.container.addChild(this.container);
+    //this._entityConfig.container.addChild(this.container);
 
     this._on(this, "updated", () => {
       this.refresh();
@@ -41,7 +40,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   protected _teardown() {
-    (this._entityConfig.container as PIXI.Container).removeChild(this.graphics);
+    //(this._entityConfig.container as PIXI.Container).removeChild(this.graphics);
   }
 
   get level(): level.Level {
@@ -49,7 +48,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   get signature(): string {
-    return this.nucleotides.map((n) => n.toString()).join("");
+    return this.nucleotides.join("");
   }
 
   /** The real length without cuts */
@@ -89,8 +88,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
-    if (n.state === "missing" || this._entityConfig.level.isGuiLocked)
-      return false;
+    if (n.state === "missing" || this.level.isGuiLocked) return false;
 
     // check the cancellation & cancel to previous nucleotide
     const index = this.items.indexOf(n);
@@ -111,7 +109,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   add(n: nucleotide.Nucleotide): boolean {
-    if (this._entityConfig.level.isGuiLocked) return false;
+    if (this.level.isGuiLocked) return false;
 
     // not add scissors on first position
     if (this.first && this.first.type === "scissors") {
@@ -144,8 +142,8 @@ export class Path extends entity.CompositeEntity {
   }
 
   refresh() {
-    this.graphics.clear();
-    this.graphics.removeChildren();
+    // this.graphics.clear();
+    // this.graphics.removeChildren();
     let last: nucleotide.Nucleotide = null;
 
     // for each nucleotide in path
@@ -180,21 +178,21 @@ export class Path extends entity.CompositeEntity {
           this.level.grid.pointTo(n, -1);
         }
 
-        this.graphics
-          .beginFill(0x000000)
-          .drawEllipse(
-            n.position.x,
-            n.position.y,
-            n.width * 0.19,
-            n.height * 0.19
-          );
+        // this.graphics
+        //   .beginFill(0x000000)
+        //   .drawEllipse(
+        //     n.position.x,
+        //     n.position.y,
+        //     n.width * 0.19,
+        //     n.height * 0.19
+        //   );
 
         last = n;
       } else {
         delete n.shakeAmounts.path;
         n.sprite.scale.set(1);
         // n.pathBorders.forEach((sprite) => (sprite.visible = false));
-        n.pathArrow.visible = false;
+        //n.pathArrow.visible = false;
       }
     }
   }

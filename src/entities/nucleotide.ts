@@ -52,7 +52,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public isHearthBeatActive = false;
   public shakeAmounts: { [k: string]: number };
   //public pathBorders: PIXI.Sprite[] = [];
-  public pathArrow: PIXI.TilingSprite;
+  //public pathArrow: PIXI.TilingSprite;
 
   private _state: NucleotideState;
   private _isHighlighted: boolean;
@@ -91,15 +91,15 @@ export class Nucleotide extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this._container);
 
-    this.pathArrow = new PIXI.TilingSprite(
-      this._entityConfig.app.loader.resources["images/path_arrow.jpg"].texture,
-      94,
-      300
-    );
-    this.pathArrow.visible = false;
-    this.pathArrow.scale.set(0.43);
-    this.pathArrow.anchor.set(0.5, 1);
-    this.pathArrow.position.copyFrom(this.position);
+    // this.pathArrow = new PIXI.TilingSprite(
+    //   this._entityConfig.app.loader.resources["images/path_arrow.jpg"].texture,
+    //   94,
+    //   300
+    // );
+    // this.pathArrow.visible = false;
+    // this.pathArrow.scale.set(0.43);
+    // this.pathArrow.anchor.set(0.5, 1);
+    // this.pathArrow.position.copyFrom(this.position);
 
     // crisprUtil.NeighborIndexes.forEach((i) => {
     //   const pathBorder = new PIXI.Sprite(
@@ -118,12 +118,12 @@ export class Nucleotide extends entity.CompositeEntity {
 
   _update(frameInfo: entity.FrameInfo) {
     this._container.position.copyFrom(this.position);
-    this.pathArrow.position.copyFrom(this.position);
-
-    // move floor arrow
-    if (this.pathArrow.visible) {
-      this.pathArrow.tilePosition.y -= 3;
-    }
+    // this.pathArrow.position.copyFrom(this.position);
+    //
+    // // move floor arrow
+    // if (this.pathArrow.visible) {
+    //   this.pathArrow.tilePosition.y -= 3;
+    // }
 
     // infected hearth beat animation
     if (this.infected && !this.isHearthBeatActive) {
@@ -173,9 +173,11 @@ export class Nucleotide extends entity.CompositeEntity {
     if (!this.nucleotideAnimation) return;
 
     if (isHighlighted && !this._isHighlighted) {
-      this.nucleotideAnimation.filters = [glow];
+      //this.nucleotideAnimation.filters = [glow];
+      this.sprite.scale.set(1.2);
     } else if (!isHighlighted && this._isHighlighted) {
-      this.nucleotideAnimation.filters = [];
+      //this.nucleotideAnimation.filters = [];
+      this.sprite.scale.set(1);
     }
 
     this._isHighlighted = isHighlighted;
