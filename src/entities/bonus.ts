@@ -79,7 +79,7 @@ export class SwapBonus extends Bonus {
   protected _update() {
     if (this.isUpdateDisabled) return;
 
-    const mouse: PIXI.Point = this.level.grid.lastPointerPos;
+    const mouse: PIXI.Point = this.level.grid.cursor;
 
     if (this.dragged) {
       this.dragged.position.x = mouse.x - this.level.grid.x;

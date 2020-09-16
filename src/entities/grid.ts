@@ -29,7 +29,7 @@ export class Grid extends entity.CompositeEntity {
   public x = game.width * 0.09;
   public y = game.height * 0.4;
   public isPointerDown = false;
-  public lastPointerPos: PIXI.Point;
+  public cursor = new PIXI.Point();
   public lastHovered: nucleotide.Nucleotide | null;
 
   constructor(
@@ -51,12 +51,7 @@ export class Grid extends entity.CompositeEntity {
     // Keep track of last pointer position
     this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointerup", this._onPointerUp);
-    this._on(
-      this.container,
-      "pointermove",
-      (e: PIXI.InteractionEvent) =>
-        (this.lastPointerPos = e.data.global || new PIXI.Point())
-    );
+    this._on(this.container, "pointermove", this._onPointerMove);
     this._entityConfig.container.addChild(this.container);
 
     // Add background to get pointer events
@@ -117,8 +112,9 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides = [];
   }
 
-  private _onPointerDown() {
+  private _onPointerDown(e: PIXI.InteractionEvent) {
     this.isPointerDown = true;
+    this.updateCursor(e);
 
     const hovered = this.getHovered();
     if (!hovered) return;
@@ -134,11 +130,20 @@ export class Grid extends entity.CompositeEntity {
     }
   }
 
-  private _onPointerUp(): void {
+  private _onPointerUp(e: PIXI.InteractionEvent): void {
     this.isPointerDown = false;
+    this.updateCursor(e);
 
     this.emit("pointerup");
     this.emit("drop");
+  }
+
+  private _onPointerMove(e: PIXI.InteractionEvent): void {
+    this.updateCursor(e);
+  }
+
+  private updateCursor(e: PIXI.InteractionEvent) {
+    this.cursor.copyFrom(e.data.global);
   }
 
   get nucleotides(): nucleotide.Nucleotide[] {
@@ -224,13 +229,13 @@ export class Grid extends entity.CompositeEntity {
   }
 
   checkHovered(n: nucleotide.Nucleotide): boolean {
-    if (!this.lastPointerPos) return false;
+    if (!this.cursor) return false;
     return (
       crisprUtil.dist(
         n.position.x + this.x,
         n.position.y + this.y,
-        this.lastPointerPos.x,
-        this.lastPointerPos.y
+        this.cursor.x,
+        this.cursor.y
       ) <
       n.radius * 0.86
     );
