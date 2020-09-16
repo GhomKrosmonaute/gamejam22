@@ -120,7 +120,7 @@ export class Grid extends entity.CompositeEntity {
   private _onPointerDown() {
     this.isPointerDown = true;
 
-    const hovered = this.lastHovered;
+    const hovered = this.getHovered();
     if (!hovered) return;
 
     this.emit("drag", hovered);

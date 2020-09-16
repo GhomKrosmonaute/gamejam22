@@ -103,7 +103,7 @@ export class Path extends entity.CompositeEntity {
       if (this.add(n)) return true;
 
       // Otherwise, start path anew
-      this.items = [n];
+      this.items = this.items.length > 0 ? [] : [n];
     }
     return true;
   }
