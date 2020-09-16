@@ -63,6 +63,10 @@ export class Level extends entity.CompositeEntity {
     super();
   }
 
+  get cursor(): PIXI.Point {
+    return this.grid.cursor;
+  }
+
   _setup() {
     this._entityConfig.level = this;
 

@@ -287,6 +287,7 @@ export class Sequence extends entity.CompositeEntity {
       new entity.EntitySequence(
         this.nucleotides
           .map<any>((n, i, all) => {
+            delete n.shakeAmounts.highlight;
             const score = i + 1;
             return [
               new entity.FunctionCallEntity(() => {
@@ -389,7 +390,7 @@ export class Sequence extends entity.CompositeEntity {
       return util.subarray(
         this.nucleotides,
         sequenceSignature.length - 1 - index,
-        -signature.length
+        signature.length * -1
       );
     }
 

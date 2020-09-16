@@ -174,10 +174,10 @@ export class Nucleotide extends entity.CompositeEntity {
 
     if (isHighlighted && !this._isHighlighted) {
       //this.nucleotideAnimation.filters = [glow];
-      this.sprite.scale.set(1.2);
+      this.shakeAmounts.highlight = 7;
     } else if (!isHighlighted && this._isHighlighted) {
       //this.nucleotideAnimation.filters = [];
-      this.sprite.scale.set(1);
+      delete this.shakeAmounts.highlight;
     }
 
     this._isHighlighted = isHighlighted;
