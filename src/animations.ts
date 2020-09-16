@@ -208,25 +208,29 @@ export function hearthBeat(
     tweeny({
       from: 1,
       to: scale,
-      duration: duration * 0.25,
+      duration: duration * 0.2,
+      easing: easing.easeInOutQuart,
       onUpdate,
     }),
     tweeny({
       from: scale,
       to: 1,
-      duration: duration * 0.25,
+      duration: duration * 0.3,
+      easing: easing.easeInOutQuart,
       onUpdate,
     }),
     tweeny({
       from: 1,
       to: scale,
-      duration: duration * 0.25,
+      duration: duration * 0.2,
+      easing: easing.easeInOutQuart,
       onUpdate,
     }),
     tweeny({
       from: scale,
       to: 1,
-      duration: duration * 0.25,
+      duration: duration * 0.3,
+      easing: easing.easeInOutQuart,
       onUpdate,
       onTeardown: () => {
         if (callback) callback(obj);

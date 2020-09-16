@@ -25,8 +25,6 @@ export class SequenceManager extends entity.CompositeEntity {
     this._entityConfig.container.addChild(this.container);
   }
 
-  _update() {}
-
   _teardown() {
     this.sequences = [];
     this._entityConfig.container.removeChild(this.container);

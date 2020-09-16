@@ -107,8 +107,6 @@ export class Path extends entity.CompositeEntity {
       // Otherwise, start path anew
       this.items = [n];
     }
-
-    this.emit("updated");
     return true;
   }
 
@@ -149,6 +147,7 @@ export class Path extends entity.CompositeEntity {
     this.graphics.clear();
     this.graphics.removeChildren();
     let last: nucleotide.Nucleotide = null;
+
     // for each nucleotide in path
     for (const n of this.level.grid.nucleotides.sort((a, b) => {
       return this.items.indexOf(a) - this.items.indexOf(b);

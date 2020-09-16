@@ -4,6 +4,7 @@ import * as entity from "booyah/src/entity";
 import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
 import * as nucleotide from "./nucleotide";
+import * as level from "../scenes/level";
 
 /** from 0 to 5, start on top */
 export type NeighborIndex = 0 | 1 | 2 | 3 | 4 | 5;
@@ -29,7 +30,10 @@ export class Grid extends entity.CompositeEntity {
   public y = game.height * 0.4;
 
   private _isPointerDown: boolean;
+  private _needToDetectHovered = true;
+
   public lastPointerPos: PIXI.Point;
+  public lastHovered: nucleotide.Nucleotide | null;
 
   constructor(
     public colCount: number,
@@ -38,6 +42,10 @@ export class Grid extends entity.CompositeEntity {
     public nucleotideRadius: number
   ) {
     super();
+  }
+
+  get level(): level.Level {
+    return this._entityConfig.level;
   }
 
   _setup() {
@@ -103,13 +111,14 @@ export class Grid extends entity.CompositeEntity {
   _update() {
     if (!this._isPointerDown) return;
 
-    const hovered: nucleotide.Nucleotide = this.nucleotides.find((n) =>
-      this.checkHovered(n)
-    );
-    if (!hovered) return;
-
-    // update path with hovered
-    this._entityConfig.level.path.add(hovered);
+    if (this._needToDetectHovered) {
+      this._needToDetectHovered = false;
+      this.lastHovered = this.nucleotides.find(this.checkHovered.bind(this));
+      if (this.lastHovered) this.level.path.add(this.lastHovered);
+      setTimeout(() => {
+        this._needToDetectHovered = true;
+      }, 50);
+    }
   }
 
   _teardown() {
@@ -127,13 +136,13 @@ export class Grid extends entity.CompositeEntity {
 
     this.emit("drag", hovered);
 
-    const focused = this._entityConfig.level.bonusesManager.focused;
+    const focused = this.level.bonusesManager.getSelectedBonus();
 
-    if (!focused)
+    if (!focused) {
       // update path with hovered
-      this._entityConfig.level.path.startAt(hovered);
-    // use bonus
-    else focused.use(hovered);
+      const updated = this.level.path.startAt(hovered);
+      if (updated) this.level.path.emit("updated");
+    }
   }
 
   private _onPointerUp(): void {
@@ -149,7 +158,7 @@ export class Grid extends entity.CompositeEntity {
 
   /** Does nothing in "long" mode **/
   addScissors(among: nucleotide.Nucleotide[]) {
-    if (this._entityConfig.level.levelVariant === "long") return;
+    if (this.level.levelVariant === "long") return;
 
     const safe = this.nucleotides;
     while (safe.filter((n) => n.type === "scissors").length < this.cutCount) {

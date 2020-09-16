@@ -24,8 +24,6 @@ const hairCount = 40;
 const hairMinScale = 0.3;
 const hairMaxScale = 0.45;
 
-const DEBUG = true;
-
 /**
  * emit:
  * - maxScoreReached()

@@ -10,9 +10,11 @@ import * as anim from "../animations";
 import * as level from "../scenes/level";
 import * as filter from "../filters";
 
-export type NucleotideState = "missing" | "present" | "infected" | "inactive";
+const glow = new filter.GlowFilter();
 
+export type NucleotideState = "missing" | "present" | "infected" | "inactive";
 export type NucleotideType = "scissors" | "bonus" | "normal";
+
 export const nucleotideTypes: NucleotideType[] = [
   "scissors",
   "bonus",
@@ -49,7 +51,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public isHovered = false;
   public isHearthBeatActive = false;
   public shakeAmounts: { [k: string]: number };
-  public pathBorders: PIXI.Sprite[] = [];
+  //public pathBorders: PIXI.Sprite[] = [];
   public pathArrow: PIXI.TilingSprite;
 
   private _state: NucleotideState;
@@ -127,24 +129,21 @@ export class Nucleotide extends entity.CompositeEntity {
     if (this.infected && !this.isHearthBeatActive) {
       this.isHearthBeatActive = true;
       this._activateChildEntity(
-        anim.hearthBeat(this.sprite, 200, 1.1, () => {
+        anim.hearthBeat(this.sprite, 400, 1.1, () => {
           setTimeout(() => {
             this.isHearthBeatActive = false;
           }, 1500 + Math.random() * 500);
         })
       );
     }
-    const shakes = Object.values(this.shakeAmounts).sort((a, b) => {
-      return a - b;
-    });
 
     // shakes animation
-    if (shakes.length > 0 && Math.max(...shakes) > 0) {
-      for (const shake of shakes) {
-        const angle = Math.random() * 2 * Math.PI;
-        this._container.position.x = this.position.x + shake * Math.cos(angle);
-        this._container.position.y = this.position.y + shake * Math.sin(angle);
-      }
+    const shakes = Object.values(this.shakeAmounts);
+    const shake = Math.max(...shakes);
+    if (shakes.length > 0 && shake) {
+      const angle = Math.random() * 2 * Math.PI;
+      this._container.position.x = this.position.x + shake * Math.cos(angle);
+      this._container.position.y = this.position.y + shake * Math.sin(angle);
     } else {
       // floating animation
       for (const vector in this.floating) {
@@ -174,7 +173,7 @@ export class Nucleotide extends entity.CompositeEntity {
     if (!this.nucleotideAnimation) return;
 
     if (isHighlighted && !this._isHighlighted) {
-      this.nucleotideAnimation.filters = [new filter.GlowFilter()];
+      this.nucleotideAnimation.filters = [glow];
     } else if (!isHighlighted && this._isHighlighted) {
       this.nucleotideAnimation.filters = [];
     }
