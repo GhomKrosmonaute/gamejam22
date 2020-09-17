@@ -8,9 +8,6 @@ import * as easing from "booyah/src/easing";
 
 import * as anim from "../animations";
 import * as level from "../scenes/level";
-import * as filter from "../filters";
-
-//const glow = new filter.GlowFilter();
 
 export type NucleotideState = "missing" | "present" | "infected" | "inactive";
 export type NucleotideType = "scissors" | "bonus" | "normal";
@@ -177,8 +174,6 @@ export class Nucleotide extends entity.CompositeEntity {
     if (!this._spriteEntity) return;
 
     if (isHighlighted && !this._isHighlighted) {
-      //this.nucleotideAnimation.filters = [glow];
-
       this.shakeAmounts.highlight = 2;
 
       this._highlightSprite = new PIXI.Sprite(
@@ -190,8 +185,6 @@ export class Nucleotide extends entity.CompositeEntity {
       this._highlightSprite.scale.set(1.3);
       this._container.addChildAt(this._highlightSprite, 0);
     } else if (!isHighlighted && this._isHighlighted) {
-      //this.nucleotideAnimation.filters = [];
-
       delete this.shakeAmounts.highlight;
 
       this._container.removeChild(this._highlightSprite);
@@ -453,12 +446,13 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   toString(): string {
-    if (this._state === "inactive") {
-      return "i";
-    } else if (this._state === "missing") {
-      return "m";
-    } else {
-      return this.colorName;
+    switch (this._state) {
+      case "inactive":
+        return "i";
+      case "missing":
+        return "m";
+      default:
+        return this.colorName;
     }
   }
 
