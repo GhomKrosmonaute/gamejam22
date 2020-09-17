@@ -14,12 +14,12 @@ import * as anim from "../animations";
 export class Path extends entity.CompositeEntity {
   public items: nucleotide.Nucleotide[] = [];
   //public graphics = new PIXI.Graphics();
-  //public container = new PIXI.Container();
+  public container = new PIXI.Container();
   public isValidSequence = false;
   public isCrunchAnimationRunning = false;
 
   protected _setup() {
-    //this.container.position.copyFrom(this.level.grid);
+    this.container.position.copyFrom(this.level.grid);
     //this.container.addChild(this.graphics);
     //this.container.filters = [new filters.GlowFilter({ distance: 20 })];
 
@@ -32,7 +32,7 @@ export class Path extends entity.CompositeEntity {
     // );
 
     // place the path above the grid
-    //this._entityConfig.container.addChild(this.container);
+    this._entityConfig.container.addChild(this.container);
 
     this._on(this, "updated", () => {
       this.refresh();
@@ -40,7 +40,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   protected _teardown() {
-    //(this._entityConfig.container as PIXI.Container).removeChild(this.graphics);
+    this._entityConfig.container.removeChild(this.container);
   }
 
   get level(): level.Level {
@@ -169,16 +169,16 @@ export class Path extends entity.CompositeEntity {
         //   }
         // });
 
-        // if (last) {
-        //   this.level.grid.pointTo(
-        //     last,
-        //     this.level.grid.getNeighborIndex(last, n)
-        //   );
-        // }
-        //
-        // if (this.last === n) {
-        //   this.level.grid.pointTo(n, -1);
-        // }
+        if (last) {
+          this.level.grid.pointTo(
+            last,
+            this.level.grid.getNeighborIndex(last, n)
+          );
+        }
+
+        if (this.last === n) {
+          this.level.grid.pointTo(n, -1);
+        }
 
         // this.graphics
         //   .beginFill(0x000000)
@@ -189,13 +189,13 @@ export class Path extends entity.CompositeEntity {
         //     n.height * 0.19
         //   );
 
-        //last = n;
+        last = n;
       } else {
         n.isHighlighted = false;
         // delete n.shakeAmounts.path;
         // n.sprite.scale.set(1);
         // n.pathBorders.forEach((sprite) => (sprite.visible = false));
-        //n.pathArrow.visible = false;
+        n.pathArrow.visible = false;
       }
     }
   }

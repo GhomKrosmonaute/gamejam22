@@ -269,14 +269,14 @@ export class Grid extends entity.CompositeEntity {
   }
 
   pointTo(n: nucleotide.Nucleotide, index: NeighborIndex | -1) {
-    // if (index !== -1) {
-    //   n.pathArrow.angle = index * (360 / 6);
-    //   n.pathArrow.visible = true;
-    //   n.level.path.container.addChildAt(n.pathArrow, 0);
-    // } else {
-    //   n.pathArrow.visible = false;
-    //   n.level.path.container.removeChild(n.pathArrow);
-    // }
+    if (index !== -1) {
+      n.pathArrow.angle = index * (360 / 6);
+      n.pathArrow.visible = true;
+      n.level.path.container.addChildAt(n.pathArrow, 0);
+    } else {
+      n.pathArrow.visible = false;
+      n.level.path.container.removeChild(n.pathArrow);
+    }
   }
 
   fillHoles(): nucleotide.Nucleotide[] {
