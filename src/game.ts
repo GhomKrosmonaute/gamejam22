@@ -115,6 +115,7 @@ const graphicalAssets = [
   "images/path_border_4.png",
   "images/path_border_5.png",
   "images/path_arrow.jpg",
+  "images/nucleotide_glow.png",
 
   // animated sprites
   "images/nucleotide_red.json",

@@ -151,8 +151,10 @@ export class Path extends entity.CompositeEntity {
       return this.items.indexOf(a) - this.items.indexOf(b);
     })) {
       if (this.items.includes(n)) {
-        n.sprite.scale.set(1.1);
-        n.shakeAmounts.path = 3;
+        n.isHighlighted = true;
+
+        // n.sprite.scale.set(1.1);
+        // n.shakeAmounts.path = 3;
 
         // const neighbors = this.level.grid.getNeighbors(n);
         // neighbors.forEach((nn, i) => {
@@ -167,16 +169,16 @@ export class Path extends entity.CompositeEntity {
         //   }
         // });
 
-        if (last) {
-          this.level.grid.pointTo(
-            last,
-            this.level.grid.getNeighborIndex(last, n)
-          );
-        }
-
-        if (this.last === n) {
-          this.level.grid.pointTo(n, -1);
-        }
+        // if (last) {
+        //   this.level.grid.pointTo(
+        //     last,
+        //     this.level.grid.getNeighborIndex(last, n)
+        //   );
+        // }
+        //
+        // if (this.last === n) {
+        //   this.level.grid.pointTo(n, -1);
+        // }
 
         // this.graphics
         //   .beginFill(0x000000)
@@ -187,10 +189,11 @@ export class Path extends entity.CompositeEntity {
         //     n.height * 0.19
         //   );
 
-        last = n;
+        //last = n;
       } else {
-        delete n.shakeAmounts.path;
-        n.sprite.scale.set(1);
+        n.isHighlighted = false;
+        // delete n.shakeAmounts.path;
+        // n.sprite.scale.set(1);
         // n.pathBorders.forEach((sprite) => (sprite.visible = false));
         //n.pathArrow.visible = false;
       }

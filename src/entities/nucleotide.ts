@@ -60,6 +60,7 @@ export class Nucleotide extends entity.CompositeEntity {
     | entity.AnimatedSpriteEntity
     | entity.SpriteEntity = null;
   private _infectionSpriteEntity: entity.SpriteEntity = null;
+  private _highlightSprite: PIXI.Sprite = null;
   private _radius: number;
 
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
@@ -176,10 +177,24 @@ export class Nucleotide extends entity.CompositeEntity {
 
     if (isHighlighted && !this._isHighlighted) {
       //this.nucleotideAnimation.filters = [glow];
-      this.shakeAmounts.highlight = 7;
+
+      this.shakeAmounts.highlight = 2;
+
+      this._highlightSprite = new PIXI.Sprite(
+        this._entityConfig.app.loader.resources[
+          "images/nucleotide_glow.png"
+        ].texture
+      );
+      this._highlightSprite.anchor.set(0.5);
+      this._highlightSprite.scale.set(1.3);
+      this._container.addChildAt(this._highlightSprite, 0);
     } else if (!isHighlighted && this._isHighlighted) {
       //this.nucleotideAnimation.filters = [];
+
       delete this.shakeAmounts.highlight;
+
+      this._container.removeChild(this._highlightSprite);
+      this._highlightSprite = null;
     }
 
     this._isHighlighted = isHighlighted;
