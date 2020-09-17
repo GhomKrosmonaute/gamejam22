@@ -10,7 +10,7 @@ import * as anim from "../animations";
 import * as level from "../scenes/level";
 import * as filter from "../filters";
 
-const glow = new filter.GlowFilter();
+//const glow = new filter.GlowFilter();
 
 export type NucleotideState = "missing" | "present" | "infected" | "inactive";
 export type NucleotideType = "scissors" | "bonus" | "normal";
@@ -56,10 +56,10 @@ export class Nucleotide extends entity.CompositeEntity {
 
   private _state: NucleotideState;
   private _isHighlighted: boolean;
-  private nucleotideAnimation: PIXI.AnimatedSprite = null;
-  private holeSprite: PIXI.Sprite = null;
-  private infectionSprite: PIXI.Sprite = null;
+  private _spriteEntity: entity.AnimatedSpriteEntity | entity.SpriteEntity = null;
+  private _infectionSpriteEntity: entity.SpriteEntity = null
   private _radius: number;
+
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
   private floatingShift = new PIXI.Point();
   private floatingSpeed = new PIXI.Point();
@@ -170,7 +170,7 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._isHighlighted;
   }
   set isHighlighted(isHighlighted: boolean) {
-    if (!this.nucleotideAnimation) return;
+    if (!this._spriteEntity) return;
 
     if (isHighlighted && !this._isHighlighted) {
       //this.nucleotideAnimation.filters = [glow];
@@ -192,7 +192,11 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   get sprite(): PIXI.Sprite | PIXI.AnimatedSprite {
-    return this.holeSprite || this.infectionSprite || this.nucleotideAnimation;
+    return this._spriteEntity.sprite;
+  }
+
+  get infectionSprite(): PIXI.Sprite {
+    return this._infectionSpriteEntity.sprite;
   }
 
   async bubble(duration: number) {
@@ -240,33 +244,29 @@ export class Nucleotide extends entity.CompositeEntity {
       this._state = newState;
       delete this.shakeAmounts.infection;
 
-      // Remove previous graphics
-      if (this.nucleotideAnimation) {
-        this._container.removeChild(this.nucleotideAnimation);
-        this.nucleotideAnimation = null;
-      }
-      if (this.infectionSprite) {
-        this._container.removeChild(this.infectionSprite);
-        this.infectionSprite = null;
-      }
+      if(this._spriteEntity)
+        this._deactivateChildEntity(this._spriteEntity);
 
       this.colorName = null;
 
-      this.holeSprite = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources["images/hole.png"].texture
+      this._spriteEntity = new entity.SpriteEntity(
+        new PIXI.Sprite(
+          this._entityConfig.app.loader.resources["images/hole.png"].texture
+        )
       );
-      this.holeSprite.anchor.set(0.5);
+      this.sprite.anchor.set(0.5);
 
+      this._activateChildEntity(this._spriteEntity, {
+        container: this._container
+      })
       this._activateChildEntity(
-        anim.popup(this.holeSprite, () => {
+        anim.popup(this.sprite, () => {
           this.emit("stateChanged", newState);
         })
       );
-
-      this._container.addChild(this.holeSprite);
     } else if (newState === "infected") {
       // Freeze animation
-      this.nucleotideAnimation.stop();
+      (this.sprite as PIXI.AnimatedSprite).stop();
 
       // Create mask
       const mask = new PIXI.Graphics();
@@ -276,14 +276,16 @@ export class Nucleotide extends entity.CompositeEntity {
       // this._container.addChild(mask);
 
       // Overlay infection
-      this.infectionSprite = new PIXI.Sprite(
+      this._infectionSpriteEntity = new entity.SpriteEntity(new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
           `images/infection_${this.fullColorName}.png`
         ].texture
-      );
+      ));
       this.infectionSprite.anchor.set(0.5, 0.5);
       this.infectionSprite.visible = false;
-      this._container.addChild(this.infectionSprite);
+      this._activateChildEntity(this._infectionSpriteEntity, {
+        container: this._container
+      });
 
       // Make infection "grow"
       const radiusTween = new tween.Tween({
@@ -317,26 +319,29 @@ export class Nucleotide extends entity.CompositeEntity {
             this.infectionSprite.mask = null;
             this._container.removeChild(mask);
 
-            this._container.removeChild(this.nucleotideAnimation);
-            this.nucleotideAnimation = null;
+            this._deactivateChildEntity(this._infectionSpriteEntity)
             this.emit("stateChanged", newState);
           }),
         ])
       );
     } else if (newState === "inactive") {
       // Freeze animation and grey it out
-      this.nucleotideAnimation.stop();
-      this.nucleotideAnimation.tint = 0x333333;
+      const animation = this.sprite as PIXI.AnimatedSprite
+
+      animation.stop();
+      animation.tint = 0x333333;
 
       this.emit("stateChanged", newState);
     } else if (this._state === "missing") {
-      // Remove hole sprite
-      this._container.removeChild(this.holeSprite);
-      this.holeSprite = null;
+      if(this._spriteEntity)
+        this._deactivateChildEntity(this._spriteEntity)
 
       // Create animated sprite
-      this.nucleotideAnimation = this._createAnimatedSprite();
-      this._container.addChildAt(this.nucleotideAnimation, 0);
+      this._spriteEntity = this._createAnimatedSprite();
+      this._activateChildEntity(this._spriteEntity, {
+        container: this._container
+      });
+      this._container.setChildIndex(this.sprite, 0);
       this._refreshScale();
 
       this.emit("stateChanged", newState);
@@ -356,13 +361,15 @@ export class Nucleotide extends entity.CompositeEntity {
     } else if (this._state === "infected") {
       delete this.shakeAmounts.infection;
 
-      // Remove hole sprite
-      this._container.removeChild(this.infectionSprite);
-      this.infectionSprite = null;
+      if(this._infectionSpriteEntity)
+        this._deactivateChildEntity(this._infectionSpriteEntity)
 
       // Create animated sprite
-      this.nucleotideAnimation = this._createAnimatedSprite();
-      this._container.addChildAt(this.nucleotideAnimation, 0);
+      this._spriteEntity = this._createAnimatedSprite();
+      this._activateChildEntity(this._spriteEntity, {
+        container: this._container
+      })
+      this._container.setChildIndex(this.sprite, 0)
       this._refreshScale();
 
       this.emit("stateChanged", newState);
@@ -375,7 +382,7 @@ export class Nucleotide extends entity.CompositeEntity {
     this.colorName = getRandomColorName();
   }
 
-  private _createAnimatedSprite(): PIXI.AnimatedSprite {
+  private _createAnimatedSprite(): entity.AnimatedSpriteEntity {
     let animatedSprite: PIXI.AnimatedSprite;
     if (this.type === "normal") {
       this.generateColor();
@@ -402,7 +409,7 @@ export class Nucleotide extends entity.CompositeEntity {
     animatedSprite.anchor.set(0.5);
     //animatedSprite.interactive = true
 
-    return animatedSprite;
+    return new entity.AnimatedSpriteEntity(animatedSprite);
   }
 
   static getNucleotideDimensionsByRadius(radius: number) {
