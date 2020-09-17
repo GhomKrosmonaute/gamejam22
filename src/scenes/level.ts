@@ -139,12 +139,14 @@ export class Level extends entity.CompositeEntity {
 
       // Make hair
       for (let i = 0; i < hairCount; i++) {
-        this.container.addChild(
+        this._activateChildEntity(
           this._makeHair(
             geom.degreesToRadians(geom.lerp(-23, 24, i / hairCount)),
             geom.lerp(hairMaxScale, hairMinScale, Math.random())
-          )
-        );
+          ), {
+            container: this.container
+          }
+        )
       }
     }
 
@@ -558,25 +560,25 @@ export class Level extends entity.CompositeEntity {
   }
 
   /**
-   *
    * @param angle in radians
+   * @param scale scale of hair
    */
-  private _makeHair(angle: number, scale: number): PIXI.AnimatedSprite {
-    const hair = util.makeAnimatedSprite(
+  private _makeHair(angle: number, scale: number): entity.AnimatedSpriteEntity {
+    const animatedSpriteEntity = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources["images/hair.json"]
     );
-    hair.animationSpeed = (24 + angle) / 60;
+    animatedSpriteEntity.sprite.animationSpeed = (24 + angle) / 60;
 
     // Make hair ping-pong
-    hair.loop = false;
-    hair.onComplete = () => {
-      hair.animationSpeed *= -1;
-      hair.play();
+    animatedSpriteEntity.sprite.loop = false;
+    animatedSpriteEntity.sprite.onComplete = () => {
+      animatedSpriteEntity.sprite.animationSpeed *= -1;
+      animatedSpriteEntity.sprite.play();
     };
-    hair.play();
+    animatedSpriteEntity.sprite.play();
 
-    hair.scale.set(scale);
-    hair.anchor.set(0.5, 1);
+    animatedSpriteEntity.sprite.scale.set(scale);
+    animatedSpriteEntity.sprite.anchor.set(0.5, 1);
 
     // const radius = 1337;
     // const centerY = 320 + radius;
@@ -587,8 +589,8 @@ export class Level extends entity.CompositeEntity {
     // );
     // hair.rotation = -angle;
 
-    crisprUtil.positionAlongMembrane(hair, angle);
+    crisprUtil.positionAlongMembrane(animatedSpriteEntity.sprite, angle);
 
-    return hair;
+    return animatedSpriteEntity;
   }
 }

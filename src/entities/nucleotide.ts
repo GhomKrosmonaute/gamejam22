@@ -383,7 +383,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   private _createAnimatedSprite(): entity.AnimatedSpriteEntity {
-    let animatedSprite: PIXI.AnimatedSprite;
+    let animatedSprite: entity.AnimatedSpriteEntity;
     if (this.type === "normal") {
       this.generateColor();
       animatedSprite = util.makeAnimatedSprite(
@@ -391,25 +391,25 @@ export class Nucleotide extends entity.CompositeEntity {
           `images/nucleotide_${this.fullColorName}.json`
         ]
       );
-      animatedSprite.animationSpeed = 25 / 60;
+      animatedSprite.sprite.animationSpeed = 25 / 60;
       // Start on a random frame
-      animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
+      animatedSprite.sprite.gotoAndPlay(_.random(animatedSprite.sprite.totalFrames));
     } else if (this.type === "scissors") {
       this.colorName = null;
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources["images/scissors.json"]
       );
-      animatedSprite.animationSpeed = 25 / 60;
+      animatedSprite.sprite.animationSpeed = 25 / 60;
       // Start on a random frame
-      animatedSprite.gotoAndPlay(_.random(animatedSprite.totalFrames));
+      animatedSprite.sprite.gotoAndPlay(_.random(animatedSprite.sprite.totalFrames));
     } else {
       throw new Error("Unhandled type");
     }
 
-    animatedSprite.anchor.set(0.5);
+    animatedSprite.sprite.anchor.set(0.5);
     //animatedSprite.interactive = true
 
-    return new entity.AnimatedSpriteEntity(animatedSprite);
+    return animatedSprite;
   }
 
   static getNucleotideDimensionsByRadius(radius: number) {
