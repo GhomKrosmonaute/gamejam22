@@ -135,7 +135,7 @@ export class Nucleotide extends entity.CompositeEntity {
         anim.hearthBeat(this.sprite, 400, 1.1, () => {
           setTimeout(() => {
             this.isHearthBeatActive = false;
-          }, 1500 + Math.random() * 500);
+          }, 1500 + Math.random() * 1000);
         })
       );
     }
@@ -164,9 +164,10 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   _teardown() {
-    (this._entityConfig.container as PIXI.Container).removeChild(
-      this._container
-    );
+    if (this._container.children.includes(this._highlightSprite))
+      this._container.removeChild(this._highlightSprite);
+    this._highlightSprite = null;
+    this._entityConfig.container.removeChild(this._container);
   }
 
   get isHighlighted(): boolean {
@@ -209,7 +210,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   get sprite(): PIXI.Sprite | PIXI.AnimatedSprite {
-    return this._spriteEntity.sprite;
+    return (this._spriteEntity || this._infectionSpriteEntity).sprite;
   }
 
   get infectionSprite(): PIXI.Sprite {
@@ -220,6 +221,17 @@ export class Nucleotide extends entity.CompositeEntity {
     return new Promise((resolve) => {
       this._activateChildEntity(
         anim.bubble(this.sprite, 1.3, duration, resolve)
+      );
+    });
+  }
+
+  async sink(duration: number) {
+    return new Promise((resolve) => {
+      this._activateChildEntity(
+        new entity.ParallelEntity([
+          anim.sink(this._highlightSprite, duration),
+          anim.sink(this.sprite, duration, resolve),
+        ])
       );
     });
   }
@@ -337,7 +349,7 @@ export class Nucleotide extends entity.CompositeEntity {
             this.infectionSprite.mask = null;
             this._container.removeChild(mask);
 
-            this._deactivateChildEntity(this._infectionSpriteEntity);
+            this._deactivateChildEntity(this._spriteEntity);
             this.emit("stateChanged", newState);
           }),
         ])
