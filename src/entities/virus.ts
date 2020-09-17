@@ -7,7 +7,7 @@ export type State = "walk" | "idle" | "sting";
 
 export class Virus extends entity.CompositeEntity {
   private _container: PIXI.Container;
-  private _virusAnimation: PIXI.AnimatedSprite;
+  private _virusAnimation: entity.AnimatedSpriteEntity;
   private _angle: number = 0;
   private _state: State = "idle";
 
@@ -43,22 +43,23 @@ export class Virus extends entity.CompositeEntity {
     if (!this.isSetup) return;
 
     if (this._virusAnimation) {
-      this._container.removeChild(this._virusAnimation);
-      this._virusAnimation = null;
+      this._deactivateChildEntity(this._virusAnimation)
     }
 
     this._virusAnimation = this._createAnimation(`mini_bob_${state}`);
-    this._container.addChild(this._virusAnimation);
+    this._activateChildEntity(this._virusAnimation, {
+      container: this._container
+    })
   }
 
-  private _createAnimation(name: string): PIXI.AnimatedSprite {
+  private _createAnimation(name: string): entity.AnimatedSpriteEntity {
     const virus = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources[`images/${name}.json`]
     );
-    virus.animationSpeed = 25 / 60;
-    virus.scale.set(0.6);
-    virus.anchor.set(0.5, 1);
-    virus.play();
+    virus.sprite.animationSpeed = 25 / 60;
+    virus.sprite.scale.set(0.6);
+    virus.sprite.anchor.set(0.5, 1);
+    virus.sprite.play();
 
     return virus;
   }
