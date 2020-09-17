@@ -143,10 +143,11 @@ export class Level extends entity.CompositeEntity {
           this._makeHair(
             geom.degreesToRadians(geom.lerp(-23, 24, i / hairCount)),
             geom.lerp(hairMaxScale, hairMinScale, Math.random())
-          ), {
-            container: this.container
+          ),
+          {
+            container: this.container,
           }
-        )
+        );
       }
     }
 

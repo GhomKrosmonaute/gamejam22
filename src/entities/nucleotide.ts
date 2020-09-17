@@ -56,8 +56,10 @@ export class Nucleotide extends entity.CompositeEntity {
 
   private _state: NucleotideState;
   private _isHighlighted: boolean;
-  private _spriteEntity: entity.AnimatedSpriteEntity | entity.SpriteEntity = null;
-  private _infectionSpriteEntity: entity.SpriteEntity = null
+  private _spriteEntity:
+    | entity.AnimatedSpriteEntity
+    | entity.SpriteEntity = null;
+  private _infectionSpriteEntity: entity.SpriteEntity = null;
   private _radius: number;
 
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
@@ -244,8 +246,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this._state = newState;
       delete this.shakeAmounts.infection;
 
-      if(this._spriteEntity)
-        this._deactivateChildEntity(this._spriteEntity);
+      if (this._spriteEntity) this._deactivateChildEntity(this._spriteEntity);
 
       this.colorName = null;
 
@@ -257,8 +258,8 @@ export class Nucleotide extends entity.CompositeEntity {
       this.sprite.anchor.set(0.5);
 
       this._activateChildEntity(this._spriteEntity, {
-        container: this._container
-      })
+        container: this._container,
+      });
       this._activateChildEntity(
         anim.popup(this.sprite, () => {
           this.emit("stateChanged", newState);
@@ -276,15 +277,17 @@ export class Nucleotide extends entity.CompositeEntity {
       // this._container.addChild(mask);
 
       // Overlay infection
-      this._infectionSpriteEntity = new entity.SpriteEntity(new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          `images/infection_${this.fullColorName}.png`
-        ].texture
-      ));
+      this._infectionSpriteEntity = new entity.SpriteEntity(
+        new PIXI.Sprite(
+          this._entityConfig.app.loader.resources[
+            `images/infection_${this.fullColorName}.png`
+          ].texture
+        )
+      );
       this.infectionSprite.anchor.set(0.5, 0.5);
       this.infectionSprite.visible = false;
       this._activateChildEntity(this._infectionSpriteEntity, {
-        container: this._container
+        container: this._container,
       });
 
       // Make infection "grow"
@@ -319,27 +322,26 @@ export class Nucleotide extends entity.CompositeEntity {
             this.infectionSprite.mask = null;
             this._container.removeChild(mask);
 
-            this._deactivateChildEntity(this._infectionSpriteEntity)
+            this._deactivateChildEntity(this._infectionSpriteEntity);
             this.emit("stateChanged", newState);
           }),
         ])
       );
     } else if (newState === "inactive") {
       // Freeze animation and grey it out
-      const animation = this.sprite as PIXI.AnimatedSprite
+      const animation = this.sprite as PIXI.AnimatedSprite;
 
       animation.stop();
       animation.tint = 0x333333;
 
       this.emit("stateChanged", newState);
     } else if (this._state === "missing") {
-      if(this._spriteEntity)
-        this._deactivateChildEntity(this._spriteEntity)
+      if (this._spriteEntity) this._deactivateChildEntity(this._spriteEntity);
 
       // Create animated sprite
       this._spriteEntity = this._createAnimatedSprite();
       this._activateChildEntity(this._spriteEntity, {
-        container: this._container
+        container: this._container,
       });
       this._container.setChildIndex(this.sprite, 0);
       this._refreshScale();
@@ -361,15 +363,15 @@ export class Nucleotide extends entity.CompositeEntity {
     } else if (this._state === "infected") {
       delete this.shakeAmounts.infection;
 
-      if(this._infectionSpriteEntity)
-        this._deactivateChildEntity(this._infectionSpriteEntity)
+      if (this._infectionSpriteEntity)
+        this._deactivateChildEntity(this._infectionSpriteEntity);
 
       // Create animated sprite
       this._spriteEntity = this._createAnimatedSprite();
       this._activateChildEntity(this._spriteEntity, {
-        container: this._container
-      })
-      this._container.setChildIndex(this.sprite, 0)
+        container: this._container,
+      });
+      this._container.setChildIndex(this.sprite, 0);
       this._refreshScale();
 
       this.emit("stateChanged", newState);
@@ -393,7 +395,9 @@ export class Nucleotide extends entity.CompositeEntity {
       );
       animatedSprite.sprite.animationSpeed = 25 / 60;
       // Start on a random frame
-      animatedSprite.sprite.gotoAndPlay(_.random(animatedSprite.sprite.totalFrames));
+      animatedSprite.sprite.gotoAndPlay(
+        _.random(animatedSprite.sprite.totalFrames)
+      );
     } else if (this.type === "scissors") {
       this.colorName = null;
       animatedSprite = util.makeAnimatedSprite(
@@ -401,7 +405,9 @@ export class Nucleotide extends entity.CompositeEntity {
       );
       animatedSprite.sprite.animationSpeed = 25 / 60;
       // Start on a random frame
-      animatedSprite.sprite.gotoAndPlay(_.random(animatedSprite.sprite.totalFrames));
+      animatedSprite.sprite.gotoAndPlay(
+        _.random(animatedSprite.sprite.totalFrames)
+      );
     } else {
       throw new Error("Unhandled type");
     }

@@ -43,13 +43,13 @@ export class Virus extends entity.CompositeEntity {
     if (!this.isSetup) return;
 
     if (this._virusAnimation) {
-      this._deactivateChildEntity(this._virusAnimation)
+      this._deactivateChildEntity(this._virusAnimation);
     }
 
     this._virusAnimation = this._createAnimation(`mini_bob_${state}`);
     this._activateChildEntity(this._virusAnimation, {
-      container: this._container
-    })
+      container: this._container,
+    });
   }
 
   private _createAnimation(name: string): entity.AnimatedSpriteEntity {
