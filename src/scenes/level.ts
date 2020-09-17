@@ -136,7 +136,7 @@ export class Level extends entity.CompositeEntity {
       this.container.addChild(membrane);
 
       // Make hair
-      this.hariManager = new hair.HairManager()
+      this.hariManager = new hair.HairManager();
 
       this._activateChildEntity(
         this.hariManager,

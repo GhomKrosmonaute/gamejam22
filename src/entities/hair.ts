@@ -1,4 +1,4 @@
-import * as PIXI from "pixi.js"
+import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
@@ -11,16 +11,17 @@ const hairMinScale = 0.3;
 const hairMaxScale = 0.45;
 
 export class HairManager extends entity.CompositeEntity {
-  private container = new PIXI.Container()
-  public hairs: Hair[] = []
+  private container = new PIXI.Container();
+  public hairs: Hair[] = [];
 
   protected _setup() {
+    this._entityConfig.container.addChild(this.container);
     for (let i = 0; i < hairCount; i++) {
       const hair = new Hair(
         geom.degreesToRadians(geom.lerp(-23, 24, i / hairCount)),
         geom.lerp(hairMaxScale, hairMinScale, Math.random())
-      )
-      this.hairs.push(hair)
+      );
+      this.hairs.push(hair);
       this._activateChildEntity(
         hair,
         entity.extendConfig({
@@ -31,22 +32,22 @@ export class HairManager extends entity.CompositeEntity {
   }
 
   protected _teardown() {
-    this.hairs.forEach(this._deactivateChildEntity.bind(this))
-    this.hairs = null
+    this.hairs.forEach(this._deactivateChildEntity.bind(this));
+    this.hairs = null;
+    this._entityConfig.container.removeChild(this.container);
   }
 }
 
-
 export class Hair extends entity.CompositeEntity {
-  private loop: entity.EntitySequence
-  public spriteEntity: entity.AnimatedSpriteEntity
+  private loop: entity.EntitySequence;
+  public spriteEntity: entity.AnimatedSpriteEntity;
 
   constructor(public rotation: number, public scale: number) {
     super();
   }
 
   get sprite(): PIXI.AnimatedSprite {
-    return this.spriteEntity.sprite
+    return this.spriteEntity.sprite;
   }
 
   _setup() {
@@ -62,25 +63,25 @@ export class Hair extends entity.CompositeEntity {
 
     crisprUtil.positionAlongMembrane(this.sprite, this.rotation);
 
-    this._entityConfig.container.addChild(this.sprite)
+    this._entityConfig.container.addChild(this.sprite);
 
-    this.loop = new entity.EntitySequence([
-      this.spriteEntity,
-      new entity.FunctionCallEntity(() => {
-        this.sprite.animationSpeed *= -1;
-      })
-    ], {
-      loop: true
-    })
+    this.loop = new entity.EntitySequence(
+      [
+        this.spriteEntity,
+        new entity.FunctionCallEntity(() => {
+          this.sprite.animationSpeed *= -1;
+        }),
+      ],
+      {
+        loop: true,
+      }
+    );
 
-    this._activateChildEntity(
-      this.loop
-    )
+    this._activateChildEntity(this.loop);
   }
 
   _teardown() {
-    this._deactivateChildEntity(this.loop)
-    this._entityConfig.container.removeChild(this.sprite)
+    this._deactivateChildEntity(this.loop);
+    this._entityConfig.container.removeChild(this.sprite);
   }
-
 }
