@@ -103,7 +103,7 @@ export class Nucleotide extends entity.CompositeEntity {
     this.pathArrow.visible = false;
     this.pathArrow.anchor.set(0.5, 1);
     this.pathArrow.position.copyFrom(this.position);
-    this.pathArrow.animationSpeed = 0.6;
+    this.pathArrow.animationSpeed = 0.4;
     this.pathArrow.stop();
 
     this._activateChildEntity(this._pathArrowEntity);
