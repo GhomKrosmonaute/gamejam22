@@ -518,7 +518,7 @@ export class Level extends entity.CompositeEntity {
                     fontFamily: "Cardenio Modern Bold",
                     fill: "#ff0000",
                   }),
-                  100 * i,
+                  200 * i,
                   new PIXI.Point(
                     n.position.x + sequence.position.x,
                     n.position.y + sequence.position.y
@@ -530,6 +530,7 @@ export class Level extends entity.CompositeEntity {
             ])
           );
         });
+        await new Promise((resolve) => sequence.down(false, resolve));
       }
       if (this.sequenceManager.countSequences() === 0) {
         this._regenerate();

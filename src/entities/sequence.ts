@@ -255,6 +255,7 @@ export class Sequence extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
+  // todo: debug this method ?
   get maxActiveLength(): number {
     const activeLength: number[] = [0];
     let nbr = 0;
