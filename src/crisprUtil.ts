@@ -1,46 +1,4 @@
 import * as PIXI from "pixi.js";
-import * as geom from "booyah/src/geom";
-
-export type NucleotideType = "scissors" | "bonus" | "normal";
-export const nucleotideTypes: NucleotideType[] = [
-  "scissors",
-  "bonus",
-  "normal",
-];
-export function getRandomNucleotideType(): NucleotideType {
-  return nucleotideTypes[Math.floor(Math.random() * nucleotideTypes.length)];
-}
-
-// TODO: Use string enum here?
-export type ColorName = "b" | "r" | "g" | "y";
-export const colorNames: ColorName[] = ["b", "r", "g", "y"];
-export function getRandomColorName(): ColorName {
-  return colorNames[Math.floor(Math.random() * colorNames.length)];
-}
-
-export const fullColorNames: { [k in ColorName]: string } = {
-  b: "blue",
-  r: "red",
-  g: "green",
-  y: "yellow",
-};
-
-export type PartyState = "crunch" | "regenerate" | "bonus";
-
-export type BonusUsageStyle =
-  | "drag & drop"
-  | "drag & drop on neighbor"
-  | "click";
-
-/** from 0 to 5, start on top */
-export type NeighborIndex = 0 | 1 | 2 | 3 | 4 | 5;
-export const NeighborIndexes: NeighborIndex[] = [0, 1, 2, 3, 4, 5];
-
-export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
-  let opposedNeighborIndex = neighborIndex - 3;
-  if (opposedNeighborIndex < 0) opposedNeighborIndex += 6;
-  return opposedNeighborIndex as NeighborIndex;
-}
 
 export function dist(x1: PIXI.Point, y1: PIXI.Point): number;
 export function dist(x1: number, y1: number, x2: number, y2: number): number;
@@ -86,7 +44,7 @@ export function random(min?: number[] | number, max?: number): number {
   }
 }
 
-export function map(
+export function proportion(
   n: number,
   start1: number,
   stop1: number,
@@ -109,4 +67,40 @@ export function approximate(base: number): number;
 export function approximate(base: number, shift?: number): number {
   if (typeof shift === "undefined") return random(-base, base);
   return random(base - shift, base + shift);
+}
+
+export function positionAlongMembrane(
+  displayObject: PIXI.DisplayObject,
+  angle: number
+): void {
+  const radius = 1337;
+  const centerY = 320 + radius;
+  displayObject.position.set(
+    radius * Math.cos(angle + Math.PI / 2) + 1080 / 2,
+    centerY - radius * Math.sin(angle + Math.PI / 2)
+  );
+  displayObject.rotation = -angle;
+}
+
+export function makeText(
+  text: string,
+  color: string | number = 0xffffff,
+  size: string | number = 70
+) {
+  const pixiText = new PIXI.Text(text, {
+    fill: color,
+    fontFamily: "Cardenio Modern Bold",
+    fontSize: size,
+    align: "center",
+  });
+  pixiText.anchor.set(0.5);
+  return pixiText;
+}
+
+const _debugged: string[] = [];
+export function debug(name: string, ...any: any) {
+  if (!_debugged.includes(name)) {
+    _debugged.push(name);
+    console.log(name, ...any);
+  }
 }

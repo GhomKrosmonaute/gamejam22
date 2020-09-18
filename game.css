@@ -4,10 +4,26 @@
   font-style: normal;
   font-weight: 400;
   src: local("Roboto Condensed"), local("RobotoCondensed-Regular"),
-    url("booyah/fonts/roboto-condensed/roboto-condensed-v16-latin-regular.woff2")
-      format("woff2"),
-    url("booyah/fonts/roboto-condensed/roboto-condensed-v16-latin-regular.woff")
-      format("woff");
+  url("booyah/fonts/roboto-condensed/roboto-condensed-v16-latin-regular.woff2")
+  format("woff2"),
+  url("booyah/fonts/roboto-condensed/roboto-condensed-v16-latin-regular.woff")
+  format("woff");
+}
+
+@font-face {
+  font-family: 'Cardenio Modern Bold';
+  src: url('fonts/cardeniomodern-bold/cardeniomodern-bold-webfont.woff2') format('woff2'),
+  url('fonts/cardeniomodern-bold/cardeniomodern-bold-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Cardenio Modern Regular';
+  src: url('fonts/cardeniomodern-regular/cardeniomodern-regular-webfont.woff2') format('woff2'),
+  url('fonts/cardeniomodern-regular/cardeniomodern-regular-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
 }
 
 /* From https://css-tricks.com/a-couple-of-use-cases-for-calc/ */

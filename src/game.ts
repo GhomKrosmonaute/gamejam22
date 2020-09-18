@@ -3,7 +3,7 @@ import * as PIXI from "pixi.js";
 import * as booyah from "booyah/src/booyah";
 import * as entity from "booyah/src/entity";
 
-import Level from "./scenes/Level";
+import * as level from "./scenes/level";
 
 export const width = 1080;
 export const height = 1920;
@@ -40,7 +40,9 @@ class LevelMenu extends entity.EntityBase {
   }
 
   _teardown(): void {
-    this._entityConfig.container.removeChild(this.container);
+    (this._entityConfig.container as PIXI.Container).removeChild(
+      this.container
+    );
   }
 
   private _makeButton(
@@ -74,9 +76,9 @@ class LevelMenu extends entity.EntityBase {
 
 const gameStates = {
   start: new LevelMenu(),
-  turnBased: new Level("turnBased"),
-  continuous: new Level("continuous"),
-  long: new Level("long"),
+  turnBased: new level.Level("turnBased"),
+  continuous: new level.Level("continuous"),
+  long: new level.Level("long"),
 };
 
 let gameTransitions = {
@@ -95,10 +97,24 @@ const graphicalAssets = [
   "images/arrow.png",
   "images/circle.png",
   "images/bonus_swap.png",
+  "images/bonus_star.png",
+  "images/bonus_kill.png",
   "images/infection_red.png",
   "images/infection_blue.png",
   "images/infection_green.png",
   "images/infection_yellow.png",
+  "images/hud_bonus_background.png",
+  "images/hud_go_button.png",
+  "images/hud_gauge_background.png",
+  "images/hud_gauge_bar.png",
+  "images/hud_gauge_foreground.png",
+  "images/path_border_0.png",
+  "images/path_border_1.png",
+  "images/path_border_2.png",
+  "images/path_border_3.png",
+  "images/path_border_4.png",
+  "images/path_border_5.png",
+  "images/path_arrow.jpg",
 
   // animated sprites
   "images/nucleotide_red.json",
@@ -112,10 +128,12 @@ const graphicalAssets = [
   "images/mini_bob_walk.json",
 ];
 
+const fontAssets = ["Cardenio Modern Bold", "Cardenio Modern Regular"];
+
 const entityInstallers: any = [
   // audio.installJukebox,
   // audio.installFxMachine,
-  // booyah.installMenu,
+  booyah.makeInstallMenu({ menuButtonPosition: new PIXI.Point(width, 0) }),
 ];
 
 booyah.go({
@@ -125,4 +143,8 @@ booyah.go({
   entityInstallers,
   screenSize: new PIXI.Point(width, height),
   graphicalAssets,
+  fontAssets,
+  graphics: {
+    menu: "images/hud_menu_button.png",
+  },
 });
