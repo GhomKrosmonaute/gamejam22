@@ -13,15 +13,12 @@ import * as anim from "../animations";
  */
 export class Path extends entity.CompositeEntity {
   public items: nucleotide.Nucleotide[] = [];
-  //public graphics = new PIXI.Graphics();
   public container = new PIXI.Container();
   public isValidSequence = false;
   public isCrunchAnimationRunning = false;
 
   protected _setup() {
     this.container.position.copyFrom(this.level.grid);
-    //this.container.addChild(this.graphics);
-    //this.container.filters = [new filters.GlowFilter({ distance: 20 })];
 
     // place the path below the grid
     this._entityConfig.container.addChildAt(
@@ -151,22 +148,6 @@ export class Path extends entity.CompositeEntity {
       if (this.items.includes(n)) {
         n.isHighlighted = true;
 
-        // n.sprite.scale.set(1.1);
-        // n.shakeAmounts.path = 3;
-
-        // const neighbors = this.level.grid.getNeighbors(n);
-        // neighbors.forEach((nn, i) => {
-        //   if (nn) {
-        //     n.pathBorders[i].visible = !(
-        //       this.items.includes(nn) &&
-        //       (this.items.indexOf(nn) === this.items.indexOf(n) - 1 ||
-        //         this.items.indexOf(nn) === this.items.indexOf(n) + 1)
-        //     );
-        //   } else {
-        //     n.pathBorders[i].visible = true;
-        //   }
-        // });
-
         if (last) {
           this.level.grid.pointTo(
             last,
@@ -178,21 +159,10 @@ export class Path extends entity.CompositeEntity {
           this.level.grid.pointTo(n, -1);
         }
 
-        // this.graphics
-        //   .beginFill(0x000000)
-        //   .drawEllipse(
-        //     n.position.x,
-        //     n.position.y,
-        //     n.width * 0.19,
-        //     n.height * 0.19
-        //   );
-
         last = n;
       } else {
         n.isHighlighted = false;
-        // delete n.shakeAmounts.path;
-        // n.sprite.scale.set(1);
-        // n.pathBorders.forEach((sprite) => (sprite.visible = false));
+
         n.pathArrow.visible = false;
       }
     }

@@ -48,7 +48,6 @@ export class Nucleotide extends entity.CompositeEntity {
   public isHovered = false;
   public isHearthBeatActive = false;
   public shakeAmounts: { [k: string]: number };
-  //public pathBorders: PIXI.Sprite[] = [];
 
   private _state: NucleotideState;
   private _isHighlighted: boolean;
@@ -107,20 +106,6 @@ export class Nucleotide extends entity.CompositeEntity {
     this.pathArrow.stop();
 
     this._activateChildEntity(this._pathArrowEntity);
-
-    // crisprUtil.NeighborIndexes.forEach((i) => {
-    //   const pathBorder = new PIXI.Sprite(
-    //     this._entityConfig.app.loader.resources[
-    //       `images/path_border_${i}.png`
-    //     ].texture
-    //   )
-    //   pathBorder.scale.set(1.1);
-    //   pathBorder.anchor.set(0.5);
-    //   pathBorder.visible = false;
-    //   pathBorder.filters = [];
-    //   this.pathBorders[i] = pathBorder
-    //   this._container.addChildAt(this.pathBorders[i], 0);
-    // });
   }
 
   _update(frameInfo: entity.FrameInfo) {
@@ -173,10 +158,12 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._isHighlighted;
   }
   set isHighlighted(isHighlighted: boolean) {
-    if (!this._spriteEntity) return;
+    if (!this.spriteEntity) return;
 
     if (isHighlighted && !this._isHighlighted) {
       this.shakeAmounts.highlight = 2;
+
+      this.spriteEntity.sprite.scale.set(this.parent === "grid" ? 0.9 : 1.1);
 
       this._highlightSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
@@ -190,6 +177,8 @@ export class Nucleotide extends entity.CompositeEntity {
       this._container.addChildAt(this._highlightSprite, 0);
     } else if (!isHighlighted && this._isHighlighted) {
       delete this.shakeAmounts.highlight;
+
+      this.spriteEntity.sprite.scale.set(1);
 
       this._container.removeChild(this._highlightSprite);
       this._highlightSprite = null;
