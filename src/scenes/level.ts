@@ -498,8 +498,6 @@ export class Level extends entity.CompositeEntity {
         this.sequenceManager.distributeSequences();
       }
 
-      console.log(this.sequenceManager.sequences[0].maxActiveLength);
-
       if (
         this.levelVariant === "long" &&
         this.sequenceManager.sequences[0] &&
