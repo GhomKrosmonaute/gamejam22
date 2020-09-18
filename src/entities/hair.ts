@@ -32,7 +32,6 @@ export class HairManager extends entity.CompositeEntity {
   }
 
   protected _teardown() {
-    this.hairs.forEach(this._deactivateChildEntity.bind(this));
     this.hairs = null;
     this._entityConfig.container.removeChild(this.container);
   }
@@ -81,7 +80,6 @@ export class Hair extends entity.CompositeEntity {
   }
 
   _teardown() {
-    this._deactivateChildEntity(this.loop);
     this._entityConfig.container.removeChild(this.sprite);
   }
 }
