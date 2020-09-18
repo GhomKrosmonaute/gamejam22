@@ -42,7 +42,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public type: NucleotideType = "normal";
   public colorName: ColorName = getRandomColorName();
   public isHovered = false;
-  public isHearthBeatActive = false;
+  public isHeartBeatActive = false;
   public shakeAmounts: { [k: string]: number };
   public pathBorders: PIXI.Sprite[] = [];
   public pathArrow: PIXI.TilingSprite;
@@ -93,20 +93,6 @@ export class Nucleotide extends entity.CompositeEntity {
     this.pathArrow.scale.set(0.43);
     this.pathArrow.anchor.set(0.5, 1);
     this.pathArrow.position.copyFrom(this.position);
-
-    // crisprUtil.NeighborIndexes.forEach((i) => {
-    //   const pathBorder = new PIXI.Sprite(
-    //     this._entityConfig.app.loader.resources[
-    //       `images/path_border_${i}.png`
-    //     ].texture
-    //   )
-    //   pathBorder.scale.set(1.1);
-    //   pathBorder.anchor.set(0.5);
-    //   pathBorder.visible = false;
-    //   pathBorder.filters = [];
-    //   this.pathBorders[i] = pathBorder
-    //   this._container.addChildAt(this.pathBorders[i], 0);
-    // });
   }
 
   _update(frameInfo: entity.FrameInfo) {
@@ -118,13 +104,13 @@ export class Nucleotide extends entity.CompositeEntity {
       this.pathArrow.tilePosition.y -= 3;
     }
 
-    // infected hearth beat animation
-    if (this.infected && !this.isHearthBeatActive) {
-      this.isHearthBeatActive = true;
+    // infected heartbeat animation
+    if (this.infected && !this.isHeartBeatActive) {
+      this.isHeartBeatActive = true;
       this._activateChildEntity(
-        anim.hearthBeat(this.sprite, 200, 1.1, () => {
+        anim.heartBeat(this.sprite, 200, 1.1, () => {
           setTimeout(() => {
-            this.isHearthBeatActive = false;
+            this.isHeartBeatActive = false;
           }, 1500 + Math.random() * 500);
         })
       );
@@ -288,7 +274,6 @@ export class Nucleotide extends entity.CompositeEntity {
           new entity.WaitingEntity(100),
 
           new entity.FunctionCallEntity(() => {
-            // this.shakeAmounts.infection = 3;
             delete this.shakeAmounts.infection;
 
             this._container.addChild(mask);

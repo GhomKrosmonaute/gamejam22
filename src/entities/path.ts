@@ -22,14 +22,6 @@ export class Path extends entity.CompositeEntity {
     this.container.addChild(this.graphics);
     this.container.filters = [new filters.GlowFilter({ distance: 20 })];
 
-    // place the path below the grid
-    // this._entityConfig.container.addChildAt(
-    //   this.graphics,
-    //   this._entityConfig.container.children.indexOf(
-    //     this.level.grid.container
-    //   )
-    // );
-
     // place the path above the grid
     this._entityConfig.container.addChild(this.container);
 
@@ -154,19 +146,6 @@ export class Path extends entity.CompositeEntity {
       if (this.items.includes(n)) {
         n.sprite.scale.set(1.1);
         n.shakeAmounts.path = 3;
-
-        // const neighbors = this.level.grid.getNeighbors(n);
-        // neighbors.forEach((nn, i) => {
-        //   if (nn) {
-        //     n.pathBorders[i].visible = !(
-        //       this.items.includes(nn) &&
-        //       (this.items.indexOf(nn) === this.items.indexOf(n) - 1 ||
-        //         this.items.indexOf(nn) === this.items.indexOf(n) + 1)
-        //     );
-        //   } else {
-        //     n.pathBorders[i].visible = true;
-        //   }
-        // });
 
         if (last) {
           this.level.grid.pointTo(

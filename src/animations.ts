@@ -197,7 +197,7 @@ export function textFadeUp(
   ]);
 }
 
-export function hearthBeat(
+export function heartBeat(
   obj: PIXI.DisplayObject,
   duration: number,
   scale: number,
