@@ -52,6 +52,7 @@ export class SwapBonus extends Bonus {
 
         this.isUpdateDisabled = true;
         this.level.grid.swap(this.dragged, this.hovered, false);
+        this.level.disablingAnimations.add("swap");
         this._activateChildEntity(
           anim.swap(
             this.dragged,
@@ -67,7 +68,10 @@ export class SwapBonus extends Bonus {
             easing.easeInBack,
             () => {
               this.hovered.bubble(150).catch();
-              this.dragged.bubble(150).catch();
+              this.dragged
+                .bubble(150)
+                .then(() => this.level.disablingAnimations.delete("swap"))
+                .catch();
               this.end();
             }
           )
@@ -126,6 +130,8 @@ export class StarBonus extends Bonus {
 
       target.shakeAmounts.star = 7;
 
+      this.level.disablingAnimations.add("star");
+
       const propagation = [
         new entity.WaitingEntity(delay * 2),
         ...stages.map((stage) => {
@@ -172,7 +178,10 @@ export class StarBonus extends Bonus {
 
       const sequence = new entity.EntitySequence([
         ...propagation,
-        new entity.FunctionCallEntity(() => this.end()),
+        new entity.FunctionCallEntity(() => {
+          this.level.disablingAnimations.delete("star");
+          this.end();
+        }),
       ]);
 
       this._activateChildEntity(sequence);
@@ -187,13 +196,27 @@ export class KillBonus extends Bonus {
     this.level.sequenceManager.container.buttonMode = true;
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
+      this.level.disablingAnimations.add("kill");
+      this.level.sequenceManager.emit("crunch", s);
       this.level.sequenceManager.removeSequence(s, () => {
         this.level.sequenceManager.add();
 
-        if (this.level.levelVariant === "turnBased") {
-          this.level.sequenceManager.distributeSequences();
-          this.end();
+        switch (this.level.levelVariant) {
+          case "continuous":
+            this.level.sequenceManager.distributeSequences();
+            this.end();
+            break;
+          case "long":
+            this.level.sequenceManager.distributeSequences();
+            this.end();
+            break;
+          case "turnBased":
+            this.level.sequenceManager.distributeSequences();
+            this.end();
+            break;
         }
+
+        this.level.disablingAnimations.delete("kill");
       });
     });
   }

@@ -219,7 +219,9 @@ export class Nucleotide extends entity.CompositeEntity {
     return new Promise((resolve) => {
       this._activateChildEntity(
         new entity.ParallelEntity([
-          anim.sink(this._highlightSprite, duration),
+          this._highlightSprite
+            ? anim.sink(this._highlightSprite, duration)
+            : new entity.FunctionCallEntity(() => {}),
           anim.sink(this.sprite, duration, resolve),
         ])
       );

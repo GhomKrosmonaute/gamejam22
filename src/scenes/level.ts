@@ -35,6 +35,7 @@ export class Level extends entity.CompositeEntity {
   public path: path.Path;
   public grid: grid.Grid;
   public state: LevelState = "crunch";
+  public disablingAnimations: Set<string> = new Set();
 
   public swapBonus = new bonuses.SwapBonus();
   public starBonus = new bonuses.StarBonus();
@@ -322,7 +323,11 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update() {
-    if (this.levelVariant !== "continuous") return;
+    if (
+      this.levelVariant !== "continuous" ||
+      this.isDisablingAnimationInProgress
+    )
+      return;
 
     const droppedSequences = this.sequenceManager.advanceSequences(dropSpeed);
     if (droppedSequences.length > 0) {
@@ -411,6 +416,10 @@ export class Level extends entity.CompositeEntity {
       this.sequenceManager.dropSequences();
       this._onInfection();
     }
+  }
+
+  get isDisablingAnimationInProgress(): boolean {
+    return this.disablingAnimations.size > 0;
   }
 
   get isGuiLocked(): boolean {

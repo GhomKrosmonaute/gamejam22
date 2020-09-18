@@ -59,7 +59,6 @@ export class SequenceManager extends entity.CompositeEntity {
       case "turnBased":
         return 3;
       case "continuous":
-        return 1;
       case "long":
         return 1;
     }
@@ -179,9 +178,6 @@ export class SequenceManager extends entity.CompositeEntity {
    */
   distributeSequences(): void {
     this.sequences.forEach((s, i) => {
-      const { width } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-        s.nucleotideRadius
-      );
       s.position.y = crisprUtil.proportion(
         i,
         0,
