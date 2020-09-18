@@ -346,7 +346,6 @@ export class Level extends entity.CompositeEntity {
   /**
    * Set value of gauge bar (value/maxValue) (default: value %)
    * @param {number} value - The new value of gauge bar
-   * @param {number} maxValue - The max bound of the new value (default 100)
    */
   setGaugeBarValue(value: number) {
     this.gaugeBar.width = crisprUtil.proportion(

@@ -31,22 +31,23 @@ export class SequenceManager extends entity.CompositeEntity {
     this.container = null;
   }
 
-  private _getSequenceRangeY(): [number, number] {
-    if (this._entityConfig.level.levelVariant === "continuous") {
-      return [
-        this._entityConfig.app.view.height * 0.2,
-        this._entityConfig.app.view.height * 0.4,
-      ];
-    } else if (this._entityConfig.level.levelVariant === "long") {
-      return [
-        this._entityConfig.app.view.height * 0.3,
-        this._entityConfig.app.view.height * 0.3,
-      ];
-    } else {
-      return [
-        this._entityConfig.app.view.height * 0.25,
-        this._entityConfig.app.view.height * 0.42,
-      ];
+  private _getSequenceRangeY(): { top: number; bottom: number } {
+    switch (this.level.levelVariant) {
+      case "turnBased":
+        return {
+          top: this._entityConfig.app.view.height * 0.25,
+          bottom: this._entityConfig.app.view.height * 0.42,
+        };
+      case "continuous":
+        return {
+          top: this._entityConfig.app.view.height * 0.2,
+          bottom: this._entityConfig.app.view.height * 0.38,
+        };
+      case "long":
+        return {
+          top: this._entityConfig.app.view.height * 0.3,
+          bottom: this._entityConfig.app.view.height * 0.3,
+        };
     }
   }
 
@@ -83,7 +84,7 @@ export class SequenceManager extends entity.CompositeEntity {
     );
     s.position.set(
       this._entityConfig.app.view.width / 2 - (s.baseLength * width * 0.8) / 2,
-      this._getSequenceRangeY()[0]
+      this._getSequenceRangeY().top
     );
     this._activateChildEntity(
       s,
@@ -118,7 +119,7 @@ export class SequenceManager extends entity.CompositeEntity {
     if (removedSequences.length > 0) {
       for (const s of removedSequences) {
         this.emit("crunch", s);
-        this.removeSequence(s, callback);
+        this.removeSequence(true, s, callback);
       }
 
       this.sequences = _.difference(this.sequences, removedSequences);
@@ -128,8 +129,8 @@ export class SequenceManager extends entity.CompositeEntity {
     // if (crunched) path.items.forEach((n) => (n.state = "missing"));
   }
 
-  removeSequence(s: Sequence, callback?: () => any) {
-    s.down(() => {
+  removeSequence(addScore: boolean, s: Sequence, callback?: () => any) {
+    s.down(addScore, () => {
       this._deactivateChildEntity(s);
       this.sequences = this.sequences.filter((ss) => ss !== s);
       this.refresh();
@@ -142,13 +143,14 @@ export class SequenceManager extends entity.CompositeEntity {
    * Removes sequences that reached the bottom, and returns them.
    */
   advanceSequences(fraction: number): Sequence[] {
-    const yDist = this._getSequenceRangeY()[1] - this._getSequenceRangeY()[0];
+    const yDist =
+      this._getSequenceRangeY().bottom - this._getSequenceRangeY().top;
 
     const droppedSequences: Sequence[] = [];
     for (const s of this.sequences) {
       s.position.y += fraction * yDist;
 
-      if (s.position.y >= this._getSequenceRangeY()[1]) {
+      if (s.position.y >= this._getSequenceRangeY().bottom) {
         droppedSequences.push(s);
       } else {
         s.refresh();
@@ -156,7 +158,14 @@ export class SequenceManager extends entity.CompositeEntity {
     }
 
     if (droppedSequences.length > 0) {
-      droppedSequences.forEach((s) => this._deactivateChildEntity(s));
+      droppedSequences.forEach((s, i) => {
+        this.level.disablingAnimations.add(`dropSequence-${i}`);
+        s.nucleotides.forEach((n) => (n.sprite.tint = 0x000000));
+        s.down(false, () => {
+          this._deactivateChildEntity(s);
+          this.level.disablingAnimations.delete(`dropSequence-${i}`);
+        });
+      });
       this.sequences = _.difference(this.sequences, droppedSequences);
     }
 
@@ -182,8 +191,8 @@ export class SequenceManager extends entity.CompositeEntity {
         i,
         0,
         this.sequences.length,
-        this._getSequenceRangeY()[0],
-        this._getSequenceRangeY()[1]
+        this._getSequenceRangeY().top,
+        this._getSequenceRangeY().bottom
       );
       s.refresh();
     });
@@ -278,7 +287,7 @@ export class Sequence extends entity.CompositeEntity {
     this.nucleotides = [];
   }
 
-  down(callback?: () => any) {
+  down(addScore: boolean, callback?: () => any) {
     const allSink: Promise<void>[] = [];
     this._activateChildEntity(
       new entity.EntitySequence(
@@ -288,22 +297,28 @@ export class Sequence extends entity.CompositeEntity {
             const score = i + 1;
             return [
               new entity.FunctionCallEntity(() => {
-                allSink.push(
-                  new Promise((resolve) => {
-                    this._activateChildEntity(
-                      anim.textFadeUp(
-                        this.container,
-                        crisprUtil.makeText(`+ ${score}`, 0xffffff, 70 + 4 * i),
-                        300,
-                        new PIXI.Point(n.position.x, n.position.y - 50),
-                        () => {
-                          this.level.addScore(score);
-                          resolve();
-                        }
-                      )
-                    );
-                  })
-                );
+                if (addScore) {
+                  allSink.push(
+                    new Promise((resolve) => {
+                      this._activateChildEntity(
+                        anim.textFadeUp(
+                          this.container,
+                          crisprUtil.makeText(
+                            `+ ${score}`,
+                            0xffffff,
+                            70 + 4 * i
+                          ),
+                          300,
+                          new PIXI.Point(n.position.x, n.position.y - 50),
+                          () => {
+                            this.level.addScore(score);
+                            resolve();
+                          }
+                        )
+                      );
+                    })
+                  );
+                }
                 allSink.push(
                   new Promise((resolve) => {
                     this._activateChildEntity(
