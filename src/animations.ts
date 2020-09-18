@@ -5,25 +5,23 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as nucleotide from "./entities/nucleotide";
-import {Tween} from "booyah/src/tween";
+import { Tween } from "booyah/src/tween";
 
 /**
  * Ghom's light tween method adaptation
  */
-export function tweeny(
-  options: {
-    from?: number;
-    to?: number;
-    duration?: number;
-    easing?: (t: number) => number;
-    onUpdate?: (value: number) => any;
-    onTeardown?: () => any;
-  }
-) {
+export function tweeny(options: {
+  from?: number;
+  to?: number;
+  duration?: number;
+  easing?: (t: number) => number;
+  onUpdate?: (value: number) => any;
+  onTeardown?: () => any;
+}) {
   options.from = options.from ?? 0;
   options.to = options.to ?? 1;
 
-  return new Tween(options)
+  return new Tween(options);
 }
 
 export type Sprite =
@@ -38,7 +36,7 @@ export function swap(
   n1: nucleotide.Nucleotide,
   n2: nucleotide.Nucleotide,
   duration: number,
-  easing: easing.Easing,
+  easing: easing.EasingFunction,
   callback?: AnimationCallback
 ) {
   const n1Position = n1.position.clone();
@@ -155,7 +153,7 @@ export function move(
   from: PIXI.Point,
   to: PIXI.Point,
   duration: number,
-  easing: easing.Easing,
+  easing: easing.EasingFunction,
   callback?: AnimationCallback
 ) {
   return new entity.ParallelEntity([
