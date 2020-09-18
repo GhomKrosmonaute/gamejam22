@@ -49,7 +49,6 @@ export class Nucleotide extends entity.CompositeEntity {
   public isHearthBeatActive = false;
   public shakeAmounts: { [k: string]: number };
   //public pathBorders: PIXI.Sprite[] = [];
-  public pathArrow: PIXI.TilingSprite;
 
   private _state: NucleotideState;
   private _isHighlighted: boolean;
@@ -58,6 +57,7 @@ export class Nucleotide extends entity.CompositeEntity {
     | entity.SpriteEntity = null;
   private _infectionSpriteEntity: entity.SpriteEntity = null;
   private _highlightSprite: PIXI.Sprite = null;
+  private _pathArrowEntity: entity.AnimatedSpriteEntity;
   private _radius: number;
 
   private floating: { x: boolean; y: boolean } = { x: false, y: false };
@@ -67,6 +67,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
   constructor(
     public readonly fullRadius: number,
+    public parent: "grid" | "sequence",
     public position = new PIXI.Point(),
     public rotation = 0
   ) {
@@ -77,6 +78,10 @@ export class Nucleotide extends entity.CompositeEntity {
 
   get level(): level.Level {
     return this._entityConfig.level;
+  }
+
+  get pathArrow(): PIXI.AnimatedSprite {
+    return this._pathArrowEntity.sprite;
   }
 
   _setup() {
@@ -91,15 +96,17 @@ export class Nucleotide extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this._container);
 
-    this.pathArrow = new PIXI.TilingSprite(
-      this._entityConfig.app.loader.resources["images/path_arrow.jpg"].texture,
-      94,
-      300
+    this._pathArrowEntity = util.makeAnimatedSprite(
+      this._entityConfig.app.loader.resources["images/path_arrow.json"]
     );
+    this.pathArrow.loop = true;
     this.pathArrow.visible = false;
-    this.pathArrow.scale.set(0.43);
     this.pathArrow.anchor.set(0.5, 1);
     this.pathArrow.position.copyFrom(this.position);
+    this.pathArrow.animationSpeed = 0.6;
+    this.pathArrow.stop();
+
+    this._activateChildEntity(this._pathArrowEntity);
 
     // crisprUtil.NeighborIndexes.forEach((i) => {
     //   const pathBorder = new PIXI.Sprite(
@@ -119,11 +126,6 @@ export class Nucleotide extends entity.CompositeEntity {
   _update(frameInfo: entity.FrameInfo) {
     this._container.position.copyFrom(this.position);
     this.pathArrow.position.copyFrom(this.position);
-
-    // move floor arrow
-    if (this.pathArrow.visible) {
-      this.pathArrow.tilePosition.y -= 3;
-    }
 
     // infected hearth beat animation
     if (this.infected && !this.isHearthBeatActive) {
@@ -178,7 +180,9 @@ export class Nucleotide extends entity.CompositeEntity {
 
       this._highlightSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
-          "images/nucleotide_glow.png"
+          this.parent === "grid"
+            ? "images/nucleotide_bright.png"
+            : "images/nucleotide_glow.png"
         ].texture
       );
       this._highlightSprite.anchor.set(0.5);
@@ -202,8 +206,12 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._state === "infected";
   }
 
+  get spriteEntity(): entity.SpriteEntity | entity.AnimatedSpriteEntity {
+    return this._spriteEntity || this._infectionSpriteEntity;
+  }
+
   get sprite(): PIXI.Sprite | PIXI.AnimatedSprite {
-    return (this._spriteEntity || this._infectionSpriteEntity).sprite;
+    return this.spriteEntity.sprite;
   }
 
   get infectionSprite(): PIXI.Sprite {
@@ -263,10 +271,16 @@ export class Nucleotide extends entity.CompositeEntity {
     }
 
     if (newState === "missing") {
+      if (this._state === "infected") {
+        this._deactivateChildEntity(this._infectionSpriteEntity);
+      }
+
       this._state = newState;
       delete this.shakeAmounts.infection;
 
-      if (this._spriteEntity) this._deactivateChildEntity(this._spriteEntity);
+      if (this.children.includes(this._spriteEntity)) {
+        this._deactivateChildEntity(this._spriteEntity);
+      }
 
       this.colorName = null;
 
@@ -277,9 +291,12 @@ export class Nucleotide extends entity.CompositeEntity {
       );
       this.sprite.anchor.set(0.5);
 
-      this._activateChildEntity(this._spriteEntity, {
-        container: this._container,
-      });
+      this._activateChildEntity(
+        this._spriteEntity,
+        entity.extendConfig({
+          container: this._container,
+        })
+      );
       this._activateChildEntity(
         anim.popup(this.sprite, () => {
           this.emit("stateChanged", newState);
@@ -306,17 +323,20 @@ export class Nucleotide extends entity.CompositeEntity {
       );
       this.infectionSprite.anchor.set(0.5, 0.5);
       this.infectionSprite.visible = false;
-      this._activateChildEntity(this._infectionSpriteEntity, {
-        container: this._container,
-      });
+      this._activateChildEntity(
+        this._infectionSpriteEntity,
+        entity.extendConfig({
+          container: this._container,
+        })
+      );
 
       // Make infection "grow"
       const radiusTween = new tween.Tween({
         from: 0,
         to: 1,
         easing: easing.easeOutCubic,
+        onUpdate: (value) => mask.scale.set(value),
       });
-      this._on(radiusTween, "updatedValue", (value) => mask.scale.set(value));
 
       this._activateChildEntity(
         new entity.EntitySequence([
@@ -360,9 +380,12 @@ export class Nucleotide extends entity.CompositeEntity {
 
       // Create animated sprite
       this._spriteEntity = this._createAnimatedSprite();
-      this._activateChildEntity(this._spriteEntity, {
-        container: this._container,
-      });
+      this._activateChildEntity(
+        this._spriteEntity,
+        entity.extendConfig({
+          container: this._container,
+        })
+      );
       this._container.setChildIndex(this.sprite, 0);
       this._refreshScale();
 
@@ -388,9 +411,12 @@ export class Nucleotide extends entity.CompositeEntity {
 
       // Create animated sprite
       this._spriteEntity = this._createAnimatedSprite();
-      this._activateChildEntity(this._spriteEntity, {
-        container: this._container,
-      });
+      this._activateChildEntity(
+        this._spriteEntity,
+        entity.extendConfig({
+          container: this._container,
+        })
+      );
       this._container.setChildIndex(this.sprite, 0);
       this._refreshScale();
 

@@ -78,6 +78,7 @@ export class Grid extends entity.CompositeEntity {
         if (x % 2 === 0 && y === this.rowCount - 1) continue;
         const n = new nucleotide.Nucleotide(
           this.nucleotideRadius,
+          "grid",
           this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y))
         );
         n.setFloating("y", 0.001, 0.018);
@@ -272,9 +273,11 @@ export class Grid extends entity.CompositeEntity {
     if (index !== -1) {
       n.pathArrow.angle = index * (360 / 6);
       n.pathArrow.visible = true;
+      n.pathArrow.play();
       n.level.path.container.addChildAt(n.pathArrow, 0);
     } else {
       n.pathArrow.visible = false;
+      n.pathArrow.stop();
       n.level.path.container.removeChild(n.pathArrow);
     }
   }

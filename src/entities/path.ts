@@ -24,15 +24,13 @@ export class Path extends entity.CompositeEntity {
     //this.container.filters = [new filters.GlowFilter({ distance: 20 })];
 
     // place the path below the grid
-    // this._entityConfig.container.addChildAt(
-    //   this.graphics,
-    //   this._entityConfig.container.children.indexOf(
-    //     this.level.grid.container
-    //   )
-    // );
+    this._entityConfig.container.addChildAt(
+      this.container,
+      this._entityConfig.container.children.indexOf(this.level.grid.container)
+    );
 
     // place the path above the grid
-    this._entityConfig.container.addChild(this.container);
+    //this._entityConfig.container.addChild(this.container);
 
     this._on(this, "updated", () => {
       this.refresh();

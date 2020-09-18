@@ -259,6 +259,7 @@ export class Sequence extends entity.CompositeEntity {
     for (let i = 0; i < this.baseLength; i++) {
       const n = new nucleotide.Nucleotide(
         this.nucleotideRadius,
+        "sequence",
         new PIXI.Point(i * width * 0.8, crisprUtil.approximate(height * 0.05)),
         Math.random()
       );
