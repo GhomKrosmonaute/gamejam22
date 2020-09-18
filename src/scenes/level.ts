@@ -31,10 +31,25 @@ export class Level extends entity.CompositeEntity {
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
-  public hariManager: hair.HairManager;
+  public hairManager: hair.HairManager;
   public path: path.Path;
   public grid: grid.Grid;
   public state: LevelState = "crunch";
+
+  /**
+   * Disable continuous events while `disablingAnimations` contains one or more elements.
+   *
+   * **Flag accessor**: `<Level>.isDisablingAnimationInProgress`
+   *
+   * set a disabling animation:
+   * ```ts
+   * disablingAnimations.add(identifier as string)
+   * ```
+   * remove a disabling animation:
+   * ```ts
+   * disablingAnimations.delete(identifier as string)
+   * ```
+   */
   public disablingAnimations: Set<string> = new Set();
 
   public swapBonus = new bonuses.SwapBonus();
@@ -55,8 +70,8 @@ export class Level extends entity.CompositeEntity {
   private bonusBackground: PIXI.Sprite;
   private gaugeBarBaseWidth: number;
   private gaugeTriggered = false;
-  private score = 0;
   private maxScore = 1000;
+  private score = 0;
 
   constructor(public readonly levelVariant: LevelVariant) {
     super();
@@ -137,10 +152,10 @@ export class Level extends entity.CompositeEntity {
       this.container.addChild(membrane);
 
       // Make hair
-      this.hariManager = new hair.HairManager();
+      this.hairManager = new hair.HairManager();
 
       this._activateChildEntity(
-        this.hariManager,
+        this.hairManager,
         entity.extendConfig({
           container: this.container,
         })
