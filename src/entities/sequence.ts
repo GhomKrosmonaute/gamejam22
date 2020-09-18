@@ -98,6 +98,8 @@ export class SequenceManager extends entity.CompositeEntity {
 
   /** remove all validated sequences */
   crunch(_path: path.Path, callback?: () => any) {
+    const finish: Promise<void>[] = [];
+
     if (this.matchesSequence(_path) !== true) return;
 
     const signature = _path.signature;
@@ -119,7 +121,11 @@ export class SequenceManager extends entity.CompositeEntity {
     if (removedSequences.length > 0) {
       for (const s of removedSequences) {
         this.emit("crunch", s);
-        this.removeSequence(true, s, callback);
+        finish.push(
+          new Promise((resolve) => {
+            this.removeSequence(true, s, resolve);
+          })
+        );
       }
 
       this.sequences = _.difference(this.sequences, removedSequences);
@@ -127,6 +133,8 @@ export class SequenceManager extends entity.CompositeEntity {
     }
 
     // if (crunched) path.items.forEach((n) => (n.state = "missing"));
+
+    Promise.all(finish).then(callback);
   }
 
   removeSequence(addScore: boolean, s: Sequence, callback?: () => any) {
@@ -185,8 +193,8 @@ export class SequenceManager extends entity.CompositeEntity {
   /**
    * In the case that sequences are layed out, distributes them evenly
    */
-  distributeSequences(): void {
-    this.sequences.forEach((s, i) => {
+  distributeSequences() {
+    this.sequences.map((s, i) => {
       s.position.y = crisprUtil.proportion(
         i,
         0,
@@ -245,6 +253,20 @@ export class Sequence extends entity.CompositeEntity {
 
   get level(): level.Level {
     return this._entityConfig.level;
+  }
+
+  get maxActiveLength(): number {
+    const activeLength: number[] = [0];
+    let nbr = 0;
+    for (const n of this.nucleotides) {
+      if (n.state !== "inactive") {
+        nbr++;
+      } else {
+        activeLength.push(nbr);
+        nbr = 0;
+      }
+    }
+    return Math.max(...activeLength);
   }
 
   _setup() {

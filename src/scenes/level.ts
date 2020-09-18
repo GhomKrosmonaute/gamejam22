@@ -493,9 +493,45 @@ export class Level extends entity.CompositeEntity {
       return;
     }
 
-    this.sequenceManager.crunch(this.path, () => {
+    this.sequenceManager.crunch(this.path, async () => {
       if (this.levelVariant === "turnBased") {
         this.sequenceManager.distributeSequences();
+      }
+
+      console.log(this.sequenceManager.sequences[0].maxActiveLength);
+
+      if (
+        this.levelVariant === "long" &&
+        this.sequenceManager.sequences[0] &&
+        this.sequenceManager.sequences[0].maxActiveLength < 3
+      ) {
+        const sequence = this.sequenceManager.sequences[0];
+        const actives = sequence.nucleotides.filter(
+          (n) => n.state !== "inactive"
+        );
+        await new Promise((resolve) => {
+          this._activateChildEntity(
+            new entity.EntitySequence([
+              ...actives.map((n, i) => {
+                return anim.textFadeUp(
+                  this.container,
+                  new PIXI.Text(`-${10 * i}`, {
+                    fontSize: 100,
+                    fontFamily: "Cardenio Modern Bold",
+                    fill: "#ff0000",
+                  }),
+                  100 * i,
+                  new PIXI.Point(
+                    n.position.x + sequence.position.x,
+                    n.position.y + sequence.position.y
+                  ),
+                  () => this.addScore(-10 * i)
+                );
+              }),
+              new entity.FunctionCallEntity(resolve),
+            ])
+          );
+        });
       }
       if (this.sequenceManager.countSequences() === 0) {
         this._regenerate();
