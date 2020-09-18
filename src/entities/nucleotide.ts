@@ -46,15 +46,15 @@ export class Nucleotide extends entity.CompositeEntity {
   public type: NucleotideType = "normal";
   public colorName: ColorName = getRandomColorName();
   public isHovered = false;
-  public isHearthBeatActive = false;
+  public isHeartBeatActive = false;
   public shakeAmounts: { [k: string]: number };
 
   private _state: NucleotideState;
   private _isHighlighted: boolean;
   private _spriteEntity:
     | entity.AnimatedSpriteEntity
-    | entity.SpriteEntity = null;
-  private _infectionSpriteEntity: entity.SpriteEntity = null;
+    | entity.DisplayObjectEntity = null;
+  private _infectionSpriteEntity: entity.DisplayObjectEntity = null;
   private _highlightSprite: PIXI.Sprite = null;
   private _pathArrowEntity: entity.AnimatedSpriteEntity;
   private _radius: number;
@@ -113,12 +113,12 @@ export class Nucleotide extends entity.CompositeEntity {
     this.pathArrow.position.copyFrom(this.position);
 
     // infected hearth beat animation
-    if (this.infected && !this.isHearthBeatActive) {
-      this.isHearthBeatActive = true;
+    if (this.infected && !this.isHeartBeatActive) {
+      this.isHeartBeatActive = true;
       this._activateChildEntity(
-        anim.hearthBeat(this.sprite, 400, 1.1, () => {
+        anim.heartBeat(this.sprite, 400, 1.1, () => {
           setTimeout(() => {
-            this.isHearthBeatActive = false;
+            this.isHeartBeatActive = false;
           }, 1500 + Math.random() * 1000);
         })
       );
@@ -163,7 +163,11 @@ export class Nucleotide extends entity.CompositeEntity {
     if (isHighlighted && !this._isHighlighted) {
       this.shakeAmounts.highlight = 2;
 
-      this.spriteEntity.sprite.scale.set(this.parent === "grid" ? 0.9 : 1.1);
+      const displayObject =
+        this.spriteEntity instanceof entity.AnimatedSpriteEntity
+          ? this.spriteEntity.sprite
+          : this.spriteEntity.displayObject;
+      displayObject.scale.set(this.parent === "grid" ? 0.9 : 1.1);
 
       this._highlightSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
@@ -178,7 +182,7 @@ export class Nucleotide extends entity.CompositeEntity {
     } else if (!isHighlighted && this._isHighlighted) {
       delete this.shakeAmounts.highlight;
 
-      this.spriteEntity.sprite.scale.set(1);
+      this.sprite.scale.set(1);
 
       this._container.removeChild(this._highlightSprite);
       this._highlightSprite = null;
@@ -195,16 +199,18 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._state === "infected";
   }
 
-  get spriteEntity(): entity.SpriteEntity | entity.AnimatedSpriteEntity {
+  get spriteEntity(): entity.DisplayObjectEntity | entity.AnimatedSpriteEntity {
     return this._spriteEntity || this._infectionSpriteEntity;
   }
 
   get sprite(): PIXI.Sprite | PIXI.AnimatedSprite {
-    return this.spriteEntity.sprite;
+    return this.spriteEntity instanceof entity.AnimatedSpriteEntity
+      ? this.spriteEntity.sprite
+      : (this.spriteEntity.displayObject as PIXI.Sprite);
   }
 
   get infectionSprite(): PIXI.Sprite {
-    return this._infectionSpriteEntity.sprite;
+    return this._infectionSpriteEntity.displayObject as PIXI.Sprite;
   }
 
   async bubble(duration: number) {
@@ -275,7 +281,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
       this.colorName = null;
 
-      this._spriteEntity = new entity.SpriteEntity(
+      this._spriteEntity = new entity.DisplayObjectEntity(
         new PIXI.Sprite(
           this._entityConfig.app.loader.resources["images/hole.png"].texture
         )
@@ -305,7 +311,7 @@ export class Nucleotide extends entity.CompositeEntity {
       // this._container.addChild(mask);
 
       // Overlay infection
-      this._infectionSpriteEntity = new entity.SpriteEntity(
+      this._infectionSpriteEntity = new entity.DisplayObjectEntity(
         new PIXI.Sprite(
           this._entityConfig.app.loader.resources[
             `images/infection_${this.fullColorName}.png`
@@ -338,7 +344,6 @@ export class Nucleotide extends entity.CompositeEntity {
           new entity.WaitingEntity(100),
 
           new entity.FunctionCallEntity(() => {
-            // this.shakeAmounts.infection = 3;
             delete this.shakeAmounts.infection;
 
             this._container.addChild(mask);

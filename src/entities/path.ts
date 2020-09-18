@@ -26,9 +26,6 @@ export class Path extends entity.CompositeEntity {
       this._entityConfig.container.children.indexOf(this.level.grid.container)
     );
 
-    // place the path above the grid
-    //this._entityConfig.container.addChild(this.container);
-
     this._on(this, "updated", () => {
       this.refresh();
     });
@@ -147,6 +144,8 @@ export class Path extends entity.CompositeEntity {
     })) {
       if (this.items.includes(n)) {
         n.isHighlighted = true;
+        n.sprite.scale.set(1.1);
+        n.shakeAmounts.path = 3;
 
         if (last) {
           this.level.grid.pointTo(

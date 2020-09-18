@@ -3,7 +3,7 @@ import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as crisprUtil from "../crisprUtil";
 
-export type State = "walk" | "idle" | "sting";
+export type State = "walkLeft" | "walkRight" | "idle" | "sting";
 
 export class Virus extends entity.CompositeEntity {
   private _container: PIXI.Container;
@@ -44,9 +44,18 @@ export class Virus extends entity.CompositeEntity {
 
     if (this._virusAnimation) {
       this._deactivateChildEntity(this._virusAnimation);
+      this._virusAnimation = null;
     }
 
-    this._virusAnimation = this._createAnimation(`mini_bob_${state}`);
+    if (this.state === "walkLeft" || this.state == "walkRight") {
+      this._virusAnimation = this._createAnimation(`mini_bob_walk`);
+      // Put him a bit lower
+      this._virusAnimation.sprite.position.y = 10;
+
+      if (this.state === "walkLeft") this._virusAnimation.sprite.scale.x *= -1;
+    } else {
+      this._virusAnimation = this._createAnimation(`mini_bob_${state}`);
+    }
     this._activateChildEntity(this._virusAnimation, {
       container: this._container,
     });
@@ -57,7 +66,7 @@ export class Virus extends entity.CompositeEntity {
       this._entityConfig.app.loader.resources[`images/${name}.json`]
     );
     virus.sprite.animationSpeed = 25 / 60;
-    virus.sprite.scale.set(0.6);
+    virus.sprite.scale.set(0.12);
     virus.sprite.anchor.set(0.5, 1);
     virus.sprite.play();
 
