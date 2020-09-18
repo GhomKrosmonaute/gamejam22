@@ -1,7 +1,6 @@
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
-import * as util from "booyah/src/util";
 import * as geom from "booyah/src/geom";
 import * as tween from "booyah/src/tween";
 
@@ -15,14 +14,12 @@ import * as bonuses from "../entities/bonus";
 import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
+import * as hair from "../entities/hair";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
 export type LevelState = "crunch" | "regenerate" | "bonus";
 
 const dropSpeed = 0.001;
-const hairCount = 40;
-const hairMinScale = 0.3;
-const hairMaxScale = 0.45;
 
 /**
  * emit:
@@ -34,9 +31,11 @@ export class Level extends entity.CompositeEntity {
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
+  public hariManager: hair.HairManager;
   public path: path.Path;
   public grid: grid.Grid;
   public state: LevelState = "crunch";
+  public disablingAnimations: Set<string> = new Set();
 
   public swapBonus = new bonuses.SwapBonus();
   public starBonus = new bonuses.StarBonus();
@@ -56,12 +55,15 @@ export class Level extends entity.CompositeEntity {
   private bonusBackground: PIXI.Sprite;
   private gaugeBarBaseWidth: number;
   private gaugeTriggered = false;
-
   private score = 0;
   private maxScore = 1000;
 
   constructor(public readonly levelVariant: LevelVariant) {
     super();
+  }
+
+  get cursor(): PIXI.Point {
+    return this.grid.cursor;
   }
 
   _setup() {
@@ -135,14 +137,14 @@ export class Level extends entity.CompositeEntity {
       this.container.addChild(membrane);
 
       // Make hair
-      for (let i = 0; i < hairCount; i++) {
-        this.container.addChild(
-          this._makeHair(
-            geom.degreesToRadians(geom.lerp(-23, 24, i / hairCount)),
-            geom.lerp(hairMaxScale, hairMinScale, Math.random())
-          )
-        );
-      }
+      this.hariManager = new hair.HairManager();
+
+      this._activateChildEntity(
+        this.hariManager,
+        entity.extendConfig({
+          container: this.container,
+        })
+      );
     }
 
     // GUI/HUD
@@ -321,7 +323,11 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update() {
-    if (this.levelVariant !== "continuous") return;
+    if (
+      this.levelVariant !== "continuous" ||
+      this.isDisablingAnimationInProgress
+    )
+      return;
 
     const droppedSequences = this.sequenceManager.advanceSequences(dropSpeed);
     if (droppedSequences.length > 0) {
@@ -410,6 +416,10 @@ export class Level extends entity.CompositeEntity {
       this.sequenceManager.dropSequences();
       this._onInfection();
     }
+  }
+
+  get isDisablingAnimationInProgress(): boolean {
+    return this.disablingAnimations.size > 0;
   }
 
   get isGuiLocked(): boolean {
@@ -508,20 +518,28 @@ export class Level extends entity.CompositeEntity {
     this.state = "regenerate";
     this._refresh();
 
-    const newNucleotides = this.grid.fillHoles();
+    const regen = () => {
+      const newNucleotides = this.grid.fillHoles();
 
-    // Wait for a second, then continue
-    this._activateChildEntity(
-      new entity.EntitySequence([
-        new entity.WaitingEntity(1000),
-        new entity.FunctionCallEntity(() => {
-          this.state = "crunch";
+      // Wait for a second, then continue
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          new entity.WaitingEntity(1000),
+          new entity.FunctionCallEntity(() => {
+            this.state = "crunch";
 
-          this._endTurn();
-          this._refresh();
-        }),
-      ])
-    );
+            this._endTurn();
+            this._refresh();
+          }),
+        ])
+      );
+    };
+
+    if (this.path.isCrunchAnimationRunning) {
+      this._once(this.path, "crunchAnimationFinished", () => regen());
+    } else {
+      regen();
+    }
   }
 
   private _onInfection(infectionCount = 1): void {
@@ -544,40 +562,5 @@ export class Level extends entity.CompositeEntity {
         }),
       ])
     );
-  }
-
-  /**
-   *
-   * @param angle in radians
-   */
-  private _makeHair(angle: number, scale: number): PIXI.AnimatedSprite {
-    const hair = util.makeAnimatedSprite(
-      this._entityConfig.app.loader.resources["images/hair.json"]
-    );
-    hair.animationSpeed = (24 + angle) / 60;
-
-    // Make hair ping-pong
-    hair.loop = false;
-    hair.onComplete = () => {
-      hair.animationSpeed *= -1;
-      hair.play();
-    };
-    hair.play();
-
-    hair.scale.set(scale);
-    hair.anchor.set(0.5, 1);
-
-    // const radius = 1337;
-    // const centerY = 320 + radius;
-    // hair.position.set(
-    //   radius * Math.cos(angle + Math.PI / 2) +
-    //     this._entityConfig.app.view.width / 2,
-    //   centerY - radius * Math.sin(angle + Math.PI / 2)
-    // );
-    // hair.rotation = -angle;
-
-    crisprUtil.positionAlongMembrane(hair, angle);
-
-    return hair;
   }
 }

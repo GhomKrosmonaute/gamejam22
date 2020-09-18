@@ -4,26 +4,27 @@ import * as entity from "booyah/src/entity";
 import * as nucleotide from "./nucleotide";
 import * as level from "../scenes/level";
 import * as anim from "../animations";
-import * as filters from "../filters";
 
 /**
  * Represent the user path to validate sequences
  * Emits:
  * - updated()
+ * - crunchAnimationFinished()
  */
 export class Path extends entity.CompositeEntity {
   public items: nucleotide.Nucleotide[] = [];
-  public graphics = new PIXI.Graphics();
   public container = new PIXI.Container();
   public isValidSequence = false;
+  public isCrunchAnimationRunning = false;
 
   protected _setup() {
     this.container.position.copyFrom(this.level.grid);
-    this.container.addChild(this.graphics);
-    this.container.filters = [new filters.GlowFilter({ distance: 20 })];
 
-    // place the path above the grid
-    this._entityConfig.container.addChild(this.container);
+    // place the path below the grid
+    this._entityConfig.container.addChildAt(
+      this.container,
+      this._entityConfig.container.children.indexOf(this.level.grid.container)
+    );
 
     this._on(this, "updated", () => {
       this.refresh();
@@ -31,7 +32,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   protected _teardown() {
-    (this._entityConfig.container as PIXI.Container).removeChild(this.graphics);
+    this._entityConfig.container.removeChild(this.container);
   }
 
   get level(): level.Level {
@@ -39,7 +40,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   get signature(): string {
-    return this.nucleotides.map((n) => n.toString()).join("");
+    return this.nucleotides.join("");
   }
 
   /** The real length without cuts */
@@ -79,8 +80,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
-    if (n.state === "missing" || this._entityConfig.level.isGuiLocked)
-      return false;
+    if (n.state === "missing" || this.level.isGuiLocked) return false;
 
     // check the cancellation & cancel to previous nucleotide
     const index = this.items.indexOf(n);
@@ -95,15 +95,13 @@ export class Path extends entity.CompositeEntity {
       if (this.add(n)) return true;
 
       // Otherwise, start path anew
-      this.items = [n];
+      this.items = this.items.length > 0 ? [] : [n];
     }
-
-    this.emit("updated");
     return true;
   }
 
   add(n: nucleotide.Nucleotide): boolean {
-    if (this._entityConfig.level.isGuiLocked) return false;
+    if (this.level.isGuiLocked) return false;
 
     // not add scissors on first position
     if (this.first && this.first.type === "scissors") {
@@ -136,14 +134,16 @@ export class Path extends entity.CompositeEntity {
   }
 
   refresh() {
-    this.graphics.clear();
-    this.graphics.removeChildren();
+    // this.graphics.clear();
+    // this.graphics.removeChildren();
     let last: nucleotide.Nucleotide = null;
+
     // for each nucleotide in path
     for (const n of this.level.grid.nucleotides.sort((a, b) => {
       return this.items.indexOf(a) - this.items.indexOf(b);
     })) {
       if (this.items.includes(n)) {
+        n.isHighlighted = true;
         n.sprite.scale.set(1.1);
         n.shakeAmounts.path = 3;
 
@@ -158,30 +158,22 @@ export class Path extends entity.CompositeEntity {
           this.level.grid.pointTo(n, -1);
         }
 
-        this.graphics
-          .beginFill(0x000000)
-          .drawEllipse(
-            n.position.x,
-            n.position.y,
-            n.width * 0.19,
-            n.height * 0.19
-          );
-
         last = n;
       } else {
-        delete n.shakeAmounts.path;
-        n.sprite.scale.set(1);
-        // n.pathBorders.forEach((sprite) => (sprite.visible = false));
+        n.isHighlighted = false;
+
         n.pathArrow.visible = false;
       }
     }
   }
 
-  crunch() {
+  crunch(callback?: () => any) {
+    this.isCrunchAnimationRunning = true;
     this.level.isGuiLocked = true;
+    const allCrunched: Promise<void>[] = [];
     this._activateChildEntity(
-      new entity.EntitySequence([
-        ...this.items
+      new entity.EntitySequence(
+        this.items
           .map<any>((item, i) => {
             const score = item.infected ? (i + 1) * 2 : i + 1;
             const fill = item.infected ? item.fullColorName : "#ffeccc";
@@ -189,14 +181,19 @@ export class Path extends entity.CompositeEntity {
             const duration = item.infected ? 1000 : 500;
             return [
               new entity.FunctionCallEntity(() => {
-                this._activateChildEntity(
-                  anim.down(
-                    item.sprite,
-                    duration,
-                    function () {
-                      this.state = "missing";
-                    }.bind(item)
-                  )
+                allCrunched.push(
+                  new Promise((resolve) => {
+                    this._activateChildEntity(
+                      anim.down(
+                        item.sprite,
+                        duration,
+                        function () {
+                          this.state = "missing";
+                          this.once("stateChanged", resolve);
+                        }.bind(item)
+                      )
+                    );
+                  })
                 );
                 this._activateChildEntity(
                   anim.textFadeUp(
@@ -219,11 +216,18 @@ export class Path extends entity.CompositeEntity {
               new entity.WaitingEntity(50),
             ];
           })
-          .flat(),
-        new entity.FunctionCallEntity(() => {
-          this.level.isGuiLocked = false;
-        }),
-      ])
+          .flat()
+          .concat([
+            new entity.FunctionCallEntity(() => {
+              Promise.all(allCrunched).then(() => {
+                this.level.isGuiLocked = false;
+                this.isCrunchAnimationRunning = false;
+                this.emit("crunchAnimationFinished");
+                if (callback) callback();
+              });
+            }),
+          ])
+      )
     );
     this.remove();
   }

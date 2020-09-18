@@ -69,17 +69,21 @@ export function approximate(base: number, shift?: number): number {
   return random(base - shift, base + shift);
 }
 
+/**
+ * @param displayObject
+ * @param rotation in radians
+ */
 export function positionAlongMembrane(
   displayObject: PIXI.DisplayObject,
-  angle: number
+  rotation: number
 ): void {
   const radius = 1337;
   const centerY = 320 + radius;
   displayObject.position.set(
-    radius * Math.cos(angle + Math.PI / 2) + 1080 / 2,
-    centerY - radius * Math.sin(angle + Math.PI / 2)
+    radius * Math.cos(rotation + Math.PI / 2) + 1080 / 2,
+    centerY - radius * Math.sin(rotation + Math.PI / 2)
   );
-  displayObject.rotation = -angle;
+  displayObject.rotation = -rotation;
 }
 
 export function makeText(

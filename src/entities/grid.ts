@@ -4,6 +4,7 @@ import * as entity from "booyah/src/entity";
 import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
 import * as nucleotide from "./nucleotide";
+import * as level from "../scenes/level";
 
 /** from 0 to 5, start on top */
 export type NeighborIndex = 0 | 1 | 2 | 3 | 4 | 5;
@@ -27,9 +28,9 @@ export class Grid extends entity.CompositeEntity {
   public nucleotideContainer: PIXI.Container;
   public x = game.width * 0.09;
   public y = game.height * 0.4;
-
-  private _isPointerDown: boolean;
-  public lastPointerPos: PIXI.Point;
+  public isPointerDown = false;
+  public cursor = new PIXI.Point();
+  public lastHovered: nucleotide.Nucleotide | null;
 
   constructor(
     public colCount: number,
@@ -40,34 +41,32 @@ export class Grid extends entity.CompositeEntity {
     super();
   }
 
-  _setup() {
-    this._isPointerDown = false;
+  get level(): level.Level {
+    return this._entityConfig.level;
+  }
 
+  _setup() {
     this.container = new PIXI.Container();
     this.container.interactive = true;
     // Keep track of last pointer position
     this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointerup", this._onPointerUp);
-    this._on(
-      this.container,
-      "pointermove",
-      (e: PIXI.InteractionEvent) => (this.lastPointerPos = e.data.global)
-    );
+    this._on(this.container, "pointermove", this._onPointerMove);
     this._entityConfig.container.addChild(this.container);
 
     // Add background to get pointer events
-    {
-      const bg = new PIXI.Graphics();
-      bg.beginFill(0, 0);
-      bg.drawRect(
-        0,
-        0,
-        this._entityConfig.app.view.width,
-        this._entityConfig.app.view.height
-      );
-      bg.endFill();
-      this.container.addChild(bg);
-    }
+    // {
+    //   const bg = new PIXI.Graphics();
+    //   bg.beginFill(0, 0);
+    //   bg.drawRect(
+    //     0,
+    //     0,
+    //     this._entityConfig.app.view.width,
+    //     this._entityConfig.app.view.height
+    //   );
+    //   bg.endFill();
+    //   this.container.addChild(bg);
+    // }
 
     this.nucleotideContainer = new PIXI.Container();
     this.nucleotideContainer.position.set(this.x, this.y);
@@ -79,6 +78,7 @@ export class Grid extends entity.CompositeEntity {
         if (x % 2 === 0 && y === this.rowCount - 1) continue;
         const n = new nucleotide.Nucleotide(
           this.nucleotideRadius,
+          "grid",
           this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y))
         );
         n.setFloating("y", 0.001, 0.018);
@@ -100,15 +100,10 @@ export class Grid extends entity.CompositeEntity {
   }
 
   _update() {
-    if (!this._isPointerDown) return;
+    if (!this.isPointerDown) return;
 
-    const hovered: nucleotide.Nucleotide = this.nucleotides.find((n) =>
-      this.checkHovered(n)
-    );
-    if (!hovered) return;
-
-    // update path with hovered
-    this._entityConfig.level.path.add(hovered);
+    this.lastHovered = this.getHovered();
+    if (this.lastHovered) this.level.path.add(this.lastHovered);
   }
 
   _teardown() {
@@ -118,28 +113,42 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides = [];
   }
 
-  private _onPointerDown() {
-    this._isPointerDown = true;
+  private _onPointerDown(e: PIXI.InteractionEvent) {
+    this.isPointerDown = true;
+    this.updateCursor(e);
 
-    const hovered: nucleotide.Nucleotide = this.getHovered();
-    if (!hovered) return;
+    let hovered: nucleotide.Nucleotide;
+
+    const bonus = this.level.bonusesManager.getSelectedBonus();
+    if (!bonus) {
+      hovered = this.getHovered();
+      if (!hovered) return;
+
+      // update path with hovered
+      const updated = this.level.path.startAt(hovered);
+      if (updated) this.level.path.emit("updated");
+    } else {
+      hovered = this.getHovered();
+      if (!hovered) return;
+    }
 
     this.emit("drag", hovered);
-
-    const focused = this._entityConfig.level.bonusesManager.focused;
-
-    if (!focused)
-      // update path with hovered
-      this._entityConfig.level.path.startAt(hovered);
-    // use bonus
-    else focused.use(hovered);
   }
 
-  private _onPointerUp(): void {
-    this._isPointerDown = false;
+  private _onPointerUp(e: PIXI.InteractionEvent): void {
+    this.isPointerDown = false;
+    this.updateCursor(e);
 
     this.emit("pointerup");
     this.emit("drop");
+  }
+
+  private _onPointerMove(e: PIXI.InteractionEvent): void {
+    this.updateCursor(e);
+  }
+
+  private updateCursor(e: PIXI.InteractionEvent) {
+    this.cursor.copyFrom(e.data.global);
   }
 
   get nucleotides(): nucleotide.Nucleotide[] {
@@ -148,7 +157,7 @@ export class Grid extends entity.CompositeEntity {
 
   /** Does nothing in "long" mode **/
   addScissors(among: nucleotide.Nucleotide[]) {
-    if (this._entityConfig.level.levelVariant === "long") return;
+    if (this.level.levelVariant === "long") return;
 
     const safe = this.nucleotides;
     while (safe.filter((n) => n.type === "scissors").length < this.cutCount) {
@@ -161,7 +170,9 @@ export class Grid extends entity.CompositeEntity {
   }
 
   isOnEvenCol(n: nucleotide.Nucleotide): boolean {
-    return this.getGridPositionOf(n).x % 2 === 0;
+    const position = this.getGridPositionOf(n);
+    if (!position) return null;
+    return position.x % 2 === 0;
   }
 
   getNucleotideFromGridPosition(
@@ -212,26 +223,36 @@ export class Grid extends entity.CompositeEntity {
     return new PIXI.Point(x, y);
   }
 
-  getHovered(): nucleotide.Nucleotide | null {
-    return this.nucleotides.find((nucleotide) => this.checkHovered(nucleotide));
+  getHovered(radiusRatio: number = 1): nucleotide.Nucleotide | null {
+    return this.nucleotides
+      .filter((n) => this.checkHovered(n, radiusRatio) !== false)
+      .sort((a, b) => {
+        return (
+          (this.checkHovered(a, radiusRatio) as number) -
+          (this.checkHovered(b, radiusRatio) as number)
+        );
+      })[0];
   }
 
-  getAllHovered(): nucleotide.Nucleotide[] {
-    return this.nucleotides.filter((nucleotide) =>
-      this.checkHovered(nucleotide)
+  getAllHovered(radiusRatio: number = 1): nucleotide.Nucleotide[] {
+    return this.nucleotides.filter(
+      (nucleotide) => this.checkHovered(nucleotide, radiusRatio) !== false
     );
   }
 
-  checkHovered(n: nucleotide.Nucleotide): boolean {
-    return (
-      crisprUtil.dist(
-        n.position.x + this.x,
-        n.position.y + this.y,
-        this.lastPointerPos.x,
-        this.lastPointerPos.y
-      ) <
-      n.radius * 0.86
+  checkHovered(
+    n: nucleotide.Nucleotide,
+    radiusRatio: number = 1
+  ): false | number {
+    if (!this.cursor) return false;
+    const dist = crisprUtil.dist(
+      n.position.x + this.x,
+      n.position.y + this.y,
+      this.cursor.x,
+      this.cursor.y
     );
+    if (dist < n.radius * radiusRatio) return dist;
+    return false;
   }
 
   slide(neighborIndex: NeighborIndex) {
@@ -252,9 +273,11 @@ export class Grid extends entity.CompositeEntity {
     if (index !== -1) {
       n.pathArrow.angle = index * (360 / 6);
       n.pathArrow.visible = true;
+      n.pathArrow.play();
       n.level.path.container.addChildAt(n.pathArrow, 0);
     } else {
       n.pathArrow.visible = false;
+      n.pathArrow.stop();
       n.level.path.container.removeChild(n.pathArrow);
     }
   }

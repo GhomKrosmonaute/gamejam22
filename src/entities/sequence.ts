@@ -25,8 +25,6 @@ export class SequenceManager extends entity.CompositeEntity {
     this._entityConfig.container.addChild(this.container);
   }
 
-  _update() {}
-
   _teardown() {
     this.sequences = [];
     this._entityConfig.container.removeChild(this.container);
@@ -61,7 +59,6 @@ export class SequenceManager extends entity.CompositeEntity {
       case "turnBased":
         return 3;
       case "continuous":
-        return 1;
       case "long":
         return 1;
     }
@@ -181,9 +178,6 @@ export class SequenceManager extends entity.CompositeEntity {
    */
   distributeSequences(): void {
     this.sequences.forEach((s, i) => {
-      const { width } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-        s.nucleotideRadius
-      );
       s.position.y = crisprUtil.proportion(
         i,
         0,
@@ -261,6 +255,7 @@ export class Sequence extends entity.CompositeEntity {
     for (let i = 0; i < this.baseLength; i++) {
       const n = new nucleotide.Nucleotide(
         this.nucleotideRadius,
+        "sequence",
         new PIXI.Point(i * width * 0.8, crisprUtil.approximate(height * 0.05)),
         Math.random()
       );
@@ -289,6 +284,7 @@ export class Sequence extends entity.CompositeEntity {
       new entity.EntitySequence(
         this.nucleotides
           .map<any>((n, i, all) => {
+            delete n.shakeAmounts.highlight;
             const score = i + 1;
             return [
               new entity.FunctionCallEntity(() => {
@@ -315,10 +311,14 @@ export class Sequence extends entity.CompositeEntity {
                         anim.tweeny({
                           from: n.position.x,
                           to: n.position.x + (all.length / 2) * 25 - i * 25,
-                          duration: 500,
-                          onUpdate: (value) => (n.position.x = value),
+                          duration: 1000,
+                          onUpdate: (value) => {
+                            n.position.x = value;
+                          },
                         }),
-                        anim.sink(n.sprite, 500, resolve),
+                        new entity.FunctionCallEntity(() => {
+                          n.sink(1000).then(resolve);
+                        }),
                       ])
                     );
                   })
@@ -391,7 +391,7 @@ export class Sequence extends entity.CompositeEntity {
       return util.subarray(
         this.nucleotides,
         sequenceSignature.length - 1 - index,
-        -signature.length
+        signature.length * -1
       );
     }
 

@@ -5,7 +5,6 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as nucleotide from "./entities/nucleotide";
-import { Tween } from "booyah/src/tween";
 
 /**
  * Ghom's light tween method adaptation
@@ -21,7 +20,7 @@ export function tweeny(options: {
   options.from = options.from ?? 0;
   options.to = options.to ?? 1;
 
-  return new Tween(options);
+  return new tween.Tween(options);
 }
 
 export type Sprite =
@@ -104,6 +103,7 @@ export function sink(
   duration: number,
   callback?: AnimationCallback
 ) {
+  obj.filters = [new PIXI.filters.AlphaFilter(1)];
   return new entity.ParallelEntity([
     tweeny({
       from: 1,
@@ -118,7 +118,7 @@ export function sink(
       duration,
       easing: easing.easeInOutQuad,
       onUpdate: (value) =>
-        (obj.filters = [new PIXI.filters.AlphaFilter(value)]),
+        ((obj.filters[0] as PIXI.filters.AlphaFilter).alpha = value),
       onTeardown: () => {
         if (callback) callback(obj);
       },
@@ -208,25 +208,29 @@ export function heartBeat(
     tweeny({
       from: 1,
       to: scale,
-      duration: duration * 0.25,
+      duration: duration * 0.2,
+      easing: easing.easeInOutQuart,
       onUpdate,
     }),
     tweeny({
       from: scale,
       to: 1,
-      duration: duration * 0.25,
+      duration: duration * 0.3,
+      easing: easing.easeInOutQuart,
       onUpdate,
     }),
     tweeny({
       from: 1,
       to: scale,
-      duration: duration * 0.25,
+      duration: duration * 0.2,
+      easing: easing.easeInOutQuart,
       onUpdate,
     }),
     tweeny({
       from: scale,
       to: 1,
-      duration: duration * 0.25,
+      duration: duration * 0.3,
+      easing: easing.easeInOutQuart,
       onUpdate,
       onTeardown: () => {
         if (callback) callback(obj);
