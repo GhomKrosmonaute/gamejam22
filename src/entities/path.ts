@@ -144,8 +144,6 @@ export class Path extends entity.CompositeEntity {
     })) {
       if (this.items.includes(n)) {
         n.isHighlighted = true;
-        n.sprite.scale.set(1.1);
-        n.shakeAmounts.path = 3;
 
         if (last) {
           this.level.grid.pointTo(
@@ -160,8 +158,6 @@ export class Path extends entity.CompositeEntity {
 
         last = n;
       } else {
-        delete n.shakeAmounts.path;
-
         n.isHighlighted = false;
 
         n.pathArrow.visible = false;
