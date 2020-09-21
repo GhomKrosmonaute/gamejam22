@@ -505,6 +505,7 @@ export class Level extends entity.CompositeEntity {
         this.sequenceManager.sequences[0].maxActiveLength < 3
       ) {
         const sequence = this.sequenceManager.sequences[0];
+        const fully = sequence.nucleotides.every((n) => n.state === "inactive");
         await new Promise((resolve) => {
           this._activateChildEntity(
             new entity.EntitySequence([
@@ -514,7 +515,8 @@ export class Level extends entity.CompositeEntity {
                   const score =
                     10 *
                     Math.ceil((i + 1) / 2) *
-                    (n.state !== "inactive" ? 1 : -1);
+                    (n.state !== "inactive" ? 1 : -1) *
+                    (fully ? 2 : 1);
                   return [
                     new entity.FunctionCallEntity(() => {
                       this._activateChildEntity(
@@ -527,7 +529,11 @@ export class Level extends entity.CompositeEntity {
                               score < 0
                                 ? "#d70000"
                                 : nucleotide.fullColorNames[n.colorName],
-                            stroke: score < 0 ? "#000000" : "#ffffff",
+                            stroke: fully
+                              ? "#ffcb00"
+                              : score < 0
+                              ? "#000000"
+                              : "#ffffff",
                             strokeThickness: score < 0 ? 3 : 10,
                           }),
                           1000,
