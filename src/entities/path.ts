@@ -115,9 +115,10 @@ export class Path extends entity.CompositeEntity {
     // Don't start new paths
     if (this.items.length === 0) return false;
 
-    // If the nucleotide is already in the path
     const index = this.items.indexOf(n);
+    // If the nucleotide is already in the path
     if (index !== -1) {
+      // If the nucleotide is the previous step of path
       if (index === this.items.length - 2) {
         // Return to previous step in the path
         this.items.pop();
