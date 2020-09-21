@@ -229,7 +229,7 @@ export class SequenceManager extends entity.CompositeEntity {
     this.sequences.forEach((s) => s.highlightSegment(signature));
   }
 
-  countSequences(): number {
+  get countSequences(): number {
     return this.sequences.length;
   }
 
@@ -263,9 +263,9 @@ export class Sequence extends entity.CompositeEntity {
       if (n.state !== "inactive") {
         nbr++;
       } else {
-        activeLength.push(nbr);
         nbr = 0;
       }
+      activeLength.push(nbr);
     }
     return Math.max(...activeLength);
   }
@@ -362,13 +362,19 @@ export class Sequence extends entity.CompositeEntity {
                   })
                 );
               }),
-              new entity.WaitingEntity(200),
+              new entity.WaitingEntity(
+                this.level.levelVariant === "long" ? 80 : 200
+              ),
             ];
           })
           .flat()
           .concat([
             new entity.FunctionCallEntity(() => {
               Promise.all(allSink).then(() => {
+                this.level.sequenceManager.sequences = this.level.sequenceManager.sequences.filter(
+                  (s) => s !== this
+                );
+                this._transition = entity.makeTransition();
                 if (callback) callback();
               });
             }),

@@ -458,7 +458,7 @@ export class Level extends entity.CompositeEntity {
     // Create a list of "actions" that will take place at the end of calling this function
     let actions: entity.Entity[] = [];
 
-    const countSequences = this.sequenceManager.countSequences();
+    const countSequences = this.sequenceManager.countSequences;
     if (countSequences > 0) {
       const infectionSequence = this.grid.infect(countSequences * 5);
       actions.push(infectionSequence);
@@ -510,29 +510,43 @@ export class Level extends entity.CompositeEntity {
         await new Promise((resolve) => {
           this._activateChildEntity(
             new entity.EntitySequence([
-              ...actives.map((n, i) => {
-                return anim.textFadeUp(
-                  this.container,
-                  new PIXI.Text(`-${10 * i}`, {
-                    fontSize: 100,
-                    fontFamily: "Cardenio Modern Bold",
-                    fill: "#ff0000",
-                  }),
-                  200 * i,
-                  new PIXI.Point(
-                    n.position.x + sequence.position.x,
-                    n.position.y + sequence.position.y
-                  ),
-                  () => this.addScore(-10 * i)
-                );
-              }),
+              ...actives
+                .map((n, i) => {
+                  const score = 10 * (i + 1);
+                  return [
+                    new entity.FunctionCallEntity(() => {
+                      this._activateChildEntity(
+                        anim.textFadeUp(
+                          this.container,
+                          new PIXI.Text(`-${score}`, {
+                            fontSize: 50 + score,
+                            fontFamily: "Cardenio Modern Bold",
+                            fill: "#ff0000",
+                            stroke: "#000000",
+                            strokeThickness: 10,
+                          }),
+                          600,
+                          new PIXI.Point(
+                            n.position.x + sequence.position.x,
+                            n.position.y + sequence.position.y - 50
+                          ),
+                          () => this.addScore(score * -1)
+                        )
+                      );
+                    }),
+                    new entity.WaitingEntity(200),
+                  ];
+                })
+                .flat(),
               new entity.FunctionCallEntity(resolve),
             ])
           );
         });
-        await new Promise((resolve) => sequence.down(false, resolve));
+        await new Promise((resolve) => {
+          sequence.down(false, resolve);
+        });
       }
-      if (this.sequenceManager.countSequences() === 0) {
+      if (this.sequenceManager.countSequences === 0) {
         this._regenerate();
       }
     });
