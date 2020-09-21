@@ -516,7 +516,7 @@ export class Level extends entity.CompositeEntity {
                   return [
                     new entity.FunctionCallEntity(() => {
                       this._activateChildEntity(
-                        anim.textFadeUp(
+                        anim.textFade(
                           this.container,
                           new PIXI.Text(`-${score}`, {
                             fontSize: 50 + score,
@@ -525,11 +525,12 @@ export class Level extends entity.CompositeEntity {
                             stroke: "#000000",
                             strokeThickness: 10,
                           }),
-                          600,
+                          1000,
                           new PIXI.Point(
                             n.position.x + sequence.position.x,
-                            n.position.y + sequence.position.y - 50
+                            n.position.y + sequence.position.y + 50
                           ),
+                          "down",
                           () => this.addScore(score * -1)
                         )
                       );

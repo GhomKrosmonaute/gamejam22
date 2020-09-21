@@ -194,7 +194,7 @@ export class Path extends entity.CompositeEntity {
                   })
                 );
                 this._activateChildEntity(
-                  anim.textFadeUp(
+                  anim.textFade(
                     this.level.grid.nucleotideContainer,
                     new PIXI.Text(`+ ${score}`, {
                       fill,
@@ -206,7 +206,8 @@ export class Path extends entity.CompositeEntity {
                       dropShadowBlur: 10,
                     }),
                     duration,
-                    item.position.clone()
+                    item.position.clone(),
+                    "up"
                   )
                 );
                 this.level.addScore(score);

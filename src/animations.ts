@@ -177,15 +177,31 @@ export function move(
   ]);
 }
 
-export function textFadeUp(
+export function textFade(
   container: PIXI.Container,
   text: PIXI.Text,
   duration: number,
   from = new PIXI.Point(),
+  direction: "up" | "down" | "left" | "right",
   callback?: AnimationCallback
 ) {
   const shift = 50;
-  const to = new PIXI.Point(from.x, from.y - shift);
+  let to: PIXI.Point;
+
+  switch (direction) {
+    case "down":
+      to = new PIXI.Point(from.x, from.y + shift);
+      break;
+    case "left":
+      to = new PIXI.Point(from.x - shift, from.y);
+      break;
+    case "right":
+      to = new PIXI.Point(from.x + shift, from.y);
+      break;
+    default:
+      to = new PIXI.Point(from.x, from.y - shift);
+      break;
+  }
 
   text.style.align = "center";
   text.anchor.set(0.5);

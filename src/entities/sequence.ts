@@ -324,7 +324,7 @@ export class Sequence extends entity.CompositeEntity {
                   allSink.push(
                     new Promise((resolve) => {
                       this._activateChildEntity(
-                        anim.textFadeUp(
+                        anim.textFade(
                           this.container,
                           crisprUtil.makeText(
                             `+ ${score}`,
@@ -333,6 +333,7 @@ export class Sequence extends entity.CompositeEntity {
                           ),
                           300,
                           new PIXI.Point(n.position.x, n.position.y - 50),
+                          "up",
                           () => {
                             this.level.addScore(score);
                             resolve();
