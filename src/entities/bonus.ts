@@ -197,8 +197,7 @@ export class KillBonus extends Bonus {
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
       this.level.disablingAnimations.add("kill");
-      this.level.sequenceManager.emit("crunch", s);
-      this.level.sequenceManager.removeSequence(s, () => {
+      this.level.sequenceManager.removeSequence(true, s, () => {
         this.level.sequenceManager.add();
 
         switch (this.level.levelVariant) {

@@ -48,25 +48,13 @@ export class Grid extends entity.CompositeEntity {
   _setup() {
     this.container = new PIXI.Container();
     this.container.interactive = true;
+
     // Keep track of last pointer position
     this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointerup", this._onPointerUp);
     this._on(this.container, "pointermove", this._onPointerMove);
-    this._entityConfig.container.addChild(this.container);
 
-    // Add background to get pointer events
-    // {
-    //   const bg = new PIXI.Graphics();
-    //   bg.beginFill(0, 0);
-    //   bg.drawRect(
-    //     0,
-    //     0,
-    //     this._entityConfig.app.view.width,
-    //     this._entityConfig.app.view.height
-    //   );
-    //   bg.endFill();
-    //   this.container.addChild(bg);
-    // }
+    this._entityConfig.container.addChild(this.container);
 
     this.nucleotideContainer = new PIXI.Container();
     this.nucleotideContainer.position.set(this.x, this.y);

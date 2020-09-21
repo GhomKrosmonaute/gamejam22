@@ -46,7 +46,17 @@ export class Nucleotide extends entity.CompositeEntity {
   public type: NucleotideType = "normal";
   public colorName: ColorName = getRandomColorName();
   public isHovered = false;
-  public isHeartBeatActive = false;
+  public isHearthBeatActive = false;
+  /**
+   * set a shake:
+   * ```ts
+   * shakeAmounts[identifier] = shakeAmount as number
+   * ```
+   * remove a shake:
+   * ```ts
+   * delete shakeAmounts[identifier]
+   * ```
+   */
   public shakeAmounts: { [k: string]: number };
 
   private _state: NucleotideState;

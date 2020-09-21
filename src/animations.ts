@@ -186,8 +186,12 @@ export function textFadeUp(
 ) {
   const shift = 50;
   const to = new PIXI.Point(from.x, from.y - shift);
+
+  text.style.align = "center";
   text.anchor.set(0.5);
+
   container.addChild(text);
+
   return new entity.ParallelEntity([
     sink(text, duration),
     move(text.position, from, to, duration, easing.easeOutQuart, () => {

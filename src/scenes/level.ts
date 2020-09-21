@@ -31,10 +31,25 @@ export class Level extends entity.CompositeEntity {
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
-  public hariManager: hair.HairManager;
+  public hairManager: hair.HairManager;
   public path: path.Path;
   public grid: grid.Grid;
   public state: LevelState = "crunch";
+
+  /**
+   * Disable continuous events while `disablingAnimations` contains one or more elements.
+   *
+   * **Flag accessor**: `<Level>.isDisablingAnimationInProgress`
+   *
+   * set a disabling animation:
+   * ```ts
+   * disablingAnimations.add(identifier as string)
+   * ```
+   * remove a disabling animation:
+   * ```ts
+   * disablingAnimations.delete(identifier as string)
+   * ```
+   */
   public disablingAnimations: Set<string> = new Set();
 
   public swapBonus = new bonuses.SwapBonus();
@@ -55,8 +70,8 @@ export class Level extends entity.CompositeEntity {
   private bonusBackground: PIXI.Sprite;
   private gaugeBarBaseWidth: number;
   private gaugeTriggered = false;
-  private score = 0;
   private maxScore = 1000;
+  private score = 0;
 
   constructor(public readonly levelVariant: LevelVariant) {
     super();
@@ -137,10 +152,10 @@ export class Level extends entity.CompositeEntity {
       this.container.addChild(membrane);
 
       // Make hair
-      this.hariManager = new hair.HairManager();
+      this.hairManager = new hair.HairManager();
 
       this._activateChildEntity(
-        this.hariManager,
+        this.hairManager,
         entity.extendConfig({
           container: this.container,
         })
@@ -346,7 +361,6 @@ export class Level extends entity.CompositeEntity {
   /**
    * Set value of gauge bar (value/maxValue) (default: value %)
    * @param {number} value - The new value of gauge bar
-   * @param {number} maxValue - The max bound of the new value (default 100)
    */
   setGaugeBarValue(value: number) {
     this.gaugeBar.width = crisprUtil.proportion(
@@ -444,7 +458,7 @@ export class Level extends entity.CompositeEntity {
     // Create a list of "actions" that will take place at the end of calling this function
     let actions: entity.Entity[] = [];
 
-    const countSequences = this.sequenceManager.countSequences();
+    const countSequences = this.sequenceManager.countSequences;
     if (countSequences > 0) {
       const infectionSequence = this.grid.infect(countSequences * 5);
       actions.push(infectionSequence);
@@ -479,11 +493,60 @@ export class Level extends entity.CompositeEntity {
       return;
     }
 
-    this.sequenceManager.crunch(this.path, () => {
+    this.sequenceManager.crunch(this.path, async () => {
       if (this.levelVariant === "turnBased") {
         this.sequenceManager.distributeSequences();
       }
-      if (this.sequenceManager.countSequences() === 0) {
+
+      if (
+        this.levelVariant === "long" &&
+        this.sequenceManager.sequences[0] &&
+        this.sequenceManager.sequences[0].maxActiveLength < 3
+      ) {
+        const sequence = this.sequenceManager.sequences[0];
+        const actives = sequence.nucleotides.filter(
+          (n) => n.state !== "inactive"
+        );
+        await new Promise((resolve) => {
+          this._activateChildEntity(
+            new entity.EntitySequence([
+              ...actives
+                .map((n, i) => {
+                  const score = 10 * (i + 1);
+                  return [
+                    new entity.FunctionCallEntity(() => {
+                      this._activateChildEntity(
+                        anim.textFadeUp(
+                          this.container,
+                          new PIXI.Text(`-${score}`, {
+                            fontSize: 50 + score,
+                            fontFamily: "Cardenio Modern Bold",
+                            fill: "#ff0000",
+                            stroke: "#000000",
+                            strokeThickness: 10,
+                          }),
+                          600,
+                          new PIXI.Point(
+                            n.position.x + sequence.position.x,
+                            n.position.y + sequence.position.y - 50
+                          ),
+                          () => this.addScore(score * -1)
+                        )
+                      );
+                    }),
+                    new entity.WaitingEntity(200),
+                  ];
+                })
+                .flat(),
+              new entity.FunctionCallEntity(resolve),
+            ])
+          );
+        });
+        await new Promise((resolve) => {
+          sequence.down(false, resolve);
+        });
+      }
+      if (this.sequenceManager.countSequences === 0) {
         this._regenerate();
       }
     });
