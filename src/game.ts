@@ -108,12 +108,6 @@ const graphicalAssets = [
   "images/hud_gauge_background.png",
   "images/hud_gauge_bar.png",
   "images/hud_gauge_foreground.png",
-  // "images/path_border_0.png",
-  // "images/path_border_1.png",
-  // "images/path_border_2.png",
-  // "images/path_border_3.png",
-  // "images/path_border_4.png",
-  // "images/path_border_5.png",
   "images/nucleotide_glow.png",
   "images/nucleotide_bright.png",
 
