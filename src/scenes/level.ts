@@ -521,14 +521,14 @@ export class Level extends entity.CompositeEntity {
                         anim.textFade(
                           this.container,
                           new PIXI.Text(`${score}`, {
-                            fontSize: 70,
+                            fontSize: 80,
                             fontFamily: "Cardenio Modern Bold",
                             fill:
                               score < 0
                                 ? "#d70000"
                                 : nucleotide.fullColorNames[n.colorName],
                             stroke: score < 0 ? "#000000" : "#ffffff",
-                            strokeThickness: 3,
+                            strokeThickness: score < 0 ? 3 : 10,
                           }),
                           1000,
                           new PIXI.Point(
