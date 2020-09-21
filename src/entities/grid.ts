@@ -90,8 +90,11 @@ export class Grid extends entity.CompositeEntity {
   _update() {
     if (!this.isPointerDown) return;
 
-    this.lastHovered = this.getHovered();
-    if (this.lastHovered) this.level.path.add(this.lastHovered);
+    const currentHovered = this.getHovered();
+    if (currentHovered && currentHovered !== this.lastHovered) {
+      this.lastHovered = currentHovered;
+      this.level.path.add(this.lastHovered);
+    }
   }
 
   _teardown() {

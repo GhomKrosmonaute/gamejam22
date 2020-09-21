@@ -115,8 +115,16 @@ export class Path extends entity.CompositeEntity {
     // Don't start new paths
     if (this.items.length === 0) return false;
 
-    // If the nucleotide is already in the path, stop
-    if (_.contains(this.items, n)) return false;
+    // If the nucleotide is already in the path
+    const index = this.items.indexOf(n);
+    if (index !== -1) {
+      if (index === this.items.length - 2) {
+        // Return to previous step in the path
+        this.items.pop();
+        this.emit("updated");
+        return true;
+      } else return false;
+    }
 
     // If the nucleotide is not a neighbor of the last one, stop
     if (this.level.grid.getNeighborIndex(n, this.last) === -1) return false;
@@ -134,8 +142,6 @@ export class Path extends entity.CompositeEntity {
   }
 
   refresh() {
-    // this.graphics.clear();
-    // this.graphics.removeChildren();
     let last: nucleotide.Nucleotide = null;
 
     // for each nucleotide in path
