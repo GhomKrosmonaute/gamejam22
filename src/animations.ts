@@ -35,7 +35,7 @@ export function swap(
   n1: nucleotide.Nucleotide,
   n2: nucleotide.Nucleotide,
   duration: number,
-  easing: easing.Easing,
+  easing: easing.EasingFunction,
   callback?: AnimationCallback
 ) {
   const n1Position = n1.position.clone();
@@ -153,7 +153,7 @@ export function move(
   from: PIXI.Point,
   to: PIXI.Point,
   duration: number,
-  easing: easing.Easing,
+  easing: easing.EasingFunction,
   callback?: AnimationCallback
 ) {
   return new entity.ParallelEntity([
@@ -201,7 +201,7 @@ export function textFadeUp(
   ]);
 }
 
-export function hearthBeat(
+export function heartBeat(
   obj: PIXI.DisplayObject,
   duration: number,
   scale: number,

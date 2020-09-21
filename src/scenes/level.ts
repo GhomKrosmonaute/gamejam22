@@ -292,15 +292,16 @@ export class Level extends entity.CompositeEntity {
     // adding viruses (test)
     {
       const v = new virus.Virus();
-      v.state = "walk";
       const config = entity.extendConfig({
         container: this.container,
       });
-
       this._activateChildEntity(v, config);
 
       const sequence = new entity.EntitySequence(
         [
+          new entity.FunctionCallEntity(() => {
+            v.state = "walkRight";
+          }),
           new tween.Tween({
             obj: v,
             property: "angle",
@@ -308,7 +309,6 @@ export class Level extends entity.CompositeEntity {
             to: geom.degreesToRadians(0),
             duration: 1000,
           }),
-          new entity.WaitingEntity(1000),
           new entity.FunctionCallEntity(() => {
             v.state = "sting";
           }),
@@ -318,7 +318,7 @@ export class Level extends entity.CompositeEntity {
           }),
           new entity.WaitingEntity(1000),
           new entity.FunctionCallEntity(() => {
-            v.state = "walk";
+            v.state = "walkLeft";
           }),
           new tween.Tween({
             obj: v,
