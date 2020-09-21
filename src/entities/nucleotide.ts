@@ -63,8 +63,10 @@ export class Nucleotide extends entity.CompositeEntity {
   private _isHighlighted: boolean;
   private _spriteEntity:
     | entity.AnimatedSpriteEntity
-    | entity.DisplayObjectEntity = null;
-  private _infectionSpriteEntity: entity.DisplayObjectEntity = null;
+    | entity.DisplayObjectEntity<PIXI.Sprite> = null;
+  private _infectionSpriteEntity: entity.DisplayObjectEntity<
+    PIXI.Sprite
+  > = null;
   private _highlightSprite: PIXI.Sprite = null;
   private _pathArrowEntity: entity.AnimatedSpriteEntity;
   private _radius: number;
@@ -123,12 +125,12 @@ export class Nucleotide extends entity.CompositeEntity {
     this.pathArrow.position.copyFrom(this.position);
 
     // infected hearth beat animation
-    if (this.infected && !this.isHeartBeatActive) {
-      this.isHeartBeatActive = true;
+    if (this.infected && !this.isHearthBeatActive) {
+      this.isHearthBeatActive = true;
       this._activateChildEntity(
         anim.heartBeat(this.sprite, 400, 1.1, () => {
           setTimeout(() => {
-            this.isHeartBeatActive = false;
+            this.isHearthBeatActive = false;
           }, 1500 + Math.random() * 1000);
         })
       );
@@ -173,11 +175,7 @@ export class Nucleotide extends entity.CompositeEntity {
     if (isHighlighted && !this._isHighlighted) {
       this.shakeAmounts.highlight = 2;
 
-      const displayObject =
-        this.spriteEntity instanceof entity.AnimatedSpriteEntity
-          ? this.spriteEntity.sprite
-          : this.spriteEntity.displayObject;
-      displayObject.scale.set(this.parent === "grid" ? 0.9 : 1.1);
+      this.sprite.scale.set(this.parent === "grid" ? 0.9 : 1.1);
 
       this._highlightSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
@@ -209,14 +207,16 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._state === "infected";
   }
 
-  get spriteEntity(): entity.DisplayObjectEntity | entity.AnimatedSpriteEntity {
+  get spriteEntity():
+    | entity.DisplayObjectEntity<PIXI.Sprite>
+    | entity.AnimatedSpriteEntity {
     return this._spriteEntity || this._infectionSpriteEntity;
   }
 
   get sprite(): PIXI.Sprite | PIXI.AnimatedSprite {
     return this.spriteEntity instanceof entity.AnimatedSpriteEntity
       ? this.spriteEntity.sprite
-      : (this.spriteEntity.displayObject as PIXI.Sprite);
+      : this.spriteEntity.displayObject;
   }
 
   get infectionSprite(): PIXI.Sprite {

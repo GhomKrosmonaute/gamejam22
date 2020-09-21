@@ -160,6 +160,8 @@ export class Path extends entity.CompositeEntity {
 
         last = n;
       } else {
+        delete n.shakeAmounts.path;
+
         n.isHighlighted = false;
 
         n.pathArrow.visible = false;
