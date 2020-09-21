@@ -9,6 +9,7 @@ import * as anim from "../animations";
 import * as game from "../game";
 import * as filters from "../filters";
 
+import * as nucleotide from "../entities/nucleotide";
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
 import * as virus from "../entities/virus";
@@ -504,38 +505,44 @@ export class Level extends entity.CompositeEntity {
         this.sequenceManager.sequences[0].maxActiveLength < 3
       ) {
         const sequence = this.sequenceManager.sequences[0];
-        const actives = sequence.nucleotides.filter(
-          (n) => n.state !== "inactive"
-        );
         await new Promise((resolve) => {
           this._activateChildEntity(
             new entity.EntitySequence([
-              ...actives
+              ...sequence.nucleotides
                 .map((n, i) => {
-                  const score = 10 * (i + 1);
+                  const baseShift = Math.round(Math.random() * 50) + 50;
+                  const score =
+                    10 *
+                    Math.ceil((i + 1) / 2) *
+                    (n.state !== "inactive" ? 1 : -1);
                   return [
                     new entity.FunctionCallEntity(() => {
                       this._activateChildEntity(
                         anim.textFade(
                           this.container,
-                          new PIXI.Text(`-${score}`, {
-                            fontSize: 50 + score,
+                          new PIXI.Text(`${score}`, {
+                            fontSize: 70,
                             fontFamily: "Cardenio Modern Bold",
-                            fill: "#ff0000",
-                            stroke: "#000000",
-                            strokeThickness: 10,
+                            fill:
+                              score < 0
+                                ? "#d70000"
+                                : nucleotide.fullColorNames[n.colorName],
+                            stroke: score < 0 ? "#000000" : "#ffffff",
+                            strokeThickness: 3,
                           }),
                           1000,
                           new PIXI.Point(
                             n.position.x + sequence.position.x,
-                            n.position.y + sequence.position.y + 50
+                            n.position.y +
+                              sequence.position.y +
+                              baseShift * (score < 0 ? 1 : -1)
                           ),
-                          "down",
-                          () => this.addScore(score * -1)
+                          score < 0 ? "down" : "up",
+                          () => this.addScore(score)
                         )
                       );
                     }),
-                    new entity.WaitingEntity(200),
+                    new entity.WaitingEntity(80),
                   ];
                 })
                 .flat(),
