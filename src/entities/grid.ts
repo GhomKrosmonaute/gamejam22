@@ -69,8 +69,10 @@ export class Grid extends entity.CompositeEntity {
           "grid",
           this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y))
         );
-        n.setFloating("y", 0.001, 0.018);
-        n.setFloating("x", 0.0007, 0.018);
+        n.floating.active.x = true;
+        n.floating.active.y = true;
+        n.floating.speed.set(1.4, 2);
+        n.floating.amplitude.set(0.3, 0.3);
         this.generateNucleotide(n);
         this._activateChildEntity(
           n,

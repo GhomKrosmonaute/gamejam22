@@ -291,7 +291,7 @@ export class Sequence extends entity.CompositeEntity {
         new PIXI.Point(i * width * 0.8, crisprUtil.approximate(height * 0.05)),
         Math.random()
       );
-      n.setFloating("y");
+      n.floating.active.y = true;
       this._activateChildEntity(
         n,
         entity.extendConfig({

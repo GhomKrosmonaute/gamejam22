@@ -6,8 +6,9 @@ import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
-import * as anim from "../animations";
 import * as level from "../scenes/level";
+
+import * as anim from "../animations";
 
 export type NucleotideState = "missing" | "present" | "infected" | "inactive";
 export type NucleotideType = "scissors" | "bonus" | "normal";
@@ -71,10 +72,7 @@ export class Nucleotide extends entity.CompositeEntity {
   private _pathArrowEntity: entity.AnimatedSpriteEntity;
   private _radius: number;
 
-  private floating: { x: boolean; y: boolean } = { x: false, y: false };
-  private floatingShift = new PIXI.Point();
-  private floatingSpeed = new PIXI.Point();
-  private floatingAmplitude = new PIXI.Point();
+  public floating = anim.makeFloatingOptions({});
 
   constructor(
     public readonly fullRadius: number,
@@ -136,26 +134,20 @@ export class Nucleotide extends entity.CompositeEntity {
       );
     }
 
-    // shakes animation
     const shakes = Object.values(this.shakeAmounts);
-    const shake = Math.max(...shakes);
-    if (shakes.length > 0 && shake) {
-      const angle = Math.random() * 2 * Math.PI;
-      this._container.position.x = this.position.x + shake * Math.cos(angle);
-      this._container.position.y = this.position.y + shake * Math.sin(angle);
+    const amount = Math.max(...shakes);
+    if (shakes.length > 0 && amount) {
+      // shakes animation
+      this._container.position.copyFrom(
+        anim.shakingPoint({
+          anchor: this.position,
+          amount,
+        })
+      );
     } else {
       // floating animation
-      for (const vector in this.floating) {
-        const v = vector as "x" | "y";
-        if (this.floating[v]) {
-          const cos = Math.cos(
-            this.floatingShift[v] +
-              frameInfo.timeSinceStart * this.floatingSpeed[v]
-          );
-          const add = cos * this.floatingAmplitude[v];
-          this._container[v] = this.position[v] + add * 200;
-        }
-      }
+      this.floating.anchor.copyFrom(this.position);
+      this._container.position.copyFrom(anim.floatingPoint(this.floating));
     }
   }
 
@@ -242,18 +234,6 @@ export class Nucleotide extends entity.CompositeEntity {
         ])
       );
     });
-  }
-
-  setFloating(
-    vector: "x" | "y",
-    speed = 0.0005,
-    amplitude = 0.06,
-    shift = Math.random() * 10
-  ) {
-    this.floating[vector] = true;
-    this.floatingShift[vector] = shift;
-    this.floatingSpeed[vector] = speed;
-    this.floatingAmplitude[vector] = amplitude;
   }
 
   get width(): number {

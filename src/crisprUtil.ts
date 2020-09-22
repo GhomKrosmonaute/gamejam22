@@ -108,3 +108,9 @@ export function debug(name: string, ...any: any) {
     console.log(name, ...any);
   }
 }
+
+export type Axe = "x" | "y";
+export const axes: Axe[] = ["x", "y"];
+export function forAxes(callback: (axe: Axe) => any) {
+  axes.forEach(callback);
+}

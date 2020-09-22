@@ -6,6 +6,11 @@ import * as easing from "booyah/src/easing";
 
 import * as nucleotide from "./entities/nucleotide";
 
+import * as crisprUtil from "./crisprUtil";
+
+const FLOATING_SPEED = 0.0005;
+const FLOATING_AMPLITUDE = 0.06;
+
 /**
  * Ghom's light tween method adaptation
  */
@@ -257,4 +262,83 @@ export function heartBeat(
       },
     }),
   ]);
+}
+
+export interface FloatingOptions {
+  active: {
+    x: boolean;
+    y: boolean;
+  };
+  anchor: PIXI.Point;
+  speed: PIXI.Point;
+  amplitude: PIXI.Point;
+  shift: PIXI.Point;
+}
+
+export interface ShakingOptions {
+  anchor: PIXI.Point;
+  amount: number;
+}
+
+export function makeFloatingOptions(
+  options?: Partial<FloatingOptions>
+): FloatingOptions {
+  return {
+    active: {
+      x: false,
+      y: false,
+    },
+    anchor: new PIXI.Point(),
+    speed: new PIXI.Point(),
+    amplitude: new PIXI.Point(),
+    shift: new PIXI.Point(Math.random() * 10, Math.random() * 10),
+    ...(options ?? {}),
+  };
+}
+
+export function makeShakingOptions(
+  options?: Partial<ShakingOptions>
+): ShakingOptions {
+  return {
+    anchor: new PIXI.Point(),
+    amount: 0,
+    ...(options ?? {}),
+  };
+}
+
+export function floatingPoint({
+  active,
+  anchor,
+  speed,
+  amplitude,
+  shift,
+}: FloatingOptions): PIXI.Point {
+  const target = new PIXI.Point();
+  crisprUtil.forAxes((axe) => {
+    target[axe] = active[axe]
+      ? floatingValue(anchor[axe], speed[axe], amplitude[axe], shift[axe])
+      : anchor[axe];
+  });
+  return target;
+}
+
+export function floatingValue(
+  anchor = 0,
+  speed = 1,
+  amplitude = 1,
+  shift = 0
+): number {
+  const cos = Math.cos(shift + Date.now() * (speed * FLOATING_SPEED));
+  const add = cos * (amplitude * FLOATING_AMPLITUDE);
+  return anchor + add * 200;
+}
+
+export function shakingPoint({ anchor, amount }: ShakingOptions): PIXI.Point {
+  const target = new PIXI.Point();
+  const angle = Math.random() * 2 * Math.PI;
+  crisprUtil.forAxes((axe) => {
+    target[axe] =
+      anchor[axe] + amount * Math[axe === "x" ? "cos" : "sin"](angle);
+  });
+  return target;
 }
