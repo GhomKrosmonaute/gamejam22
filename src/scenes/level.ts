@@ -426,22 +426,22 @@ export class Level extends entity.CompositeEntity {
   }) {
     const finish: Promise<void>[] = [];
     this.gaugeRings.children.forEach((gaugeRing, i) => {
-      setTimeout(
-        (ring: PIXI.Sprite, index: number) => {
-          finish.push(
-            new Promise((resolve) => {
+      finish.push(
+        new Promise((resolve) => {
+          setTimeout(
+            (ring: PIXI.Sprite, index: number) => {
               this._activateChildEntity(
                 anim.bubble(ring, 1.2, 300, () => {
                   options?.forEach?.(ring, index);
                   resolve();
                 })
               );
-            })
+            },
+            200 + i * 150,
+            gaugeRing,
+            i
           );
-        },
-        200 + i * 150,
-        gaugeRing,
-        i
+        })
       );
     });
     Promise.all(finish).then(() => {
