@@ -345,12 +345,12 @@ export function shakingPoint({ anchor, amount }: ShakingOptions): PIXI.Point {
 
 export class DisplayObjectShakesManager extends entity.EntityBase {
   public floatingOptions?: FloatingOptions;
-  private shakes: { [name: string]: number } = {};
-  private anchor = new PIXI.Point();
+  private _shakes: Map<string, number> = new Map();
+  private _anchor = new PIXI.Point();
 
   constructor(private object: PIXI.DisplayObject) {
     super();
-    this.anchor.copyFrom(object.position);
+    this._anchor.copyFrom(object.position);
   }
 
   set(name: string, options: number | FloatingOptions) {
@@ -362,39 +362,44 @@ export class DisplayObjectShakesManager extends entity.EntityBase {
   }
 
   setShake(name: string, amount: number) {
-    this.shakes[name] = amount;
+    this._shakes.set(name, amount);
   }
 
   setFloat(name: string, options?: Partial<FloatingOptions>) {
     this.floatingOptions = makeFloatingOptions({
       ...options,
-      anchor: this.anchor,
+      anchor: this._anchor,
     });
   }
 
   removeShake(name: string) {
-    delete this.shakes[name];
+    this._shakes.delete(name);
+    this._resetPosition();
   }
 
   stopFloating() {
     delete this.floatingOptions;
+    this._resetPosition();
+  }
+
+  private _resetPosition() {
+    if (this._shakes.size === 0 && !this.floatingOptions)
+      this.object.position.copyFrom(this._anchor);
   }
 
   protected _update() {
-    const shakes = Object.values(this.shakes);
-    const amount = Math.max(...shakes);
-    if (shakes.length > 0 && amount) {
+    const amount = Math.max(0, ...this._shakes.values());
+    if (this._shakes.size > 0 && amount > 0) {
       // shakes animation
       this.object.position.copyFrom(
         shakingPoint({
-          anchor: this.anchor,
+          anchor: this._anchor,
           amount,
         })
       );
-    } else {
+    } else if (this.floatingOptions) {
       // floating animation
-      if (this.floatingOptions)
-        this.object.position.copyFrom(floatingPoint(this.floatingOptions));
+      this.object.position.copyFrom(floatingPoint(this.floatingOptions));
     }
   }
 }
