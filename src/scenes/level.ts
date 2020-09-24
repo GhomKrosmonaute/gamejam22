@@ -235,8 +235,11 @@ export class Level extends entity.CompositeEntity {
           gaugeRing.base.copyFrom(position);
 
           this._once(gaugeRing, "reached", () => {
-            console.log(true);
-            gaugeRing.tint = 0x6bffff;
+            this.emit(
+              "ringReached",
+              gaugeRing,
+              this.gaugeRings.children.indexOf(gaugeRing)
+            );
           });
 
           this.gaugeRings.addChild(gaugeRing);
@@ -256,6 +259,10 @@ export class Level extends entity.CompositeEntity {
 
         this.setGaugeBarValue(0);
         this.bubbleRings();
+
+        this._on(this, "ringReached", (ring: PIXI.Sprite) => {
+          ring.tint = 0x6bffff;
+        });
 
         // setup shockwave on max score is reached
         this._on(this, "maxScoreReached", () => {
@@ -380,25 +387,28 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update() {
+    // todo: remove this.addScore(3) from here.
     this.addScore(3);
-    const reachedScorePosition = this.reachedScorePosition;
-    this.gaugeRings.children.forEach(
-      (ring: PIXI.Sprite & { base?: PIXI.Point }, i) => {
-        if (
-          reachedScorePosition >=
-          ring.base.x + 200 + (ring.width / 2) * (i / 2)
-        ) {
-          ring.position.copyFrom(
-            anim.shakingPoint({
-              anchor: ring.base,
-              amount: crisprUtil.proportion(i, 0, this.gaugeRingCount, 1, 5),
-            })
-          );
-          this.emit("ringReached", ring, i);
-          ring.emit("reached");
+
+    if (this.score < this.maxScore) {
+      const reachedScorePosition = this.reachedScorePosition;
+      this.gaugeRings.children.forEach(
+        (ring: PIXI.Sprite & { base?: PIXI.Point }, i) => {
+          if (
+            reachedScorePosition >=
+            ring.base.x + 200 + (ring.width / 2) * (i / 2)
+          ) {
+            ring.position.copyFrom(
+              anim.shakingPoint({
+                anchor: ring.base,
+                amount: crisprUtil.proportion(i, 0, this.gaugeRingCount, 1, 5),
+              })
+            );
+            ring.emit("reached");
+          }
         }
-      }
-    );
+      );
+    }
 
     if (
       this.levelVariant !== "continuous" ||
