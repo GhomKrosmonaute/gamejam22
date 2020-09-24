@@ -316,7 +316,7 @@ export class Sequence extends entity.CompositeEntity {
       new entity.EntitySequence(
         this.nucleotides
           .map<any>((n, i, all) => {
-            delete n.shakeAmounts.highlight;
+            n.shakes.removeShake("highlight");
             const score = i + 1;
             return [
               new entity.FunctionCallEntity(() => {

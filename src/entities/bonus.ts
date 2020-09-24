@@ -37,7 +37,7 @@ export class SwapBonus extends Bonus {
   downNucleotide(n: nucleotide.Nucleotide): null {
     if (n) {
       this.level.grid.setAbsolutePositionFromGridPosition(n);
-      delete n.shakeAmounts.swap;
+      n.shakes.removeShake(this.name);
     }
     return null;
   }
@@ -52,7 +52,7 @@ export class SwapBonus extends Bonus {
 
         this.isUpdateDisabled = true;
         this.level.grid.swap(this.dragged, this.hovered, false);
-        this.level.disablingAnimations.add("swap");
+        this.level.disablingAnimations.add(this.name);
         this._activateChildEntity(
           anim.swap(
             this.dragged,
@@ -70,7 +70,7 @@ export class SwapBonus extends Bonus {
               this.hovered.bubble(150).catch();
               this.dragged
                 .bubble(150)
-                .then(() => this.level.disablingAnimations.delete("swap"))
+                .then(() => this.level.disablingAnimations.delete(this.name))
                 .catch();
               this.end();
             }
@@ -99,11 +99,11 @@ export class SwapBonus extends Bonus {
           this.level.grid.setAbsolutePositionFromGridPosition(this.dragged);
         }
         this.level.grid.nucleotides.forEach((n) => {
-          delete n.shakeAmounts.swap;
+          n.shakes.removeShake(this.name);
           n.sprite.scale.set(1);
         });
         this.hovered = hovered;
-        this.hovered.shakeAmounts.swap = 5;
+        this.hovered.shakes.set(this.name, 5);
         this.hovered.sprite.scale.set(1.2);
         this.level.grid.swapAbsolutePosition(this.hovered, this.dragged);
         // this._activateChildEntity(
@@ -128,9 +128,9 @@ export class StarBonus extends Bonus {
     this._once(this.level.grid, "drag", (target: nucleotide.Nucleotide) => {
       const stages = this.level.grid.getStarStages(target);
 
-      target.shakeAmounts.star = 7;
+      target.shakes.setShake(this.name, 7);
 
-      this.level.disablingAnimations.add("star");
+      this.level.disablingAnimations.add(this.name);
 
       const propagation = [
         new entity.WaitingEntity(delay * 2),
@@ -138,7 +138,7 @@ export class StarBonus extends Bonus {
           return [
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
-                n.shakeAmounts.star = 2;
+                n.shakes.setShake(this.name, 2);
               }
             }),
             new entity.WaitingEntity(delay),
@@ -151,12 +151,14 @@ export class StarBonus extends Bonus {
           this._activateChildEntity(anim.bubble(target.sprite, 1.3, delay));
         }),
         new entity.WaitingEntity(delay / 2),
-        new entity.FunctionCallEntity(() => (target.shakeAmounts.star = 0)),
+        new entity.FunctionCallEntity(() =>
+          target.shakes.removeShake(this.name)
+        ),
         ...stages.map((stage, index) => {
           return [
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
-                n.shakeAmounts.star = 10 - index;
+                n.shakes.setShake(this.name, 10 - index);
               }
             }),
             new entity.WaitingEntity(delay / 3),
@@ -169,7 +171,7 @@ export class StarBonus extends Bonus {
             new entity.WaitingEntity(delay / 3),
             new entity.FunctionCallEntity(() => {
               for (const n of stage) {
-                delete n.shakeAmounts.star;
+                n.shakes.removeShake(this.name);
               }
             }),
           ];
@@ -179,7 +181,7 @@ export class StarBonus extends Bonus {
       const sequence = new entity.EntitySequence([
         ...propagation,
         new entity.FunctionCallEntity(() => {
-          this.level.disablingAnimations.delete("star");
+          this.level.disablingAnimations.delete(this.name);
           this.end();
         }),
       ]);
@@ -196,7 +198,7 @@ export class KillBonus extends Bonus {
     this.level.sequenceManager.container.buttonMode = true;
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
-      this.level.disablingAnimations.add("kill");
+      this.level.disablingAnimations.add(this.name);
       this.level.sequenceManager.removeSequence(true, s, () => {
         this.level.sequenceManager.add();
 
@@ -215,7 +217,7 @@ export class KillBonus extends Bonus {
             break;
         }
 
-        this.level.disablingAnimations.delete("kill");
+        this.level.disablingAnimations.delete(this.name);
       });
     });
   }

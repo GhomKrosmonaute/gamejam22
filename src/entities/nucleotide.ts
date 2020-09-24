@@ -48,17 +48,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public colorName: ColorName = getRandomColorName();
   public isHovered = false;
   public isHearthBeatActive = false;
-  /**
-   * set a shake:
-   * ```ts
-   * shakeAmounts[identifier] = shakeAmount as number
-   * ```
-   * remove a shake:
-   * ```ts
-   * delete shakeAmounts[identifier]
-   * ```
-   */
-  public shakeAmounts: { [k: string]: number };
+  public shakes: anim.DisplayObjectShakesManager;
 
   private _state: NucleotideState;
   private _isHighlighted: boolean;
@@ -96,12 +86,14 @@ export class Nucleotide extends entity.CompositeEntity {
   _setup() {
     this._state = "missing";
     this._isHighlighted = false;
-    this.shakeAmounts = {};
 
     this._container = new PIXI.Container();
     this._container.rotation = this.rotation;
     this._container.position.copyFrom(this.position);
+
     this._refreshScale();
+
+    this.shakes = new anim.DisplayObjectShakesManager(this._container);
 
     this._entityConfig.container.addChild(this._container);
 
@@ -115,10 +107,11 @@ export class Nucleotide extends entity.CompositeEntity {
     this.pathArrow.animationSpeed = 0.4;
     this.pathArrow.stop();
 
+    this._activateChildEntity(this.shakes);
     this._activateChildEntity(this._pathArrowEntity);
   }
 
-  _update(frameInfo: entity.FrameInfo) {
+  _update() {
     this._container.position.copyFrom(this.position);
     this.pathArrow.position.copyFrom(this.position);
 
@@ -132,22 +125,6 @@ export class Nucleotide extends entity.CompositeEntity {
           }, 1500 + Math.random() * 1000);
         })
       );
-    }
-
-    const shakes = Object.values(this.shakeAmounts);
-    const amount = Math.max(...shakes);
-    if (shakes.length > 0 && amount) {
-      // shakes animation
-      this._container.position.copyFrom(
-        anim.shakingPoint({
-          anchor: this.position,
-          amount,
-        })
-      );
-    } else {
-      // floating animation
-      this.floating.anchor.copyFrom(this.position);
-      this._container.position.copyFrom(anim.floatingPoint(this.floating));
     }
   }
 
@@ -165,7 +142,7 @@ export class Nucleotide extends entity.CompositeEntity {
     if (!this.spriteEntity) return;
 
     if (isHighlighted && !this._isHighlighted) {
-      this.shakeAmounts.highlight = 2;
+      this.shakes.setShake("highlight", 2);
 
       this.sprite.scale.set(this.parent === "grid" ? 0.9 : 1.1);
 
@@ -180,7 +157,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this._highlightSprite.scale.set(1.3);
       this._container.addChildAt(this._highlightSprite, 0);
     } else if (!isHighlighted && this._isHighlighted) {
-      delete this.shakeAmounts.highlight;
+      this.shakes.removeShake("highlight");
 
       this.sprite.scale.set(1);
 
@@ -263,7 +240,7 @@ export class Nucleotide extends entity.CompositeEntity {
       }
 
       this._state = newState;
-      delete this.shakeAmounts.infection;
+      this.shakes.removeShake("infection");
 
       if (this.children.includes(this._spriteEntity)) {
         this._deactivateChildEntity(this._spriteEntity);
@@ -328,13 +305,13 @@ export class Nucleotide extends entity.CompositeEntity {
       this._activateChildEntity(
         new entity.EntitySequence([
           // Briefly shake
-          new entity.FunctionCallEntity(
-            () => (this.shakeAmounts.infection = 6)
+          new entity.FunctionCallEntity(() =>
+            this.shakes.setShake("infection", 6)
           ),
           new entity.WaitingEntity(100),
 
           new entity.FunctionCallEntity(() => {
-            delete this.shakeAmounts.infection;
+            this.shakes.removeShake("infection");
 
             this._container.addChild(mask);
             this.infectionSprite.mask = mask;
@@ -390,7 +367,7 @@ export class Nucleotide extends entity.CompositeEntity {
       });
       this._activateChildEntity(radiusTween);
     } else if (this._state === "infected") {
-      delete this.shakeAmounts.infection;
+      this.shakes.removeShake("infection");
 
       if (this._infectionSpriteEntity)
         this._deactivateChildEntity(this._infectionSpriteEntity);
