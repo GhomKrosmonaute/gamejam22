@@ -342,3 +342,64 @@ export function shakingPoint({ anchor, amount }: ShakingOptions): PIXI.Point {
   });
   return target;
 }
+
+export class DisplayObjectShakesManager extends entity.EntityBase {
+  public floatingOptions?: FloatingOptions;
+  private _shakes: Map<string, number> = new Map();
+  public anchor = new PIXI.Point();
+
+  constructor(private object: PIXI.DisplayObject) {
+    super();
+    this.anchor.copyFrom(object.position);
+  }
+
+  set(name: string, options: number | FloatingOptions) {
+    if (typeof options === "number") {
+      this.setShake(name, options);
+    } else {
+      this.setFloat(name, options);
+    }
+  }
+
+  setShake(name: string, amount: number) {
+    this._shakes.set(name, amount);
+  }
+
+  setFloat(name: string, options?: Partial<FloatingOptions>) {
+    this.floatingOptions = makeFloatingOptions({
+      ...options,
+      anchor: this.anchor,
+    });
+  }
+
+  removeShake(name: string) {
+    this._shakes.delete(name);
+    this._resetPosition();
+  }
+
+  stopFloating() {
+    delete this.floatingOptions;
+    this._resetPosition();
+  }
+
+  private _resetPosition() {
+    if (this._shakes.size === 0 && !this.floatingOptions)
+      this.object.position.copyFrom(this.anchor);
+  }
+
+  protected _update() {
+    const amount = Math.max(0, ...this._shakes.values());
+    if (this._shakes.size > 0 && amount > 0) {
+      // shakes animation
+      this.object.position.copyFrom(
+        shakingPoint({
+          anchor: this.anchor,
+          amount,
+        })
+      );
+    } else if (this.floatingOptions) {
+      // floating animation
+      this.object.position.copyFrom(floatingPoint(this.floatingOptions));
+    }
+  }
+}
