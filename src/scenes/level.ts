@@ -67,15 +67,19 @@ export class Level extends entity.CompositeEntity {
   private gauge: PIXI.Container;
   private gaugeText: PIXI.Text;
   private gaugeBar: PIXI.Sprite;
+  private gaugeRings: PIXI.Container;
   private gaugeBackground: PIXI.Sprite;
-  private gaugeForeground: PIXI.Sprite;
   private bonusBackground: PIXI.Sprite;
   private gaugeBarBaseWidth: number;
   private gaugeTriggered = false;
-  private maxScore = 1000;
-  private score = 0;
 
-  constructor(public readonly levelVariant: LevelVariant) {
+  public score = 0;
+
+  constructor(
+    public readonly levelVariant: LevelVariant,
+    public readonly maxScore = 1000,
+    public readonly gaugeRingCount = 5
+  ) {
     super();
   }
 
@@ -193,27 +197,41 @@ export class Level extends entity.CompositeEntity {
       // Gauge bar (score/exp?)
       {
         this.gauge = new PIXI.Container();
+
         this.gaugeBackground = new PIXI.Sprite(
           this._entityConfig.app.loader.resources[
             "images/hud_gauge_background.png"
           ].texture
         );
+
         this.gaugeBar = new PIXI.Sprite(
           this._entityConfig.app.loader.resources[
             "images/hud_gauge_bar.png"
           ].texture
         );
-        this.gaugeForeground = new PIXI.Sprite(
-          this._entityConfig.app.loader.resources[
-            "images/hud_gauge_foreground.png"
-          ].texture
-        );
+
+        this.gaugeRings = new PIXI.Container()
+        this.gaugeRings.position.x = 200
+
+        for(let i=0; i<this.gaugeRingCount; i++){
+          const gaugeRing = new PIXI.Sprite(
+            this._entityConfig.app.loader.resources[
+              "images/hud_gauge_ring.png"
+              ].texture
+          )
+          gaugeRing.anchor.x = .5
+          gaugeRing.position.x = crisprUtil.proportion(
+            i, -1, this.gaugeRingCount, 0, 450, true
+          )
+          this.gaugeRings.addChild(gaugeRing)
+        }
+
         this.gaugeText = crisprUtil.makeText("", 0x000000, 40);
         this.gaugeText.position.set(110, 110);
 
         this.gauge.addChild(this.gaugeBackground);
         this.gauge.addChild(this.gaugeBar);
-        this.gauge.addChild(this.gaugeForeground);
+        this.gauge.addChild(this.gaugeRings);
         this.gauge.addChild(this.gaugeText);
 
         this.container.addChild(this.gauge);

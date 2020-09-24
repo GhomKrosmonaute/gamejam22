@@ -107,7 +107,7 @@ const graphicalAssets = [
   "images/hud_go_button.png",
   "images/hud_gauge_background.png",
   "images/hud_gauge_bar.png",
-  "images/hud_gauge_foreground.png",
+  "images/hud_gauge_ring.png",
   "images/nucleotide_glow.png",
   "images/nucleotide_bright.png",
 
