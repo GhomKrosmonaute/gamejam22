@@ -24,8 +24,9 @@ export type LevelState = "crunch" | "regenerate" | "bonus";
 const dropSpeed = 0.001;
 
 /**
- * emit:
+ * Emits:
  * - maxScoreReached()
+ * - ringReached(ring: PIXI.Sprite, index: number)
  * - scoreUpdated(score: number)
  */
 export class Level extends entity.CompositeEntity {
@@ -210,20 +211,35 @@ export class Level extends entity.CompositeEntity {
           ].texture
         );
 
-        this.gaugeRings = new PIXI.Container()
-        this.gaugeRings.position.x = 200
+        this.gaugeRings = new PIXI.Container();
+        this.gaugeRings.position.x = 200;
 
-        for(let i=0; i<this.gaugeRingCount; i++){
-          const gaugeRing = new PIXI.Sprite(
+        // place rings
+        for (let i = 0; i < this.gaugeRingCount; i++) {
+          const gaugeRing: PIXI.Sprite & {
+            base?: PIXI.Point;
+          } = new PIXI.Sprite(
             this._entityConfig.app.loader.resources[
               "images/hud_gauge_ring.png"
-              ].texture
-          )
-          gaugeRing.anchor.x = .5
-          gaugeRing.position.x = crisprUtil.proportion(
-            i, -1, this.gaugeRingCount, 0, 450, true
-          )
-          this.gaugeRings.addChild(gaugeRing)
+            ].texture
+          );
+
+          const position = new crisprUtil.BetterPoint(
+            crisprUtil.proportion(i, -1, this.gaugeRingCount, 0, 450, true),
+            gaugeRing.height * 0.5
+          );
+
+          gaugeRing.anchor.set(0.5);
+          gaugeRing.position.copyFrom(position);
+          gaugeRing.base = new PIXI.Point();
+          gaugeRing.base.copyFrom(position);
+
+          this._once(gaugeRing, "reached", () => {
+            console.log(true);
+            gaugeRing.tint = 0x6bffff;
+          });
+
+          this.gaugeRings.addChild(gaugeRing);
         }
 
         this.gaugeText = crisprUtil.makeText("", 0x000000, 40);
@@ -239,9 +255,15 @@ export class Level extends entity.CompositeEntity {
         this.gaugeBarBaseWidth = this.gaugeBar.width;
 
         this.setGaugeBarValue(0);
+        this.bubbleRings();
 
         // setup shockwave on max score is reached
         this._on(this, "maxScoreReached", () => {
+          this.bubbleRings({
+            forEach: (ring) => {
+              ring.tint = 0x007784;
+            },
+          });
           const filter = new filters.ShockwaveFilter(new PIXI.Point(110, 110), {
             amplitude: this.gaugeBar.width / 5,
             wavelength: 100,
@@ -358,6 +380,26 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update() {
+    this.addScore(3);
+    const reachedScorePosition = this.reachedScorePosition;
+    this.gaugeRings.children.forEach(
+      (ring: PIXI.Sprite & { base?: PIXI.Point }, i) => {
+        if (
+          reachedScorePosition >=
+          ring.base.x + 200 + (ring.width / 2) * (i / 2)
+        ) {
+          ring.position.copyFrom(
+            anim.shakingPoint({
+              anchor: ring.base,
+              amount: crisprUtil.proportion(i, 0, this.gaugeRingCount, 1, 5),
+            })
+          );
+          this.emit("ringReached", ring, i);
+          ring.emit("reached");
+        }
+      }
+    );
+
     if (
       this.levelVariant !== "continuous" ||
       this.isDisablingAnimationInProgress
@@ -378,12 +420,48 @@ export class Level extends entity.CompositeEntity {
     this.sequenceManager = null;
   }
 
+  bubbleRings(options?: {
+    forEach?: (ring: PIXI.Sprite, index: number) => any;
+    callback?: () => any;
+  }) {
+    const finish: Promise<void>[] = [];
+    this.gaugeRings.children.forEach((gaugeRing, i) => {
+      setTimeout(
+        (ring: PIXI.Sprite, index: number) => {
+          finish.push(
+            new Promise((resolve) => {
+              this._activateChildEntity(
+                anim.bubble(ring, 1.2, 300, () => {
+                  options?.forEach?.(ring, index);
+                  resolve();
+                })
+              );
+            })
+          );
+        },
+        200 + i * 150,
+        gaugeRing,
+        i
+      );
+    });
+    Promise.all(finish).then(() => {
+      options?.callback?.();
+    });
+  }
+
   /**
    * Set value of gauge bar (value/maxValue) (default: value %)
    * @param {number} value - The new value of gauge bar
    */
   setGaugeBarValue(value: number) {
-    this.gaugeBar.width = crisprUtil.proportion(
+    this.gaugeBar.width = this.getGaugeBarWidthByValue(value);
+    this.gaugeBar.position.set(this.getGaugeBarPositionByValue(value), 0);
+    this.gaugeText.text =
+      value > 999 ? Math.floor(value / 1000) + "k" : Math.floor(value) + " pts";
+  }
+
+  getGaugeBarWidthByValue(value: number): number {
+    return crisprUtil.proportion(
       value,
       0,
       this.maxScore,
@@ -391,12 +469,17 @@ export class Level extends entity.CompositeEntity {
       this.gaugeBarBaseWidth,
       true
     );
-    this.gaugeBar.position.set(
-      crisprUtil.proportion(value, 0, this.maxScore, 200, 0, true),
-      0
+  }
+
+  getGaugeBarPositionByValue(value: number): number {
+    return crisprUtil.proportion(value, 0, this.maxScore, 200, 0, true);
+  }
+
+  get reachedScorePosition(): number {
+    return (
+      this.getGaugeBarPositionByValue(this.score) +
+      this.getGaugeBarWidthByValue(this.score)
     );
-    this.gaugeText.text =
-      value > 999 ? Math.floor(value / 1000) + "k" : value + " pts";
   }
 
   addScore(score: number) {
@@ -413,7 +496,7 @@ export class Level extends entity.CompositeEntity {
     if (!this.gaugeTriggered) {
       this.gaugeTriggered = true;
       this._activateChildEntity(
-        anim.bubble(this.gaugeText, 1.5, 50, () => {
+        anim.bubble(this.gaugeText, 1.4, 100, () => {
           this.gaugeTriggered = false;
         })
       );
@@ -457,7 +540,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   get isGuiLocked(): boolean {
-    return !this.goButton.buttonMode;
+    return !this.goButton.buttonMode || this.isDisablingAnimationInProgress;
   }
 
   set isGuiLocked(value: boolean) {
