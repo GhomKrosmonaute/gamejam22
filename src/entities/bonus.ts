@@ -277,11 +277,12 @@ export class BonusesManager extends entity.CompositeEntity {
   _update() {
     const bonus = this.getSelectedBonus();
     if (bonus) {
-      const angle = Math.random() * 2 * Math.PI;
-      this.sprites[bonus.name].position.x =
-        this.basePosition[bonus.name].x + this.shakeAmount * Math.cos(angle);
-      this.sprites[bonus.name].position.y =
-        this.basePosition[bonus.name].y + this.shakeAmount * Math.sin(angle);
+      this.sprites[bonus.name].position.copyFrom(
+        anim.shakingPoint({
+          anchor: this.basePosition[bonus.name],
+          amount: this.shakeAmount,
+        })
+      );
     }
   }
 

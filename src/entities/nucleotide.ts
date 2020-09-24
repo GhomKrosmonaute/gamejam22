@@ -114,6 +114,7 @@ export class Nucleotide extends entity.CompositeEntity {
   _update() {
     this._container.position.copyFrom(this.position);
     this.pathArrow.position.copyFrom(this.position);
+    this.shakes.anchor.copyFrom(this.position);
 
     // infected hearth beat animation
     if (this.infected && !this.isHearthBeatActive) {

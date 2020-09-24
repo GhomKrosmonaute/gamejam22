@@ -346,11 +346,11 @@ export function shakingPoint({ anchor, amount }: ShakingOptions): PIXI.Point {
 export class DisplayObjectShakesManager extends entity.EntityBase {
   public floatingOptions?: FloatingOptions;
   private _shakes: Map<string, number> = new Map();
-  private _anchor = new PIXI.Point();
+  public anchor = new PIXI.Point();
 
   constructor(private object: PIXI.DisplayObject) {
     super();
-    this._anchor.copyFrom(object.position);
+    this.anchor.copyFrom(object.position);
   }
 
   set(name: string, options: number | FloatingOptions) {
@@ -368,7 +368,7 @@ export class DisplayObjectShakesManager extends entity.EntityBase {
   setFloat(name: string, options?: Partial<FloatingOptions>) {
     this.floatingOptions = makeFloatingOptions({
       ...options,
-      anchor: this._anchor,
+      anchor: this.anchor,
     });
   }
 
@@ -384,7 +384,7 @@ export class DisplayObjectShakesManager extends entity.EntityBase {
 
   private _resetPosition() {
     if (this._shakes.size === 0 && !this.floatingOptions)
-      this.object.position.copyFrom(this._anchor);
+      this.object.position.copyFrom(this.anchor);
   }
 
   protected _update() {
@@ -393,7 +393,7 @@ export class DisplayObjectShakesManager extends entity.EntityBase {
       // shakes animation
       this.object.position.copyFrom(
         shakingPoint({
-          anchor: this._anchor,
+          anchor: this.anchor,
           amount,
         })
       );
