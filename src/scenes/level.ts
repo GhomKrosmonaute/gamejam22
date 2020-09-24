@@ -405,6 +405,8 @@ export class Level extends entity.CompositeEntity {
               })
             );
             ring.emit("reached");
+          } else {
+            ring.position.copyFrom(ring.base);
           }
         }
       );
