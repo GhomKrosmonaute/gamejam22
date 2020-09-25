@@ -289,9 +289,6 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update() {
-    // todo: remove this.addScore(x) from here.
-    this.addScore(1);
-
     if (
       this.levelVariant !== "continuous" ||
       this.isDisablingAnimationInProgress
