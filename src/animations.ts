@@ -55,7 +55,10 @@ export function bubble(
   obj: PIXI.DisplayObject,
   to: number,
   duration: number,
-  callback?: AnimationCallback
+  callbacks?: {
+    onTop?: AnimationCallback;
+    onTeardown?: AnimationCallback;
+  }
 ) {
   return new entity.EntitySequence([
     tweeny({
@@ -64,6 +67,9 @@ export function bubble(
       duration: duration * 0.33,
       easing: easing.easeInOutQuad,
       onUpdate: (value) => obj.scale.set(value),
+      onTeardown: () => {
+        callbacks?.onTop?.(obj);
+      },
     }),
     tweeny({
       from: to,
@@ -72,7 +78,7 @@ export function bubble(
       easing: easing.easeOutQuart,
       onUpdate: (value) => obj.scale.set(value),
       onTeardown: () => {
-        if (callback) callback(obj);
+        callbacks?.onTeardown?.(obj);
       },
     }),
   ]);
@@ -264,6 +270,41 @@ export function heartBeat(
   ]);
 }
 
+/**
+ * @param obj
+ * @param duration
+ * @param from - from amount
+ * @param to - to amount (default: from)
+ * @param callback
+ */
+export function tweenShaking(
+  obj: PIXI.DisplayObject,
+  duration: number,
+  from: number,
+  to?: number,
+  callback?: AnimationCallback
+) {
+  const anchor = new PIXI.Point();
+  anchor.copyFrom(obj.position);
+  return tweeny({
+    from,
+    to: to ?? from,
+    duration,
+    onUpdate: (value) => {
+      obj.position.copyFrom(
+        shakingPoint({
+          anchor,
+          amount: value,
+        })
+      );
+    },
+    onTeardown: () => {
+      obj.position.copyFrom(anchor);
+      callback?.();
+    },
+  });
+}
+
 export interface FloatingOptions {
   active: {
     x: boolean;
@@ -344,8 +385,8 @@ export function shakingPoint({ anchor, amount }: ShakingOptions): PIXI.Point {
 }
 
 export class DisplayObjectShakesManager extends entity.EntityBase {
-  public floatingOptions?: FloatingOptions;
   private _shakes: Map<string, number> = new Map();
+  public floatingOptions?: FloatingOptions;
   public anchor = new PIXI.Point();
 
   constructor(private object: PIXI.DisplayObject) {

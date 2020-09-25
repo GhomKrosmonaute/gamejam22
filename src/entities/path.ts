@@ -174,7 +174,7 @@ export class Path extends entity.CompositeEntity {
 
   crunch(callback?: () => any) {
     this.isCrunchAnimationRunning = true;
-    this.level.isGuiLocked = true;
+    this.level.disablingAnimations.add("pathCrunch");
     const allCrunched: Promise<void>[] = [];
     this._activateChildEntity(
       new entity.EntitySequence(
@@ -226,7 +226,7 @@ export class Path extends entity.CompositeEntity {
           .concat([
             new entity.FunctionCallEntity(() => {
               Promise.all(allCrunched).then(() => {
-                this.level.isGuiLocked = false;
+                this.level.disablingAnimations.delete("pathCrunch");
                 this.isCrunchAnimationRunning = false;
                 this.emit("crunchAnimationFinished");
                 if (callback) callback();

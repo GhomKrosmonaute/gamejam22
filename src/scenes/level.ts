@@ -16,7 +16,7 @@ import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
-import { FrameInfo } from "booyah/src/entity";
+import * as hud from "../entities/hud";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
 export type LevelState = "crunch" | "regenerate" | "bonus";
@@ -35,6 +35,7 @@ export class Level extends entity.CompositeEntity {
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;
+  public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
   public state: LevelState = "crunch";
@@ -63,16 +64,9 @@ export class Level extends entity.CompositeEntity {
   public readonly rowCount = 7;
   public readonly cutCount = 6;
 
+  private bonusBackground: PIXI.Sprite;
   private goButton: PIXI.Container & { text?: PIXI.Text };
   private crunchCount = 0;
-  private gauge: PIXI.Container;
-  private gaugeText: PIXI.Text;
-  private gaugeBar: PIXI.Sprite;
-  private gaugeRings: PIXI.Container;
-  private gaugeBackground: PIXI.Sprite;
-  private bonusBackground: PIXI.Sprite;
-  private gaugeBarBaseWidth: number;
-  private gaugeTriggered = false;
 
   public score = 0;
 
@@ -124,24 +118,26 @@ export class Level extends entity.CompositeEntity {
     }
 
     // add to entities path, grid and the test sequenceManager
-    this._activateChildEntity(
-      this.grid,
-      entity.extendConfig({
-        container: this.container,
-      })
-    );
-    this._activateChildEntity(
-      this.path,
-      entity.extendConfig({
-        container: this.container,
-      })
-    );
-    this._activateChildEntity(
-      this.sequenceManager,
-      entity.extendConfig({
-        container: this.container,
-      })
-    );
+    {
+      this._activateChildEntity(
+        this.grid,
+        entity.extendConfig({
+          container: this.container,
+        })
+      );
+      this._activateChildEntity(
+        this.path,
+        entity.extendConfig({
+          container: this.container,
+        })
+      );
+      this._activateChildEntity(
+        this.sequenceManager,
+        entity.extendConfig({
+          container: this.container,
+        })
+      );
+    }
 
     // foreground images
     {
@@ -197,101 +193,38 @@ export class Level extends entity.CompositeEntity {
 
       // Gauge bar (score/exp?)
       {
-        this.gauge = new PIXI.Container();
+        this.gauge = new hud.Gauge(this.gaugeRingCount, this.maxScore);
 
-        this.gaugeBackground = new PIXI.Sprite(
-          this._entityConfig.app.loader.resources[
-            "images/hud_gauge_background.png"
-          ].texture
+        this._activateChildEntity(
+          this.gauge,
+          entity.extendConfig({
+            container: this.container,
+          })
         );
 
-        this.gaugeBar = new PIXI.Sprite(
-          this._entityConfig.app.loader.resources[
-            "images/hud_gauge_bar.png"
-          ].texture
+        this._once(
+          this,
+          "activatedChildEntity",
+          (entity: entity.EntityBase) => {
+            if (entity === this.gauge) {
+              this.gauge.setValue(0);
+              this.gauge.bubbleRings();
+            }
+          }
         );
 
-        this.gaugeRings = new PIXI.Container();
-        this.gaugeRings.position.x = 200;
-
-        // place rings
-        for (let i = 0; i < this.gaugeRingCount; i++) {
-          const gaugeRing: PIXI.Sprite & {
-            base?: PIXI.Point;
-          } = new PIXI.Sprite(
-            this._entityConfig.app.loader.resources[
-              "images/hud_gauge_ring.png"
-            ].texture
-          );
-
-          const position = new crisprUtil.BetterPoint(
-            crisprUtil.proportion(i, -1, this.gaugeRingCount, 0, 450, true),
-            gaugeRing.height * 0.5
-          );
-
-          gaugeRing.anchor.set(0.5);
-          gaugeRing.position.copyFrom(position);
-          gaugeRing.base = new PIXI.Point();
-          gaugeRing.base.copyFrom(position);
-
-          this._once(gaugeRing, "reached", () => {
-            this.emit(
-              "ringReached",
-              gaugeRing,
-              this.gaugeRings.children.indexOf(gaugeRing)
-            );
-          });
-
-          this.gaugeRings.addChild(gaugeRing);
-        }
-
-        this.gaugeText = crisprUtil.makeText("", 0x000000, 40);
-        this.gaugeText.position.set(110, 110);
-
-        this.gauge.addChild(this.gaugeBackground);
-        this.gauge.addChild(this.gaugeBar);
-        this.gauge.addChild(this.gaugeRings);
-        this.gauge.addChild(this.gaugeText);
-
-        this.container.addChild(this.gauge);
-
-        this.gaugeBarBaseWidth = this.gaugeBar.width;
-
-        this.setGaugeBarValue(0);
-        this.bubbleRings();
-
-        this._on(this, "ringReached", (ring: PIXI.Sprite) => {
+        this._on(this.gauge, "ringReached", (ring: hud.Ring) => {
           ring.tint = 0x6bffff;
+          this._activateChildEntity(anim.tweenShaking(ring, 1000, 6, 0));
         });
 
         // setup shockwave on max score is reached
         this._on(this, "maxScoreReached", () => {
-          this.bubbleRings({
-            forEach: (ring) => {
+          this.gauge.bubbleRings({
+            forEach: (ring: hud.Ring) => {
               ring.tint = 0x007784;
             },
           });
-          const filter = new filters.ShockwaveFilter(new PIXI.Point(110, 110), {
-            amplitude: this.gaugeBar.width / 5,
-            wavelength: 100,
-            brightness: 2,
-            radius: this.gaugeBar.width,
-          });
-          if (!this.gauge.filters) this.gauge.filters = [];
-          this.gauge.filters.push(filter);
-          this._activateChildEntity(
-            anim.tweeny({
-              from: 0,
-              to: 3,
-              duration: 1,
-              onUpdate: (value) => (filter.time = value),
-              onTeardown: () => {
-                this.gauge.filters = this.gauge.filters.filter((f) => {
-                  return f !== filter;
-                });
-              },
-            })
-          );
         });
       }
 
@@ -387,30 +320,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update() {
-    // todo: remove this.addScore(3) from here.
-    this.addScore(3);
-
-    if (this.score < this.maxScore) {
-      const reachedScorePosition = this.reachedScorePosition;
-      this.gaugeRings.children.forEach(
-        (ring: PIXI.Sprite & { base?: PIXI.Point }, i) => {
-          if (
-            reachedScorePosition >=
-            ring.base.x + 200 + (ring.width / 2) * (i / 2)
-          ) {
-            ring.position.copyFrom(
-              anim.shakingPoint({
-                anchor: ring.base,
-                amount: crisprUtil.proportion(i, 0, this.gaugeRingCount, 1, 5),
-              })
-            );
-            ring.emit("reached");
-          } else {
-            ring.position.copyFrom(ring.base);
-          }
-        }
-      );
-    }
+    // todo: remove this.addScore(x) from here.
+    this.addScore(1);
 
     if (
       this.levelVariant !== "continuous" ||
@@ -426,72 +337,10 @@ export class Level extends entity.CompositeEntity {
 
   _teardown() {
     this._entityConfig.container.removeChild(this.container);
-
+    this.gauge = null;
     this.path = null;
     this.grid = null;
     this.sequenceManager = null;
-  }
-
-  bubbleRings(options?: {
-    forEach?: (ring: PIXI.Sprite, index: number) => any;
-    callback?: () => any;
-  }) {
-    const finish: Promise<void>[] = [];
-    this.gaugeRings.children.forEach((gaugeRing, i) => {
-      finish.push(
-        new Promise((resolve) => {
-          setTimeout(
-            (ring: PIXI.Sprite, index: number) => {
-              this._activateChildEntity(
-                anim.bubble(ring, 1.2, 300, () => {
-                  options?.forEach?.(ring, index);
-                  resolve();
-                })
-              );
-            },
-            200 + i * 150,
-            gaugeRing,
-            i
-          );
-        })
-      );
-    });
-    Promise.all(finish).then(() => {
-      options?.callback?.();
-    });
-  }
-
-  /**
-   * Set value of gauge bar (value/maxValue) (default: value %)
-   * @param {number} value - The new value of gauge bar
-   */
-  setGaugeBarValue(value: number) {
-    this.gaugeBar.width = this.getGaugeBarWidthByValue(value);
-    this.gaugeBar.position.set(this.getGaugeBarPositionByValue(value), 0);
-    this.gaugeText.text =
-      value > 999 ? Math.floor(value / 1000) + "k" : Math.floor(value) + " pts";
-  }
-
-  getGaugeBarWidthByValue(value: number): number {
-    return crisprUtil.proportion(
-      value,
-      0,
-      this.maxScore,
-      0,
-      this.gaugeBarBaseWidth,
-      true
-    );
-  }
-
-  getGaugeBarPositionByValue(value: number): number {
-    return crisprUtil.proportion(value, 0, this.maxScore, 200, 0, true);
-  }
-
-  get reachedScorePosition(): number {
-    return (
-      this.getGaugeBarPositionByValue(this.score) +
-      this.getGaugeBarWidthByValue(this.score)
-    );
   }
 
   addScore(score: number) {
@@ -504,15 +353,7 @@ export class Level extends entity.CompositeEntity {
       this.emit("scoreUpdated", score);
       this.score += score;
     }
-    this.setGaugeBarValue(this.score);
-    if (!this.gaugeTriggered) {
-      this.gaugeTriggered = true;
-      this._activateChildEntity(
-        anim.bubble(this.gaugeText, 1.4, 100, () => {
-          this.gaugeTriggered = false;
-        })
-      );
-    }
+    this.gauge.setValue(this.score);
   }
 
   private _onGo(): void {
@@ -744,12 +585,12 @@ export class Level extends entity.CompositeEntity {
     this._activateChildEntity(
       new entity.EntitySequence([
         new entity.FunctionCallEntity(() => {
-          this.isGuiLocked = true;
+          this.disablingAnimations.add("infection");
         }),
         infectionSequence,
         new entity.FunctionCallEntity(() => {
           this.sequenceManager.add();
-          this.isGuiLocked = false;
+          this.disablingAnimations.delete("infection");
         }),
       ])
     );
