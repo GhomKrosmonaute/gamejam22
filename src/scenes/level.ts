@@ -30,7 +30,7 @@ const dropSpeed = 0.001;
  * - scoreUpdated(score: number)
  */
 export class Level extends entity.CompositeEntity {
-  public container: PIXI.Container;
+  public container = new PIXI.Container();
   public nucleotideRadius = game.width / 13.44;
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
@@ -78,23 +78,50 @@ export class Level extends entity.CompositeEntity {
     super();
   }
 
+  get config(): entity.EntityConfig {
+    return entity.extendConfig({
+      container: this.container,
+    });
+  }
+
   get cursor(): PIXI.Point {
     return this.grid.cursor;
   }
 
-  _setup() {
-    this._entityConfig.level = this;
+  private _initBackground() {
+    const background = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources["images/background.jpg"].texture
+    );
+    const particles = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources[
+        "images/particles_background.png"
+      ].texture
+    );
+    this.container.addChild(background);
+    this.container.addChild(particles);
+  }
 
-    this.container = new PIXI.Container();
-    this._entityConfig.container.addChild(this.container);
+  private _initForeground() {
+    const particles = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources[
+        "images/particles_foreground.png"
+      ].texture
+    );
+    const membrane = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources["images/membrane.png"].texture
+    );
+    membrane.position.set(0, 300);
+    this.container.addChild(particles);
+    this.container.addChild(membrane);
+  }
 
-    this.sequenceManager = new sequence.SequenceManager();
-
-    // instancing path system
+  private _initPath() {
     this.path = new path.Path();
     this._on(this.path, "updated", this._refresh);
+    this._activateChildEntity(this.path, this.config);
+  }
 
-    // generating nucleotide grid
+  private _initGrid() {
     this.grid = new grid.Grid(
       this.colCount,
       this.rowCount,
@@ -102,218 +129,159 @@ export class Level extends entity.CompositeEntity {
       this.nucleotideRadius
     );
     this._on(this.grid, "pointerup", this._attemptCrunch);
+    this._activateChildEntity(this.grid, this.config);
+  }
 
-    // background images
-    {
-      const background = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources["images/background.jpg"].texture
-      );
-      const particles = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/particles_background.png"
-        ].texture
-      );
-      this.container.addChild(background);
-      this.container.addChild(particles);
-    }
-
-    // add to entities path, grid and the test sequenceManager
-    {
-      this._activateChildEntity(
-        this.grid,
-        entity.extendConfig({
-          container: this.container,
-        })
-      );
-      this._activateChildEntity(
-        this.path,
-        entity.extendConfig({
-          container: this.container,
-        })
-      );
-      this._activateChildEntity(
-        this.sequenceManager,
-        entity.extendConfig({
-          container: this.container,
-        })
-      );
-    }
-
-    // foreground images
-    {
-      const particles2 = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/particles_foreground.png"
-        ].texture
-      );
-      this.container.addChild(particles2);
-
-      const membrane = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources["images/membrane.png"].texture
-      );
-      membrane.position.set(0, 300);
-      this.container.addChild(membrane);
-
-      // Make hair
-      this.hairManager = new hair.HairManager();
-
-      this._activateChildEntity(
-        this.hairManager,
-        entity.extendConfig({
-          container: this.container,
-        })
-      );
-    }
-
-    // GUI/HUD
-    {
-      // GO button
-      {
-        this.goButton = new PIXI.Sprite(
-          this._entityConfig.app.loader.resources[
-            "images/hud_go_button.png"
-          ].texture
-        );
-        this.goButton.position.set(
-          this._entityConfig.app.view.width * 0.734,
-          this._entityConfig.app.view.height * 0.8715
-        );
-        this.goButton.interactive = true;
-        this.goButton.buttonMode = true;
-        this._on(this.goButton, "pointerup", this._onGo);
-        this.container.addChild(this.goButton);
-
-        this.goButton.text = crisprUtil.makeText("GO", 0x000000);
-        this.goButton.text.position.set(
-          this.goButton.width / 2,
-          this.goButton.height / 2
-        );
-        this.goButton.addChild(this.goButton.text);
+  private _initSequences() {
+    this.sequenceManager = new sequence.SequenceManager();
+    this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
+      if (child === this.sequenceManager) {
+        this.sequenceManager.add();
+        if (this.levelVariant === "turnBased")
+          this.sequenceManager.distributeSequences();
       }
+    });
+    this._activateChildEntity(this.sequenceManager, this.config);
+  }
 
-      // Gauge bar (score/exp?)
-      {
-        this.gauge = new hud.Gauge(this.gaugeRingCount, this.maxScore);
+  private _initHairs() {
+    this.hairManager = new hair.HairManager();
+    this._activateChildEntity(this.hairManager, this.config);
+  }
 
-        this._activateChildEntity(
-          this.gauge,
-          entity.extendConfig({
-            container: this.container,
-          })
-        );
-
-        this._once(
-          this,
-          "activatedChildEntity",
-          (entity: entity.EntityBase) => {
-            if (entity === this.gauge) {
-              this.gauge.setValue(0);
-              this.gauge.bubbleRings();
-            }
-          }
-        );
-
-        this._on(this.gauge, "ringReached", (ring: hud.Ring) => {
-          ring.tint = 0x6bffff;
-          this._activateChildEntity(anim.tweenShaking(ring, 1000, 6, 0));
-        });
-
-        // setup shockwave on max score is reached
-        this._on(this, "maxScoreReached", () => {
-          this.gauge.bubbleRings({
-            forEach: (ring: hud.Ring) => {
-              ring.tint = 0x007784;
-            },
-          });
-        });
-      }
-
-      // Bonus
-      {
-        this.bonusBackground = new PIXI.Sprite(
-          this._entityConfig.app.loader.resources[
-            "images/hud_bonus_background.png"
-          ].texture
-        );
-        this.bonusBackground.position.set(
-          this._entityConfig.app.view.width * 0.07,
-          this._entityConfig.app.view.height * 0.88
-        );
-        this.bonusBackground.scale.set(0.65);
-        // todo: continue
-        this.container.addChild(this.bonusBackground);
-      }
-    }
-
-    this.bonusesManager = new bonuses.BonusesManager();
-
-    this._activateChildEntity(
-      this.bonusesManager,
-      entity.extendConfig({
-        container: this.container,
-      })
+  private _initButton() {
+    this.goButton = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources[
+        "images/hud_go_button.png"
+      ].texture
     );
+    this.goButton.position.set(
+      this._entityConfig.app.view.width * 0.734,
+      this._entityConfig.app.view.height * 0.8715
+    );
+    this.goButton.interactive = true;
+    this.goButton.buttonMode = true;
+    this._on(this.goButton, "pointerup", this._onGo);
+    this.container.addChild(this.goButton);
 
-    // adding sequences for tests
-    this.sequenceManager.add();
+    this.goButton.text = crisprUtil.makeText("GO", 0x000000);
+    this.goButton.text.position.set(
+      this.goButton.width / 2,
+      this.goButton.height / 2
+    );
+    this.goButton.addChild(this.goButton.text);
+  }
 
-    if (this.levelVariant === "turnBased")
-      this.sequenceManager.distributeSequences();
+  private _initBonuses() {
+    this.bonusBackground = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources[
+        "images/hud_bonus_background.png"
+      ].texture
+    );
+    this.bonusBackground.position.set(
+      this._entityConfig.app.view.width * 0.07,
+      this._entityConfig.app.view.height * 0.88
+    );
+    this.bonusBackground.scale.set(0.65);
+    // todo: continue
+    this.container.addChild(this.bonusBackground);
+    this.bonusesManager = new bonuses.BonusesManager();
+    this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
+      if (child === this.bonusesManager) {
+        this.bonusesManager.add(this.swapBonus, 5);
+        this.bonusesManager.add(this.starBonus, 5);
+        this.bonusesManager.add(this.killBonus, 5);
+        this._on(this.sequenceManager, "crunch", () => {
+          this.crunchCount++;
+          if (this.crunchCount % 2 === 0) {
+            this.bonusesManager.add(this.swapBonus);
+          }
+        });
+      }
+    });
+    this._activateChildEntity(this.bonusesManager, this.config);
+  }
 
-    // adding bonuses
-    {
-      this.bonusesManager.add(this.swapBonus, 5);
-      this.bonusesManager.add(this.starBonus, 5);
-      this.bonusesManager.add(this.killBonus, 5);
-      this._on(this.sequenceManager, "crunch", () => {
-        this.crunchCount++;
-        if (this.crunchCount % 2 === 0) this.bonusesManager.add(this.swapBonus);
+  private _initVirus() {
+    const v = new virus.Virus();
+    const config = entity.extendConfig({
+      container: this.container,
+    });
+    this._activateChildEntity(v, config);
+
+    const sequence = new entity.EntitySequence(
+      [
+        new entity.FunctionCallEntity(() => {
+          v.state = "walkRight";
+        }),
+        new tween.Tween({
+          obj: v,
+          property: "angle",
+          from: geom.degreesToRadians(25),
+          to: geom.degreesToRadians(0),
+          duration: 1000,
+        }),
+        new entity.FunctionCallEntity(() => {
+          v.state = "sting";
+        }),
+        new entity.WaitingEntity(3000),
+        new entity.FunctionCallEntity(() => {
+          v.state = "idle";
+        }),
+        new entity.WaitingEntity(1000),
+        new entity.FunctionCallEntity(() => {
+          v.state = "walkLeft";
+        }),
+        new tween.Tween({
+          obj: v,
+          property: "angle",
+          from: geom.degreesToRadians(0),
+          to: geom.degreesToRadians(25),
+          duration: 1000,
+        }),
+      ],
+      { loop: true }
+    );
+    const moveVirus = this._activateChildEntity(sequence, config);
+  }
+
+  private _initGauge() {
+    this.gauge = new hud.Gauge(this.gaugeRingCount, this.maxScore);
+    this._on(this, "activatedChildEntity", (entity: entity.EntityBase) => {
+      if (entity === this.gauge) {
+        this.gauge.setValue(0);
+      }
+    });
+    this._activateChildEntity(this.gauge, this.config);
+    this._on(this.gauge, "ringReached", (ring: hud.Ring) => {
+      ring.tint = 0x6bffff;
+      this._activateChildEntity(anim.tweenShaking(ring, 1000, 6, 0));
+    });
+    // setup shockwave on max score is reached
+    this._on(this, "maxScoreReached", () => {
+      this.gauge.bubbleRings({
+        timeBetween: 100,
+        forEach: (ring: hud.Ring) => {
+          ring.tint = 0x007784;
+        },
       });
-    }
+    });
+  }
 
-    // adding viruses (test)
-    {
-      const v = new virus.Virus();
-      const config = entity.extendConfig({
-        container: this.container,
-      });
-      this._activateChildEntity(v, config);
+  _setup() {
+    this._entityConfig.level = this;
+    this._entityConfig.container.addChild(this.container);
 
-      const sequence = new entity.EntitySequence(
-        [
-          new entity.FunctionCallEntity(() => {
-            v.state = "walkRight";
-          }),
-          new tween.Tween({
-            obj: v,
-            property: "angle",
-            from: geom.degreesToRadians(25),
-            to: geom.degreesToRadians(0),
-            duration: 1000,
-          }),
-          new entity.FunctionCallEntity(() => {
-            v.state = "sting";
-          }),
-          new entity.WaitingEntity(3000),
-          new entity.FunctionCallEntity(() => {
-            v.state = "idle";
-          }),
-          new entity.WaitingEntity(1000),
-          new entity.FunctionCallEntity(() => {
-            v.state = "walkLeft";
-          }),
-          new tween.Tween({
-            obj: v,
-            property: "angle",
-            from: geom.degreesToRadians(0),
-            to: geom.degreesToRadians(25),
-            duration: 1000,
-          }),
-        ],
-        { loop: true }
-      );
-      const moveVirus = this._activateChildEntity(sequence, config);
-    }
+    this._initBackground();
+    this._initGrid();
+    this._initPath();
+    this._initSequences();
+    this._initForeground();
+    this._initHairs();
+    this._initButton();
+    this._initBonuses();
+    this._initVirus();
+    this._initGauge();
 
     this._refresh();
     this.isGuiLocked = false;

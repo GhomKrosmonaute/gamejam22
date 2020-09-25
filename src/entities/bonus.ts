@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as easing from "booyah/src/easing";
+import * as tween from "booyah/src/tween";
 
 import * as level from "../scenes/level";
 import * as nucleotide from "./nucleotide";
@@ -248,7 +249,7 @@ export class BonusesManager extends entity.CompositeEntity {
           this.basePosition[bonus.name]
         );
         this._activateChildEntity(
-          anim.tweeny({
+          new tween.Tween({
             from: 0.7,
             to: 0.5,
             duration: 20,
@@ -263,7 +264,7 @@ export class BonusesManager extends entity.CompositeEntity {
         bonus.level.isGuiLocked = true;
         bonus.level.path.remove();
         this._activateChildEntity(
-          anim.tweeny({
+          new tween.Tween({
             from: 0.5,
             to: 0.7,
             duration: 20,

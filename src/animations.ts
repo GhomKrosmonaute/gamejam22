@@ -11,21 +11,33 @@ import * as crisprUtil from "./crisprUtil";
 const FLOATING_SPEED = 0.0005;
 const FLOATING_AMPLITUDE = 0.06;
 
-/**
- * Ghom's light tween method adaptation
- */
-export function tweeny(options: {
-  from?: number;
-  to?: number;
-  duration?: number;
-  easing?: (t: number) => number;
-  onUpdate?: (value: number) => any;
-  onTeardown?: () => any;
-}) {
-  options.from = options.from ?? 0;
-  options.to = options.to ?? 1;
+export type Resolver = (...args: any[]) => any;
 
-  return new tween.Tween(options);
+export function sequenced<T>(options: {
+  onStep: (resolve: Resolver, obj: T, index: number, src: T[]) => any;
+  sequence: T[];
+  delay?: number;
+  timeBetween: number;
+  callback?: AnimationCallback;
+}) {
+  const finish: Promise<void>[] = [];
+  options.sequence.forEach((obj, i, src) => {
+    finish.push(
+      new Promise((resolve: Resolver) => {
+        setTimeout(
+          options.onStep,
+          (options.delay ?? 0) + i * options.timeBetween,
+          resolve,
+          obj,
+          i,
+          src
+        );
+      })
+    );
+  });
+  Promise.all(finish).then(() => {
+    options.callback?.();
+  });
 }
 
 export type Sprite =
@@ -61,7 +73,7 @@ export function bubble(
   }
 ) {
   return new entity.EntitySequence([
-    tweeny({
+    new tween.Tween({
       from: 1,
       to,
       duration: duration * 0.33,
@@ -71,7 +83,7 @@ export function bubble(
         callbacks?.onTop?.(obj);
       },
     }),
-    tweeny({
+    new tween.Tween({
       from: to,
       to: 1,
       duration: duration * 0.66,
@@ -91,13 +103,13 @@ export function down(
 ) {
   const onUpdate = (value: number) => obj.scale.set(value);
   return new entity.EntitySequence([
-    tweeny({
+    new tween.Tween({
       from: 1,
       to: 1.2,
       duration: duration * 0.65,
       onUpdate,
     }),
-    tweeny({
+    new tween.Tween({
       from: 1.2,
       to: 0,
       duration: duration * 0.35,
@@ -116,14 +128,14 @@ export function sink(
 ) {
   obj.filters = [new PIXI.filters.AlphaFilter(1)];
   return new entity.ParallelEntity([
-    tweeny({
+    new tween.Tween({
       from: 1,
       to: 0.5,
       duration,
       easing: easing.easeInOutQuad,
       onUpdate: (value) => obj.scale.set(value),
     }),
-    tweeny({
+    new tween.Tween({
       from: 1,
       to: 0,
       duration,
@@ -140,13 +152,14 @@ export function sink(
 export function popup(obj: PIXI.DisplayObject, callback?: AnimationCallback) {
   const duration = 100;
   return new entity.EntitySequence([
-    tweeny({
+    new tween.Tween({
+      from: 0,
       to: 1.2,
       duration: duration * 0.7,
       easing: easing.easeInOutExpo,
       onUpdate: (value) => obj.scale.set(value),
     }),
-    tweeny({
+    new tween.Tween({
       from: 1.3,
       to: 1,
       duration: duration * 0.3,
@@ -168,14 +181,14 @@ export function move(
   callback?: AnimationCallback
 ) {
   return new entity.ParallelEntity([
-    tweeny({
+    new tween.Tween({
       from: from.y,
       to: to.y,
       duration,
       easing,
       onUpdate: (value) => (target.y = value),
     }),
-    tweeny({
+    new tween.Tween({
       from: from.x,
       to: to.x,
       duration,
@@ -236,28 +249,28 @@ export function heartBeat(
 ) {
   const onUpdate = (value: number) => obj.scale.set(value);
   return new entity.EntitySequence([
-    tweeny({
+    new tween.Tween({
       from: 1,
       to: scale,
       duration: duration * 0.2,
       easing: easing.easeInOutQuart,
       onUpdate,
     }),
-    tweeny({
+    new tween.Tween({
       from: scale,
       to: 1,
       duration: duration * 0.3,
       easing: easing.easeInOutQuart,
       onUpdate,
     }),
-    tweeny({
+    new tween.Tween({
       from: 1,
       to: scale,
       duration: duration * 0.2,
       easing: easing.easeInOutQuart,
       onUpdate,
     }),
-    tweeny({
+    new tween.Tween({
       from: scale,
       to: 1,
       duration: duration * 0.3,
@@ -286,7 +299,7 @@ export function tweenShaking(
 ) {
   const anchor = new PIXI.Point();
   anchor.copyFrom(obj.position);
-  return tweeny({
+  return new tween.Tween({
     from,
     to: to ?? from,
     duration,
