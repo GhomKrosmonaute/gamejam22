@@ -175,66 +175,50 @@ export class Path extends entity.CompositeEntity {
   crunch(callback?: () => any) {
     this.isCrunchAnimationRunning = true;
     this.level.disablingAnimations.add("pathCrunch");
-    const allCrunched: Promise<void>[] = [];
-    this._activateChildEntity(
-      new entity.EntitySequence(
-        this.items
-          .map<any>((item, i) => {
-            const score = item.infected ? (i + 1) * 2 : i + 1;
-            const fill = item.infected ? item.fullColorName : "#ffeccc";
-            const stroke = item.infected ? "#ffc200" : "black";
-            const duration = item.infected ? 1000 : 500;
-            return [
-              new entity.FunctionCallEntity(() => {
-                allCrunched.push(
-                  new Promise((resolve) => {
-                    this._activateChildEntity(
-                      anim.down(
-                        item.sprite,
-                        duration,
-                        function () {
-                          this.state = "missing";
-                          this.once("stateChanged", resolve);
-                        }.bind(item)
-                      )
-                    );
-                  })
-                );
-                this._activateChildEntity(
-                  anim.textFade(
-                    this.level.grid.nucleotideContainer,
-                    new PIXI.Text(`+ ${score}`, {
-                      fill,
-                      stroke,
-                      strokeThickness: 10,
-                      fontSize: 90 + score * 4,
-                      fontFamily: "Cardenio Modern Bold",
-                      dropShadow: true,
-                      dropShadowBlur: 10,
-                    }),
-                    duration,
-                    item.position.clone(),
-                    "up"
-                  )
-                );
-                this.level.addScore(score);
-              }),
-              new entity.WaitingEntity(50),
-            ];
-          })
-          .flat()
-          .concat([
-            new entity.FunctionCallEntity(() => {
-              Promise.all(allCrunched).then(() => {
-                this.level.disablingAnimations.delete("pathCrunch");
-                this.isCrunchAnimationRunning = false;
-                this.emit("crunchAnimationFinished");
-                if (callback) callback();
-              });
+    anim.sequenced({
+      sequence: this.items,
+      timeBetween: 50,
+      onStep: (resolve, item, i) => {
+        const score = item.infected ? (i + 1) * 2 : i + 1;
+        const fill = item.infected ? item.fullColorName : "#ffeccc";
+        const stroke = item.infected ? "#ffc200" : "black";
+        const duration = item.infected ? 1000 : 500;
+        this._activateChildEntity(
+          anim.down(
+            item.sprite,
+            duration,
+            function () {
+              this.state = "missing";
+              this.once("stateChanged", resolve);
+            }.bind(item)
+          )
+        );
+        this._activateChildEntity(
+          anim.textFade(
+            this.level.grid.nucleotideContainer,
+            new PIXI.Text(`+ ${score}`, {
+              fill,
+              stroke,
+              strokeThickness: 10,
+              fontSize: 90 + score * 4,
+              fontFamily: "Cardenio Modern Bold",
+              dropShadow: true,
+              dropShadowBlur: 10,
             }),
-          ])
-      )
-    );
+            duration,
+            item.position.clone(),
+            "up"
+          )
+        );
+        this.level.addScore(score);
+      },
+      callback: () => {
+        this.level.disablingAnimations.delete("pathCrunch");
+        this.isCrunchAnimationRunning = false;
+        this.emit("crunchAnimationFinished");
+        callback?.();
+      },
+    });
     this.remove();
   }
 

@@ -3,6 +3,7 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
+import * as tween from "booyah/src/tween";
 
 import * as game from "../game";
 import * as crisprUtil from "../crisprUtil";
@@ -311,77 +312,61 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   down(addScore: boolean, callback?: () => any) {
-    const allSink: Promise<void>[] = [];
-    this._activateChildEntity(
-      new entity.EntitySequence(
-        this.nucleotides
-          .map<any>((n, i, all) => {
-            n.shakes.removeShake("highlight");
-            const score = i + 1;
-            return [
-              new entity.FunctionCallEntity(() => {
-                if (addScore) {
-                  allSink.push(
-                    new Promise((resolve) => {
-                      this._activateChildEntity(
-                        anim.textFade(
-                          this.container,
-                          crisprUtil.makeText(
-                            `+ ${score}`,
-                            0xffffff,
-                            70 + 4 * i
-                          ),
-                          300,
-                          new PIXI.Point(n.position.x, n.position.y - 50),
-                          "up",
-                          () => {
-                            this.level.addScore(score);
-                            resolve();
-                          }
-                        )
-                      );
-                    })
-                  );
-                }
-                allSink.push(
-                  new Promise((resolve) => {
-                    this._activateChildEntity(
-                      new entity.ParallelEntity([
-                        anim.tweeny({
-                          from: n.position.x,
-                          to: n.position.x + (all.length / 2) * 25 - i * 25,
-                          duration: 1000,
-                          onUpdate: (value) => {
-                            n.position.x = value;
-                          },
-                        }),
-                        new entity.FunctionCallEntity(() => {
-                          n.sink(1000).then(resolve);
-                        }),
-                      ])
-                    );
-                  })
-                );
-              }),
-              new entity.WaitingEntity(
-                this.level.levelVariant === "long" ? 80 : 200
-              ),
-            ];
+    anim.sequenced({
+      sequence: this.nucleotides,
+      timeBetween: this.level.levelVariant === "long" ? 80 : 200,
+      onStep: (resolve, n, i, all) => {
+        n.shakes.removeShake("highlight");
+        const score = i + 1;
+        const promises: Promise<void>[] = [];
+        if (addScore) {
+          promises.push(
+            new Promise((_resolve) => {
+              this._activateChildEntity(
+                anim.textFade(
+                  this.container,
+                  crisprUtil.makeText(`+ ${score}`, 0xffffff, 70 + 4 * i),
+                  300,
+                  new PIXI.Point(n.position.x, n.position.y - 50),
+                  "up",
+                  () => {
+                    this.level.addScore(score);
+                    _resolve();
+                  }
+                )
+              );
+            })
+          );
+        }
+        promises.push(
+          new Promise((_resolve) => {
+            this._activateChildEntity(
+              new entity.ParallelEntity([
+                new tween.Tween({
+                  from: n.position.x,
+                  to: n.position.x + (all.length / 2) * 25 - i * 25,
+                  duration: 1000,
+                  onUpdate: (value) => {
+                    n.position.x = value;
+                  },
+                }),
+                new entity.FunctionCallEntity(() => {
+                  n.sink(1000).then(_resolve);
+                }),
+              ])
+            );
           })
-          .flat()
-          .concat([
-            new entity.FunctionCallEntity(() => {
-              Promise.all(allSink).then(() => {
-                this.level.sequenceManager.sequences = this.level.sequenceManager.sequences.filter(
-                  (s) => s !== this
-                );
-                this._transition = entity.makeTransition();
-                if (callback) callback();
-              });
-            }),
-          ])
-      )
-    );
+        );
+        Promise.all(promises).then(resolve);
+      },
+      callback: () => {
+        this.level.sequenceManager.sequences = this.level.sequenceManager.sequences.filter(
+          (s) => s !== this
+        );
+        this._transition = entity.makeTransition();
+        callback?.();
+      },
+    });
   }
 
   validate(

@@ -73,33 +73,26 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   bubbleRings(options?: {
-    forEach?: (ring: PIXI.Sprite, index: number) => any;
+    delay?: number;
+    timeBetween?: number;
+    forEach?: (ring: Ring, index: number) => any;
     callback?: () => any;
   }) {
-    const finish: Promise<void>[] = [];
-    this._rings.children.forEach((ring: Ring, i) => {
-      finish.push(
-        new Promise((resolve) => {
-          setTimeout(
-            (ring: Ring, index: number) => {
-              this._activateChildEntity(
-                anim.bubble(ring, 1.2, 300, {
-                  onTop: () => {
-                    options?.forEach?.(ring, index);
-                    resolve();
-                  },
-                })
-              );
+    anim.sequenced({
+      delay: options.delay ?? 200,
+      timeBetween: options.timeBetween ?? 150,
+      sequence: this._rings.children as Ring[],
+      callback: () => options.callback?.(),
+      onStep: (resolve, ring, index) => {
+        this._activateChildEntity(
+          anim.bubble(ring, 1.2, 300, {
+            onTop: () => {
+              options?.forEach?.(ring, index);
+              resolve();
             },
-            200 + i * 150,
-            ring,
-            i
-          );
-        })
-      );
-    });
-    Promise.all(finish).then(() => {
-      options?.callback?.();
+          })
+        );
+      },
     });
   }
 
@@ -135,6 +128,7 @@ export class Gauge extends entity.CompositeEntity {
       );
 
       ring.anchor.set(0.5);
+      ring.scale.set(0);
       ring.position.copyFrom(position);
       ring.base = new PIXI.Point();
       ring.base.copyFrom(position);
@@ -157,6 +151,15 @@ export class Gauge extends entity.CompositeEntity {
     this._rings.position.x = 200;
 
     this._entityConfig.container.addChild(this._container);
+
+    anim.sequenced({
+      delay: 200,
+      timeBetween: 150,
+      sequence: this._rings.children as Ring[],
+      onStep: (resolve, ring) => {
+        this._activateChildEntity(anim.popup(ring, resolve));
+      },
+    });
   }
 
   _update() {
