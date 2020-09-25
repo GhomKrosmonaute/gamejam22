@@ -312,32 +312,60 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   down(addScore: boolean, callback?: () => any) {
+    const isLong = this.level.levelVariant === "long";
+    const fully = this.nucleotides.every((n) => n.state === "inactive");
     anim.sequenced({
       sequence: this.nucleotides,
-      timeBetween: this.level.levelVariant === "long" ? 80 : 200,
+      timeBetween: isLong ? 80 : 200,
       onStep: (resolve, n, i, all) => {
         n.shakes.removeShake("highlight");
-        const score = i + 1;
+
+        const baseShift = Math.round(Math.random() * 50) + 50;
         const promises: Promise<void>[] = [];
+
+        let score = this.level.baseScore;
+
+        if (isLong) {
+          if (n.state !== "inactive") {
+            score *= -1;
+          } else if (fully) {
+            score *= 2;
+          }
+        }
+
         if (addScore) {
+          this.level.addScore(score);
+
           promises.push(
             new Promise((_resolve) => {
               this._activateChildEntity(
                 anim.textFade(
                   this.container,
-                  crisprUtil.makeText(`+ ${score}`, 0xffffff, 70 + 4 * i),
-                  300,
-                  new PIXI.Point(n.position.x, n.position.y - 50),
-                  "up",
-                  () => {
-                    this.level.addScore(score);
-                    _resolve();
-                  }
+                  crisprUtil.makeText(
+                    `${score >= 0 ? "+" : "-"} ${String(score).replace(
+                      "-",
+                      ""
+                    )}`,
+                    {
+                      fill: score < 0 ? "#d70000" : "#ffffff",
+                      fontSize: 70 + score,
+                      stroke: fully ? "#ffa200" : "#000000",
+                      strokeThickness: 4,
+                    }
+                  ),
+                  800,
+                  new PIXI.Point(
+                    n.position.x,
+                    n.position.y + baseShift * (score < 0 ? 1 : -1)
+                  ),
+                  score < 0 ? "down" : "up",
+                  _resolve
                 )
               );
             })
           );
         }
+
         promises.push(
           new Promise((_resolve) => {
             this._activateChildEntity(
@@ -357,6 +385,7 @@ export class Sequence extends entity.CompositeEntity {
             );
           })
         );
+
         Promise.all(promises).then(resolve);
       },
       callback: () => {

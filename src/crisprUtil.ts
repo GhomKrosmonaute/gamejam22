@@ -99,16 +99,12 @@ export function positionAlongMembrane(
   displayObject.rotation = -rotation;
 }
 
-export function makeText(
-  text: string,
-  color: string | number = 0xffffff,
-  size: string | number = 70
-) {
+export function makeText(text: string, options: Partial<PIXI.TextStyle>) {
   const pixiText = new PIXI.Text(text, {
-    fill: color,
     fontFamily: "Cardenio Modern Bold",
-    fontSize: size,
+    fontSize: 80,
     align: "center",
+    ...options,
   });
   pixiText.anchor.set(0.5);
   return pixiText;
