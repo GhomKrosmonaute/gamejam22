@@ -140,7 +140,7 @@ export class Gauge extends entity.CompositeEntity {
       this._rings.addChild(ring);
     }
 
-    this._text = crisprUtil.makeText("", 0x000000, 40);
+    this._text = crisprUtil.makeText("", { fill: 0x000000, fontSize: 40 });
     this._text.position.set(110, 110);
 
     this._container.addChild(this._background);

@@ -7,9 +7,7 @@ import * as tween from "booyah/src/tween";
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
 import * as game from "../game";
-import * as filters from "../filters";
 
-import * as nucleotide from "../entities/nucleotide";
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
 import * as virus from "../entities/virus";
@@ -73,7 +71,8 @@ export class Level extends entity.CompositeEntity {
   constructor(
     public readonly levelVariant: LevelVariant,
     public readonly maxScore = 1000,
-    public readonly gaugeRingCount = 5
+    public readonly gaugeRingCount = 5,
+    public readonly baseScore = 10
   ) {
     super();
   }
@@ -164,7 +163,9 @@ export class Level extends entity.CompositeEntity {
     this._on(this.goButton, "pointerup", this._onGo);
     this.container.addChild(this.goButton);
 
-    this.goButton.text = crisprUtil.makeText("GO", 0x000000);
+    this.goButton.text = crisprUtil.makeText("GO", {
+      fill: 0x000000,
+    });
     this.goButton.text.position.set(
       this.goButton.width / 2,
       this.goButton.height / 2
@@ -275,12 +276,12 @@ export class Level extends entity.CompositeEntity {
     this._initBackground();
     this._initGrid();
     this._initPath();
-    this._initSequences();
     this._initForeground();
-    this._initHairs();
-    this._initButton();
-    this._initBonuses();
     this._initVirus();
+    this._initHairs();
+    this._initSequences();
+    this._initBonuses();
+    this._initButton();
     this._initGauge();
 
     this._refresh();
@@ -427,61 +428,64 @@ export class Level extends entity.CompositeEntity {
         this.sequenceManager.sequences[0] &&
         this.sequenceManager.sequences[0].maxActiveLength < 3
       ) {
-        const sequence = this.sequenceManager.sequences[0];
-        const fully = sequence.nucleotides.every((n) => n.state === "inactive");
         await new Promise((resolve) => {
-          this._activateChildEntity(
-            new entity.EntitySequence([
-              ...sequence.nucleotides
-                .map((n, i) => {
-                  const baseShift = Math.round(Math.random() * 50) + 50;
-                  const score =
-                    10 *
-                    Math.ceil((i + 1) / 2) *
-                    (n.state !== "inactive" ? 1 : -1) *
-                    (fully ? 2 : 1);
-                  return [
-                    new entity.FunctionCallEntity(() => {
-                      this._activateChildEntity(
-                        anim.textFade(
-                          this.container,
-                          new PIXI.Text(`${score}`, {
-                            fontSize: 80,
-                            fontFamily: "Cardenio Modern Bold",
-                            fill:
-                              score < 0
-                                ? "#d70000"
-                                : nucleotide.fullColorNames[n.colorName],
-                            stroke: fully
-                              ? "#ffcb00"
-                              : score < 0
-                              ? "#000000"
-                              : "#ffffff",
-                            strokeThickness: score < 0 ? 3 : 10,
-                          }),
-                          1000,
-                          new PIXI.Point(
-                            n.position.x + sequence.position.x,
-                            n.position.y +
-                              sequence.position.y +
-                              baseShift * (score < 0 ? 1 : -1)
-                          ),
-                          score < 0 ? "down" : "up",
-                          () => this.addScore(score)
-                        )
-                      );
-                    }),
-                    new entity.WaitingEntity(80),
-                  ];
-                })
-                .flat(),
-              new entity.FunctionCallEntity(resolve),
-            ])
-          );
+          this.sequenceManager.sequences[0].down(true, resolve);
         });
-        await new Promise((resolve) => {
-          sequence.down(false, resolve);
-        });
+
+        // const fully = sequence.nucleotides.every((n) => n.state === "inactive");
+        // await new Promise((resolve) => {
+        //   this._activateChildEntity(
+        //     new entity.EntitySequence([
+        //       ...sequence.nucleotides
+        //         .map((n, i) => {
+        //           const baseShift = Math.round(Math.random() * 50) + 50;
+        //           const score =
+        //             10 *
+        //             Math.ceil((i + 1) / 2) *
+        //             (n.state !== "inactive" ? 1 : -1) *
+        //             (fully ? 2 : 1);
+        //           return [
+        //             new entity.FunctionCallEntity(() => {
+        //               this._activateChildEntity(
+        //                 anim.textFade(
+        //                   this.container,
+        //                   new PIXI.Text(`${score}`, {
+        //                     fontSize: 80,
+        //                     fontFamily: "Cardenio Modern Bold",
+        //                     fill:
+        //                       score < 0
+        //                         ? "#d70000"
+        //                         : nucleotide.fullColorNames[n.colorName],
+        //                     stroke: fully
+        //                       ? "#ffcb00"
+        //                       : score < 0
+        //                       ? "#000000"
+        //                       : "#ffffff",
+        //                     strokeThickness: score < 0 ? 3 : 10,
+        //                   }),
+        //                   1000,
+        //                   new PIXI.Point(
+        //                     n.position.x + sequence.position.x,
+        //                     n.position.y +
+        //                       sequence.position.y +
+        //                       baseShift * (score < 0 ? 1 : -1)
+        //                   ),
+        //                   score < 0 ? "down" : "up",
+        //                   () => this.addScore(score)
+        //                 )
+        //               );
+        //             }),
+        //             new entity.WaitingEntity(80),
+        //           ];
+        //         })
+        //         .flat(),
+        //       new entity.FunctionCallEntity(resolve),
+        //     ])
+        //   );
+        // });
+        // await new Promise((resolve) => {
+        //   sequence.down(false, resolve);
+        // });
       }
       if (this.sequenceManager.countSequences === 0) {
         this._regenerate();
