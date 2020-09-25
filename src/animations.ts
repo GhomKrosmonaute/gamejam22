@@ -13,6 +13,7 @@ const FLOATING_AMPLITUDE = 0.06;
 
 export type Resolver = (...args: any[]) => any;
 
+// todo: to test when game loop is stopped
 export function sequenced<T>(options: {
   onStep: (resolve: Resolver, obj: T, index: number, src: T[]) => any;
   sequence: T[];
