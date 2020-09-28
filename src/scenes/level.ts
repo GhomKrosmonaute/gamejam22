@@ -204,46 +204,42 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initVirus() {
-    const v = new virus.Virus();
+    const v = new virus.Virus(virus.leftEdge);
     const config = entity.extendConfig({
       container: this.container,
     });
     this._activateChildEntity(v, config);
 
-    const sequence = new entity.EntitySequence(
+    const moveVirus = new entity.EntitySequence(
       [
         new entity.FunctionCallEntity(() => {
-          v.state = "walkRight";
+          v.moveToAngle(geom.degreesToRadians(geom.randomInRange(10, -10)));
         }),
-        new tween.Tween({
-          obj: v,
-          property: "angle",
-          from: geom.degreesToRadians(25),
-          to: geom.degreesToRadians(0),
-          duration: 1000,
-        }),
+        new entity.WaitForEvent(
+          v,
+          "changedState",
+          (newState, oldState) => oldState === "walk"
+        ),
         new entity.FunctionCallEntity(() => {
-          v.state = "sting";
+          v.sting();
         }),
-        new entity.WaitingEntity(3000),
+        new entity.WaitForEvent(
+          v,
+          "changedState",
+          (newState, oldState) => oldState === "sting"
+        ),
         new entity.FunctionCallEntity(() => {
-          v.state = "idle";
+          v.leave();
         }),
-        new entity.WaitingEntity(1000),
-        new entity.FunctionCallEntity(() => {
-          v.state = "walkLeft";
-        }),
-        new tween.Tween({
-          obj: v,
-          property: "angle",
-          from: geom.degreesToRadians(0),
-          to: geom.degreesToRadians(25),
-          duration: 1000,
-        }),
+        new entity.WaitForEvent(
+          v,
+          "changedState",
+          (newState, oldState) => oldState === "walk"
+        ),
       ],
       { loop: true }
     );
-    const moveVirus = this._activateChildEntity(sequence, config);
+    this._activateChildEntity(moveVirus, config);
   }
 
   private _initGauge() {
