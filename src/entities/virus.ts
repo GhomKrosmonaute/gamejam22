@@ -5,14 +5,14 @@ import * as geom from "booyah/src/geom";
 import * as tween from "booyah/src/tween";
 import * as crisprUtil from "../crisprUtil";
 
-export type State = "idle" | "walk" | "sting";
+export type State = "idle" | "walk" | "stingIn" | "stingOut";
 
 export const leftEdge = geom.degreesToRadians(25);
 export const rightEdge = geom.degreesToRadians(-25);
 
 /**
  * Sends the following events:
- * - changedState(oldState: string, newState: string)
+ * - changedState(newState: string, oldState: string)
  */
 export class Virus extends entity.CompositeEntity {
   private _container: PIXI.Container;
@@ -63,21 +63,30 @@ export class Virus extends entity.CompositeEntity {
       container: this._container,
     });
 
+    this._changeState("stingIn");
+
     const virusAnimation = this._createAnimation(`mini_bob_sting`, false);
+    const halfAnimationDelay = new entity.EntitySequence([
+      new entity.FunctionalEntity({
+        requestTransition: () =>
+          virusAnimation.sprite.currentFrame >=
+          virusAnimation.sprite.totalFrames * 0.5,
+      }),
+      new entity.FunctionCallEntity(() => this._changeState("stingOut")),
+    ]);
     this._activateChildEntity(
       new entity.EntitySequence([
-        virusAnimation,
+        new entity.ParallelEntity([virusAnimation, halfAnimationDelay]),
         new entity.FunctionCallEntity(() => this.idle()),
       ]),
       childConfig
     );
-
-    this._changeState("sting");
   }
 
   moveToAngle(angle: number): void {
     if (geom.areAlmostEqualNumber(this._angle, angle)) return;
-    if (this.state === "sting") throw new Error("Cannot move while stinging");
+    if (this.state === "stingIn" || this.state === "stingOut")
+      throw new Error("Cannot move while stinging");
 
     this._state = "walk";
     this._targetAngle = angle;
