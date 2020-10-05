@@ -5,25 +5,27 @@ import * as anim from "../animations";
 import * as game from "../game";
 import * as crisprUtil from "../crisprUtil";
 
+import * as level from "../scenes/level";
+
 /**
  * Emits:
  * - closed
  */
-export class Popup extends entity.CompositeEntity {
+export abstract class Popup extends entity.CompositeEntity {
   private _container = new PIXI.Container();
 
   public shaker: anim.DisplayObjectShakesManager;
 
-  public readonly width = game.width * -0.8;
-  public readonly height = game.height / 3;
+  public readonly width = game.width * 0.8;
+  public readonly height = game.height * 0.7;
   public readonly center = new PIXI.Point(this.width / 2, this.height / 2);
 
   /** popup body container */
   public readonly container = new PIXI.Container();
 
-  // todo: add a popup background as sprite
+  // todo: add an optional popup background as sprite
 
-  constructor() {
+  constructor(private withBackground: boolean = false) {
     super();
 
     this.container.position.set(this.width * -0.5, this.height * -0.5);
@@ -33,8 +35,27 @@ export class Popup extends entity.CompositeEntity {
     this.shaker = new anim.DisplayObjectShakesManager(this.container);
   }
 
+  get level(): level.Level {
+    return this._entityConfig.level;
+  }
+
   setup(frameInfo: entity.FrameInfo, entityConfig: entity.EntityConfig) {
     super.setup(frameInfo, entityConfig);
+
+    this.level.disablingAnimations.add("popup");
+
+    // background
+    if (this.withBackground) {
+      const background = new PIXI.Sprite(
+        this._entityConfig.app.loader.resources[
+          "images/popup_background.png"
+        ].texture
+      );
+      background.width = this.width;
+      background.height = this.height;
+
+      this.container.addChildAt(background, 0);
+    }
 
     this._entityConfig.container.addChild(this._container);
 
@@ -49,7 +70,8 @@ export class Popup extends entity.CompositeEntity {
    * 2. clean all containers
    * 3. clean all shakers
    * 4. emit "closed" event
-   * 5. make transition
+   * 5. reactivate level interactions
+   * 6. make transition
    */
   close() {
     this._activateChildEntity(
@@ -59,6 +81,7 @@ export class Popup extends entity.CompositeEntity {
         this._entityConfig.container.removeChild(this._container);
         this.shaker.removeAllShakes();
         this.emit("closed");
+        this.level.disablingAnimations.delete("popup");
         this._transition = entity.makeTransition();
       })
     );
@@ -100,4 +123,154 @@ export class ExamplePopup extends Popup {
 
 export class TerminatedLevelPopup extends Popup {
   // todo: make popup with stars and score of level
+
+  constructor() {
+    super(true);
+  }
+
+  protected _setup() {
+    const checks = {
+      "No infection": !this.level.wasInfected,
+      "Max score reached": this.level.score >= this.level.maxScore,
+      "No virus has escaped": !this.level.someVirusHasEscaped,
+    };
+
+    const starCount = Object.values(checks).filter((check) => check).length;
+
+    // add checks content
+    {
+      Object.entries(checks).map(([key, check], i) => {
+        const line = new PIXI.Container();
+        line.position.set(0, this.center.y + 300 + i * 100);
+        this.container.addChild(line);
+
+        const text = crisprUtil.makeText(key, {
+          stroke: 0xffffff,
+          strokeThickness: 10,
+        });
+        text.position.x = this.center.x;
+        line.addChild(text);
+
+        const icon = crisprUtil.makeText(check ? "✅" : "❌", {
+          align: "right",
+          strokeThickness: 20,
+          stroke: 0x000000,
+        });
+        icon.position.x = this.width - 100;
+        line.addChild(icon);
+      });
+    }
+
+    // add star-based children
+    {
+      let title: PIXI.Text;
+
+      switch (starCount) {
+        case 1:
+          title = crisprUtil.makeText("Well done", {
+            fontSize: 150,
+            stroke: 0xffffff,
+            strokeThickness: 10,
+          });
+          break;
+        case 2:
+          title = crisprUtil.makeText("Great!", {
+            fontSize: 200,
+            stroke: 0xffffff,
+            strokeThickness: 10,
+          });
+          break;
+        case 3:
+          title = crisprUtil.makeText("Awesome!", {
+            fontSize: 250,
+            stroke: 0xffffff,
+            strokeThickness: 10,
+          });
+          break;
+        default:
+          title = crisprUtil.makeText("Too bad...", {
+            fontSize: 100,
+            stroke: 0xffffff,
+            strokeThickness: 10,
+          });
+        // todo: retry button
+      }
+
+      title.position.set(this.center.x, this.center.y - 500);
+      this.container.addChild(title);
+    }
+
+    // add score
+    {
+      const score = crisprUtil.makeText(
+        `Score: ${this.level.score} pts (${crisprUtil.proportion(
+          this.level.score,
+          0,
+          this.level.maxScore,
+          0,
+          100,
+          true
+        )}%)`,
+        {
+          fontSize: 100,
+          fill: 0xffffff,
+          strokeThickness: 20,
+          stroke: 0x000000,
+        }
+      );
+
+      score.position.set(this.center.x, this.center.y + 100);
+      score.scale.set(0);
+
+      this.container.addChild(score);
+
+      this._activateChildEntity(anim.popup(score, 800));
+    }
+
+    // add stars
+    {
+      anim.sequenced({
+        sequence: Object.values(checks),
+        timeBetween: 200,
+        delay: 500,
+        onStep: (resolve, check, index) => {
+          const star = new PIXI.Sprite(
+            this._entityConfig.app.loader.resources["images/star.png"].texture
+          );
+
+          star.scale.set(0);
+          star.anchor.set(0.5);
+
+          if (!check) {
+            star.tint = 0x666666;
+          }
+
+          star.position.y = this.center.y - 200;
+
+          switch (index) {
+            case 0:
+              star.position.x = 150;
+              star.angle = -10;
+              break;
+            case 1:
+              star.position.x = this.center.x;
+              star.position.y -= 30;
+              break;
+            case 2:
+              star.position.x = this.width - 150;
+              star.angle = 10;
+              break;
+          }
+
+          this.container.addChild(star);
+
+          this._activateChildEntity(
+            anim.popup(star, 400, () => {
+              resolve();
+            })
+          );
+        },
+      });
+    }
+  }
 }

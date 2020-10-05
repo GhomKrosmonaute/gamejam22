@@ -110,6 +110,8 @@ const graphicalAssets = [
   "images/hud_gauge_ring.png",
   "images/nucleotide_glow.png",
   "images/nucleotide_bright.png",
+  "images/popup_background.png",
+  "images/star.png",
 
   // animated sprites
   "images/nucleotide_red.json",
