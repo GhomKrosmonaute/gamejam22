@@ -10,12 +10,14 @@ import * as level from "../scenes/level";
 /**
  * Emits:
  * - closed
+ * - backgroundLoaded( background: PIXI.Sprite )
  */
 export abstract class Popup extends entity.CompositeEntity {
   private _id = "popup:" + Date.now();
   private _container = new PIXI.Container();
 
   public shaker: anim.DisplayObjectShakesManager;
+  public background?: PIXI.Sprite;
 
   public readonly width = game.width * 0.8;
   public readonly height = game.height * 0.7;
@@ -43,20 +45,21 @@ export abstract class Popup extends entity.CompositeEntity {
   setup(frameInfo: entity.FrameInfo, entityConfig: entity.EntityConfig) {
     super.setup(frameInfo, entityConfig);
 
-    this.level.disablingAnimations.add(this._id);
-
     // background
     if (this.withBackground) {
-      const background = new PIXI.Sprite(
+      this.background = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
           "images/popup_background.png"
         ].texture
       );
-      background.width = this.width;
-      background.height = this.height;
+      this.background.width = this.width;
+      this.background.height = this.height;
 
-      this.container.addChildAt(background, 0);
+      this.container.addChildAt(this.background, 0);
+      this.emit("backgroundLoaded", this.background);
     }
+
+    this.level.disablingAnimations.add(this._id);
 
     this._entityConfig.container.addChild(this._container);
 
@@ -89,7 +92,9 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   button(displayObject: PIXI.DisplayObject, callback?: () => any) {
-    this.container.addChild(displayObject);
+    if (!this.container.children.includes(displayObject)) {
+      this.container.addChild(displayObject);
+    }
     displayObject.buttonMode = true;
     displayObject.interactive = true;
     this._on(displayObject, "pointerup", () => {
@@ -274,9 +279,11 @@ export class TerminatedLevelPopup extends Popup {
       });
     }
 
-    // todo: debug the following code
-    // this.button(this.container, () => {
-    //   this.close()
-    // })
+    // use background as closure button
+    this._once(this, "backgroundLoaded", (background: PIXI.Sprite) => {
+      this.button(background, () => {
+        this.close();
+      });
+    });
   }
 }
