@@ -19,8 +19,8 @@ export abstract class Popup extends entity.CompositeEntity {
   public shaker: anim.DisplayObjectShakesManager;
   public background?: PIXI.Sprite;
 
-  public readonly width = game.width * 0.8;
-  public readonly height = game.height * 0.7;
+  public readonly width = game.width * 0.8; // 864
+  public readonly height = game.height * 0.7; // 1344
   public readonly center = new PIXI.Point(this.width / 2, this.height / 2);
 
   /** popup body container */
