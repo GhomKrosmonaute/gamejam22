@@ -27,15 +27,15 @@ export class Popup extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this._container);
 
-    this._activateChildEntity(anim.popup(this._container, 1000));
+    this._activateChildEntity(anim.popup(this._container, 800));
   }
 
-  teardown(frameInfo: entity.FrameInfo) {
+  end() {
     this._activateChildEntity(
       anim.sink(this._container, 300, () => {
         this._container.removeChild(this.container);
-        this._entityConfig.removeChild(this._container);
-        super.teardown(frameInfo);
+        this._entityConfig.container.removeChild(this._container);
+        this._transition = entity.makeTransition();
       })
     );
   }
@@ -46,8 +46,21 @@ export class EndLevelPopup extends Popup {
 
   protected _setup() {
     this.text = crisprUtil.makeText("HELLO WORLD!", {
-      fontSize: 200,
+      fontSize: 140,
     });
+    this.text.position.set(this.width / 2, this.height / 2);
+    this.text.buttonMode = true;
+    this.text.interactive = true;
+
+    this._on(this.text, "pointerup", () => {
+      console.log("HOP");
+      this.end();
+    });
+
     this.container.addChild(this.text);
+  }
+
+  protected _teardown() {
+    this.container.removeChild(this.text);
   }
 }
