@@ -34,7 +34,7 @@ export class Level extends entity.CompositeEntity {
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;
-  public endPopup: popup.EndLevelPopup;
+  public examplePopup: popup.ExamplePopup;
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
@@ -90,9 +90,10 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initPopups() {
-    this.endPopup = new popup.EndLevelPopup();
+    this.examplePopup = new popup.ExamplePopup();
 
-    this._activateChildEntity(this.endPopup, this.config);
+    // activate for open popup (close with popup.close())
+    this._activateChildEntity(this.examplePopup, this.config);
   }
 
   private _initBackground() {
@@ -291,7 +292,6 @@ export class Level extends entity.CompositeEntity {
     this._initBonuses();
     this._initButton();
     this._initGauge();
-
     this._initPopups();
 
     this._refresh();

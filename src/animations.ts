@@ -426,6 +426,11 @@ export class DisplayObjectShakesManager extends entity.EntityBase {
     this._resetPosition();
   }
 
+  removeAllShakes() {
+    this._shakes.clear();
+    this._resetPosition();
+  }
+
   stopFloating() {
     delete this.floatingOptions;
     this._resetPosition();
