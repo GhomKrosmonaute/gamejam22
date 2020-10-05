@@ -34,7 +34,6 @@ export class SwapBonus extends Bonus {
   dragged: nucleotide.Nucleotide | null = null;
   hovered: nucleotide.Nucleotide | null = null;
   basePosition = new PIXI.Point();
-  clickMode = false;
 
   downNucleotide(n: nucleotide.Nucleotide): null {
     if (n) {
@@ -81,7 +80,6 @@ export class SwapBonus extends Bonus {
       this._once(this.level.grid, "drop", () => {
         if (!this.hovered) {
           // click
-          this.clickMode = true;
           this._once(this.level.grid, "drag", () => {
             if (!this.dragged || !this.hovered) {
               return this.abort();

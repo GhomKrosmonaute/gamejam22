@@ -1,5 +1,8 @@
 import * as PIXI from "pixi.js";
+
 import * as entity from "booyah/src/entity";
+import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 
 import * as anim from "../animations";
 import * as game from "../game";
@@ -232,6 +235,20 @@ export class TerminatedLevelPopup extends Popup {
       this.container.addChild(score);
 
       this._activateChildEntity(anim.popup(score, 800));
+      this._activateChildEntity(new tween.Tween({
+        from: 0,
+        to: this.level.score,
+        easing: easing.easeInQuad,
+        duration: 3000,
+        onUpdate: value => score.text = `Score: ${Math.floor(value)} pts (${Math.floor(crisprUtil.proportion(
+          value,
+          0,
+          this.level.maxScore,
+          0,
+          100,
+          true
+        ))}%)`
+      }))
     }
 
     // add stars
