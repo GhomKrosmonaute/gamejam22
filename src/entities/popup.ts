@@ -98,6 +98,6 @@ export class ExamplePopup extends Popup {
   }
 }
 
-export class TerminateLevelPopup extends Popup {
+export class TerminatedLevelPopup extends Popup {
   // todo: make popup with stars and score of level
 }
