@@ -10,6 +10,7 @@ import * as game from "../game";
 
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
+import * as popup from "../entities/popup";
 import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
@@ -33,6 +34,7 @@ export class Level extends entity.CompositeEntity {
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;
+  public endPopup: popup.EndLevelPopup;
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
@@ -85,6 +87,12 @@ export class Level extends entity.CompositeEntity {
 
   get cursor(): PIXI.Point {
     return this.grid.cursor;
+  }
+
+  private _initPopups() {
+    this.endPopup = new popup.EndLevelPopup()
+
+    this._activateChildEntity(this.endPopup, this.config)
   }
 
   private _initBackground() {
@@ -283,6 +291,8 @@ export class Level extends entity.CompositeEntity {
     this._initBonuses();
     this._initButton();
     this._initGauge();
+
+    this._initPopups();
 
     this._refresh();
     this.isGuiLocked = false;
