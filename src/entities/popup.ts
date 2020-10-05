@@ -13,7 +13,7 @@ import * as level from "../scenes/level";
  * - backgroundLoaded( background: PIXI.Sprite )
  */
 export abstract class Popup extends entity.CompositeEntity {
-  private _id = "popup:" + Date.now();
+  private _id: string;
   private _container = new PIXI.Container();
 
   public shaker: anim.DisplayObjectShakesManager;
@@ -28,8 +28,9 @@ export abstract class Popup extends entity.CompositeEntity {
 
   // todo: add an optional popup background as sprite
 
-  constructor(private withBackground: boolean = false) {
+  constructor(public readonly withBackground: boolean = false) {
     super();
+    this._id = "popup:" + Math.random();
 
     this.container.position.set(this.width * -0.5, this.height * -0.5);
     this._container.position.set(game.width / 2, game.height / 2);
@@ -236,7 +237,7 @@ export class TerminatedLevelPopup extends Popup {
     // add stars
     {
       anim.sequenced({
-        sequence: Object.values(checks),
+        sequence: Object.keys(checks),
         timeBetween: 200,
         delay: 500,
         onStep: (resolve, check, index) => {
@@ -247,7 +248,7 @@ export class TerminatedLevelPopup extends Popup {
           star.scale.set(0);
           star.anchor.set(0.5);
 
-          if (!check) {
+          if (index >= starCount) {
             star.tint = 0x666666;
           }
 
@@ -280,10 +281,12 @@ export class TerminatedLevelPopup extends Popup {
     }
 
     // use background as closure button
-    this._once(this, "backgroundLoaded", (background: PIXI.Sprite) => {
-      this.button(background, () => {
-        this.close();
+    if (this.withBackground) {
+      this._once(this, "backgroundLoaded", (background: PIXI.Sprite) => {
+        this.button(background, () => {
+          this.close();
+        });
       });
-    });
+    }
   }
 }
