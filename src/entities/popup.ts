@@ -273,5 +273,10 @@ export class TerminatedLevelPopup extends Popup {
         },
       });
     }
+
+    // todo: debug the following code
+    // this.button(this.container, () => {
+    //   this.close()
+    // })
   }
 }
