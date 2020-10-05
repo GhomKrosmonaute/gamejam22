@@ -66,7 +66,7 @@ export function swap(
 
 export function bubble(
   obj: PIXI.DisplayObject,
-  to: number,
+  topScale: number,
   duration: number,
   callbacks?: {
     onTop?: AnimationCallback;
@@ -76,7 +76,7 @@ export function bubble(
   return new entity.EntitySequence([
     new tween.Tween({
       from: 1,
-      to,
+      to: topScale,
       duration: duration * 0.33,
       easing: easing.easeInOutQuad,
       onUpdate: (value) => obj.scale.set(value),
@@ -85,7 +85,7 @@ export function bubble(
       },
     }),
     new tween.Tween({
-      from: to,
+      from: topScale,
       to: 1,
       duration: duration * 0.66,
       easing: easing.easeOutQuart,
