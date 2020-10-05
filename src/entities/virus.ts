@@ -1,9 +1,13 @@
 import * as PIXI from "pixi.js";
+
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as geom from "booyah/src/geom";
 import * as tween from "booyah/src/tween";
+
 import * as crisprUtil from "../crisprUtil";
+
+import * as level from "../scenes/level";
 
 export type State = "idle" | "walk" | "stingIn" | "stingOut";
 
@@ -46,22 +50,18 @@ export class Virus extends entity.CompositeEntity {
   idle(): void {
     this._deactivateAllChildEntities();
 
-    const childConfig = entity.extendConfig({
-      container: this._container,
-    });
-
-    const virusAnimation = this._createAnimation(`mini_bob_idle`);
-    this._activateChildEntity(virusAnimation, childConfig);
+    this._activateChildEntity(
+      this._createAnimation(`mini_bob_idle`),
+      entity.extendConfig({
+        container: this._container,
+      })
+    );
 
     this._changeState("idle");
   }
 
-  sting(): void {
+  sting(onSting?: () => any): void {
     this._deactivateAllChildEntities();
-
-    const childConfig = entity.extendConfig({
-      container: this._container,
-    });
 
     this._changeState("stingIn");
 
@@ -72,18 +72,23 @@ export class Virus extends entity.CompositeEntity {
           virusAnimation.sprite.currentFrame >=
           virusAnimation.sprite.totalFrames * 0.5,
       }),
-      new entity.FunctionCallEntity(() => this._changeState("stingOut")),
+      new entity.FunctionCallEntity(() => {
+        this._changeState("stingOut");
+        onSting?.();
+      }),
     ]);
     this._activateChildEntity(
       new entity.EntitySequence([
         new entity.ParallelEntity([virusAnimation, halfAnimationDelay]),
         new entity.FunctionCallEntity(() => this.idle()),
       ]),
-      childConfig
+      entity.extendConfig({
+        container: this._container,
+      })
     );
   }
 
-  moveToAngle(angle: number): void {
+  moveToAngle(angle: number, callback?: () => any): void {
     if (geom.areAlmostEqualNumber(this._angle, angle)) return;
     if (this.state === "stingIn" || this.state === "stingOut")
       throw new Error("Cannot move while stinging");
@@ -115,7 +120,10 @@ export class Virus extends entity.CompositeEntity {
     this._activateChildEntity(
       new entity.EntitySequence([
         virusMovement,
-        new entity.FunctionCallEntity(() => this.idle()),
+        new entity.FunctionCallEntity(() => {
+          this.idle();
+          callback?.();
+        }),
       ]),
       childConfig
     );
@@ -125,6 +133,31 @@ export class Virus extends entity.CompositeEntity {
 
   leave(): void {
     this.moveToAngle(this._angle < 0 ? rightEdge : leftEdge);
+  }
+
+  injectSequence(options: { length?: number; callback?: () => any }) {
+    // check if I can do this
+    if (this._state !== "idle") {
+      throw new Error("the virus is already moving");
+    }
+
+    // disable interactions while virus move to sting
+    this.level.disablingAnimations.add("virusInjection");
+
+    // move to sting and add sequence
+    this.moveToAngle(crisprUtil.random(-10, 10), () => {
+      this.sting(() => {
+        this.level.disablingAnimations.delete("virusInjection");
+        this.level.sequenceManager.addSequenceAccordingToLevelVariant(
+          options.length
+        );
+        options.callback?.();
+      });
+    });
+  }
+
+  get level(): level.Level {
+    return this._entityConfig.level;
   }
 
   get state(): State {
@@ -157,5 +190,6 @@ export class Virus extends entity.CompositeEntity {
 
     this._state = newState;
     this.emit("changedState", newState, oldState);
+    this.emit(this._state);
   }
 }

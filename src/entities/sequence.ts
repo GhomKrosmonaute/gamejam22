@@ -77,6 +77,22 @@ export class SequenceManager extends entity.CompositeEntity {
     }
   }
 
+  addSequenceAccordingToLevelVariant(length?: number) {
+    this.add(length);
+
+    switch (this.level.levelVariant) {
+      case "continuous":
+        this.distributeSequences();
+        break;
+      case "long":
+        this.distributeSequences();
+        break;
+      case "turnBased":
+        this.distributeSequences();
+        break;
+    }
+  }
+
   add(length?: number) {
     length = length ?? this._pickSequenceLength();
     const s = new Sequence(length);

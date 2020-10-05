@@ -152,20 +152,10 @@ export class Level extends entity.CompositeEntity {
   private _initSequences() {
     this.sequenceManager = new sequence.SequenceManager();
 
-    let virus: virus.Virus;
-
     this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
       if (child !== this.sequenceManager) return;
 
-      virus = this._makeVirus();
-
-      this._on(virus, "changedState", (newState) => {
-        if (newState !== "stingOut") return;
-
-        this.sequenceManager.add();
-        if (this.levelVariant === "turnBased")
-          this.sequenceManager.distributeSequences();
-      });
+      this.addVirus();
     });
 
     this._activateChildEntity(this.sequenceManager, this.config);
@@ -231,44 +221,6 @@ export class Level extends entity.CompositeEntity {
     this._activateChildEntity(this.bonusesManager, this.config);
   }
 
-  private _makeVirus(): virus.Virus {
-    const v = new virus.Virus(virus.leftEdge);
-    const config = entity.extendConfig({
-      container: this.container,
-    });
-    this._activateChildEntity(v, config);
-
-    const moveVirus = new entity.EntitySequence([
-      new entity.FunctionCallEntity(() => {
-        v.moveToAngle(geom.degreesToRadians(geom.randomInRange(10, -10)));
-      }),
-      new entity.WaitForEvent(
-        v,
-        "changedState",
-        (newState, oldState) => oldState === "walk"
-      ),
-      new entity.FunctionCallEntity(() => {
-        v.sting();
-      }),
-      new entity.WaitForEvent(
-        v,
-        "changedState",
-        (newState, oldState) => oldState === "stingOut"
-      ),
-      new entity.FunctionCallEntity(() => {
-        v.leave();
-      }),
-      new entity.WaitForEvent(
-        v,
-        "changedState",
-        (newState, oldState) => oldState === "walk"
-      ),
-    ]);
-    this._activateChildEntity(moveVirus, config);
-
-    return v;
-  }
-
   private _initGauge() {
     this.gauge = new hud.Gauge(this.gaugeRingCount, this.maxScore);
     this._on(this, "activatedChildEntity", (entity: entity.EntityBase) => {
@@ -300,7 +252,6 @@ export class Level extends entity.CompositeEntity {
     this._initGrid();
     this._initPath();
     this._initForeground();
-    // this._initVirus();
     this._initHairs();
     this._initSequences();
     this._initBonuses();
@@ -347,6 +298,15 @@ export class Level extends entity.CompositeEntity {
       this.score += score;
     }
     this.gauge.setValue(this.score);
+  }
+
+  addVirus(callback?: () => any) {
+    // todo: check score relation with max score to define virus variant (big or not)
+    // todo: run virus.injectSequence()
+    // todo: stay on stinging while sequence animation is running
+    // todo: (not disabling) stay on idle state few seconds (10..20) and animate tint of virus to display timeout
+    // todo: (not disabling) normal tint and virus leaving.
+    // todo: callback.
   }
 
   private _onGo(): void {
@@ -416,8 +376,7 @@ export class Level extends entity.CompositeEntity {
     if (countSequences < this.sequenceManager.sequenceCountLimit) {
       actions.push(
         new entity.FunctionCallEntity(() => {
-          this.sequenceManager.add();
-          this.sequenceManager.distributeSequences();
+          this.sequenceManager.addSequenceAccordingToLevelVariant();
         })
       );
     }
@@ -532,7 +491,7 @@ export class Level extends entity.CompositeEntity {
         }),
         infectionSequence,
         new entity.FunctionCallEntity(() => {
-          this.sequenceManager.add();
+          this.addVirus();
           this.disablingAnimations.delete("infection");
         }),
       ])
