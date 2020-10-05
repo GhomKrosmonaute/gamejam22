@@ -150,8 +150,11 @@ export function sink(
   ]);
 }
 
-export function popup(obj: PIXI.DisplayObject, callback?: AnimationCallback) {
-  const duration = 100;
+export function popup(
+  obj: PIXI.DisplayObject,
+  duration = 100,
+  callback?: AnimationCallback
+) {
   return new entity.EntitySequence([
     new tween.Tween({
       from: 0,

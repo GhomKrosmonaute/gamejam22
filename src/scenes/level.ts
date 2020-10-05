@@ -90,9 +90,9 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initPopups() {
-    this.endPopup = new popup.EndLevelPopup()
+    this.endPopup = new popup.EndLevelPopup();
 
-    this._activateChildEntity(this.endPopup, this.config)
+    this._activateChildEntity(this.endPopup, this.config);
   }
 
   private _initBackground() {

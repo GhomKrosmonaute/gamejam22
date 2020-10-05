@@ -103,12 +103,17 @@ export function makeText(text: string, options?: Partial<PIXI.TextStyle>) {
   const defaultConfig = {
     fontFamily: "Cardenio Modern Bold",
     fontSize: 80,
-    align: "center"
-  }
-  const pixiText = new PIXI.Text(text, options ? {
-    ...defaultConfig,
-    ...options
-  } : defaultConfig);
+    align: "center",
+  };
+  const pixiText = new PIXI.Text(
+    text,
+    options
+      ? {
+          ...defaultConfig,
+          ...options,
+        }
+      : defaultConfig
+  );
   pixiText.anchor.set(0.5);
   return pixiText;
 }

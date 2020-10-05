@@ -157,7 +157,7 @@ export class Gauge extends entity.CompositeEntity {
       timeBetween: 150,
       sequence: this._rings.children as Ring[],
       onStep: (resolve, ring) => {
-        this._activateChildEntity(anim.popup(ring, resolve));
+        this._activateChildEntity(anim.popup(ring, 200, resolve));
       },
     });
   }

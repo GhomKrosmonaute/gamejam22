@@ -268,7 +268,7 @@ export class Nucleotide extends entity.CompositeEntity {
         })
       );
       this._activateChildEntity(
-        anim.popup(this.sprite, () => {
+        anim.popup(this.sprite, 200, () => {
           this.emit("stateChanged", newState);
         })
       );
