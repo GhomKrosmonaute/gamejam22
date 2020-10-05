@@ -43,40 +43,50 @@ export class SwapBonus extends Bonus {
     return null;
   }
 
+  swap(a: nucleotide.Nucleotide, b: nucleotide.Nucleotide) {
+    this.isUpdateDisabled = true;
+    this.level.grid.swap(a, b, false);
+    this.level.disablingAnimations.add(this.name);
+    this._activateChildEntity(
+      anim.swap(
+        a,
+        b,
+        crispUtil.proportion(
+          crispUtil.dist(b.position, a.position),
+          0,
+          1000,
+          100,
+          500,
+          true
+        ),
+        easing.easeInBack,
+        () => {
+          b.bubble(150).catch();
+          a.bubble(150)
+            .then(() => this.level.disablingAnimations.delete(this.name))
+            .catch();
+          this.end();
+        }
+      )
+    );
+  }
+
   protected _setup() {
     this._once(this.level.grid, "drag", (n1: nucleotide.Nucleotide) => {
       this.dragged = n1;
       this.basePosition.copyFrom(n1.position);
 
       this._once(this.level.grid, "drop", () => {
-        if (!this.dragged || !this.hovered) return this.abort();
-
-        this.isUpdateDisabled = true;
-        this.level.grid.swap(this.dragged, this.hovered, false);
-        this.level.disablingAnimations.add(this.name);
-        this._activateChildEntity(
-          anim.swap(
-            this.dragged,
-            this.hovered,
-            crispUtil.proportion(
-              crispUtil.dist(this.hovered.position, this.dragged.position),
-              0,
-              1000,
-              100,
-              500,
-              true
-            ),
-            easing.easeInBack,
-            () => {
-              this.hovered.bubble(150).catch();
-              this.dragged
-                .bubble(150)
-                .then(() => this.level.disablingAnimations.delete(this.name))
-                .catch();
-              this.end();
-            }
-          )
-        );
+        if (this.dragged === this.hovered) {
+          // click
+          console.log("selection");
+        } else {
+          // drag & drop
+          if (!this.dragged || !this.hovered) {
+            return this.abort();
+          }
+          this.swap(this.dragged, this.hovered);
+        }
       });
     });
   }
@@ -124,70 +134,44 @@ export class StarBonus extends Bonus {
   name = "star";
 
   protected _setup() {
-    const delay = 200;
-
     this._once(this.level.grid, "drag", (target: nucleotide.Nucleotide) => {
-      const stages = this.level.grid.getStarStages(target);
-
-      target.shakes.setShake(this.name, 7);
+      const stages = [[target], ...this.level.grid.getStarStages(target)];
 
       this.level.disablingAnimations.add(this.name);
 
-      const propagation = [
-        new entity.WaitingEntity(delay * 2),
-        ...stages.map((stage) => {
-          return [
-            new entity.FunctionCallEntity(() => {
+      anim.sequenced({
+        timeBetween: 200,
+        sequence: stages,
+        onStep: (resolve, stage, index) => {
+          for (const n of stage) {
+            n.shakes.setShake(this.name, 7 - index / 2);
+          }
+          resolve();
+        },
+        callback: () => {
+          anim.sequenced({
+            delay: 400,
+            timeBetween: 200,
+            sequence: stages,
+            onStep: (resolve, stage, index) => {
+              const finish: Promise<any>[] = [];
               for (const n of stage) {
-                n.shakes.setShake(this.name, 2);
+                finish.push(
+                  n.bubble(300, (_n) => {
+                    _n.state = "present";
+                    _n.shakes.removeShake(this.name);
+                  })
+                );
               }
-            }),
-            new entity.WaitingEntity(delay),
-          ];
-        }),
-        new entity.FunctionCallEntity(() => {
-          target.state = "present";
-        }),
-        new entity.FunctionCallEntity(() => {
-          this._activateChildEntity(anim.bubble(target.sprite, 1.3, delay));
-        }),
-        new entity.WaitingEntity(delay / 2),
-        new entity.FunctionCallEntity(() =>
-          target.shakes.removeShake(this.name)
-        ),
-        ...stages.map((stage, index) => {
-          return [
-            new entity.FunctionCallEntity(() => {
-              for (const n of stage) {
-                n.shakes.setShake(this.name, 10 - index);
-              }
-            }),
-            new entity.WaitingEntity(delay / 3),
-            new entity.FunctionCallEntity(() => {
-              for (const n of stage) {
-                n.state = "present";
-                n.bubble(delay).catch();
-              }
-            }),
-            new entity.WaitingEntity(delay / 3),
-            new entity.FunctionCallEntity(() => {
-              for (const n of stage) {
-                n.shakes.removeShake(this.name);
-              }
-            }),
-          ];
-        }),
-      ].flat();
-
-      const sequence = new entity.EntitySequence([
-        ...propagation,
-        new entity.FunctionCallEntity(() => {
-          this.level.disablingAnimations.delete(this.name);
-          this.end();
-        }),
-      ]);
-
-      this._activateChildEntity(sequence);
+              Promise.all(finish).then(resolve);
+            },
+            callback: () => {
+              this.level.disablingAnimations.delete(this.name);
+              this.end();
+            },
+          });
+        },
+      });
     });
   }
 }

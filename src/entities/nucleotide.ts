@@ -193,11 +193,14 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._infectionSpriteEntity.displayObject as PIXI.Sprite;
   }
 
-  async bubble(duration: number) {
+  async bubble(duration: number, onTop?: (nucleotide: Nucleotide) => any) {
     return new Promise((resolve) => {
       this._activateChildEntity(
-        anim.bubble(this.sprite, 1.3, duration, {
+        anim.bubble(this._container, 1.3, duration, {
           onTeardown: resolve,
+          onTop: () => {
+            onTop?.(this);
+          },
         })
       );
     });
