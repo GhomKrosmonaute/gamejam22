@@ -49,5 +49,7 @@ export class EndLevelPopup extends Popup {
 
   protected _setup() {
     this.text = crisprUtil.makeText("HELLO WORLD!")
+    this.text.anchor.set(.5)
+    this.container.addChild(this.text)
   }
 }
