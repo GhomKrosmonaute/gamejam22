@@ -39,6 +39,7 @@ export class SwapBonus extends Bonus {
     if (n) {
       this.level.grid.setAbsolutePositionFromGridPosition(n);
       n.shakes.removeShake(this.name);
+      n.sprite.scale.set(1);
     }
     return null;
   }
