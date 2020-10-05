@@ -12,6 +12,7 @@ import * as level from "../scenes/level";
  * - closed
  */
 export abstract class Popup extends entity.CompositeEntity {
+  private _id = "popup:" + Date.now();
   private _container = new PIXI.Container();
 
   public shaker: anim.DisplayObjectShakesManager;
@@ -42,7 +43,7 @@ export abstract class Popup extends entity.CompositeEntity {
   setup(frameInfo: entity.FrameInfo, entityConfig: entity.EntityConfig) {
     super.setup(frameInfo, entityConfig);
 
-    this.level.disablingAnimations.add("popup");
+    this.level.disablingAnimations.add(this._id);
 
     // background
     if (this.withBackground) {
@@ -69,9 +70,9 @@ export abstract class Popup extends entity.CompositeEntity {
    * 1. animate popup closure
    * 2. clean all containers
    * 3. clean all shakers
-   * 4. emit "closed" event
-   * 5. reactivate level interactions
-   * 6. make transition
+   * 4. reactivate level interactions
+   * 5. make transition
+   * 6. emit "closed" event
    */
   close() {
     this._activateChildEntity(
@@ -80,9 +81,9 @@ export abstract class Popup extends entity.CompositeEntity {
         this._container.removeChild(this.container);
         this._entityConfig.container.removeChild(this._container);
         this.shaker.removeAllShakes();
-        this.emit("closed");
-        this.level.disablingAnimations.delete("popup");
+        this.level.disablingAnimations.delete(this._id);
         this._transition = entity.makeTransition();
+        this.emit("closed");
       })
     );
   }
