@@ -5,11 +5,17 @@ import * as anim from "../animations";
 import * as game from "../game";
 import * as crisprUtil from "../crisprUtil";
 
+/**
+ * Emits:
+ * - closed
+ */
 export class Popup extends entity.CompositeEntity {
   private _container = new PIXI.Container();
   public readonly width = game.width * -0.8;
   public readonly height = game.height / 3;
   public readonly center = new PIXI.Point(this.width / 2, this.height / 2);
+
+  // todo: add a popup background as sprite
 
   /** popup body container */
   public readonly container = new PIXI.Container();
@@ -27,17 +33,33 @@ export class Popup extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this._container);
 
-    this._activateChildEntity(anim.popup(this._container, 800));
+    this._activateChildEntity(anim.popup(this._container, 700));
   }
 
-  end() {
+  teardown(frameInfo: entity.FrameInfo) {
+    super.teardown(frameInfo);
+
+    this.container.removeChildren();
+  }
+
+  close() {
     this._activateChildEntity(
-      anim.sink(this._container, 300, () => {
+      anim.sink(this._container, 150, () => {
         this._container.removeChild(this.container);
         this._entityConfig.container.removeChild(this._container);
         this._transition = entity.makeTransition();
+        this.emit("closed");
       })
     );
+  }
+
+  button(displayObject: PIXI.DisplayObject, callback?: () => any) {
+    this.container.addChild(displayObject);
+    displayObject.buttonMode = true;
+    displayObject.interactive = true;
+    this._on(displayObject, "pointerup", () => {
+      callback?.();
+    });
   }
 }
 
@@ -45,22 +67,19 @@ export class EndLevelPopup extends Popup {
   private text: PIXI.Text;
 
   protected _setup() {
-    this.text = crisprUtil.makeText("HELLO WORLD!", {
-      fontSize: 140,
-    });
-    this.text.position.set(this.width / 2, this.height / 2);
-    this.text.buttonMode = true;
-    this.text.interactive = true;
-
-    this._on(this.text, "pointerup", () => {
-      console.log("HOP");
-      this.end();
+    // make text with anchor already set on middle
+    this.text = crisprUtil.makeText("Click-me for close popup!", {
+      fontSize: 100,
+      stroke: 0xffffff,
+      strokeThickness: 10,
     });
 
-    this.container.addChild(this.text);
-  }
+    // place text on center of popup
+    this.text.position.copyFrom(this.center);
 
-  protected _teardown() {
-    this.container.removeChild(this.text);
+    // use this text as button for close popup
+    this.button(this.text, () => {
+      this.close();
+    });
   }
 }
