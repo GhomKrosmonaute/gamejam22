@@ -97,3 +97,7 @@ export class ExamplePopup extends Popup {
     this.shaker.setShake("example", 3);
   }
 }
+
+export class TerminateLevelPopup extends Popup {
+  // todo: make popup with stars and score of level
+}
