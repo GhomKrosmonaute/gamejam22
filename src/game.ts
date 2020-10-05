@@ -97,8 +97,8 @@ const graphicalAssets = [
   "images/arrow.png",
   "images/circle.png",
   "images/bonus_swap.png",
-  "images/bonus_star.png",
-  "images/bonus_kill.png",
+  "images/bonus_heal.png",
+  "images/bonus_syringe.png",
   "images/infection_red.png",
   "images/infection_blue.png",
   "images/infection_green.png",
@@ -110,6 +110,8 @@ const graphicalAssets = [
   "images/hud_gauge_ring.png",
   "images/nucleotide_glow.png",
   "images/nucleotide_bright.png",
+  "images/popup_background.png",
+  "images/star.png",
 
   // animated sprites
   "images/nucleotide_red.json",

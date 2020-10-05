@@ -10,6 +10,7 @@ import * as game from "../game";
 
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
+import * as popup from "../entities/popup";
 import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
@@ -33,10 +34,14 @@ export class Level extends entity.CompositeEntity {
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;
+  public examplePopup: popup.Popup;
+  public terminatedLevelPopup: popup.Popup;
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
   public state: LevelState = "crunch";
+  public wasInfected = false;
+  public someVirusHasEscaped = false;
 
   /**
    * Disable continuous events while `disablingAnimations` contains one or more elements.
@@ -55,8 +60,8 @@ export class Level extends entity.CompositeEntity {
   public disablingAnimations: Set<string> = new Set();
 
   public swapBonus = new bonuses.SwapBonus();
-  public starBonus = new bonuses.StarBonus();
-  public killBonus = new bonuses.KillBonus();
+  public healBonus = new bonuses.HealBonus();
+  public syringeBonus = new bonuses.SyringeBonus();
 
   public readonly colCount = 7;
   public readonly rowCount = 7;
@@ -85,6 +90,19 @@ export class Level extends entity.CompositeEntity {
 
   get cursor(): PIXI.Point {
     return this.grid.cursor;
+  }
+
+  private _initPopups() {
+    this.examplePopup = new popup.ExamplePopup();
+    this.terminatedLevelPopup = new popup.TerminatedLevelPopup();
+
+    // activate the popup entity to open it (close with popup.close())
+    this._activateChildEntity(this.examplePopup, this.config);
+
+    // test terminatedLevelPopup after examplePopup is closed
+    this._on(this.examplePopup, "closed", () => {
+      this._activateChildEntity(this.terminatedLevelPopup, this.config);
+    });
   }
 
   private _initBackground() {
@@ -190,8 +208,8 @@ export class Level extends entity.CompositeEntity {
     this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
       if (child === this.bonusesManager) {
         this.bonusesManager.add(this.swapBonus, 5);
-        this.bonusesManager.add(this.starBonus, 5);
-        this.bonusesManager.add(this.killBonus, 5);
+        this.bonusesManager.add(this.healBonus, 5);
+        this.bonusesManager.add(this.syringeBonus, 5);
         this._on(this.sequenceManager, "crunch", () => {
           this.crunchCount++;
           if (this.crunchCount % 2 === 0) {
@@ -283,9 +301,13 @@ export class Level extends entity.CompositeEntity {
     this._initBonuses();
     this._initButton();
     this._initGauge();
+    this._initPopups();
 
     this._refresh();
     this.isGuiLocked = false;
+
+    this.wasInfected = false;
+    this.someVirusHasEscaped = false;
   }
 
   _update() {
@@ -428,61 +450,6 @@ export class Level extends entity.CompositeEntity {
         await new Promise((resolve) => {
           this.sequenceManager.sequences[0].down(true, resolve);
         });
-
-        // const fully = sequence.nucleotides.every((n) => n.state === "inactive");
-        // await new Promise((resolve) => {
-        //   this._activateChildEntity(
-        //     new entity.EntitySequence([
-        //       ...sequence.nucleotides
-        //         .map((n, i) => {
-        //           const baseShift = Math.round(Math.random() * 50) + 50;
-        //           const score =
-        //             10 *
-        //             Math.ceil((i + 1) / 2) *
-        //             (n.state !== "inactive" ? 1 : -1) *
-        //             (fully ? 2 : 1);
-        //           return [
-        //             new entity.FunctionCallEntity(() => {
-        //               this._activateChildEntity(
-        //                 anim.textFade(
-        //                   this.container,
-        //                   new PIXI.Text(`${score}`, {
-        //                     fontSize: 80,
-        //                     fontFamily: "Cardenio Modern Bold",
-        //                     fill:
-        //                       score < 0
-        //                         ? "#d70000"
-        //                         : nucleotide.fullColorNames[n.colorName],
-        //                     stroke: fully
-        //                       ? "#ffcb00"
-        //                       : score < 0
-        //                       ? "#000000"
-        //                       : "#ffffff",
-        //                     strokeThickness: score < 0 ? 3 : 10,
-        //                   }),
-        //                   1000,
-        //                   new PIXI.Point(
-        //                     n.position.x + sequence.position.x,
-        //                     n.position.y +
-        //                       sequence.position.y +
-        //                       baseShift * (score < 0 ? 1 : -1)
-        //                   ),
-        //                   score < 0 ? "down" : "up",
-        //                   () => this.addScore(score)
-        //                 )
-        //               );
-        //             }),
-        //             new entity.WaitingEntity(80),
-        //           ];
-        //         })
-        //         .flat(),
-        //       new entity.FunctionCallEntity(resolve),
-        //     ])
-        //   );
-        // });
-        // await new Promise((resolve) => {
-        //   sequence.down(false, resolve);
-        // });
       }
       if (this.sequenceManager.countSequences === 0) {
         this._regenerate();
@@ -544,6 +511,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _onInfection(infectionCount = 1): void {
+    this.wasInfected = true;
+
     if (this.grid.isGameOver()) {
       this._transition = entity.makeTransition("game_over");
       return;

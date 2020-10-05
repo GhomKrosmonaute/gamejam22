@@ -150,27 +150,21 @@ export function sink(
   ]);
 }
 
-export function popup(obj: PIXI.DisplayObject, callback?: AnimationCallback) {
-  const duration = 100;
-  return new entity.EntitySequence([
-    new tween.Tween({
-      from: 0,
-      to: 1.2,
-      duration: duration * 0.7,
-      easing: easing.easeInOutExpo,
-      onUpdate: (value) => obj.scale.set(value),
-    }),
-    new tween.Tween({
-      from: 1.3,
-      to: 1,
-      duration: duration * 0.3,
-      easing: easing.easeInOutCubic,
-      onUpdate: (value) => obj.scale.set(value),
-      onTeardown: () => {
-        if (callback) callback(obj);
-      },
-    }),
-  ]);
+export function popup(
+  obj: PIXI.DisplayObject,
+  duration = 100,
+  callback?: AnimationCallback
+) {
+  return new tween.Tween({
+    from: 0,
+    to: 1,
+    duration: duration,
+    easing: easing.easeOutBack,
+    onUpdate: (value) => obj.scale.set(value),
+    onTeardown: () => {
+      if (callback) callback(obj);
+    },
+  });
 }
 
 export function move(
@@ -429,6 +423,11 @@ export class DisplayObjectShakesManager extends entity.EntityBase {
 
   removeShake(name: string) {
     this._shakes.delete(name);
+    this._resetPosition();
+  }
+
+  removeAllShakes() {
+    this._shakes.clear();
     this._resetPosition();
   }
 

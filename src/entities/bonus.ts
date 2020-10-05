@@ -130,8 +130,8 @@ export class SwapBonus extends Bonus {
   }
 }
 
-export class StarBonus extends Bonus {
-  name = "star";
+export class HealBonus extends Bonus {
+  name = "heal";
 
   protected _setup() {
     this._once(this.level.grid, "drag", (target: nucleotide.Nucleotide) => {
@@ -176,8 +176,8 @@ export class StarBonus extends Bonus {
   }
 }
 
-export class KillBonus extends Bonus {
-  name = "kill";
+export class SyringeBonus extends Bonus {
+  name = "syringe";
 
   protected _setup() {
     this.level.sequenceManager.container.buttonMode = true;
