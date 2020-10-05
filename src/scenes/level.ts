@@ -55,8 +55,8 @@ export class Level extends entity.CompositeEntity {
   public disablingAnimations: Set<string> = new Set();
 
   public swapBonus = new bonuses.SwapBonus();
-  public starBonus = new bonuses.StarBonus();
-  public killBonus = new bonuses.KillBonus();
+  public healBonus = new bonuses.HealBonus();
+  public syringeBonus = new bonuses.SyringeBonus();
 
   public readonly colCount = 7;
   public readonly rowCount = 7;
@@ -190,8 +190,8 @@ export class Level extends entity.CompositeEntity {
     this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
       if (child === this.bonusesManager) {
         this.bonusesManager.add(this.swapBonus, 5);
-        this.bonusesManager.add(this.starBonus, 5);
-        this.bonusesManager.add(this.killBonus, 5);
+        this.bonusesManager.add(this.healBonus, 5);
+        this.bonusesManager.add(this.syringeBonus, 5);
         this._on(this.sequenceManager, "crunch", () => {
           this.crunchCount++;
           if (this.crunchCount % 2 === 0) {
