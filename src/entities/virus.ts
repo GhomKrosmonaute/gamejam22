@@ -2,194 +2,138 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
-import * as geom from "booyah/src/geom";
 import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 
 import * as crisprUtil from "../crisprUtil";
 
-import * as level from "../scenes/level";
-
 export type State = "idle" | "walk" | "stingIn" | "stingOut";
+export type VirusType = "mini" | "medium" | "big";
+export type VirusAnimation = "sting" | "idle" | "walk";
 
-export const leftEdge = geom.degreesToRadians(25);
-export const rightEdge = geom.degreesToRadians(-25);
+export const leftEdge = 25;
+export const rightEdge = -25;
 
-/**
- * Sends the following events:
- * - changedState(newState: string, oldState: string)
- */
 export class Virus extends entity.CompositeEntity {
-  private _container: PIXI.Container;
-  // private _virusAnimation: entity.AnimatedSpriteEntity;
-  private _angle: number = 0;
-  private _state: State = "idle";
-  private _targetAngle: number = 0;
+  private _container = new PIXI.Container();
+  private _animation: entity.AnimatedSpriteEntity;
+  private _currentAnimation: VirusAnimation;
 
-  constructor(angle: number = 0) {
+  constructor(public readonly type: VirusType) {
     super();
-
-    this._angle = angle;
-  }
-
-  _setup() {
-    this._container = new PIXI.Container();
-    this._entityConfig.container.addChild(this._container);
-
-    this.idle();
-  }
-
-  _teardown() {
-    this._entityConfig.container.removeChild(this._container);
-    this._container = null;
   }
 
   get angle(): number {
-    return this._angle;
+    return this._container.angle;
   }
 
-  idle(): void {
-    this._deactivateAllChildEntities();
+  set angle(value) {
+    crisprUtil.positionAlongMembrane(this._container, value);
+  }
 
+  protected _setup() {
+    // set starting angle
+    this.angle = Math.random() < 0.5 ? leftEdge : rightEdge;
+
+    // set starting animation to idle
+    this.setAnimatedSprite("idle");
+
+    // add to app container
+    this._entityConfig.container.addChild(this._container);
+  }
+
+  protected _teardown() {
+    this._entityConfig.container.removeChild(this._container);
+  }
+
+  moveTo(angle: number, callback?: () => any) {
+    this.setAnimatedSprite("walk");
     this._activateChildEntity(
-      this._createAnimation(`mini_bob_idle`),
-      entity.extendConfig({
-        container: this._container,
+      new tween.Tween({
+        duration: crisprUtil.proportion(
+          crisprUtil.dist1D(this.angle, angle),
+          0,
+          20,
+          0,
+          2000
+        ),
+        from: this.angle,
+        to: angle,
+        easing: easing.easeInOutQuart,
+        onUpdate: (value) => (this.angle = value),
+        onTeardown: () => {
+          this.setAnimatedSprite("idle");
+          callback?.();
+        },
       })
     );
-
-    this._changeState("idle");
   }
 
-  sting(onSting?: () => any): void {
-    this._deactivateAllChildEntities();
-
-    this._changeState("stingIn");
-
-    const virusAnimation = this._createAnimation(`mini_bob_sting`, false);
-    const halfAnimationDelay = new entity.EntitySequence([
-      new entity.FunctionalEntity({
-        requestTransition: () =>
-          virusAnimation.sprite.currentFrame >=
-          virusAnimation.sprite.totalFrames * 0.5,
-      }),
-      new entity.FunctionCallEntity(() => {
-        this._changeState("stingOut");
-        onSting?.();
-      }),
-    ]);
-    this._activateChildEntity(
-      new entity.EntitySequence([
-        new entity.ParallelEntity([virusAnimation, halfAnimationDelay]),
-        new entity.FunctionCallEntity(() => this.idle()),
-      ]),
-      entity.extendConfig({
-        container: this._container,
-      })
-    );
+  leave(callback?: () => any) {
+    this.moveTo(this.angle < 0 ? rightEdge : leftEdge, callback);
   }
 
-  moveToAngle(angle: number, callback?: () => any): void {
-    if (geom.areAlmostEqualNumber(this._angle, angle)) return;
-    if (this.state === "stingIn" || this.state === "stingOut")
-      throw new Error("Cannot move while stinging");
-
-    this._state = "walk";
-    this._targetAngle = angle;
-
-    this._deactivateAllChildEntities();
-
-    const childConfig = entity.extendConfig({
-      container: this._container,
-    });
-
-    // Create virus
-    const virusAnimation = this._createAnimation("mini_bob_walk");
-    // Put him a bit lower
-    virusAnimation.sprite.position.y = 10;
-    // Possibly flip to face the right direction
-    if (this._targetAngle > this._angle) virusAnimation.sprite.scale.x *= -1;
-    this._activateChildEntity(virusAnimation, childConfig);
-
-    // Create movement
-    const virusMovement = new tween.Tween({
-      from: this._angle,
-      to: this._targetAngle,
-      duration: 1000,
-      onUpdate: (x: number) => this._setAngle(x),
-    });
+  /**
+   * place virus in position to inject sequence
+   */
+  stingIn(callback?: () => any) {
+    this.setAnimatedSprite("sting", false);
     this._activateChildEntity(
       new entity.EntitySequence([
-        virusMovement,
+        new entity.FunctionalEntity({
+          requestTransition: () =>
+            this._animation.sprite.currentFrame >=
+            this._animation.sprite.totalFrames * 0.5,
+        }),
         new entity.FunctionCallEntity(() => {
-          this.idle();
+          this._animation.sprite.stop();
           callback?.();
         }),
-      ]),
-      childConfig
+      ])
     );
-
-    this._changeState("walk");
   }
 
-  leave(): void {
-    this.moveToAngle(this._angle < 0 ? rightEdge : leftEdge);
-  }
-
-  injectSequence(options: { length?: number; callback?: () => any }) {
-    // check if I can do this
-    if (this._state !== "idle") {
-      throw new Error("the virus is already moving");
+  /**
+   * finish sting animation after sequence is deployed
+   */
+  stingOut(callback?: () => any) {
+    if (this._currentAnimation !== "sting") {
+      throw new Error("stingIn must be called before stingOut.");
     }
-
-    // disable interactions while virus move to sting
-    this.level.disablingAnimations.add("virusInjection");
-
-    // move to sting and add sequence
-    this.moveToAngle(crisprUtil.random(-10, 10), () => {
-      this.sting(() => {
-        this.level.disablingAnimations.delete("virusInjection");
-        this.level.sequenceManager.addSequenceAccordingToLevelVariant(
-          options.length
-        );
-        options.callback?.();
-      });
-    });
-  }
-
-  get level(): level.Level {
-    return this._entityConfig.level;
-  }
-
-  get state(): State {
-    return this._state;
-  }
-
-  private _setAngle(angle: number): void {
-    crisprUtil.positionAlongMembrane(this._container, angle);
-    this._angle = angle;
-  }
-
-  private _createAnimation(
-    name: string,
-    loop = true
-  ): entity.AnimatedSpriteEntity {
-    const virus = util.makeAnimatedSprite(
-      this._entityConfig.app.loader.resources[`images/${name}.json`]
+    this._animation.sprite.play();
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        new entity.FunctionalEntity({
+          requestTransition: () =>
+            this._animation.sprite.currentFrame ===
+            this._animation.sprite.totalFrames,
+        }),
+        new entity.FunctionCallEntity(() => {
+          this.setAnimatedSprite("idle");
+          callback?.();
+        }),
+      ])
     );
-    virus.sprite.animationSpeed = 25 / 60;
-    virus.sprite.scale.set(0.12);
-    virus.sprite.anchor.set(0.5, 1);
-    virus.sprite.loop = loop;
-    virus.sprite.play();
-
-    return virus;
   }
 
-  private _changeState(newState: State): void {
-    const oldState = this._state;
-
-    this._state = newState;
-    this.emit("changedState", newState, oldState);
-    this.emit(this._state);
+  setAnimatedSprite(animationName: VirusAnimation, loop = true) {
+    this._currentAnimation = animationName;
+    if (this._animation) this._deactivateChildEntity(this._animation);
+    this._animation = util.makeAnimatedSprite(
+      this._entityConfig.app.loader.resources[
+        `${this.type}_bob_${animationName}.json`
+      ]
+    );
+    this._activateChildEntity(
+      this._animation,
+      entity.extendConfig({
+        container: this._container,
+      })
+    );
+    this._animation.sprite.animationSpeed = 25 / 60;
+    this._animation.sprite.scale.set(0.12);
+    this._animation.sprite.anchor.set(0.5, 1);
+    this._animation.sprite.loop = loop;
+    this._animation.sprite.play();
   }
 }

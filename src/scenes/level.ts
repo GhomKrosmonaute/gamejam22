@@ -1,8 +1,6 @@
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
-import * as geom from "booyah/src/geom";
-import * as tween from "booyah/src/tween";
 
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
@@ -155,7 +153,7 @@ export class Level extends entity.CompositeEntity {
     this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
       if (child !== this.sequenceManager) return;
 
-      this.addVirus();
+      this.sequenceManager.addSequenceAccordingToLevelVariant();
     });
 
     this._activateChildEntity(this.sequenceManager, this.config);
@@ -298,15 +296,6 @@ export class Level extends entity.CompositeEntity {
       this.score += score;
     }
     this.gauge.setValue(this.score);
-  }
-
-  addVirus(callback?: () => any) {
-    // todo: check score relation with max score to define virus variant (big or not)
-    // todo: run virus.injectSequence()
-    // todo: stay on stinging while sequence animation is running
-    // todo: (not disabling) stay on idle state few seconds (10..20) and animate tint of virus to display timeout
-    // todo: (not disabling) normal tint and virus leaving.
-    // todo: callback.
   }
 
   private _onGo(): void {
@@ -491,7 +480,7 @@ export class Level extends entity.CompositeEntity {
         }),
         infectionSequence,
         new entity.FunctionCallEntity(() => {
-          this.addVirus();
+          this.sequenceManager.addSequenceAccordingToLevelVariant();
           this.disablingAnimations.delete("infection");
         }),
       ])

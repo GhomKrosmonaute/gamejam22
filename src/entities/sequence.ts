@@ -11,6 +11,8 @@ import * as anim from "../animations";
 
 import * as nucleotide from "./nucleotide";
 import * as path from "./path";
+import * as virus from "./virus";
+
 import * as level from "../scenes/level";
 
 /**
@@ -95,21 +97,22 @@ export class SequenceManager extends entity.CompositeEntity {
 
   add(length?: number) {
     length = length ?? this._pickSequenceLength();
-    const s = new Sequence(length);
+    const sequence = new Sequence(length);
     const { width } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      s.nucleotideRadius
+      sequence.nucleotideRadius
     );
-    s.position.set(
-      this._entityConfig.app.view.width / 2 - (s.baseLength * width * 0.8) / 2,
+    sequence.position.set(
+      this._entityConfig.app.view.width / 2 -
+        (sequence.baseLength * width * 0.8) / 2,
       this._getSequenceRangeY().top
     );
     this._activateChildEntity(
-      s,
+      sequence,
       entity.extendConfig({
         container: this.container,
       })
     );
-    this.sequences.push(s);
+    this.sequences.push(sequence);
     this.refresh();
   }
 
@@ -255,11 +258,14 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 }
 
-/** Represent a sequence dropped by virus */
+/**
+ * Represent a sequence dropped by virus
+ */
 export class Sequence extends entity.CompositeEntity {
+  public nucleotideRadius = game.width * 0.04;
   public nucleotides: nucleotide.Nucleotide[] = [];
   public container: PIXI.Container;
-  public nucleotideRadius = game.width * 0.04;
+  public virus: virus.Virus;
 
   constructor(
     public readonly baseLength: number,
@@ -287,20 +293,32 @@ export class Sequence extends entity.CompositeEntity {
     return Math.max(...activeLength);
   }
 
-  _setup() {
-    this.container = new PIXI.Container();
-    this.container.interactive = true;
-    this.container.position.copyFrom(this.position);
-    this._entityConfig.container.addChild(this.container);
-    this._on(this.container, "pointerup", () => {
-      this._entityConfig.level.sequenceManager.emit("click", this);
+  _initVirus(callback: () => any) {
+    this.virus = new virus.Virus("mini");
+
+    this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
+      if (child !== this.virus) return;
+      this.virus.moveTo(
+        crisprUtil.random(virus.rightEdge * 0.5, virus.leftEdge * 0.5),
+        () => {
+          this.virus.stingIn(callback);
+        }
+      );
     });
+
+    this._activateChildEntity(this.virus, this.level.config);
+  }
+
+  _initNucleotides(callback: () => any) {
     const {
       width,
       height,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
     );
+
+    const finish: Promise<void>[] = [];
+
     for (let i = 0; i < this.baseLength; i++) {
       const n = new nucleotide.Nucleotide(
         this.nucleotideRadius,
@@ -309,16 +327,48 @@ export class Sequence extends entity.CompositeEntity {
         Math.random()
       );
       n.floating.active.y = true;
+      n.state = "present";
+
       this._activateChildEntity(
         n,
         entity.extendConfig({
           container: this.container,
         })
       );
-      n.state = "present";
       this.nucleotides.push(n);
+
+      finish.push(
+        new Promise((resolve) => {
+          this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
+            if (child === n) resolve();
+          });
+        })
+      );
     }
+
+    Promise.all(finish).then(callback);
+
     this.refresh();
+  }
+
+  _setup() {
+    this.container = new PIXI.Container();
+    this.container.interactive = true;
+    this.container.position.copyFrom(this.position);
+
+    this._on(this.container, "pointerup", () => {
+      this._entityConfig.level.sequenceManager.emit("click", this);
+    });
+
+    this._initVirus(() => {
+      this._initNucleotides(() => {
+        this.virus.stingOut(() => {
+          this.emit("setup");
+        });
+      });
+    });
+
+    this._entityConfig.container.addChild(this.container);
   }
 
   _teardown() {
