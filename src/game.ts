@@ -1,84 +1,13 @@
 import * as PIXI from "pixi.js";
 
 import * as booyah from "booyah/src/booyah";
-import * as entity from "booyah/src/entity";
 
-import * as level from "./scenes/level";
+import * as minimap from "./scenes/minimap";
 
-export const width = 1080;
-export const height = 1920;
-export const size = new PIXI.Point(width, height);
-
-class LevelMenu extends entity.EntityBase {
-  private container: PIXI.Container;
-
-  _setup(): void {
-    this.container = new PIXI.Container();
-    this._entityConfig.container.addChild(this.container);
-
-    this.container.addChild(
-      this._makeButton(
-        "Turn-based",
-        new PIXI.Point(this._entityConfig.app.view.width / 2, 400),
-        () => (this._transition = entity.makeTransition("turnBased"))
-      )
-    );
-    this.container.addChild(
-      this._makeButton(
-        "Continuous",
-        new PIXI.Point(this._entityConfig.app.view.width / 2, 600),
-        () => (this._transition = entity.makeTransition("continuous"))
-      )
-    );
-    this.container.addChild(
-      this._makeButton(
-        "Long",
-        new PIXI.Point(this._entityConfig.app.view.width / 2, 800),
-        () => (this._transition = entity.makeTransition("long"))
-      )
-    );
-  }
-
-  _teardown(): void {
-    (this._entityConfig.container as PIXI.Container).removeChild(
-      this.container
-    );
-  }
-
-  private _makeButton(
-    text: string,
-    position: PIXI.Point,
-    callback: (...args: any) => void
-  ): PIXI.DisplayObject {
-    const button: PIXI.Container & { text?: PIXI.Text } = new PIXI.Container();
-    button.position.copyFrom(position);
-    button.interactive = true;
-    button.buttonMode = true;
-    this._on(button, "pointerup", callback);
-
-    const bg = new PIXI.Graphics()
-      .beginFill(0xaaaaaa)
-      .drawRect(-250, -50, 500, 100)
-      .endFill();
-
-    button.addChild(bg);
-
-    button.text = new PIXI.Text(text, {
-      fill: "#000000",
-      fontSize: "50px",
-    });
-    button.text.anchor.set(0.5);
-    button.addChild(button.text);
-
-    return button;
-  }
-}
+import * as crisprUtil from "./crisprUtil";
 
 const gameStates = {
-  start: new LevelMenu(),
-  turnBased: new level.Level("turnBased"),
-  continuous: new level.Level("continuous"),
-  long: new level.Level("long"),
+  start: new minimap.Minimap(),
 };
 
 let gameTransitions = {
@@ -112,6 +41,10 @@ const graphicalAssets = [
   "images/nucleotide_bright.png",
   "images/popup_background.png",
   "images/star.png",
+  "images/cellule.png",
+  "images/cellule_1.png",
+  "images/cellule_2.png",
+  "images/cellule_background.png",
 
   // animated sprites
   "images/nucleotide_red.json",
@@ -131,7 +64,9 @@ const fontAssets = ["Cardenio Modern Bold", "Cardenio Modern Regular"];
 const entityInstallers: any = [
   // audio.installJukebox,
   // audio.installFxMachine,
-  booyah.makeInstallMenu({ menuButtonPosition: new PIXI.Point(width, 0) }),
+  booyah.makeInstallMenu({
+    menuButtonPosition: new PIXI.Point(crisprUtil.width, 0),
+  }),
 ];
 
 booyah.go({
@@ -139,7 +74,7 @@ booyah.go({
   //@ts-ignore
   transitions: gameTransitions,
   entityInstallers,
-  screenSize: new PIXI.Point(width, height),
+  screenSize: new PIXI.Point(crisprUtil.width, crisprUtil.height),
   graphicalAssets,
   fontAssets,
   graphics: {

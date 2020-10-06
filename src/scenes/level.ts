@@ -27,7 +27,7 @@ const dropSpeed = 0.001;
  */
 export class Level extends entity.CompositeEntity {
   public container = new PIXI.Container();
-  public nucleotideRadius = game.width / 13.44;
+  public nucleotideRadius = crisprUtil.width / 13.44;
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;

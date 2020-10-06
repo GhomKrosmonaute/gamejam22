@@ -5,7 +5,6 @@ import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
 
-import * as game from "../game";
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
 
@@ -262,7 +261,7 @@ export class SequenceManager extends entity.CompositeEntity {
  * Represent a sequence dropped by virus
  */
 export class Sequence extends entity.CompositeEntity {
-  public nucleotideRadius = game.width * 0.04;
+  public nucleotideRadius = crisprUtil.width * 0.04;
   public nucleotides: nucleotide.Nucleotide[] = [];
   public container: PIXI.Container;
   public virus: virus.Virus;
@@ -278,7 +277,6 @@ export class Sequence extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  // todo: debug this method ?
   get maxActiveLength(): number {
     const activeLength: number[] = [0];
     let nbr = 0;
@@ -317,17 +315,18 @@ export class Sequence extends entity.CompositeEntity {
       this.nucleotideRadius
     );
 
-    const finish: Promise<void>[] = [];
-
     for (let i = 0; i < this.baseLength; i++) {
       const n = new nucleotide.Nucleotide(
         this.nucleotideRadius,
         "sequence",
-        new PIXI.Point(i * width * 0.8, crisprUtil.approximate(height * 0.05)),
+        new PIXI.Point(
+          i * width * 0.8,
+          crisprUtil.approximate(0, height * 0.05)
+        ),
         Math.random()
       );
+
       n.floating.active.y = true;
-      n.state = "present";
 
       this._activateChildEntity(
         n,
@@ -335,20 +334,15 @@ export class Sequence extends entity.CompositeEntity {
           container: this.container,
         })
       );
-      this.nucleotides.push(n);
 
-      finish.push(
-        new Promise((resolve) => {
-          this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
-            if (child === n) resolve();
-          });
-        })
-      );
+      n.state = "present";
+
+      this.nucleotides.push(n);
     }
 
-    Promise.all(finish).then(callback);
-
     this.refresh();
+
+    callback();
   }
 
   _setup() {
@@ -360,13 +354,19 @@ export class Sequence extends entity.CompositeEntity {
       this._entityConfig.level.sequenceManager.emit("click", this);
     });
 
-    this._initVirus(() => {
+    if (this.level.levelVariant === "long") {
       this._initNucleotides(() => {
-        this.virus.stingOut(() => {
-          this.emit("setup");
+        this.emit("setup");
+      });
+    } else {
+      this._initVirus(() => {
+        this._initNucleotides(() => {
+          this.virus.stingOut(() => {
+            this.emit("setup");
+          });
         });
       });
-    });
+    }
 
     this._entityConfig.container.addChild(this.container);
   }

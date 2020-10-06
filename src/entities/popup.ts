@@ -5,7 +5,6 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as anim from "../animations";
-import * as game from "../game";
 import * as crisprUtil from "../crisprUtil";
 
 import * as level from "../scenes/level";
@@ -22,8 +21,8 @@ export abstract class Popup extends entity.CompositeEntity {
   public shaker: anim.DisplayObjectShakesManager;
   public background?: PIXI.Sprite;
 
-  public readonly width = game.width * 0.8; // 864
-  public readonly height = game.height * 0.7; // 1344
+  public readonly width = crisprUtil.width * 0.8; // 864
+  public readonly height = crisprUtil.height * 0.7; // 1344
   public readonly center = new PIXI.Point(this.width / 2, this.height / 2);
 
   /** popup body container */
@@ -36,7 +35,7 @@ export abstract class Popup extends entity.CompositeEntity {
     this._id = "popup:" + Math.random();
 
     this.container.position.set(this.width * -0.5, this.height * -0.5);
-    this._container.position.set(game.width / 2, game.height / 2);
+    this._container.position.set(crisprUtil.width / 2, crisprUtil.height / 2);
     this._container.addChild(this.container);
 
     this.shaker = new anim.DisplayObjectShakesManager(this.container);

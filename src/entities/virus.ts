@@ -122,7 +122,7 @@ export class Virus extends entity.CompositeEntity {
     loop = true,
     onLoaded?: () => any
   ) {
-    if(this._animation) this._deactivateChildEntity(this._animation);
+    if (this._animation) this._deactivateChildEntity(this._animation);
 
     this._currentAnimation = animationName;
 
