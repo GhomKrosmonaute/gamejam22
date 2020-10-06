@@ -9,7 +9,6 @@ import * as game from "../game";
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
 import * as popup from "../entities/popup";
-import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
