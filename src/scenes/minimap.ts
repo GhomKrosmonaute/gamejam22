@@ -13,6 +13,8 @@ export const levels = {
   turnBased: new level.Level("turnBased"),
   continuous: new level.Level("continuous"),
   long: new level.Level("long"),
+  long2: new level.Level("long"),
+  long3: new level.Level("long"),
 };
 export const levelNames = Object.keys(levels);
 
@@ -22,6 +24,7 @@ export class Minimap extends entity.CompositeEntity {
   private buttons = new PIXI.Container();
   private particles: PIXI.Sprite;
   private particlesBis: PIXI.Sprite;
+  private links = new PIXI.Graphics();
 
   protected _setup() {
     this.background = new PIXI.Sprite(
@@ -67,14 +70,16 @@ export class Minimap extends entity.CompositeEntity {
     this.container.addChild(this.particles);
     this.container.addChild(this.particlesBis);
 
+    this.container.addChild(this.links);
+
     for (const levelName in levels) {
       // make a button
       const position = new PIXI.Point(
-        crisprUtil.approximate(crisprUtil.width * 0.5, 10),
+        crisprUtil.approximate(crisprUtil.width * 0.5, 50),
         crisprUtil.proportion(
           levelNames.indexOf(levelName),
           -0.5,
-          levelNames.length - 0.5,
+          4 - 0.5,
           200,
           crisprUtil.height - 200
         )
@@ -84,7 +89,7 @@ export class Minimap extends entity.CompositeEntity {
         this._entityConfig.app.loader.resources["images/cellule.png"].texture
       );
       levelSprite.anchor.set(0.5);
-      levelSprite.scale.set(0.7);
+      levelSprite.scale.set(0.55 + Math.random() * 0.15);
       levelSprite.interactive = true;
       levelSprite.buttonMode = true;
       levelSprite.position.copyFrom(position);
@@ -115,6 +120,19 @@ export class Minimap extends entity.CompositeEntity {
     this.container.addChild(this.buttons);
 
     this._entityConfig.container.addChild(this.container);
+  }
+
+  protected _update() {
+    this.links.clear();
+    this.links.lineStyle(150, 0xffffff, 0.1);
+    this.buttons.children.forEach(
+      (button: PIXI.Sprite, i: number, arr: PIXI.Sprite[]) => {
+        if (i > 0) {
+          this.links.moveTo(button.position.x, button.position.y);
+          this.links.lineTo(arr[i - 1].position.x, arr[i - 1].position.y);
+        }
+      }
+    );
   }
 
   protected _teardown() {
