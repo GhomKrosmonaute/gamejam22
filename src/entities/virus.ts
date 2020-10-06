@@ -47,26 +47,25 @@ export class Virus extends entity.CompositeEntity {
   }
 
   moveTo(angle: number, callback?: () => any) {
-    this.setAnimatedSprite("walk");
-    this._activateChildEntity(
-      new tween.Tween({
-        duration: crisprUtil.proportion(
-          crisprUtil.dist1D(this.angle, angle),
-          0,
-          20,
-          0,
-          2000
-        ),
-        from: this.angle,
-        to: angle,
-        easing: easing.easeInOutQuart,
-        onUpdate: (value) => (this.angle = value),
-        onTeardown: () => {
-          this.setAnimatedSprite("idle");
-          callback?.();
-        },
-      })
-    );
+    this.setAnimatedSprite("walk", true, () => {
+      if (angle > this.angle) this._animation.sprite.scale.x *= -1;
+      this._activateChildEntity(
+        new tween.Tween({
+          duration: crisprUtil.proportion(
+            crisprUtil.dist1D(this.angle, angle),
+            0,
+            20,
+            0,
+            1000
+          ),
+          from: this.angle,
+          to: angle,
+          easing: easing.easeInOutQuart,
+          onUpdate: (value) => (this.angle = value),
+          onTeardown: callback,
+        })
+      );
+    });
   }
 
   leave(callback?: () => any) {
@@ -74,23 +73,24 @@ export class Virus extends entity.CompositeEntity {
   }
 
   /**
-   * place virus in position to inject sequence
+   * place virus in position for inject sequence
    */
   stingIn(callback?: () => any) {
-    this.setAnimatedSprite("sting", false);
-    this._activateChildEntity(
-      new entity.EntitySequence([
-        new entity.FunctionalEntity({
-          requestTransition: () =>
-            this._animation.sprite.currentFrame >=
-            this._animation.sprite.totalFrames * 0.5,
-        }),
-        new entity.FunctionCallEntity(() => {
-          this._animation.sprite.stop();
-          callback?.();
-        }),
-      ])
-    );
+    this.setAnimatedSprite("sting", false, () => {
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          new entity.FunctionalEntity({
+            requestTransition: () =>
+              this._animation.sprite.currentFrame >=
+              this._animation.sprite.totalFrames * 0.5,
+          }),
+          new entity.FunctionCallEntity(() => {
+            this._animation.sprite.stop();
+            callback?.();
+          }),
+        ])
+      );
+    });
   }
 
   /**
@@ -109,31 +109,41 @@ export class Virus extends entity.CompositeEntity {
             this._animation.sprite.totalFrames,
         }),
         new entity.FunctionCallEntity(() => {
-          this.setAnimatedSprite("idle");
-          callback?.();
+          this.setAnimatedSprite("idle", true, callback);
         }),
       ])
     );
   }
 
-  setAnimatedSprite(animationName: VirusAnimation, loop = true) {
+  setAnimatedSprite(
+    animationName: VirusAnimation,
+    loop = true,
+    onLoaded?: () => any
+  ) {
     this._currentAnimation = animationName;
-    if (this._animation) this._deactivateChildEntity(this._animation);
+
+    if (this.childEntities.includes(this._animation))
+      this._deactivateChildEntity(this._animation);
+
     this._animation = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources[
-        `${this.type}_bob_${animationName}.json`
+        `images/${this.type}_bob_${animationName}.json`
       ]
     );
+
     this._activateChildEntity(
       this._animation,
       entity.extendConfig({
         container: this._container,
       })
     );
+
     this._animation.sprite.animationSpeed = 25 / 60;
     this._animation.sprite.scale.set(0.12);
     this._animation.sprite.anchor.set(0.5, 1);
     this._animation.sprite.loop = loop;
     this._animation.sprite.play();
+
+    onLoaded?.();
   }
 }

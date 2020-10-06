@@ -18,7 +18,7 @@ export class HairManager extends entity.CompositeEntity {
     this._entityConfig.container.addChild(this.container);
     for (let i = 0; i < hairCount; i++) {
       const hair = new Hair(
-        geom.degreesToRadians(geom.lerp(-23, 24, i / hairCount)),
+        geom.lerp(-23, 24, i / hairCount),
         geom.lerp(hairMaxScale, hairMinScale, Math.random())
       );
       this.hairs.push(hair);
@@ -41,7 +41,7 @@ export class Hair extends entity.CompositeEntity {
   private loop: entity.EntitySequence;
   public spriteEntity: entity.AnimatedSpriteEntity;
 
-  constructor(public rotation: number, public scale: number) {
+  constructor(public angle: number, public scale: number) {
     super();
   }
 
@@ -55,12 +55,12 @@ export class Hair extends entity.CompositeEntity {
       false
     );
 
-    this.sprite.animationSpeed = (24 + this.rotation) / 60;
+    this.sprite.animationSpeed = (15 + this.angle / 10) / 60;
     this.sprite.loop = false;
     this.sprite.scale.set(this.scale);
     this.sprite.anchor.set(0.5, 1);
 
-    crisprUtil.positionAlongMembrane(this.sprite, this.rotation);
+    crisprUtil.positionAlongMembrane(this.sprite, this.angle);
 
     this._entityConfig.container.addChild(this.sprite);
 
