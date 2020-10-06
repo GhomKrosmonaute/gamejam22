@@ -120,10 +120,9 @@ export class Virus extends entity.CompositeEntity {
     loop = true,
     onLoaded?: () => any
   ) {
-    this._currentAnimation = animationName;
+    if(this._animation) this._deactivateChildEntity(this._animation);
 
-    if (this.childEntities.includes(this._animation))
-      this._deactivateChildEntity(this._animation);
+    this._currentAnimation = animationName;
 
     this._animation = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources[
