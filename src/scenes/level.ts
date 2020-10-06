@@ -255,7 +255,7 @@ export class Level extends entity.CompositeEntity {
     this._initBonuses();
     this._initButton();
     this._initGauge();
-    this._initPopups();
+    //this._initPopups();
 
     this._refresh();
     this.isGuiLocked = false;
