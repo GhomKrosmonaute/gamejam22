@@ -56,7 +56,7 @@ export class Minimap extends entity.CompositeEntity {
     {
       const options = anim.makeFloatingOptions({
         active: { x: true, y: true },
-        amplitude: new PIXI.Point(1, 1),
+        amplitude: new PIXI.Point(2, 2),
         speed: new PIXI.Point(Math.random(), Math.random()),
       });
       const shaking = new anim.DisplayObjectShakesManager(this.particlesBis);
