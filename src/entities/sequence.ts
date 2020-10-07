@@ -298,6 +298,10 @@ export class Sequence extends entity.CompositeEntity {
 
     this._activateChildEntity(this.virus, this.level.config);
 
+    this._on(this.virus, "stungOut", () => {
+      this.virus.setAnimatedSprite("idle");
+    });
+
     return new entity.EntitySequence([
       new entity.FunctionalEntity({
         requestTransition: () => this.virus.isSetup,
@@ -305,7 +309,10 @@ export class Sequence extends entity.CompositeEntity {
       this.virus.moveTo(
         crisprUtil.random(virus.rightEdge * 0.5, virus.leftEdge * 0.5)
       ),
+      new entity.FunctionCallEntity(() => this._initNucleotides()),
       this.virus.stingIn(),
+      new entity.WaitingEntity(3000),
+      this.virus.stingOut(),
     ]);
   }
 
@@ -354,13 +361,7 @@ export class Sequence extends entity.CompositeEntity {
     if (this.level.levelVariant === "long") {
       this._initNucleotides();
     } else {
-      this._activateChildEntity(
-        new entity.EntitySequence([
-          this._initVirus(),
-          new entity.FunctionCallEntity(() => this._initNucleotides()),
-          this.virus.stingOut(),
-        ])
-      );
+      this._activateChildEntity(this._initVirus());
     }
 
     this._entityConfig.container.addChild(this.container);

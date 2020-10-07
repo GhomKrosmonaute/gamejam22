@@ -52,7 +52,7 @@ export class Hair extends entity.CompositeEntity {
   _setup() {
     this.spriteEntity = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources["images/hair.json"],
-      false
+      { resetFrame: false }
     );
 
     this.sprite.animationSpeed = (15 + this.angle / 10) / 60;

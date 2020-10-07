@@ -63,7 +63,6 @@ export class Virus extends entity.CompositeEntity {
       onUpdate: (value) => {
         this.angle = value;
       },
-      onTeardown: () => this.emit("moved"),
     });
   }
 
@@ -104,18 +103,17 @@ export class Virus extends entity.CompositeEntity {
           this._animation.sprite.totalFrames,
       }),
       new entity.FunctionCallEntity(() => {
-        this.setAnimatedSprite("idle");
+        this.emit("stungOut");
       }),
     ]);
   }
 
   setAnimatedSprite(animationName: VirusAnimation, loop = true) {
     if (this._currentAnimationName === animationName) return;
+    else this._currentAnimationName = animationName;
 
     if (this._animation && this._animation.isSetup)
       this._deactivateChildEntity(this._animation);
-
-    this._currentAnimationName = animationName;
 
     this._animation = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources[
@@ -123,17 +121,19 @@ export class Virus extends entity.CompositeEntity {
       ]
     );
 
+    this._animation.sprite.animationSpeed = 25 / 60;
+    this._animation.sprite.scale.set(0.12);
+    this._animation.sprite.anchor.set(0.5, 1);
+    this._animation.sprite.loop = loop;
+    this._animation.options.transitionOnComplete = () => {
+      this.setAnimatedSprite("idle");
+    };
+
     this._activateChildEntity(
       this._animation,
       entity.extendConfig({
         container: this._container,
       })
     );
-
-    this._animation.sprite.animationSpeed = 25 / 60;
-    this._animation.sprite.scale.set(0.12);
-    this._animation.sprite.anchor.set(0.5, 1);
-    this._animation.sprite.loop = loop;
-    this._animation.sprite.play();
   }
 }
