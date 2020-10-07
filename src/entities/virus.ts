@@ -52,27 +52,31 @@ export class Virus extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this._container);
   }
 
-  moveTo(angle: number) {
-    this.setAnimatedSprite("walk", true);
-    if (angle > this.angle) this._animation.sprite.scale.x *= -1;
-    return new tween.Tween({
-      duration: crisprUtil.proportion(
-        crisprUtil.dist1D(this.angle, angle),
-        0,
-        20,
-        0,
-        1000
-      ),
-      from: this.angle,
-      to: angle,
-      easing: easing.easeOutSine,
-      onUpdate: (value) => {
-        this.angle = value;
-      },
-    });
+  moveTo(angle: number): entity.Entity {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.setAnimatedSprite("walk", true);
+        if (angle > this.angle) this._animation.sprite.scale.x *= -1;
+      }),
+      new tween.Tween({
+        duration: crisprUtil.proportion(
+          crisprUtil.dist1D(this.angle, angle),
+          0,
+          20,
+          0,
+          1000
+        ),
+        from: this.angle,
+        to: angle,
+        easing: easing.easeOutSine,
+        onUpdate: (value) => {
+          this.angle = value;
+        },
+      }),
+    ]);
   }
 
-  leave() {
+  leave(): entity.Entity {
     return new entity.EntitySequence([
       this.moveTo(this.angle < 0 ? rightEdge : leftEdge),
       new entity.FunctionCallEntity(() => {
@@ -84,7 +88,7 @@ export class Virus extends entity.CompositeEntity {
   /**
    * place virus in position for inject sequence
    */
-  stingIn() {
+  stingIn(): entity.Entity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("sting", false);
@@ -104,7 +108,7 @@ export class Virus extends entity.CompositeEntity {
   /**
    * finish sting animation after sequence is deployed
    */
-  stingOut() {
+  stingOut(): entity.Entity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         if (this._currentAnimationName !== "sting") {
@@ -119,7 +123,7 @@ export class Virus extends entity.CompositeEntity {
     ]);
   }
 
-  setAnimatedSprite(animationName: VirusAnimation, loop = true) {
+  private setAnimatedSprite(animationName: VirusAnimation, loop = true) {
     if (this._currentAnimationName === animationName) return;
     else this._currentAnimationName = animationName;
 

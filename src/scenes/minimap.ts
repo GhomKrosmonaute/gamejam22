@@ -7,6 +7,7 @@ import * as level from "./level";
 
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
+import { height } from "../crisprUtil";
 
 export type LevelName = keyof Levels;
 export type Levels = typeof levels;
@@ -14,6 +15,14 @@ export const levels = {
   turnBased: new level.Level("turnBased"),
   continuous: new level.Level("continuous"),
   long: new level.Level("long"),
+  turnBased1: new level.Level("turnBased"),
+  continuous1: new level.Level("continuous"),
+  long1: new level.Level("long"),
+  turnBased2: new level.Level("turnBased"),
+  continuous2: new level.Level("continuous"),
+  long31: new level.Level("long"),
+  turnBased23: new level.Level("turnBased"),
+  continuou3s2: new level.Level("continuous"),
 };
 export const levelNames = Object.keys(levels);
 
@@ -27,19 +36,6 @@ export class Minimap extends entity.CompositeEntity {
   private scrollBox: scroll.Scrollbox;
 
   protected _setup() {
-    this.scrollBox = new scroll.Scrollbox({
-      content: this.buttons,
-      boxWidth: crisprUtil.width,
-      boxHeight: crisprUtil.height,
-      overflowY: "scroll",
-    });
-    this._activateChildEntity(
-      this.scrollBox,
-      entity.extendConfig({
-        container: this.container,
-      })
-    );
-
     this.background = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         "images/cellule_background.png"
@@ -130,15 +126,29 @@ export class Minimap extends entity.CompositeEntity {
 
       this.buttons.addChild(levelSprite);
     }
-    // todo: uncomment
-    // this.scrollBox.refresh();
-    // todo: comment
-    this.container.addChild(this.buttons);
+
+    this.scrollBox = new scroll.Scrollbox({
+      content: this.buttons,
+      boxWidth: crisprUtil.width - 10,
+      boxHeight: crisprUtil.height,
+      overflowY: "scroll",
+      scrollbarSize: 25,
+      contentMarginY: 500,
+    });
+    this._activateChildEntity(
+      this.scrollBox,
+      entity.extendConfig({
+        container: this.container,
+      })
+    );
+
+    this.scrollBox.refresh();
 
     this._entityConfig.container.addChild(this.container);
   }
 
   protected _update() {
+    this.links.position.copyFrom(this.scrollBox.currentScroll);
     this.links.clear();
     this.links.lineStyle(150, 0xffffff, 0.1);
     this.buttons.children.forEach(
