@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
+import * as scroll from "booyah/src/scroll";
 
 import * as level from "./level";
 
@@ -17,14 +18,28 @@ export const levels = {
 export const levelNames = Object.keys(levels);
 
 export class Minimap extends entity.CompositeEntity {
-  private container = new PIXI.Container();
   private background: PIXI.Sprite;
+  private container = new PIXI.Container();
   private buttons = new PIXI.Container();
   private particles: PIXI.Sprite;
   private particlesBis: PIXI.Sprite;
   private links = new PIXI.Graphics();
+  private scrollBox: scroll.Scrollbox;
 
   protected _setup() {
+    this.scrollBox = new scroll.Scrollbox({
+      content: this.buttons,
+      boxWidth: crisprUtil.width,
+      boxHeight: crisprUtil.height,
+      overflowY: "scroll",
+    });
+    this._activateChildEntity(
+      this.scrollBox,
+      entity.extendConfig({
+        container: this.container,
+      })
+    );
+
     this.background = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         "images/cellule_background.png"
@@ -115,7 +130,7 @@ export class Minimap extends entity.CompositeEntity {
 
       this.buttons.addChild(levelSprite);
     }
-    this.container.addChild(this.buttons);
+    //this.container.addChild(this.buttons);
 
     this._entityConfig.container.addChild(this.container);
   }
