@@ -24,7 +24,7 @@ export class Virus extends entity.CompositeEntity {
   }
 
   get angle(): number {
-    return this._container.angle;
+    return this._container.angle * -1;
   }
 
   set angle(value) {
@@ -59,7 +59,7 @@ export class Virus extends entity.CompositeEntity {
       ),
       from: this.angle,
       to: angle,
-      easing: easing.easeInOutQuart,
+      easing: easing.easeOutSine,
       onUpdate: (value) => {
         this.angle = value;
       },
@@ -67,7 +67,12 @@ export class Virus extends entity.CompositeEntity {
   }
 
   leave() {
-    return this.moveTo(this.angle < 0 ? rightEdge : leftEdge);
+    return new entity.EntitySequence([
+      this.moveTo(this.angle < 0 ? rightEdge : leftEdge),
+      new entity.FunctionCallEntity(() => {
+        this._transition = entity.makeTransition();
+      }),
+    ]);
   }
 
   /**

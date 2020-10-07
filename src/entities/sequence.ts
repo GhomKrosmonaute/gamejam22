@@ -265,7 +265,7 @@ export class Sequence extends entity.CompositeEntity {
   public nucleotideRadius = game.width * 0.04;
   public nucleotides: nucleotide.Nucleotide[] = [];
   public container: PIXI.Container;
-  public virus: virus.Virus;
+  public virus?: virus.Virus;
 
   constructor(
     public readonly baseLength: number,
@@ -451,11 +451,23 @@ export class Sequence extends entity.CompositeEntity {
         Promise.all(promises).then(resolve);
       },
       callback: () => {
-        this.level.sequenceManager.sequences = this.level.sequenceManager.sequences.filter(
-          (s) => s !== this
-        );
-        this._transition = entity.makeTransition();
-        callback?.();
+        const end = () => {
+          this.level.sequenceManager.sequences = this.level.sequenceManager.sequences.filter(
+            (s) => s !== this
+          );
+          this._transition = entity.makeTransition();
+          callback?.();
+        };
+        if (this.virus) {
+          this._activateChildEntity(
+            new entity.EntitySequence([
+              this.virus.leave(),
+              new entity.FunctionCallEntity(end),
+            ])
+          );
+        } else {
+          end();
+        }
       },
     });
   }
