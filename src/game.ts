@@ -23,8 +23,6 @@ const graphicalAssets = [
   "images/background.jpg",
   "images/membrane.png",
   "images/hole.png",
-  "images/arrow.png",
-  "images/circle.png",
   "images/bonus_swap.png",
   "images/bonus_heal.png",
   "images/bonus_syringe.png",
