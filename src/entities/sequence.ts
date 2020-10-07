@@ -293,31 +293,29 @@ export class Sequence extends entity.CompositeEntity {
     return Math.max(...activeLength);
   }
 
-  _initVirus(callback: () => any) {
+  _initVirus() {
     this.virus = new virus.Virus("mini");
 
-    this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
-      if (child !== this.virus) return;
-      this.virus.moveTo(
-        crisprUtil.random(virus.rightEdge * 0.5, virus.leftEdge * 0.5),
-        () => {
-          this.virus.stingIn(callback);
-        }
-      );
-    });
-
     this._activateChildEntity(this.virus, this.level.config);
+
+    return new entity.EntitySequence([
+      new entity.FunctionalEntity({
+        requestTransition: () => this.virus.isSetup,
+      }),
+      this.virus.moveTo(
+        crisprUtil.random(virus.rightEdge * 0.5, virus.leftEdge * 0.5)
+      ),
+      this.virus.stingIn(),
+    ]);
   }
 
-  _initNucleotides(callback: () => any) {
+  _initNucleotides() {
     const {
       width,
       height,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
       this.nucleotideRadius
     );
-
-    const finish: Promise<void>[] = [];
 
     for (let i = 0; i < this.baseLength; i++) {
       const n = new nucleotide.Nucleotide(
@@ -326,8 +324,8 @@ export class Sequence extends entity.CompositeEntity {
         new PIXI.Point(i * width * 0.8, crisprUtil.approximate(height * 0.05)),
         Math.random()
       );
+
       n.floating.active.y = true;
-      n.state = "present";
 
       this._activateChildEntity(
         n,
@@ -335,18 +333,11 @@ export class Sequence extends entity.CompositeEntity {
           container: this.container,
         })
       );
+
+      n.state = "present";
+
       this.nucleotides.push(n);
-
-      finish.push(
-        new Promise((resolve) => {
-          this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
-            if (child === n) resolve();
-          });
-        })
-      );
     }
-
-    Promise.all(finish).then(callback);
 
     this.refresh();
   }
@@ -360,13 +351,17 @@ export class Sequence extends entity.CompositeEntity {
       this._entityConfig.level.sequenceManager.emit("click", this);
     });
 
-    this._initVirus(() => {
-      this._initNucleotides(() => {
-        this.virus.stingOut(() => {
-          this.emit("setup");
-        });
-      });
-    });
+    if (this.level.levelVariant === "long") {
+      this._initNucleotides();
+    } else {
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          this._initVirus(),
+          new entity.FunctionCallEntity(() => this._initNucleotides()),
+          this.virus.stingOut(),
+        ])
+      );
+    }
 
     this._entityConfig.container.addChild(this.container);
   }

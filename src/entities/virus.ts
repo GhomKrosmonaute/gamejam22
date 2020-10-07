@@ -17,7 +17,7 @@ export const rightEdge = -25;
 export class Virus extends entity.CompositeEntity {
   private _container = new PIXI.Container();
   private _animation: entity.AnimatedSpriteEntity;
-  private _currentAnimation: VirusAnimation;
+  private _currentAnimationName: VirusAnimation;
 
   constructor(public readonly type: VirusType) {
     super();
@@ -46,85 +46,76 @@ export class Virus extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this._container);
   }
 
-  moveTo(angle: number, callback?: () => any) {
-    this.setAnimatedSprite("walk", true, () => {
-      if (angle > this.angle) this._animation.sprite.scale.x *= -1;
-      this._activateChildEntity(
-        new tween.Tween({
-          duration: crisprUtil.proportion(
-            crisprUtil.dist1D(this.angle, angle),
-            0,
-            20,
-            0,
-            1000
-          ),
-          from: this.angle,
-          to: angle,
-          easing: easing.easeInOutQuart,
-          onUpdate: (value) => {
-            this.angle = value;
-          },
-          onTeardown: callback,
-        })
-      );
+  moveTo(angle: number) {
+    this.setAnimatedSprite("walk", true);
+    if (angle > this.angle) this._animation.sprite.scale.x *= -1;
+    return new tween.Tween({
+      duration: crisprUtil.proportion(
+        crisprUtil.dist1D(this.angle, angle),
+        0,
+        20,
+        0,
+        1000
+      ),
+      from: this.angle,
+      to: angle,
+      easing: easing.easeInOutQuart,
+      onUpdate: (value) => {
+        this.angle = value;
+      },
+      onTeardown: () => this.emit("moved"),
     });
   }
 
-  leave(callback?: () => any) {
-    this.moveTo(this.angle < 0 ? rightEdge : leftEdge, callback);
+  leave() {
+    return this.moveTo(this.angle < 0 ? rightEdge : leftEdge);
   }
 
   /**
    * place virus in position for inject sequence
    */
-  stingIn(callback?: () => any) {
-    this.setAnimatedSprite("sting", false, () => {
-      this._activateChildEntity(
-        new entity.EntitySequence([
-          new entity.FunctionalEntity({
-            requestTransition: () =>
-              this._animation.sprite.currentFrame >=
-              this._animation.sprite.totalFrames * 0.5,
-          }),
-          new entity.FunctionCallEntity(() => {
-            this._animation.sprite.stop();
-            callback?.();
-          }),
-        ])
-      );
-    });
+  stingIn() {
+    this.setAnimatedSprite("sting", false);
+    return new entity.EntitySequence([
+      new entity.FunctionalEntity({
+        requestTransition: () =>
+          this._animation.sprite.currentFrame >=
+          this._animation.sprite.totalFrames * 0.5,
+      }),
+      new entity.FunctionCallEntity(() => {
+        this._animation.sprite.stop();
+        this.emit("stungIn");
+      }),
+    ]);
   }
 
   /**
    * finish sting animation after sequence is deployed
    */
-  stingOut(callback?: () => any) {
-    if (this._currentAnimation !== "sting") {
+  stingOut() {
+    if (this._currentAnimationName !== "sting") {
       throw new Error("stingIn must be called before stingOut.");
     }
     this._animation.sprite.play();
-    this._activateChildEntity(
-      new entity.EntitySequence([
-        new entity.FunctionalEntity({
-          requestTransition: () =>
-            this._animation.sprite.currentFrame ===
-            this._animation.sprite.totalFrames,
-        }),
-        new entity.FunctionCallEntity(() => {
-          this.setAnimatedSprite("idle", true, callback);
-        }),
-      ])
-    );
+    return new entity.EntitySequence([
+      new entity.FunctionalEntity({
+        requestTransition: () =>
+          this._animation.sprite.currentFrame ===
+          this._animation.sprite.totalFrames,
+      }),
+      new entity.FunctionCallEntity(() => {
+        this.setAnimatedSprite("idle");
+      }),
+    ]);
   }
 
-  setAnimatedSprite(
-    animationName: VirusAnimation,
-    loop = true,
-    onLoaded?: () => any
-  ) {
-    if(this._animation) this._deactivateChildEntity(this._animation);
+  setAnimatedSprite(animationName: VirusAnimation, loop = true) {
+    if (this._currentAnimationName === animationName) return;
 
-    this._currentAnimation = animationName;
+    if (this._animation && this._animation.isSetup)
+      this._deactivateChildEntity(this._animation);
+
+    this._currentAnimationName = animationName;
 
     this._animation = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources[
@@ -144,7 +135,5 @@ export class Virus extends entity.CompositeEntity {
     this._animation.sprite.anchor.set(0.5, 1);
     this._animation.sprite.loop = loop;
     this._animation.sprite.play();
-
-    onLoaded?.();
   }
 }
