@@ -49,6 +49,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public isHovered = false;
   public isHearthBeatActive = false;
   public shakes: anim.DisplayObjectShakesManager;
+  public position: PIXI.Point;
 
   private _state: NucleotideState;
   private _isHighlighted: boolean;
@@ -67,11 +68,12 @@ export class Nucleotide extends entity.CompositeEntity {
   constructor(
     public readonly fullRadius: number,
     public parent: "grid" | "sequence",
-    public position = new PIXI.Point(),
+    position = new PIXI.Point(),
     public rotation = 0
   ) {
     super();
 
+    this.position = position.clone();
     this._radius = fullRadius;
   }
 
@@ -91,6 +93,7 @@ export class Nucleotide extends entity.CompositeEntity {
     this._container.rotation = this.rotation;
     this._container.position.copyFrom(this.position);
 
+    this._container.scale.set(0);
     this._refreshScale();
 
     this.shakes = new anim.DisplayObjectShakesManager(this._container);
@@ -120,7 +123,7 @@ export class Nucleotide extends entity.CompositeEntity {
     if (this.infected && !this.isHearthBeatActive) {
       this.isHearthBeatActive = true;
       this._activateChildEntity(
-        anim.heartBeat(this.sprite, 400, 1.1, () => {
+        anim.heartBeat(this._container, 400, 1.1, () => {
           setTimeout(() => {
             this.isHearthBeatActive = false;
           }, 1500 + Math.random() * 1000);
@@ -463,6 +466,20 @@ export class Nucleotide extends entity.CompositeEntity {
   private _refreshScale(): void {
     // Native sprite size is 136 x 129 px
     const scale = (0.85 * this.width) / 136;
-    this._container.scale.set(scale);
+
+    if (this.parent === "sequence") {
+      setTimeout(() => {
+        this._activateChildEntity(
+          new tween.Tween({
+            from: this._container.scale.x,
+            to: scale,
+            duration: 100,
+            onUpdate: (value) => this._container.scale.set(value),
+          })
+        );
+      }, 1200);
+    } else {
+      this._container.scale.set(scale);
+    }
   }
 }

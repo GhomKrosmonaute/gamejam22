@@ -4,6 +4,7 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 
 import * as game from "../game";
 import * as crisprUtil from "../crisprUtil";
@@ -298,10 +299,6 @@ export class Sequence extends entity.CompositeEntity {
 
     this._activateChildEntity(this.virus, this.level.config);
 
-    this._on(this.virus, "stungOut", () => {
-      this.virus.setAnimatedSprite("idle");
-    });
-
     return new entity.EntitySequence([
       new entity.FunctionalEntity({
         requestTransition: () => this.virus.isSetup,
@@ -311,7 +308,7 @@ export class Sequence extends entity.CompositeEntity {
       ),
       new entity.FunctionCallEntity(() => this._initNucleotides()),
       this.virus.stingIn(),
-      new entity.WaitingEntity(3000),
+      new entity.WaitingEntity(1000),
       this.virus.stingOut(),
     ]);
   }
@@ -325,12 +322,23 @@ export class Sequence extends entity.CompositeEntity {
     );
 
     for (let i = 0; i < this.baseLength; i++) {
+      const position = new PIXI.Point(
+        i * width * 0.8,
+        crisprUtil.approximate(height * 0.05)
+      );
+
       const n = new nucleotide.Nucleotide(
         this.nucleotideRadius,
         "sequence",
-        new PIXI.Point(i * width * 0.8, crisprUtil.approximate(height * 0.05)),
+        position,
         Math.random()
       );
+
+      if (this.virus) {
+        crisprUtil.positionAlongMembrane(n.position, this.virus.angle);
+        n.position.x -= this.container.x;
+        n.position.y -= this.container.y;
+      }
 
       n.floating.active.y = true;
 
@@ -344,6 +352,30 @@ export class Sequence extends entity.CompositeEntity {
       n.state = "present";
 
       this.nucleotides.push(n);
+    }
+
+    if (this.virus) {
+      anim.sequenced({
+        sequence: this.nucleotides,
+        timeBetween: 250,
+        delay: 500,
+        onStep: (resolve, n, index) => {
+          const position = new PIXI.Point(
+            index * width * 0.8,
+            crisprUtil.approximate(height * 0.05)
+          );
+          this._activateChildEntity(
+            anim.move(
+              n.position,
+              n.position.clone(),
+              position,
+              1000,
+              easing.easeOutCubic,
+              resolve
+            )
+          );
+        },
+      });
     }
 
     this.refresh();

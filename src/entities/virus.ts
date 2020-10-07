@@ -14,6 +14,12 @@ export type VirusAnimation = "sting" | "idle" | "walk";
 export const leftEdge = 25;
 export const rightEdge = -25;
 
+/**
+ * Emits:
+ * - stungIn
+ * - stungOut
+ * - terminatedAnimation
+ */
 export class Virus extends entity.CompositeEntity {
   private _container = new PIXI.Container();
   private _animation: entity.AnimatedSpriteEntity;
@@ -79,8 +85,10 @@ export class Virus extends entity.CompositeEntity {
    * place virus in position for inject sequence
    */
   stingIn() {
-    this.setAnimatedSprite("sting", false);
     return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.setAnimatedSprite("sting", false);
+      }),
       new entity.FunctionalEntity({
         requestTransition: () =>
           this._animation.sprite.currentFrame >=
@@ -97,16 +105,14 @@ export class Virus extends entity.CompositeEntity {
    * finish sting animation after sequence is deployed
    */
   stingOut() {
-    if (this._currentAnimationName !== "sting") {
-      throw new Error("stingIn must be called before stingOut.");
-    }
-    this._animation.sprite.play();
     return new entity.EntitySequence([
-      new entity.FunctionalEntity({
-        requestTransition: () =>
-          this._animation.sprite.currentFrame ===
-          this._animation.sprite.totalFrames,
+      new entity.FunctionCallEntity(() => {
+        if (this._currentAnimationName !== "sting") {
+          throw new Error("stingIn must be called before stingOut.");
+        }
+        this._animation.sprite.play();
       }),
+      new entity.WaitForEvent(this, "terminatedAnimation"),
       new entity.FunctionCallEntity(() => {
         this.emit("stungOut");
       }),
@@ -131,6 +137,7 @@ export class Virus extends entity.CompositeEntity {
     this._animation.sprite.anchor.set(0.5, 1);
     this._animation.sprite.loop = loop;
     this._animation.options.transitionOnComplete = () => {
+      this.emit("terminatedAnimation");
       this.setAnimatedSprite("idle");
     };
 
