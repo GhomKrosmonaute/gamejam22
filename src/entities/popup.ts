@@ -304,3 +304,35 @@ export class TerminatedLevelPopup extends Popup {
     }
   }
 }
+
+export class TutorialPopup extends Popup {
+  constructor(
+    public options: {
+      title: string;
+      content: string;
+      exampleImage?: PIXI.Sprite;
+    }
+  ) {
+    super(true);
+  }
+
+  protected _setup() {
+    const text = crisprUtil.makeText(this.options.title, {
+      fontSize: 150,
+      fill: 0xffffff,
+      wordWrapWidth: this.width * 0.9,
+      wordWrap: true,
+    });
+    text.position.set(this.center.x, text.height / 2);
+
+    const content = crisprUtil.makeText(this.options.content, {
+      fill: 0xffffff,
+      wordWrapWidth: this.width * 0.9,
+      wordWrap: true,
+    });
+    content.position.copyFrom(this.center);
+
+    this.container.addChild(text);
+    this.container.addChild(content);
+  }
+}

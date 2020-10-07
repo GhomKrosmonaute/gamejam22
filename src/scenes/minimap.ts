@@ -5,24 +5,44 @@ import * as scroll from "booyah/src/scroll";
 
 import * as level from "./level";
 
+import * as popup from "../entities/popup";
+
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
-import { height } from "../crisprUtil";
 
 export type LevelName = keyof Levels;
 export type Levels = typeof levels;
 export const levels = {
-  turnBased: new level.Level("turnBased"),
-  continuous: new level.Level("continuous"),
-  long: new level.Level("long"),
-  turnBased1: new level.Level("turnBased"),
-  continuous1: new level.Level("continuous"),
-  long1: new level.Level("long"),
-  turnBased2: new level.Level("turnBased"),
-  continuous2: new level.Level("continuous"),
-  long31: new level.Level("long"),
-  turnBased23: new level.Level("turnBased"),
-  continuou3s2: new level.Level("continuous"),
+  // first real level
+  "Level 1": new level.Level("turnBased"),
+
+  // Infections
+  "Tuto 3": new level.Tutorial({
+    variant: "turnBased",
+  }),
+
+  // Missing Scissors
+  "Tuto 2": new level.Tutorial({
+    variant: "turnBased",
+  }),
+
+  // Sequence de 3
+  "Tuto 1": new level.Tutorial({
+    variant: "turnBased",
+    onSetup(tuto) {
+      // tuto.sequenceManager.sequences.forEach(s => {
+      //   tuto.deactivate(s)
+      // })
+      // tuto.sequenceManager.sequences = []
+      // tuto.sequenceManager.add(3)
+      tuto.activate(
+        new popup.TutorialPopup({
+          title: "Bienvenue sur Crispr Crunch!",
+          content: "Suivez les instructions pour finir le tutoriel.",
+        })
+      );
+    },
+  }),
 };
 export const levelNames = Object.keys(levels);
 

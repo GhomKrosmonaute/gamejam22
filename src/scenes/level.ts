@@ -24,6 +24,7 @@ const dropSpeed = 0.001;
  * - maxScoreReached()
  * - ringReached(ring: PIXI.Sprite, index: number)
  * - scoreUpdated(score: number)
+ * - initiatedSequenceManager
  */
 export class Level extends entity.CompositeEntity {
   public container = new PIXI.Container();
@@ -153,6 +154,8 @@ export class Level extends entity.CompositeEntity {
       if (child !== this.sequenceManager) return;
 
       this.sequenceManager.addSequenceAccordingToLevelVariant();
+
+      this.emit("initiatedSequenceManager");
     });
 
     this._activateChildEntity(this.sequenceManager, this.config);
@@ -484,5 +487,46 @@ export class Level extends entity.CompositeEntity {
         }),
       ])
     );
+  }
+}
+
+export class Tutorial extends Level {
+  constructor(
+    private options: {
+      variant: LevelVariant;
+      onSetup?: (tuto: Tutorial) => any;
+      onUpdate?: (tuto: Tutorial) => any;
+      onTeardown?: (tuto: Tutorial) => any;
+      onSequenceManagerSetup?: (tuto: Tutorial) => any;
+    }
+  ) {
+    super(options.variant);
+  }
+
+  deactivate(e: entity.Entity) {
+    this._deactivateChildEntity(e);
+  }
+
+  activate(e: entity.Entity) {
+    this._activateChildEntity(e, this.config);
+  }
+
+  _setup() {
+    this._on(this, "initiatedSequenceManager", () => {
+      this.options.onSequenceManagerSetup?.(this);
+    });
+
+    super._setup();
+    this.options.onSetup?.(this);
+  }
+
+  _update() {
+    super._update();
+    this.options.onUpdate?.(this);
+  }
+
+  _teardown() {
+    super._teardown();
+    this.options.onTeardown?.(this);
   }
 }
