@@ -2,6 +2,9 @@ import * as PIXI from "pixi.js";
 
 import * as geom from "booyah/src/geom";
 
+export const width = 1080;
+export const height = 1920;
+
 export class BetterPoint extends PIXI.Point {
   public readonly origin = new PIXI.Point();
 
@@ -87,9 +90,7 @@ export function constrain(n: number, low: number, high: number): number {
   return Math.max(Math.min(n, high), low);
 }
 
-export function approximate(base: number): number;
-export function approximate(base: number, shift?: number): number {
-  if (typeof shift === "undefined") return random(-base, base);
+export function approximate(base: number, shift: number): number {
   return random(base - shift, base + shift);
 }
 

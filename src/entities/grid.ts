@@ -26,8 +26,8 @@ export class Grid extends entity.CompositeEntity {
   public container: PIXI.Container;
   public allNucleotides: nucleotide.Nucleotide[] = [];
   public nucleotideContainer: PIXI.Container;
-  public x = game.width * 0.09;
-  public y = game.height * 0.4;
+  public x = crisprUtil.width * 0.09;
+  public y = crisprUtil.height * 0.4;
   public isPointerDown = false;
   public cursor = new PIXI.Point();
   public lastHovered: nucleotide.Nucleotide | null;

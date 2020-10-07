@@ -6,7 +6,6 @@ import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
-import * as game from "../game";
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
 
@@ -263,7 +262,7 @@ export class SequenceManager extends entity.CompositeEntity {
  * Represent a sequence dropped by virus
  */
 export class Sequence extends entity.CompositeEntity {
-  public nucleotideRadius = game.width * 0.04;
+  public nucleotideRadius = crisprUtil.width * 0.04;
   public nucleotides: nucleotide.Nucleotide[] = [];
   public container: PIXI.Container;
   public virus?: virus.Virus;
@@ -279,7 +278,6 @@ export class Sequence extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  // todo: debug this method ?
   get maxActiveLength(): number {
     const activeLength: number[] = [0];
     let nbr = 0;
@@ -339,7 +337,6 @@ export class Sequence extends entity.CompositeEntity {
         n.position.x -= this.container.x;
         n.position.y -= this.container.y;
       }
-
       n.floating.active.y = true;
 
       this._activateChildEntity(
@@ -379,6 +376,8 @@ export class Sequence extends entity.CompositeEntity {
     }
 
     this.refresh();
+
+    callback();
   }
 
   _setup() {
