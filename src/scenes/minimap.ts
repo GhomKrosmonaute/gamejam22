@@ -14,6 +14,10 @@ export const levels = {
   turnBased: new level.Level("turnBased"),
   continuous: new level.Level("continuous"),
   long: new level.Level("long"),
+  continuous1: new level.Level("continuous"),
+  long1: new level.Level("long"),
+  continuous2: new level.Level("continuous"),
+  long2: new level.Level("long"),
 };
 export const levelNames = Object.keys(levels);
 
@@ -130,6 +134,7 @@ export class Minimap extends entity.CompositeEntity {
 
       this.buttons.addChild(levelSprite);
     }
+    this.scrollBox.refresh();
     //this.container.addChild(this.buttons);
 
     this._entityConfig.container.addChild(this.container);
