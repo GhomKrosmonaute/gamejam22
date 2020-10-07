@@ -14,10 +14,6 @@ export const levels = {
   turnBased: new level.Level("turnBased"),
   continuous: new level.Level("continuous"),
   long: new level.Level("long"),
-  continuous1: new level.Level("continuous"),
-  long1: new level.Level("long"),
-  continuous2: new level.Level("continuous"),
-  long2: new level.Level("long"),
 };
 export const levelNames = Object.keys(levels);
 
@@ -126,16 +122,18 @@ export class Minimap extends entity.CompositeEntity {
         "float",
         anim.makeFloatingOptions({
           active: { x: true, y: true },
-          amplitude: new PIXI.Point(1.5, 1.5),
-          speed: new PIXI.Point(Math.random() + 0.5, Math.random() + 0.5),
+          amplitude: new PIXI.Point(1, 1),
+          speed: new PIXI.Point(Math.random() + 0.2, Math.random() + 0.2),
         })
       );
       this._activateChildEntity(shaking);
 
       this.buttons.addChild(levelSprite);
     }
-    this.scrollBox.refresh();
-    //this.container.addChild(this.buttons);
+    // todo: uncomment
+    // this.scrollBox.refresh();
+    // todo: comment
+    this.container.addChild(this.buttons);
 
     this._entityConfig.container.addChild(this.container);
   }
