@@ -1,5 +1,7 @@
 import * as PIXI from "pixi.js";
 
+import * as geom from "booyah/src/geom";
+
 export class BetterPoint extends PIXI.Point {
   public readonly origin = new PIXI.Point();
 
@@ -28,14 +30,23 @@ export function dist(
   return NaN;
 }
 
+export function dist1D(a: number, b: number): number {
+  return a < b ? b - a : a - b;
+}
+
 export function middle(a: PIXI.Point, b: PIXI.Point): PIXI.Point {
   return new PIXI.Point(a.x + (b.x - a.x) / 2, a.y + (b.y - a.y) / 2);
 }
 
+/** random between 0 and 1 */
 export function random(): number;
+/** random between 0 and X */
 export function random(min: number): number;
+/** random choice on number array */
 export function random(min: number[]): number;
+/** random in range */
 export function random(min: number, max: number): number;
+/** polyvalent random util */
 export function random(min?: number[] | number, max?: number): number {
   let rand = Math.random();
   if (typeof min === "undefined") {
@@ -83,20 +94,27 @@ export function approximate(base: number, shift?: number): number {
 }
 
 /**
- * @param displayObject
- * @param rotation in radians
+ * @param angle in degrees
  */
 export function positionAlongMembrane(
-  displayObject: PIXI.DisplayObject,
-  rotation: number
+  target: PIXI.DisplayObject | PIXI.Point,
+  angle: number
 ): void {
+  const rotation = geom.degreesToRadians(angle);
   const radius = 1337;
   const centerY = 320 + radius;
-  displayObject.position.set(
-    radius * Math.cos(rotation + Math.PI / 2) + 1080 / 2,
-    centerY - radius * Math.sin(rotation + Math.PI / 2)
-  );
-  displayObject.rotation = -rotation;
+  if (target instanceof PIXI.Point) {
+    target.set(
+      radius * Math.cos(rotation + Math.PI / 2) + 1080 / 2,
+      centerY - radius * Math.sin(rotation + Math.PI / 2)
+    );
+  } else {
+    target.position.set(
+      radius * Math.cos(rotation + Math.PI / 2) + 1080 / 2,
+      centerY - radius * Math.sin(rotation + Math.PI / 2)
+    );
+    target.rotation = -rotation;
+  }
 }
 
 export function makeText(text: string, options?: Partial<PIXI.TextStyle>) {
