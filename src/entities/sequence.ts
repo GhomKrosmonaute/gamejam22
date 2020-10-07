@@ -322,7 +322,7 @@ export class Sequence extends entity.CompositeEntity {
     for (let i = 0; i < this.baseLength; i++) {
       const position = new PIXI.Point(
         i * width * 0.8,
-        crisprUtil.approximate(height * 0.05)
+        crisprUtil.approximate(0, height * 0.05)
       );
 
       const n = new nucleotide.Nucleotide(
@@ -359,7 +359,7 @@ export class Sequence extends entity.CompositeEntity {
         onStep: (resolve, n, index) => {
           const position = new PIXI.Point(
             index * width * 0.8,
-            crisprUtil.approximate(height * 0.05)
+            crisprUtil.approximate(0, height * 0.05)
           );
           this._activateChildEntity(
             anim.move(
@@ -376,8 +376,6 @@ export class Sequence extends entity.CompositeEntity {
     }
 
     this.refresh();
-
-    callback();
   }
 
   _setup() {
@@ -392,7 +390,16 @@ export class Sequence extends entity.CompositeEntity {
     if (this.level.levelVariant === "long") {
       this._initNucleotides();
     } else {
-      this._activateChildEntity(this._initVirus());
+      const id = "sequenceInjection:" + Math.random();
+      this.level.disablingAnimations.add(id);
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          this._initVirus(),
+          new entity.FunctionCallEntity(() => {
+            this.level.disablingAnimations.delete(id);
+          }),
+        ])
+      );
     }
 
     this._entityConfig.container.addChild(this.container);
