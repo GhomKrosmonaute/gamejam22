@@ -95,21 +95,27 @@ export function approximate(base: number, shift: number): number {
 }
 
 /**
- * @param displayObject
  * @param angle in degrees
  */
 export function positionAlongMembrane(
-  displayObject: PIXI.DisplayObject,
+  target: PIXI.DisplayObject | PIXI.Point,
   angle: number
 ): void {
   const rotation = geom.degreesToRadians(angle);
   const radius = 1337;
   const centerY = 320 + radius;
-  displayObject.position.set(
-    radius * Math.cos(rotation + Math.PI / 2) + 1080 / 2,
-    centerY - radius * Math.sin(rotation + Math.PI / 2)
-  );
-  displayObject.rotation = -rotation;
+  if (target instanceof PIXI.Point) {
+    target.set(
+      radius * Math.cos(rotation + Math.PI / 2) + 1080 / 2,
+      centerY - radius * Math.sin(rotation + Math.PI / 2)
+    );
+  } else {
+    target.position.set(
+      radius * Math.cos(rotation + Math.PI / 2) + 1080 / 2,
+      centerY - radius * Math.sin(rotation + Math.PI / 2)
+    );
+    target.rotation = -rotation;
+  }
 }
 
 export function makeText(text: string, options?: Partial<PIXI.TextStyle>) {

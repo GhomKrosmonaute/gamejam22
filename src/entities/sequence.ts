@@ -4,6 +4,7 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
@@ -264,7 +265,7 @@ export class Sequence extends entity.CompositeEntity {
   public nucleotideRadius = crisprUtil.width * 0.04;
   public nucleotides: nucleotide.Nucleotide[] = [];
   public container: PIXI.Container;
-  public virus: virus.Virus;
+  public virus?: virus.Virus;
 
   constructor(
     public readonly baseLength: number,
@@ -291,23 +292,26 @@ export class Sequence extends entity.CompositeEntity {
     return Math.max(...activeLength);
   }
 
-  _initVirus(callback: () => any) {
+  _initVirus() {
     this.virus = new virus.Virus("mini");
 
-    this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
-      if (child !== this.virus) return;
-      this.virus.moveTo(
-        crisprUtil.random(virus.rightEdge * 0.5, virus.leftEdge * 0.5),
-        () => {
-          this.virus.stingIn(callback);
-        }
-      );
-    });
-
     this._activateChildEntity(this.virus, this.level.config);
+
+    return new entity.EntitySequence([
+      new entity.FunctionalEntity({
+        requestTransition: () => this.virus.isSetup,
+      }),
+      this.virus.moveTo(
+        crisprUtil.random(virus.rightEdge * 0.5, virus.leftEdge * 0.5)
+      ),
+      new entity.FunctionCallEntity(() => this._initNucleotides()),
+      this.virus.stingIn(),
+      new entity.WaitingEntity(1000),
+      this.virus.stingOut(),
+    ]);
   }
 
-  _initNucleotides(callback: () => any) {
+  _initNucleotides() {
     const {
       width,
       height,
@@ -316,16 +320,23 @@ export class Sequence extends entity.CompositeEntity {
     );
 
     for (let i = 0; i < this.baseLength; i++) {
+      const position = new PIXI.Point(
+        i * width * 0.8,
+        crisprUtil.approximate(height * 0.05)
+      );
+
       const n = new nucleotide.Nucleotide(
         this.nucleotideRadius,
         "sequence",
-        new PIXI.Point(
-          i * width * 0.8,
-          crisprUtil.approximate(0, height * 0.05)
-        ),
+        position,
         Math.random()
       );
 
+      if (this.virus) {
+        crisprUtil.positionAlongMembrane(n.position, this.virus.angle);
+        n.position.x -= this.container.x;
+        n.position.y -= this.container.y;
+      }
       n.floating.active.y = true;
 
       this._activateChildEntity(
@@ -338,6 +349,30 @@ export class Sequence extends entity.CompositeEntity {
       n.state = "present";
 
       this.nucleotides.push(n);
+    }
+
+    if (this.virus) {
+      anim.sequenced({
+        sequence: this.nucleotides,
+        timeBetween: 250,
+        delay: 500,
+        onStep: (resolve, n, index) => {
+          const position = new PIXI.Point(
+            index * width * 0.8,
+            crisprUtil.approximate(height * 0.05)
+          );
+          this._activateChildEntity(
+            anim.move(
+              n.position,
+              n.position.clone(),
+              position,
+              1000,
+              easing.easeOutCubic,
+              resolve
+            )
+          );
+        },
+      });
     }
 
     this.refresh();
@@ -355,17 +390,9 @@ export class Sequence extends entity.CompositeEntity {
     });
 
     if (this.level.levelVariant === "long") {
-      this._initNucleotides(() => {
-        this.emit("setup");
-      });
+      this._initNucleotides();
     } else {
-      this._initVirus(() => {
-        this._initNucleotides(() => {
-          this.virus.stingOut(() => {
-            this.emit("setup");
-          });
-        });
-      });
+      this._activateChildEntity(this._initVirus());
     }
 
     this._entityConfig.container.addChild(this.container);
@@ -455,11 +482,23 @@ export class Sequence extends entity.CompositeEntity {
         Promise.all(promises).then(resolve);
       },
       callback: () => {
-        this.level.sequenceManager.sequences = this.level.sequenceManager.sequences.filter(
-          (s) => s !== this
-        );
-        this._transition = entity.makeTransition();
-        callback?.();
+        const end = () => {
+          this.level.sequenceManager.sequences = this.level.sequenceManager.sequences.filter(
+            (s) => s !== this
+          );
+          this._transition = entity.makeTransition();
+          callback?.();
+        };
+        if (this.virus) {
+          this._activateChildEntity(
+            new entity.EntitySequence([
+              this.virus.leave(),
+              new entity.FunctionCallEntity(end),
+            ])
+          );
+        } else {
+          end();
+        }
       },
     });
   }
