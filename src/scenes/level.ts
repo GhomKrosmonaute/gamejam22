@@ -307,11 +307,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   _teardown() {
-    this._entityConfig.container.removeChild(this.container);
-    this.gauge = null;
-    this.path = null;
-    this.grid = null;
-    this.sequenceManager = null;
+    this.container.removeChildren();
+    this._entityConfig.container.removeChildren();
   }
 
   gameOver() {

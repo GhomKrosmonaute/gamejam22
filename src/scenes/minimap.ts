@@ -26,6 +26,12 @@ export const levels = {
   // Missing Scissors
   "Tuto 2": new level.Level({
     variant: "turnBased",
+    gridShape: "mini",
+    scissorCount: 1,
+    sequenceLength: 3,
+    forceMatching: true,
+    gaugeRingCount: 0,
+    maxScore: 50,
   }),
 
   // Sequence de 3
@@ -35,6 +41,8 @@ export const levels = {
     scissorCount: 0,
     sequenceLength: 3,
     forceMatching: true,
+    gaugeRingCount: 0,
+    maxScore: 50,
   }),
 };
 export const levelNames = Object.keys(levels);
