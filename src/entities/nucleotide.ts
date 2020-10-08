@@ -148,7 +148,11 @@ export class Nucleotide extends entity.CompositeEntity {
     if (isHighlighted && !this._isHighlighted) {
       this.shakes.setShake("highlight", 2);
 
-      this.sprite.scale.set(this.parent === "grid" ? 0.9 : 1.1);
+      if (this.parent === "grid") {
+        this._container.scale.set(0.9);
+      } else {
+        this.sprite.scale.set(1.1);
+      }
 
       this._highlightSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
@@ -163,7 +167,11 @@ export class Nucleotide extends entity.CompositeEntity {
     } else if (!isHighlighted && this._isHighlighted) {
       this.shakes.removeShake("highlight");
 
-      this.sprite.scale.set(1);
+      if (this.parent === "grid") {
+        this._container.scale.set(1);
+      } else {
+        this.sprite.scale.set(1);
+      }
 
       this._container.removeChild(this._highlightSprite);
       this._highlightSprite = null;
