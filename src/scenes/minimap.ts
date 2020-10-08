@@ -154,6 +154,13 @@ export class Minimap extends entity.CompositeEntity {
     this.scrollBox.refresh();
 
     this._entityConfig.container.addChild(this.container);
+
+    this._once(this, "deactivatedChildEntity", (e: entity.Entity) => {
+      if (e instanceof level.Level) {
+        this._teardown();
+        this._setup();
+      }
+    });
   }
 
   protected _update() {
