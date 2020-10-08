@@ -73,8 +73,12 @@ export class Virus extends entity.CompositeEntity {
 
   come(): entity.EntitySequence {
     return new entity.EntitySequence([
-      this.moveTo(this.angle < 0 ? crisprUtil.random(-2, rightEdge * .5) : crisprUtil.random(2, leftEdge * .5))
-    ])
+      this.moveTo(
+        this.angle < 0
+          ? crisprUtil.random(-2, rightEdge * 0.5)
+          : crisprUtil.random(2, leftEdge * 0.5)
+      ),
+    ]);
   }
 
   leave(): entity.EntitySequence {

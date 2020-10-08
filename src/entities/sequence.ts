@@ -210,13 +210,7 @@ export class SequenceManager extends entity.CompositeEntity {
           duration: 2000,
           easing: easing.easeInOutQuad,
           from: s.container.position.y,
-          to: crisprUtil.proportion(
-            i,
-            0,
-            this.sequences.size,
-            this._getSequenceRangeY().top,
-            this._getSequenceRangeY().bottom
-          ),
+          to: this.getSequenceYByIndex(i),
           onUpdate: function (value: number) {
             (<Sequence>this).container.position.y = value;
           }.bind(s),
@@ -225,6 +219,16 @@ export class SequenceManager extends entity.CompositeEntity {
     );
 
     this._activateChildEntity(this.adjustment);
+  }
+
+  getSequenceYByIndex(index: number) {
+    return crisprUtil.proportion(
+      index,
+      0,
+      this.sequences.size,
+      this._getSequenceRangeY().top,
+      this._getSequenceRangeY().bottom
+    );
   }
 
   matchesSequence(_path: path.Path): string | true {
@@ -339,7 +343,9 @@ export class Sequence extends entity.CompositeEntity {
       if (this.virus) {
         crisprUtil.positionAlongMembrane(n.position, this.virus.angle);
         n.position.x -= this.container.x;
-        n.position.y -= this.container.y;
+        n.position.y -= this.level.sequenceManager.getSequenceYByIndex(
+          [...this.level.sequenceManager.sequences].indexOf(this)
+        );
       }
       n.floating.active.y = true;
 
