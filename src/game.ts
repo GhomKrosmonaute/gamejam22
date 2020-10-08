@@ -7,9 +7,11 @@ import * as minimap from "./scenes/minimap";
 import * as crisprUtil from "./crisprUtil";
 import * as levels from "./levels";
 
+const main = new minimap.Minimap();
+
 const gameStates = {
-  start: new minimap.Minimap(),
-  default: new minimap.Minimap(),
+  start: main,
+  default: main,
   ...levels.levels,
 };
 
