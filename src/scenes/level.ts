@@ -30,6 +30,7 @@ export interface LevelOptions {
   scissorCount: number;
   nucleotideRadius: number;
   sequenceNucleotideRadius: number;
+  endsBy: "maxScoreReached" | "none";
 }
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
@@ -45,6 +46,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   scissorCount: 6,
   nucleotideRadius: crisprUtil.width / 13.44,
   sequenceNucleotideRadius: crisprUtil.width * 0.04,
+  endsBy: "maxScoreReached",
 };
 
 /**
@@ -248,6 +250,11 @@ export class Level extends entity.CompositeEntity {
         forEach: (ring: hud.Ring) => {
           ring.tint = 0x007784;
         },
+        callback: () => {
+          if (this.options.endsBy === "maxScoreReached") {
+            this.gameOver();
+          }
+        },
       });
     });
   }
@@ -294,6 +301,14 @@ export class Level extends entity.CompositeEntity {
     this.path = null;
     this.grid = null;
     this.sequenceManager = null;
+  }
+
+  gameOver() {
+    const endLevelPopup = new popup.TerminatedLevelPopup();
+    this._once(endLevelPopup, "closed", () => {
+      this._transition = entity.makeTransition();
+    });
+    this._activateChildEntity(endLevelPopup, this.config);
   }
 
   addScore(score: number) {
