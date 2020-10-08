@@ -31,6 +31,10 @@ export const levels = {
   // Sequence de 3
   "Tuto 1": new level.Level({
     variant: "turnBased",
+    gridShape: "mini",
+    scissorCount: 0,
+    sequenceLength: 3,
+    forceMatching: true,
   }),
 };
 export const levelNames = Object.keys(levels);

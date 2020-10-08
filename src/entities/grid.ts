@@ -1,9 +1,13 @@
 import * as _ from "underscore";
 import * as PIXI from "pixi.js";
+
 import * as entity from "booyah/src/entity";
+
 import * as crisprUtil from "../crisprUtil";
 import * as game from "../game";
+
 import * as nucleotide from "./nucleotide";
+
 import * as level from "../scenes/level";
 
 /** from 0 to 5, start on top */
@@ -15,6 +19,8 @@ export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
   if (opposedNeighborIndex < 0) opposedNeighborIndex += 6;
   return opposedNeighborIndex as NeighborIndex;
 }
+
+export type GridShape = "mini" | "medium" | "full";
 
 /** Represent the game nucleotides grid
  *
@@ -36,7 +42,8 @@ export class Grid extends entity.CompositeEntity {
     public colCount: number,
     public rowCount: number,
     public scissorCount: number,
-    public nucleotideRadius: number
+    public nucleotideRadius: number,
+    public shape: GridShape
   ) {
     super();
   }
@@ -50,8 +57,8 @@ export class Grid extends entity.CompositeEntity {
     this.container.interactive = true;
 
     // Keep track of last pointer position
-    this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointerup", this._onPointerUp);
+    this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointermove", this._onPointerMove);
 
     this._entityConfig.container.addChild(this.container);
@@ -64,6 +71,12 @@ export class Grid extends entity.CompositeEntity {
     for (let x = 0; x < this.colCount; x++) {
       for (let y = 0; y < this.rowCount; y++) {
         if (x % 2 === 0 && y === this.rowCount - 1) continue;
+        if (
+          this.shape === "mini" &&
+          (x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0))
+        )
+          continue;
+
         const n = new nucleotide.Nucleotide(
           this.nucleotideRadius,
           "grid",
@@ -153,6 +166,8 @@ export class Grid extends entity.CompositeEntity {
     if (this.level.options.variant === "long") return;
 
     const safe = this.nucleotides;
+    if (safe.length === 0) return;
+
     while (
       safe.filter((n) => n.type === "scissors").length < this.scissorCount
     ) {
@@ -168,6 +183,44 @@ export class Grid extends entity.CompositeEntity {
     const position = this.getGridPositionOf(n);
     if (!position) return null;
     return position.x % 2 === 0;
+  }
+
+  getRandomPath(length: number): nucleotide.ColorName[] | null {
+    const alreadyPassed: nucleotide.Nucleotide[] = [];
+    const colorNames: nucleotide.ColorName[] = [];
+
+    let current = crisprUtil.random(this.nucleotides);
+
+    while (current.type !== "normal") {
+      current = crisprUtil.random(this.nucleotides);
+    }
+
+    for (let i = 0; i < length; i++) {
+      alreadyPassed.push(current);
+      if (current.type === "normal") {
+        colorNames.push(current.colorName);
+      } else {
+        i--;
+      }
+
+      const neighbors = this.getNeighbors(current).filter((n) => {
+        return (
+          !!n &&
+          !alreadyPassed.includes(n) &&
+          (n.type === "normal" || n.type === "scissors")
+        );
+      });
+
+      if (neighbors.length === 0) {
+        return null;
+      }
+
+      current = crisprUtil.random(neighbors);
+    }
+
+    if (colorNames.length !== length) throw new Error("oops");
+
+    return colorNames;
   }
 
   getNucleotideFromGridPosition(

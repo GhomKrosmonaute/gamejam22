@@ -6,6 +6,8 @@ import * as util from "booyah/src/util";
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
 
+import * as minimap from "./minimap";
+
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
 import * as popup from "../entities/popup";
@@ -31,6 +33,8 @@ export interface LevelOptions {
   nucleotideRadius: number;
   sequenceNucleotideRadius: number;
   endsBy: "maxScoreReached" | "none";
+  gridShape: grid.GridShape;
+  forceMatching: boolean;
 }
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
@@ -47,6 +51,8 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   nucleotideRadius: crisprUtil.width / 13.44,
   sequenceNucleotideRadius: crisprUtil.width * 0.04,
   endsBy: "maxScoreReached",
+  gridShape: "full",
+  forceMatching: false,
 };
 
 /**
@@ -100,6 +106,10 @@ export class Level extends entity.CompositeEntity {
     this.score = this.options.baseScore;
   }
 
+  get minimap(): minimap.Minimap {
+    return this._entityConfig.minimap;
+  }
+
   get config(): entity.EntityConfig {
     return entity.extendConfig({
       container: this.container,
@@ -148,7 +158,8 @@ export class Level extends entity.CompositeEntity {
       this.options.colCount,
       this.options.rowCount,
       this.options.scissorCount,
-      this.options.nucleotideRadius
+      this.options.nucleotideRadius,
+      this.options.gridShape
     );
     this._on(this.grid, "pointerup", this._attemptCrunch);
     this._activateChildEntity(this.grid, this.config);

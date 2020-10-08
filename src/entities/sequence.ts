@@ -36,24 +36,30 @@ export class SequenceManager extends entity.CompositeEntity {
     this.container = null;
   }
 
-  private _getSequenceRangeY(): { top: number; bottom: number } {
+  private _getSequenceRangeY(): crisprUtil.Range {
+    const range: crisprUtil.Range = {
+      top: 0,
+      middle: 0,
+      bottom: 0,
+    };
+
     switch (this.level.options.variant) {
       case "turnBased":
-        return {
-          top: this._entityConfig.app.view.height * 0.25,
-          bottom: this._entityConfig.app.view.height * 0.42,
-        };
+        range.top = crisprUtil.height * 0.25;
+        range.bottom = crisprUtil.height * 0.42;
+        break;
       case "continuous":
-        return {
-          top: this._entityConfig.app.view.height * 0.2,
-          bottom: this._entityConfig.app.view.height * 0.38,
-        };
+        range.top = crisprUtil.height * 0.2;
+        range.bottom = crisprUtil.height * 0.38;
+        break;
       case "long":
-        return {
-          top: this._entityConfig.app.view.height * 0.3,
-          bottom: this._entityConfig.app.view.height * 0.3,
-        };
+        range.top = crisprUtil.height * 0.3;
+        range.bottom = crisprUtil.height * 0.3;
+        break;
     }
+
+    range.middle = (range.top + range.bottom) / 2;
+    return range;
   }
 
   get level(): level.Level {
@@ -222,12 +228,14 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   getSequenceYByIndex(index: number) {
+    const range = this._getSequenceRangeY();
+    if (this.sequences.size === 1) return range.middle;
     return crisprUtil.proportion(
       index,
       0,
       this.sequences.size,
-      this._getSequenceRangeY().top,
-      this._getSequenceRangeY().bottom
+      range.top,
+      range.bottom
     );
   }
 
@@ -320,12 +328,21 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _initNucleotides() {
+    // todo: force matching if level forceMatching flag is true
+
     const {
       width,
       height,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
       this.level.options.sequenceNucleotideRadius
     );
+
+    let forcedSequence: nucleotide.ColorName[];
+
+    if (this.level.options.forceMatching) {
+      forcedSequence = this.level.grid.getRandomPath(this.baseLength);
+      if (!forcedSequence) throw new Error("oops-bis");
+    }
 
     for (let i = 0; i < this.baseLength; i++) {
       const position = new PIXI.Point(
@@ -339,6 +356,10 @@ export class Sequence extends entity.CompositeEntity {
         position,
         Math.random()
       );
+
+      if (this.level.options.forceMatching) {
+        n.colorName = forcedSequence[i];
+      }
 
       if (this.virus) {
         crisprUtil.positionAlongMembrane(n.position, this.virus.angle);
