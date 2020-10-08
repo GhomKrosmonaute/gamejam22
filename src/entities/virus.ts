@@ -7,7 +7,6 @@ import * as easing from "booyah/src/easing";
 
 import * as crisprUtil from "../crisprUtil";
 
-export type State = "idle" | "walk" | "stingIn" | "stingOut";
 export type VirusType = "mini" | "medium" | "big";
 export type VirusAnimation = "sting" | "idle" | "walk";
 
@@ -23,7 +22,7 @@ export const rightEdge = -25;
 export class Virus extends entity.CompositeEntity {
   private _container = new PIXI.Container();
   private _animation: entity.AnimatedSpriteEntity;
-  private _currentAnimationName: VirusAnimation;
+  private _previousAnimationName: VirusAnimation;
 
   constructor(public readonly type: VirusType) {
     super();
@@ -41,10 +40,6 @@ export class Virus extends entity.CompositeEntity {
     // set starting angle
     this.angle = Math.random() < 0.5 ? leftEdge : rightEdge;
 
-    // set starting animation to idle
-    this.setAnimatedSprite("idle");
-
-    // add to app container
     this._entityConfig.container.addChild(this._container);
   }
 
@@ -52,7 +47,7 @@ export class Virus extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this._container);
   }
 
-  moveTo(angle: number): entity.Entity {
+  moveTo(angle: number): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("walk", true);
@@ -76,7 +71,13 @@ export class Virus extends entity.CompositeEntity {
     ]);
   }
 
-  leave(): entity.Entity {
+  come(): entity.EntitySequence {
+    return new entity.EntitySequence([
+      this.moveTo(this.angle < 0 ? crisprUtil.random(-2, rightEdge * .5) : crisprUtil.random(2, leftEdge * .5))
+    ])
+  }
+
+  leave(): entity.EntitySequence {
     return new entity.EntitySequence([
       this.moveTo(this.angle < 0 ? rightEdge : leftEdge),
       new entity.FunctionCallEntity(() => {
@@ -88,7 +89,7 @@ export class Virus extends entity.CompositeEntity {
   /**
    * place virus in position for inject sequence
    */
-  stingIn(): entity.Entity {
+  stingIn(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("sting", false);
@@ -108,10 +109,10 @@ export class Virus extends entity.CompositeEntity {
   /**
    * finish sting animation after sequence is deployed
    */
-  stingOut(): entity.Entity {
+  stingOut(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        if (this._currentAnimationName !== "sting") {
+        if (this._previousAnimationName !== "sting") {
           throw new Error("stingIn must be called before stingOut.");
         }
         this._animation.sprite.play();
@@ -124,8 +125,8 @@ export class Virus extends entity.CompositeEntity {
   }
 
   private setAnimatedSprite(animationName: VirusAnimation, loop = true) {
-    if (this._currentAnimationName === animationName) return;
-    else this._currentAnimationName = animationName;
+    if (this._previousAnimationName === animationName) return;
+    else this._previousAnimationName = animationName;
 
     if (this._animation && this._animation.isSetup)
       this._deactivateChildEntity(this._animation);

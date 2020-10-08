@@ -307,9 +307,7 @@ export class Sequence extends entity.CompositeEntity {
       new entity.FunctionalEntity({
         requestTransition: () => this.virus.isSetup,
       }),
-      this.virus.moveTo(
-        crisprUtil.random(virus.rightEdge * 0.5, virus.leftEdge * 0.5)
-      ),
+      this.virus.come(),
       new entity.FunctionCallEntity(() => this._initNucleotides()),
       this.virus.stingIn(),
       new entity.WaitingEntity(1000),
