@@ -104,6 +104,7 @@ export interface Range {
 }
 
 /**
+ * @param target
  * @param angle in degrees
  */
 export function positionAlongMembrane(

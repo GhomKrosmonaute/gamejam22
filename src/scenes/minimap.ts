@@ -3,49 +3,10 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as scroll from "booyah/src/scroll";
 
-import * as level from "./level";
-
-import * as popup from "../entities/popup";
+import * as levels from "../levels";
 
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
-
-export type LevelName = keyof Levels;
-export type Levels = typeof levels;
-export const levels = {
-  // first real level
-  "Level 1": new level.Level({
-    variant: "turnBased",
-  }),
-
-  // Infections
-  "Tuto 3": new level.Level({
-    variant: "turnBased",
-  }),
-
-  // Missing Scissors
-  "Tuto 2": new level.Level({
-    variant: "turnBased",
-    gridShape: "mini",
-    scissorCount: 1,
-    sequenceLength: 3,
-    forceMatching: true,
-    gaugeRingCount: 0,
-    maxScore: 50,
-  }),
-
-  // Sequence de 3
-  "Tuto 1": new level.Level({
-    variant: "turnBased",
-    gridShape: "mini",
-    scissorCount: 0,
-    sequenceLength: 3,
-    forceMatching: true,
-    gaugeRingCount: 0,
-    maxScore: 50,
-  }),
-};
-export const levelNames = Object.keys(levels);
 
 export class Minimap extends entity.CompositeEntity {
   private background: PIXI.Sprite;
@@ -102,12 +63,12 @@ export class Minimap extends entity.CompositeEntity {
 
     this.container.addChild(this.links);
 
-    for (const levelName in levels) {
+    for (const levelName in levels.levels) {
       // make a button
       const position = new PIXI.Point(
         crisprUtil.approximate(crisprUtil.width * 0.5, 50),
         crisprUtil.proportion(
-          levelNames.indexOf(levelName),
+          levels.levelNames.indexOf(levelName),
           -0.5,
           4 - 0.5,
           200,
@@ -129,7 +90,7 @@ export class Minimap extends entity.CompositeEntity {
       });
 
       this._on(levelSprite, "pointerup", () => {
-        this.setLevel(<LevelName>levelName);
+        this.setLevel(<levels.LevelName>levelName);
       });
 
       levelSprite.addChild(text);
@@ -166,13 +127,6 @@ export class Minimap extends entity.CompositeEntity {
     this.scrollBox.refresh();
 
     this._entityConfig.container.addChild(this.container);
-
-    this._once(this, "deactivatedChildEntity", (e: entity.Entity) => {
-      if (e instanceof level.Level) {
-        this._teardown();
-        this._setup();
-      }
-    });
   }
 
   protected _update() {
@@ -197,8 +151,7 @@ export class Minimap extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this.container);
   }
 
-  private setLevel(levelName: LevelName) {
-    this._teardown();
-    this._activateChildEntity(levels[levelName]);
+  private setLevel(levelName: levels.LevelName) {
+    this._transition = entity.makeTransition(levelName);
   }
 }

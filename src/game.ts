@@ -5,15 +5,12 @@ import * as booyah from "booyah/src/booyah";
 import * as minimap from "./scenes/minimap";
 
 import * as crisprUtil from "./crisprUtil";
+import * as levels from "./levels";
 
 const gameStates = {
   start: new minimap.Minimap(),
-};
-
-let gameTransitions = {
-  turnBased: "end",
-  continuous: "end",
-  long: "end",
+  default: new minimap.Minimap(),
+  ...levels.levels,
 };
 
 const graphicalAssets = [
@@ -69,8 +66,6 @@ const entityInstallers: any = [
 
 booyah.go({
   states: gameStates,
-  //@ts-ignore
-  transitions: gameTransitions,
   entityInstallers,
   screenSize: new PIXI.Point(crisprUtil.width, crisprUtil.height),
   graphicalAssets,
