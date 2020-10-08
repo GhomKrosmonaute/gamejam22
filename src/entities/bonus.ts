@@ -18,14 +18,25 @@ export abstract class Bonus extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  end() {
+  end(aborted = false) {
+    if (!aborted) this.level.bonusesManager.wasBonusUsed = true;
     this._transition = entity.makeTransition();
     this.isUpdateDisabled = false;
   }
 
   abort() {
     this.level.bonusesManager.counts[this.name]++;
-    this.end();
+    this._activateChildEntity(
+      anim.tweenShaking(
+        this.level.bonusesManager.sprites[this.name],
+        200,
+        20,
+        20,
+        () => {
+          this.end(true);
+        }
+      )
+    );
   }
 }
 
@@ -45,6 +56,9 @@ export class SwapBonus extends Bonus {
   }
 
   swap(a: nucleotide.Nucleotide, b: nucleotide.Nucleotide) {
+    if (a.colorName === b.colorName && a.type === b.type && a.state === b.state)
+      return this.abort();
+
     this.isUpdateDisabled = true;
     this.level.grid.swap(a, b, false);
     this.level.disablingAnimations.add(this.name);
@@ -211,6 +225,7 @@ export class BonusesManager extends entity.CompositeEntity {
   public basePosition: { [k: string]: PIXI.Point } = {};
   public selected: string;
   public shakeAmount = 3;
+  public wasBonusUsed = false;
 
   _setup() {
     this.container = new PIXI.Container();
