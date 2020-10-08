@@ -140,7 +140,7 @@ export class TerminatedLevelPopup extends Popup {
   protected _setup() {
     const checks = {
       "No infection": !this.level.wasInfected,
-      "Max score reached": this.level.score >= this.level.maxScore,
+      "Max score reached": this.level.score >= this.level.options.maxScore,
       "No virus has escaped": !this.level.someVirusHasEscaped,
     };
 
@@ -215,7 +215,7 @@ export class TerminatedLevelPopup extends Popup {
         `Score: ${this.level.score} pts (${crisprUtil.proportion(
           this.level.score,
           0,
-          this.level.maxScore,
+          this.level.options.maxScore,
           0,
           100,
           true
@@ -242,7 +242,14 @@ export class TerminatedLevelPopup extends Popup {
           duration: 3000,
           onUpdate: (value) =>
             (score.text = `Score: ${Math.floor(value)} pts (${Math.floor(
-              crisprUtil.proportion(value, 0, this.level.maxScore, 0, 100, true)
+              crisprUtil.proportion(
+                value,
+                0,
+                this.level.options.maxScore,
+                0,
+                100,
+                true
+              )
             )}%)`),
         })
       );

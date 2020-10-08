@@ -20,8 +20,10 @@ import * as level from "../scenes/level";
  * - crunch(s: Sequence)
  */
 export class SequenceManager extends entity.CompositeEntity {
-  public sequences: Sequence[] = [];
+  public sequences = new Set<Sequence>();
   public container: PIXI.Container;
+
+  private adjustment: entity.ParallelEntity = null;
 
   _setup() {
     this.container = new PIXI.Container();
@@ -29,13 +31,13 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   _teardown() {
-    this.sequences = [];
+    this.sequences.clear();
     this._entityConfig.container.removeChild(this.container);
     this.container = null;
   }
 
   private _getSequenceRangeY(): { top: number; bottom: number } {
-    switch (this.level.levelVariant) {
+    switch (this.level.options.variant) {
       case "turnBased":
         return {
           top: this._entityConfig.app.view.height * 0.25,
@@ -59,7 +61,7 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   get sequenceCountLimit(): number {
-    switch (this.level.levelVariant) {
+    switch (this.level.options.variant) {
       case "turnBased":
         return 3;
       case "continuous":
@@ -69,7 +71,10 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   private _pickSequenceLength(): number {
-    switch (this.level.levelVariant) {
+    if (this.level.options.sequenceLength !== null)
+      return this.level.options.sequenceLength;
+
+    switch (this.level.options.variant) {
       case "turnBased":
         return crisprUtil.random(4, 7);
       case "continuous":
@@ -79,32 +84,19 @@ export class SequenceManager extends entity.CompositeEntity {
     }
   }
 
-  addSequenceAccordingToLevelVariant(length?: number) {
-    this.add(length);
-
-    switch (this.level.levelVariant) {
-      case "continuous":
-        this.distributeSequences();
-        break;
-      case "long":
-        this.distributeSequences();
-        break;
-      case "turnBased":
-        this.distributeSequences();
-        break;
-    }
-  }
-
   add(length?: number) {
     length = length ?? this._pickSequenceLength();
-    const sequence = new Sequence(length);
-    const { width } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      sequence.nucleotideRadius
+    const {
+      width: nucleotideWidth,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      this.level.options.sequenceNucleotideRadius
     );
-    sequence.position.set(
-      this._entityConfig.app.view.width / 2 -
-        (sequence.baseLength * width * 0.8) / 2,
-      this._getSequenceRangeY().top
+    const sequence = new Sequence(
+      length,
+      new PIXI.Point(
+        crisprUtil.width / 2 - (length * nucleotideWidth * 0.8) / 2,
+        this._getSequenceRangeY().top
+      )
     );
     this._activateChildEntity(
       sequence,
@@ -112,8 +104,8 @@ export class SequenceManager extends entity.CompositeEntity {
         container: this.container,
       })
     );
-    this.sequences.push(sequence);
-    this.refresh();
+    this.sequences.add(sequence);
+    this.adjustRelativePositionOfSequences();
   }
 
   /** remove all validated sequences */
@@ -125,7 +117,7 @@ export class SequenceManager extends entity.CompositeEntity {
     const signature = _path.signature;
     const removedSequences: Sequence[] = [];
     for (const s of this.sequences) {
-      if (this._entityConfig.level.levelVariant === "long") {
+      if (this._entityConfig.level.options.variant === "long") {
         if (s.validate(signature, "partial")) {
           s.deactivateSegment(_path.signature);
 
@@ -148,8 +140,7 @@ export class SequenceManager extends entity.CompositeEntity {
         );
       }
 
-      this.sequences = _.difference(this.sequences, removedSequences);
-      this.refresh();
+      this.adjustRelativePositionOfSequences();
     }
 
     // if (crunched) path.items.forEach((n) => (n.state = "missing"));
@@ -159,9 +150,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
   removeSequence(addScore: boolean, s: Sequence, callback?: () => any) {
     s.down(addScore, () => {
-      this._deactivateChildEntity(s);
-      this.sequences = this.sequences.filter((ss) => ss !== s);
-      this.refresh();
+      this.adjustRelativePositionOfSequences();
       if (callback) callback();
     });
   }
@@ -176,12 +165,10 @@ export class SequenceManager extends entity.CompositeEntity {
 
     const droppedSequences: Sequence[] = [];
     for (const s of this.sequences) {
-      s.position.y += fraction * yDist;
+      s.container.position.y += fraction * yDist;
 
-      if (s.position.y >= this._getSequenceRangeY().bottom) {
+      if (s.container.position.y >= this._getSequenceRangeY().bottom) {
         droppedSequences.push(s);
-      } else {
-        s.refresh();
       }
     }
 
@@ -190,11 +177,9 @@ export class SequenceManager extends entity.CompositeEntity {
         this.level.disablingAnimations.add(`dropSequence-${i}`);
         s.nucleotides.forEach((n) => (n.sprite.tint = 0x000000));
         s.down(false, () => {
-          this._deactivateChildEntity(s);
           this.level.disablingAnimations.delete(`dropSequence-${i}`);
         });
       });
-      this.sequences = _.difference(this.sequences, droppedSequences);
     }
 
     return droppedSequences;
@@ -202,10 +187,11 @@ export class SequenceManager extends entity.CompositeEntity {
 
   /** Drops the last @count sequences and returns them */
   dropSequences(count = 1): Sequence[] {
-    const droppedSequences = _.last(this.sequences, count);
+    const droppedSequences = _.last([...this.sequences], count);
 
-    droppedSequences.forEach((s) => this._deactivateChildEntity(s));
-    this.sequences = _.difference(this.sequences, droppedSequences);
+    droppedSequences.forEach((s) => {
+      this.removeSequence(false, s);
+    });
 
     return droppedSequences;
   }
@@ -213,33 +199,57 @@ export class SequenceManager extends entity.CompositeEntity {
   /**
    * In the case that sequences are layed out, distributes them evenly
    */
-  distributeSequences() {
-    this.sequences.map((s, i) => {
-      s.position.y = crisprUtil.proportion(
-        i,
-        0,
-        this.sequences.length,
-        this._getSequenceRangeY().top,
-        this._getSequenceRangeY().bottom
-      );
-      s.refresh();
-    });
+  adjustRelativePositionOfSequences() {
+    if (this.adjustment && this.adjustment.isSetup) {
+      this._deactivateChildEntity(this.adjustment);
+    }
+
+    this.adjustment = new entity.ParallelEntity(
+      [...this.sequences].map((s, i) => {
+        return new tween.Tween({
+          duration: 2000,
+          easing: easing.easeInOutQuad,
+          from: s.container.position.y,
+          to: crisprUtil.proportion(
+            i,
+            0,
+            this.sequences.size,
+            this._getSequenceRangeY().top,
+            this._getSequenceRangeY().bottom
+          ),
+          onUpdate: function (value: number) {
+            (<Sequence>this).container.position.y = value;
+          }.bind(s),
+        });
+      })
+    );
+
+    this._activateChildEntity(this.adjustment);
   }
 
   matchesSequence(_path: path.Path): string | true {
     // TODO: perhaps this should only work if one and only one sequence matches?
 
-    if (this._entityConfig.level.levelVariant === "long") {
+    if (this._entityConfig.level.options.variant === "long") {
       return (
         (_path.length > 2 &&
-          this.sequences.some((s) => s.validate(_path.signature, "partial"))) ||
+          [...this.sequences].some((s) =>
+            s.validate(_path.signature, "partial")
+          )) ||
         "NO\nMATCH"
       );
     } else {
-      if (!this.sequences.some((s) => s.validate(_path.signature, "full"))) {
+      if (
+        ![...this.sequences].some((s) => s.validate(_path.signature, "full"))
+      ) {
         return "NO\nMATCH";
       }
-      if (!_path.correctlyContainsScissors()) return "MISSING\nSCISSORS";
+      if (
+        this.level.options.scissorCount > 0 &&
+        !_path.correctlyContainsScissors()
+      ) {
+        return "MISSING\nSCISSORS";
+      }
       return true;
     }
   }
@@ -249,12 +259,8 @@ export class SequenceManager extends entity.CompositeEntity {
     this.sequences.forEach((s) => s.highlightSegment(signature));
   }
 
-  get countSequences(): number {
-    return this.sequences.length;
-  }
-
-  refresh(): void {
-    this.sequences.forEach((s) => s.refresh());
+  get sequenceCount(): number {
+    return this.sequences.size;
   }
 }
 
@@ -262,16 +268,16 @@ export class SequenceManager extends entity.CompositeEntity {
  * Represent a sequence dropped by virus
  */
 export class Sequence extends entity.CompositeEntity {
-  public nucleotideRadius = crisprUtil.width * 0.04;
   public nucleotides: nucleotide.Nucleotide[] = [];
-  public container: PIXI.Container;
+  public container = new PIXI.Container();
   public virus?: virus.Virus;
 
   constructor(
     public readonly baseLength: number,
-    public position = new PIXI.Point()
+    private readonly basePosition: PIXI.Point
   ) {
     super();
+    this.container.position.copyFrom(basePosition);
   }
 
   get level(): level.Level {
@@ -316,7 +322,7 @@ export class Sequence extends entity.CompositeEntity {
       width,
       height,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.nucleotideRadius
+      this.level.options.sequenceNucleotideRadius
     );
 
     for (let i = 0; i < this.baseLength; i++) {
@@ -326,7 +332,7 @@ export class Sequence extends entity.CompositeEntity {
       );
 
       const n = new nucleotide.Nucleotide(
-        this.nucleotideRadius,
+        this.level.options.sequenceNucleotideRadius,
         "sequence",
         position,
         Math.random()
@@ -374,20 +380,16 @@ export class Sequence extends entity.CompositeEntity {
         },
       });
     }
-
-    this.refresh();
   }
 
   _setup() {
-    this.container = new PIXI.Container();
     this.container.interactive = true;
-    this.container.position.copyFrom(this.position);
 
     this._on(this.container, "pointerup", () => {
       this._entityConfig.level.sequenceManager.emit("click", this);
     });
 
-    if (this.level.levelVariant === "long") {
+    if (this.level.options.variant === "long") {
       this._initNucleotides();
     } else {
       const id = "sequenceInjection:" + Math.random();
@@ -412,7 +414,7 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   down(addScore: boolean, callback?: () => any) {
-    const isLong = this.level.levelVariant === "long";
+    const isLong = this.level.options.variant === "long";
     const fully = this.nucleotides.every((n) => n.state === "inactive");
     anim.sequenced({
       sequence: this.nucleotides,
@@ -423,7 +425,7 @@ export class Sequence extends entity.CompositeEntity {
         const baseShift = Math.round(Math.random() * 50) + 50;
         const promises: Promise<void>[] = [];
 
-        let score = this.level.baseScore;
+        let score = this.level.options.baseGain;
 
         if (isLong) {
           if (n.state !== "inactive") {
@@ -490,9 +492,7 @@ export class Sequence extends entity.CompositeEntity {
       },
       callback: () => {
         const end = () => {
-          this.level.sequenceManager.sequences = this.level.sequenceManager.sequences.filter(
-            (s) => s !== this
-          );
+          this.level.sequenceManager.sequences.delete(this);
           this._transition = entity.makeTransition();
           callback?.();
         };
@@ -571,10 +571,6 @@ export class Sequence extends entity.CompositeEntity {
 
   isInactive(): boolean {
     return !this.nucleotides.some((n) => n.state !== "inactive");
-  }
-
-  refresh() {
-    this.container.position.copyFrom(this.position);
   }
 
   toString(): string {

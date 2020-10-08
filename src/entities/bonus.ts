@@ -191,7 +191,7 @@ export class SyringeBonus extends Bonus {
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
       this.level.disablingAnimations.add(this.name);
       this.level.sequenceManager.removeSequence(true, s, () => {
-        this.level.sequenceManager.addSequenceAccordingToLevelVariant();
+        this.level.sequenceManager.add();
         this.level.disablingAnimations.delete(this.name);
         this.end();
       });

@@ -59,7 +59,7 @@ export class Path extends entity.CompositeEntity {
 
   get maxLength(): number {
     return Math.max(
-      ...this.level.sequenceManager.sequences.map((s) => s.baseLength)
+      ...[...this.level.sequenceManager.sequences].map((s) => s.baseLength)
     );
   }
 
@@ -188,8 +188,8 @@ export class Path extends entity.CompositeEntity {
             item.sprite,
             duration,
             function () {
-              this.state = "missing";
               this.once("stateChanged", resolve);
+              this.state = "missing";
             }.bind(item)
           )
         );

@@ -14,34 +14,23 @@ export type LevelName = keyof Levels;
 export type Levels = typeof levels;
 export const levels = {
   // first real level
-  "Level 1": new level.Level("turnBased"),
+  "Level 1": new level.Level({
+    variant: "turnBased",
+  }),
 
   // Infections
-  "Tuto 3": new level.Tutorial({
+  "Tuto 3": new level.Level({
     variant: "turnBased",
   }),
 
   // Missing Scissors
-  "Tuto 2": new level.Tutorial({
+  "Tuto 2": new level.Level({
     variant: "turnBased",
   }),
 
   // Sequence de 3
-  "Tuto 1": new level.Tutorial({
+  "Tuto 1": new level.Level({
     variant: "turnBased",
-    onSetup(tuto) {
-      // tuto.sequenceManager.sequences.forEach(s => {
-      //   tuto.deactivate(s)
-      // })
-      // tuto.sequenceManager.sequences = []
-      // tuto.sequenceManager.add(3)
-      tuto.activate(
-        new popup.TutorialPopup({
-          title: "Bienvenue sur Crispr Crunch!",
-          content: "Suivez les instructions pour finir le tutoriel.",
-        })
-      );
-    },
   }),
 };
 export const levelNames = Object.keys(levels);

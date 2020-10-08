@@ -35,7 +35,7 @@ export class Grid extends entity.CompositeEntity {
   constructor(
     public colCount: number,
     public rowCount: number,
-    public cutCount: number,
+    public scissorCount: number,
     public nucleotideRadius: number
   ) {
     super();
@@ -150,10 +150,12 @@ export class Grid extends entity.CompositeEntity {
 
   /** Does nothing in "long" mode **/
   addScissors(among: nucleotide.Nucleotide[]) {
-    if (this.level.levelVariant === "long") return;
+    if (this.level.options.variant === "long") return;
 
     const safe = this.nucleotides;
-    while (safe.filter((n) => n.type === "scissors").length < this.cutCount) {
+    while (
+      safe.filter((n) => n.type === "scissors").length < this.scissorCount
+    ) {
       let randomIndex;
       do {
         randomIndex = Math.floor(Math.random() * among.length);
