@@ -64,7 +64,7 @@ export class Virus extends entity.CompositeEntity {
         ),
         from: this.angle,
         to: angle,
-        easing: easing.easeOutSine,
+        easing: easing.easeInOutQuad,
         onUpdate: (value) => {
           this.angle = value;
         },
