@@ -96,10 +96,6 @@ export class Level extends entity.CompositeEntity {
   public crunchCount = 0;
   public score: number;
 
-  public swapBonus = new bonuses.SwapBonus();
-  public healBonus = new bonuses.HealBonus();
-  public syringeBonus = new bonuses.SyringeBonus();
-
   constructor(public readonly options: Partial<LevelOptions>) {
     super();
     this.options = util.fillInOptions(this.options, defaultLevelOptions);
@@ -200,22 +196,8 @@ export class Level extends entity.CompositeEntity {
       this._entityConfig.app.view.height * 0.88
     );
     this.bonusBackground.scale.set(0.65);
-    // todo: continue
     this.container.addChild(this.bonusBackground);
     this.bonusesManager = new bonuses.BonusesManager();
-    this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
-      if (child === this.bonusesManager) {
-        this.bonusesManager.add(this.swapBonus, 5);
-        this.bonusesManager.add(this.healBonus, 5);
-        this.bonusesManager.add(this.syringeBonus, 5);
-        this._on(this.sequenceManager, "crunch", () => {
-          this.crunchCount++;
-          if (this.crunchCount % 2 === 0) {
-            this.bonusesManager.add(this.swapBonus);
-          }
-        });
-      }
-    });
     this._activateChildEntity(this.bonusesManager, this.config);
   }
 

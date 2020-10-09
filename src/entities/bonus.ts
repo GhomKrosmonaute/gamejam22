@@ -217,6 +217,10 @@ export class SyringeBonus extends Bonus {
   }
 }
 
+export const syringeBonus = new SyringeBonus();
+export const healBonus = new HealBonus();
+export const swapBonus = new SwapBonus();
+
 export class BonusesManager extends entity.CompositeEntity {
   public container: PIXI.Container;
   public bonuses: Bonus[] = [];
@@ -234,9 +238,13 @@ export class BonusesManager extends entity.CompositeEntity {
   _setup() {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
+
+    this.add(swapBonus).add(healBonus).add(syringeBonus);
+
     this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
       if (bonus instanceof Bonus) {
         this.selected = null;
+        this.counts[bonus.name]--;
         this.sprites[bonus.name].filters = [];
         this.sprites[bonus.name].position.copyFrom(
           this.basePosition[bonus.name]
@@ -279,8 +287,9 @@ export class BonusesManager extends entity.CompositeEntity {
     }
     const disable = this.level.isDisablingAnimationInProgress;
     for (const bonusName in this.sprites) {
-      this.sprites[bonusName].buttonMode = !disable;
-      this.sprites[bonusName].tint = disable ? 0x9f9f9f : 0xffffff;
+      const bonusDisable = disable || !this.counts[bonusName];
+      this.sprites[bonusName].buttonMode = !bonusDisable;
+      this.sprites[bonusName].tint = bonusDisable ? 0x9f9f9f : 0xffffff;
     }
   }
 
@@ -292,7 +301,7 @@ export class BonusesManager extends entity.CompositeEntity {
     return this.bonuses.find((b) => b.name === this.selected);
   }
 
-  add(bonus: Bonus, count = 1) {
+  add(bonus: Bonus, count = 1): this {
     if (this.bonuses.includes(bonus)) {
       this.counts[bonus.name] += count;
       return;
@@ -321,6 +330,8 @@ export class BonusesManager extends entity.CompositeEntity {
     );
 
     this.bonuses.push(bonus);
+
+    return this;
   }
 
   selection(name: string) {
@@ -330,7 +341,7 @@ export class BonusesManager extends entity.CompositeEntity {
       return;
     }
 
-    if (this.level.isDisablingAnimationInProgress) return;
+    if (this.level.isDisablingAnimationInProgress || !this.counts[name]) return;
 
     this.selected = name;
 
