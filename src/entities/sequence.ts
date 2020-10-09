@@ -313,6 +313,9 @@ export class Sequence extends entity.CompositeEntity {
   _initVirus() {
     this.virus = new virus.Virus("mini");
 
+    const id = "sequenceInjection:" + Math.random();
+    this.level.disablingAnimations.add(id);
+
     this._activateChildEntity(this.virus, this.level.config);
 
     return new entity.EntitySequence([
@@ -324,6 +327,10 @@ export class Sequence extends entity.CompositeEntity {
       this.virus.stingIn(),
       new entity.WaitingEntity(1000),
       this.virus.stingOut(),
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimations.delete(id);
+      }),
+      // todo: wait the crunch, then leave (if virus is not killed before)
     ]);
   }
 
@@ -417,16 +424,7 @@ export class Sequence extends entity.CompositeEntity {
     if (this.level.options.variant === "long") {
       this._initNucleotides();
     } else {
-      const id = "sequenceInjection:" + Math.random();
-      this.level.disablingAnimations.add(id);
-      this._activateChildEntity(
-        new entity.EntitySequence([
-          this._initVirus(),
-          new entity.FunctionCallEntity(() => {
-            this.level.disablingAnimations.delete(id);
-          }),
-        ])
-      );
+      this._activateChildEntity(this._initVirus());
     }
 
     this._entityConfig.container.addChild(this.container);
@@ -521,11 +519,11 @@ export class Sequence extends entity.CompositeEntity {
           this._transition = entity.makeTransition();
           callback?.();
         };
-        if (this.virus) {
+        if (this.virus && this.virus.isSetup) {
           this._activateChildEntity(
             new entity.EntitySequence([
-              this.virus.leave(),
-              new entity.FunctionCallEntity(end),
+              this.virus.kill(),
+              new entity.FunctionCallEntity(() => end()),
             ])
           );
         } else {

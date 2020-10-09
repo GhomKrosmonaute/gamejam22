@@ -6,6 +6,7 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as crisprUtil from "../crisprUtil";
+import * as anim from "../animations";
 
 export type VirusType = "mini" | "medium" | "big";
 export type VirusAnimation = "sting" | "idle" | "walk";
@@ -56,10 +57,10 @@ export class Virus extends entity.CompositeEntity {
       new tween.Tween({
         duration: crisprUtil.proportion(
           crisprUtil.dist1D(this.angle, angle),
+          leftEdge,
+          rightEdge,
           0,
-          20,
-          0,
-          1000
+          10000
         ),
         from: this.angle,
         to: angle,
@@ -87,6 +88,15 @@ export class Virus extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this._transition = entity.makeTransition();
       }),
+    ]);
+  }
+
+  kill(): entity.EntitySequence {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        // todo: use death animation
+      }),
+      this.leave(),
     ]);
   }
 
