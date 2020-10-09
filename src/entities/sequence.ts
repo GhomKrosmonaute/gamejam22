@@ -329,6 +329,7 @@ export class Sequence extends entity.CompositeEntity {
       this.virus.stingOut(),
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimations.delete(id);
+        this.level.disablingAnimations.delete("game");
       }),
       // todo: wait the crunch, then leave (if virus is not killed before)
     ]);
@@ -423,6 +424,7 @@ export class Sequence extends entity.CompositeEntity {
 
     if (this.level.options.variant === "long") {
       this._initNucleotides();
+      this.level.disablingAnimations.delete("game");
     } else {
       this._activateChildEntity(this._initVirus());
     }

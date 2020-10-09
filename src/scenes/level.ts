@@ -316,6 +316,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   public endTurn(): void {
+    this.disablingAnimations.add("game");
+
     if (this.grid.isGameOver()) {
       this._transition = entity.makeTransition("game_over");
       return;
@@ -396,6 +398,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   public regenerate(): void {
+    this.disablingAnimations.add("game");
+
     // Switch to regenerate mode
     this.state = "regenerate";
     this.refresh();
@@ -425,6 +429,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   public onInfection(infectionCount = 1): void {
+    this.disablingAnimations.add("game");
     this.wasInfected = true;
 
     if (this.grid.isGameOver()) {
@@ -436,13 +441,9 @@ export class Level extends entity.CompositeEntity {
 
     this._activateChildEntity(
       new entity.EntitySequence([
-        new entity.FunctionCallEntity(() => {
-          this.disablingAnimations.add("infection");
-        }),
         infectionSequence,
         new entity.FunctionCallEntity(() => {
           this.sequenceManager.add();
-          this.disablingAnimations.delete("infection");
         }),
       ])
     );
