@@ -80,7 +80,8 @@ export class Path extends entity.CompositeEntity {
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
-    if (n.state === "missing" || this.level.isGuiLocked) return false;
+    if (n.state === "missing" || this.level.isDisablingAnimationInProgress)
+      return false;
 
     // check the cancellation & cancel to previous nucleotide
     const index = this.items.indexOf(n);
@@ -101,7 +102,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   add(n: nucleotide.Nucleotide): boolean {
-    if (this.level.isGuiLocked) return false;
+    if (this.level.isDisablingAnimationInProgress) return false;
 
     // not add scissors on first position
     if (this.first && this.first.type === "scissors") {

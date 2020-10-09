@@ -221,18 +221,21 @@ export class BonusesManager extends entity.CompositeEntity {
   public container: PIXI.Container;
   public bonuses: Bonus[] = [];
   public counts: { [k: string]: number } = {};
-  public sprites: { [k: string]: anim.Sprite } = {};
+  public sprites: { [k: string]: PIXI.Sprite } = {};
   public basePosition: { [k: string]: PIXI.Point } = {};
   public selected: string;
   public shakeAmount = 3;
   public wasBonusUsed = false;
+
+  get level(): level.Level {
+    return this._entityConfig.level;
+  }
 
   _setup() {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
     this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
       if (bonus instanceof Bonus) {
-        bonus.level.isGuiLocked = false;
         this.selected = null;
         this.sprites[bonus.name].filters = [];
         this.sprites[bonus.name].position.copyFrom(
@@ -251,7 +254,6 @@ export class BonusesManager extends entity.CompositeEntity {
 
     this._on(this, "activatedChildEntity", (bonus: entity.EntityBase) => {
       if (bonus instanceof Bonus) {
-        bonus.level.isGuiLocked = true;
         bonus.level.path.remove();
         this._activateChildEntity(
           new tween.Tween({
@@ -274,6 +276,11 @@ export class BonusesManager extends entity.CompositeEntity {
           amount: this.shakeAmount,
         })
       );
+    }
+    const disable = this.level.isDisablingAnimationInProgress;
+    for (const bonusName in this.sprites) {
+      this.sprites[bonusName].buttonMode = !disable;
+      this.sprites[bonusName].tint = disable ? 0x9f9f9f : 0xffffff;
     }
   }
 
@@ -317,15 +324,13 @@ export class BonusesManager extends entity.CompositeEntity {
   }
 
   selection(name: string) {
-    const level: level.Level = this._entityConfig.level;
-
     if (name === this.selected) {
       const bonus = this.getSelectedBonus();
       if (bonus) bonus.abort();
       return;
     }
 
-    if (level.isGuiLocked) return;
+    if (this.level.isDisablingAnimationInProgress) return;
 
     this.selected = name;
 

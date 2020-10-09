@@ -5,6 +5,8 @@ import * as entity from "booyah/src/entity";
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
 
+import * as level from "../scenes/level";
+
 /**
  * Emits:
  * - reached()
@@ -178,5 +180,91 @@ export class Gauge extends entity.CompositeEntity {
 
   _teardown() {
     this._entityConfig.container.removeChild(this._container);
+  }
+}
+
+export class GoButton extends entity.CompositeEntity {
+  public container: PIXI.Container;
+  public sprite: PIXI.Sprite;
+  public text: PIXI.Text;
+
+  get level(): level.Level {
+    return this._entityConfig.level;
+  }
+
+  protected _setup() {
+    this.container = new PIXI.Container();
+
+    this.sprite = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources[
+        "images/hud_go_button.png"
+      ].texture
+    );
+    this.sprite.position.set(
+      this._entityConfig.app.view.width * 0.734,
+      this._entityConfig.app.view.height * 0.8715
+    );
+    this.sprite.interactive = true;
+    this.sprite.buttonMode = true;
+    this._on(this.sprite, "pointerup", this._onGo);
+    this.container.addChild(this.sprite);
+
+    this.text = crisprUtil.makeText("GO", {
+      fill: 0x000000,
+    });
+    this.text.position.set(this.sprite.width / 2, this.sprite.height / 2);
+    this.sprite.addChild(this.text);
+
+    this._entityConfig.container.addChild(this.sprite);
+  }
+
+  protected _update() {
+    const disabled = this.level.isDisablingAnimationInProgress;
+    this.sprite.buttonMode = !disabled;
+    this.sprite.interactive = !disabled;
+    this.text.style.fill = !disabled ? "#000000" : "#4e535d";
+  }
+
+  protected _teardown() {}
+
+  public setText(text: string) {
+    this.text.style.fontSize = text.length > 6 ? 50 : 70;
+    this.text.text = text;
+  }
+
+  private _onGo(): void {
+    if (this.level.isDisablingAnimationInProgress) return;
+
+    if (this.level.path.items.length > 0) return;
+
+    if (
+      this.level.options.variant === "turnBased" ||
+      this.level.options.variant === "long"
+    ) {
+      if (this.level.grid.containsHoles()) {
+        this.level.regenerate();
+      } else {
+        // TODO: add confirm dialog "Are you sure?"
+
+        this._activateChildEntity(
+          new entity.EntitySequence([
+            new entity.FunctionCallEntity(() => {
+              this.level.disablingAnimations.add("skipping");
+              this.level.grid.regenerate(5, (n) => n.state === "present");
+            }),
+            new entity.WaitingEntity(1200),
+            new entity.FunctionCallEntity(() => {
+              this.level.endTurn();
+              this.level.refresh();
+              this.level.disablingAnimations.delete("skipping");
+            }),
+          ])
+        );
+      }
+    } else {
+      // As if the sequence dropped all the way down
+      this.level.sequenceManager.dropSequences();
+      this.level.onInfection();
+    }
   }
 }

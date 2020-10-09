@@ -88,7 +88,7 @@ export class Level extends entity.CompositeEntity {
   public grid: grid.Grid;
   public state: LevelState = "crunch";
   private bonusBackground: PIXI.Sprite;
-  private goButton: PIXI.Container & { text?: PIXI.Text };
+  private goButton: hud.GoButton;
 
   // game
   public wasInfected = false;
@@ -149,7 +149,7 @@ export class Level extends entity.CompositeEntity {
 
   private _initPath() {
     this.path = new path.Path();
-    this._on(this.path, "updated", this._refresh);
+    this._on(this.path, "updated", this.refresh);
     this._activateChildEntity(this.path, this.config);
   }
 
@@ -185,28 +185,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initButton() {
-    this.goButton = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/hud_go_button.png"
-      ].texture
-    );
-    this.goButton.position.set(
-      this._entityConfig.app.view.width * 0.734,
-      this._entityConfig.app.view.height * 0.8715
-    );
-    this.goButton.interactive = true;
-    this.goButton.buttonMode = true;
-    this._on(this.goButton, "pointerup", this._onGo);
-    this.container.addChild(this.goButton);
-
-    this.goButton.text = crisprUtil.makeText("GO", {
-      fill: 0x000000,
-    });
-    this.goButton.text.position.set(
-      this.goButton.width / 2,
-      this.goButton.height / 2
-    );
-    this.goButton.addChild(this.goButton.text);
+    this.goButton = new hud.GoButton();
+    this._activateChildEntity(this.goButton, this.config);
   }
 
   private _initBonuses() {
@@ -284,8 +264,7 @@ export class Level extends entity.CompositeEntity {
     this._initButton();
     this._initGauge();
 
-    this._refresh();
-    this.isGuiLocked = false;
+    this.refresh();
 
     this.wasInfected = false;
     this.someVirusHasEscaped = false;
@@ -302,7 +281,7 @@ export class Level extends entity.CompositeEntity {
       this.options.dropSpeed
     );
     if (droppedSequences.length > 0) {
-      this._onInfection(droppedSequences.length);
+      this.onInfection(droppedSequences.length);
     }
   }
 
@@ -332,59 +311,11 @@ export class Level extends entity.CompositeEntity {
     this.gauge.setValue(this.score);
   }
 
-  private _onGo(): void {
-    if (this.isGuiLocked) return;
-
-    if (this.path.items.length > 0) return;
-
-    if (
-      this.options.variant === "turnBased" ||
-      this.options.variant === "long"
-    ) {
-      if (this.grid.containsHoles()) {
-        this._regenerate();
-      } else {
-        // TODO: add confirm dialog "Are you sure?"
-
-        this._activateChildEntity(
-          new entity.EntitySequence([
-            new entity.FunctionCallEntity(() => {
-              this.isGuiLocked = true;
-              this.grid.regenerate(5, (n) => n.state === "present");
-            }),
-            new entity.WaitingEntity(1200),
-            new entity.FunctionCallEntity(() => {
-              this._endTurn();
-              this._refresh();
-            }),
-          ])
-        );
-      }
-    } else {
-      // As if the sequence dropped all the way down
-      this.sequenceManager.dropSequences();
-      this._onInfection();
-    }
-  }
-
   get isDisablingAnimationInProgress(): boolean {
     return this.disablingAnimations.size > 0;
   }
 
-  get isGuiLocked(): boolean {
-    return !this.goButton.buttonMode || this.isDisablingAnimationInProgress;
-  }
-
-  set isGuiLocked(value: boolean) {
-    this.goButton.buttonMode = !value;
-    this.goButton.interactive = !value;
-    this.goButton.text.style.fill = !value ? "#000000" : "#4e535d";
-    for (const bonusName in this.bonusesManager.sprites) {
-      this.bonusesManager.sprites[bonusName].buttonMode = !value;
-    }
-  }
-
-  private _endTurn(): void {
+  public endTurn(): void {
     if (this.grid.isGameOver()) {
       this._transition = entity.makeTransition("game_over");
       return;
@@ -406,12 +337,6 @@ export class Level extends entity.CompositeEntity {
         })
       );
     }
-
-    actions.push(
-      new entity.FunctionCallEntity(() => {
-        this.isGuiLocked = false;
-      })
-    );
 
     if (actions.length > 0) {
       this._activateChildEntity(new entity.EntitySequence(actions));
@@ -444,7 +369,7 @@ export class Level extends entity.CompositeEntity {
         });
       }
       if (this.sequenceManager.sequenceCount === 0) {
-        this._regenerate();
+        this.regenerate();
       }
     });
 
@@ -453,13 +378,11 @@ export class Level extends entity.CompositeEntity {
   }
 
   public setGoButtonText(text: string) {
-    this.goButton.text.style.fontSize = text.length > 6 ? 50 : 70;
-    this.goButton.text.text = text;
+    this.goButton.setText(text);
   }
 
-  private _refresh(): void {
+  public refresh(): void {
     if (this.path.items.length > 0) {
-      this.goButton.interactive = false;
       const match = this.sequenceManager.matchesSequence(this.path);
       if (match === true) {
         this.setGoButtonText("MATCH");
@@ -468,15 +391,14 @@ export class Level extends entity.CompositeEntity {
       }
     } else {
       this.setGoButtonText("SKIP");
-      this.goButton.interactive = true;
     }
     this.sequenceManager.updateHighlighting(this.path);
   }
 
-  private _regenerate(): void {
+  public regenerate(): void {
     // Switch to regenerate mode
     this.state = "regenerate";
-    this._refresh();
+    this.refresh();
 
     const regen = () => {
       const newNucleotides = this.grid.fillHoles();
@@ -488,8 +410,8 @@ export class Level extends entity.CompositeEntity {
           new entity.FunctionCallEntity(() => {
             this.state = "crunch";
 
-            this._endTurn();
-            this._refresh();
+            this.endTurn();
+            this.refresh();
           }),
         ])
       );
@@ -502,7 +424,7 @@ export class Level extends entity.CompositeEntity {
     }
   }
 
-  private _onInfection(infectionCount = 1): void {
+  public onInfection(infectionCount = 1): void {
     this.wasInfected = true;
 
     if (this.grid.isGameOver()) {
