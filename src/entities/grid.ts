@@ -4,7 +4,6 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 
 import * as crisprUtil from "../crisprUtil";
-import * as game from "../game";
 
 import * as nucleotide from "./nucleotide";
 

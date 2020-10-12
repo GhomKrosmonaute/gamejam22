@@ -8,7 +8,6 @@ import * as levels from "../levels";
 
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
-import * as easing from "booyah/dist/easing";
 
 export class Minimap extends entity.CompositeEntity {
   private background: PIXI.Sprite;

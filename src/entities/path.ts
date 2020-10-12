@@ -1,8 +1,11 @@
 import * as PIXI from "pixi.js";
-import * as _ from "underscore";
+
 import * as entity from "booyah/src/entity";
+
 import * as nucleotide from "./nucleotide";
+
 import * as level from "../scenes/level";
+
 import * as anim from "../animations";
 
 /**
