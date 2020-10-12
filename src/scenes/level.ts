@@ -99,7 +99,10 @@ export class Hook<
       this.emitter,
       this.options.event,
       (...params) => {
-        if (!this.options.filter || this.options.filter(...params)) {
+        if (
+          !this.options.filter ||
+          this.options.filter.bind(this.emitter)(...params)
+        ) {
           this._activateChildEntity(this.options.entity, this.level.config);
         }
       }
@@ -112,6 +115,7 @@ export interface LevelEvents {
   infected: [];
   pathUpdated: [];
   ringReached: [ring: hud.Ring, index: number];
+  sequenceDown: [];
   scoreUpdated: [score: number];
   clickedBonus: [bonus: bonuses.Bonus];
   maxScoreReached: [];
@@ -331,11 +335,11 @@ export class Level extends entity.CompositeEntity {
   }
 
   gameOver() {
-    const endLevelPopup = new popup.TerminatedLevelPopup();
-    this._once(endLevelPopup, "closed", () => {
-      this._transition = entity.makeTransition();
-    });
-    this._activateChildEntity(endLevelPopup, this.config);
+    this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
+  }
+
+  exit() {
+    this._transition = entity.makeTransition();
   }
 
   addScore(score: number) {

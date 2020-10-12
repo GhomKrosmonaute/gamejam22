@@ -519,6 +519,7 @@ export class Sequence extends entity.CompositeEntity {
         const end = () => {
           this.level.sequenceManager.sequences.delete(this);
           this.level.disablingAnimations.delete("down");
+          this.level.emit("sequenceDown");
           this._transition = entity.makeTransition();
           callback?.();
         };

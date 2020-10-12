@@ -47,7 +47,7 @@ export const levels = {
         }),
       }),
       new level.Hook({
-        event: "maxScoreReached",
+        event: "sequenceDown",
         entity: new popup.TerminatedLevelPopup(),
       }),
     ],

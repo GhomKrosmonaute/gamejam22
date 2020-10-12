@@ -192,6 +192,10 @@ export class TerminatedLevelPopup extends Popup {
   }
 
   protected _setup() {
+    this._on(this, "closed", () => {
+      this.level.exit();
+    });
+
     const checks: { [k: string]: boolean } = {
       "Max score reached": this.level.score >= this.level.options.maxScore,
       "No virus has escaped": !this.level.someVirusHasEscaped,
