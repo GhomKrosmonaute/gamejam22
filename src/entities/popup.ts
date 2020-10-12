@@ -13,6 +13,7 @@ import * as level from "../scenes/level";
 export interface PopupOptions {
   withBackground: boolean;
   closeOnBackgroundClick: boolean;
+  adjustHeight: boolean;
   height: number;
   width: number;
 }
@@ -22,6 +23,7 @@ export const defaultPopupOptions = {
   closeOnBackgroundClick: false,
   width: crisprUtil.width * 0.8, // 864
   height: crisprUtil.height * 0.7, // 1344
+  adjustHeight: false,
 };
 
 /**
@@ -63,7 +65,7 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   get center(): PIXI.Point {
-    return new PIXI.Point(this.options.width / 2, this.options.height / 2);
+    return new PIXI.Point(this.width / 2, this.height / 2);
   }
 
   get width(): number {
@@ -71,11 +73,13 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   get height(): number {
-    return this.options.height;
+    return this.options.adjustHeight
+      ? this.background?.height || this._container.height
+      : this.options.height;
   }
 
   heightByPercentage(percent: number): number {
-    return crisprUtil.proportion(percent, 0, 100, 0, this.options.height);
+    return crisprUtil.proportion(percent, 0, 100, 0, this.height);
   }
 
   setup(frameInfo: entity.FrameInfo, entityConfig: entity.EntityConfig) {
@@ -88,8 +92,6 @@ export abstract class Popup extends entity.CompositeEntity {
           "images/popup_background.png"
         ].texture
       );
-      this.background.width = this.options.width;
-      this.background.height = this.options.height;
 
       this.container.addChildAt(this.background, 0);
 
@@ -108,6 +110,15 @@ export abstract class Popup extends entity.CompositeEntity {
     this._activateChildEntity(anim.popup(this._container, 700));
 
     this._activateChildEntity(this.shaker);
+  }
+
+  update(frameInfo: entity.FrameInfo) {
+    super.update(frameInfo);
+
+    if (this.options.withBackground) {
+      this.background.width = this.width;
+      this.background.height = this.height;
+    }
   }
 
   /**
@@ -181,7 +192,8 @@ export class TerminatedLevelPopup extends Popup {
 
   protected _setup() {
     const checks = {
-      "No infection & no bonus used": !this.level.wasInfected && !this.level.bonusesManager.wasBonusUsed,
+      "No infection & no bonus used":
+        !this.level.wasInfected && !this.level.bonusesManager.wasBonusUsed,
       "Max score reached": this.level.score >= this.level.options.maxScore,
       "No virus has escaped": !this.level.someVirusHasEscaped,
     };
@@ -334,11 +346,7 @@ export class TerminatedLevelPopup extends Popup {
 
           this.container.addChild(star);
 
-          this._activateChildEntity(
-            anim.popup(star, 400, () => {
-              resolve();
-            })
-          );
+          this._activateChildEntity(anim.popup(star, 400, resolve));
         },
       });
     }
@@ -346,6 +354,9 @@ export class TerminatedLevelPopup extends Popup {
 }
 
 export class TutorialPopup extends Popup {
+  private text: PIXI.Text;
+  private content: PIXI.Text;
+
   constructor(
     public _options: {
       title: string;
@@ -356,26 +367,30 @@ export class TutorialPopup extends Popup {
     super({
       withBackground: true,
       closeOnBackgroundClick: true,
+      adjustHeight: true,
     });
   }
 
   protected _setup() {
-    const text = crisprUtil.makeText(this._options.title, {
+    this.text = crisprUtil.makeText(this._options.title, {
       fontSize: 150,
       fill: 0xffffff,
       wordWrapWidth: this.width * 0.9,
       wordWrap: true,
     });
-    text.position.set(this.center.x, text.height / 2);
 
-    const content = crisprUtil.makeText(this._options.content, {
+    this.content = crisprUtil.makeText(this._options.content, {
       fill: 0xffffff,
       wordWrapWidth: this.width * 0.9,
       wordWrap: true,
     });
-    content.position.copyFrom(this.center);
 
-    this.container.addChild(text);
-    this.container.addChild(content);
+    this.container.addChild(this.text);
+    this.container.addChild(this.content);
+  }
+
+  protected _update() {
+    this.text.position.set(this.center.x, this.text.height / 2);
+    this.content.position.copyFrom(this.center);
   }
 }

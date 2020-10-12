@@ -38,8 +38,8 @@ export const levels = {
         event: "setup",
         once: true,
         entity: new popup.TutorialPopup({
-          title: "Welcome inside my body.",
-          content: "Try to crunch-it!",
+          title: "Tutorial",
+          content: "Draw a line to make a sequence",
         }),
       },
     ],
