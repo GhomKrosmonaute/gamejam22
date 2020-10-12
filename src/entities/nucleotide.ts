@@ -413,7 +413,6 @@ export class Nucleotide extends entity.CompositeEntity {
   private _createAnimatedSprite(): entity.AnimatedSpriteEntity {
     let animatedSprite: entity.AnimatedSpriteEntity;
     if (this.type === "normal") {
-      this.generateColor();
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources[
           `images/nucleotide_${this.fullColorName}.json`

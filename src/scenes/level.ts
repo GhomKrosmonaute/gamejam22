@@ -112,7 +112,6 @@ export interface LevelEvents {
   clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
   activatedChildEntity: [entity: entity.Entity];
   deactivatedChildEntity: [entity: entity.Entity];
-  initiatedSequenceManager: [];
 }
 
 export class Level extends entity.CompositeEntity {
@@ -230,15 +229,6 @@ export class Level extends entity.CompositeEntity {
 
   private _initSequences() {
     this.sequenceManager = new sequence.SequenceManager();
-
-    this._on(this, "activatedChildEntity", (child: entity.Entity) => {
-      if (child !== this.sequenceManager) return;
-
-      this.sequenceManager.add();
-
-      this.emit("initiatedSequenceManager");
-    });
-
     this._activateChildEntity(this.sequenceManager, this.config);
   }
 

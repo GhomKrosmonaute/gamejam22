@@ -191,11 +191,17 @@ export class Grid extends entity.CompositeEntity {
     const alreadyPassed: nucleotide.Nucleotide[] = [];
     const colorNames: nucleotide.ColorName[] = [];
 
-    let current = crisprUtil.random(this.nucleotides);
+    const normals = this.nucleotides.filter((n) => n.type === "normal");
 
-    while (current.type !== "normal") {
-      current = crisprUtil.random(this.nucleotides);
+    console.log(normals.map((n) => n.colorName));
+
+    if (normals.length < length) {
+      return null;
     }
+
+    let current = crisprUtil.random(normals);
+
+    console.log("start by", current.colorName);
 
     while (colorNames.length < length) {
       alreadyPassed.push(current);
@@ -204,19 +210,24 @@ export class Grid extends entity.CompositeEntity {
       }
 
       const neighbors = this.getNeighbors(current).filter((n) => {
-        return (
-          !!n &&
-          !alreadyPassed.includes(n) &&
-          (n.type === "normal" || n.type === "scissors")
-        );
+        return !!n && !alreadyPassed.includes(n);
       });
 
       if (neighbors.length === 0) {
         return null;
       }
 
+      console.log(
+        "available neighbors",
+        neighbors.map((n) => n.colorName)
+      );
+
       current = crisprUtil.random(neighbors);
+
+      console.log("next", current.colorName);
     }
+
+    console.log("output", colorNames);
 
     return colorNames;
   }
