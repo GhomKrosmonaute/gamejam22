@@ -181,10 +181,9 @@ export class TerminatedLevelPopup extends Popup {
 
   protected _setup() {
     const checks = {
-      "No infection": !this.level.wasInfected,
+      "No infection & no bonus used": !this.level.wasInfected && !this.level.bonusesManager.wasBonusUsed,
       "Max score reached": this.level.score >= this.level.options.maxScore,
       "No virus has escaped": !this.level.someVirusHasEscaped,
-      "No bonus used": !this.level.bonusesManager.wasBonusUsed,
     };
 
     const starCount = Object.values(checks).filter((check) => check).length;
