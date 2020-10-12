@@ -197,9 +197,13 @@ export class TerminatedLevelPopup extends Popup {
     });
 
     const checks: { [k: string]: boolean } = {
-      "Max score reached": this.level.score >= this.level.options.maxScore,
       "No virus has escaped": !this.level.someVirusHasEscaped,
     };
+
+    if (!this.level.options.disableScore) {
+      checks["Max score reached"] =
+        this.level.score >= this.level.options.maxScore;
+    }
 
     if (this.level.options.disableBonuses) {
       checks["Not infected"] = !this.level.wasInfected;
@@ -208,6 +212,8 @@ export class TerminatedLevelPopup extends Popup {
     }
 
     const starCount = Object.values(checks).filter((check) => check).length;
+    const starTotalCount = Object.values(checks).length;
+    const starRatio = starCount / starTotalCount;
 
     // add checks content
     {
@@ -237,34 +243,30 @@ export class TerminatedLevelPopup extends Popup {
     {
       let title: PIXI.Text;
 
-      switch (starCount) {
-        case 1:
-          title = crisprUtil.makeText("Well done", {
-            fontSize: 150,
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
-          break;
-        case 2:
-          title = crisprUtil.makeText("Great!", {
-            fontSize: 200,
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
-          break;
-        case 3:
-          title = crisprUtil.makeText("Awesome!", {
-            fontSize: 250,
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
-          break;
-        default:
-          title = crisprUtil.makeText("Too bad...", {
-            fontSize: 100,
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
+      if (starRatio >= 1) {
+        title = crisprUtil.makeText("Awesome!", {
+          fontSize: 250,
+          stroke: 0xffffff,
+          strokeThickness: 10,
+        });
+      } else if (starRatio >= 2 / 3) {
+        title = crisprUtil.makeText("Great!", {
+          fontSize: 200,
+          stroke: 0xffffff,
+          strokeThickness: 10,
+        });
+      } else if (starRatio >= 1 / 3) {
+        title = crisprUtil.makeText("Well done", {
+          fontSize: 150,
+          stroke: 0xffffff,
+          strokeThickness: 10,
+        });
+      } else {
+        title = crisprUtil.makeText("Too bad...", {
+          fontSize: 100,
+          stroke: 0xffffff,
+          strokeThickness: 10,
+        });
         // todo: retry button
       }
 
@@ -273,7 +275,7 @@ export class TerminatedLevelPopup extends Popup {
     }
 
     // add score
-    {
+    if (!this.level.options.disableScore) {
       const score = crisprUtil.makeText(
         `Score: ${this.level.score} pts (${crisprUtil.proportion(
           this.level.score,
@@ -302,7 +304,7 @@ export class TerminatedLevelPopup extends Popup {
           from: 0,
           to: this.level.score,
           easing: easing.easeInQuad,
-          duration: 3000,
+          duration: 1000,
           onUpdate: (value) =>
             (score.text = `Score: ${Math.floor(value)} pts (${Math.floor(
               crisprUtil.proportion(
@@ -324,7 +326,7 @@ export class TerminatedLevelPopup extends Popup {
         sequence: Object.keys(checks),
         timeBetween: 200,
         delay: 500,
-        onStep: (resolve, check, index) => {
+        onStep: (resolve, check, index, arr) => {
           const star = new PIXI.Sprite(
             this._entityConfig.app.loader.resources["images/star.png"].texture
           );
@@ -338,20 +340,49 @@ export class TerminatedLevelPopup extends Popup {
 
           star.position.y = this.center.y - 200;
 
-          switch (index) {
-            case 0:
-              star.position.x = 150;
-              star.angle = -10;
-              break;
-            case 1:
-              star.position.x = this.center.x;
-              star.position.y -= 30;
-              break;
-            case 2:
-              star.position.x = this.width - 150;
-              star.angle = 10;
-              break;
-          }
+          star.position.y +=
+            crisprUtil.proportion(
+              index,
+              0,
+              (arr.length - 1) / 2,
+              0,
+              -30,
+              true
+            ) +
+            crisprUtil.proportion(
+              index,
+              (arr.length - 1) / 2,
+              arr.length - 1,
+              0,
+              30,
+              true
+            );
+
+          star.position.x = crisprUtil.proportion(
+            index,
+            0,
+            arr.length - 1,
+            150,
+            this.width - 150,
+            true
+          );
+
+          star.angle = crisprUtil.proportion(index, 0, arr.length - 1, -10, 10);
+
+          // switch (index) {
+          //   case 0:
+          //     star.position.x = 150;
+          //     star.angle = -10;
+          //     break;
+          //   case 1:
+          //     star.position.x = this.center.x;
+          //     star.position.y -= 30;
+          //     break;
+          //   case 2:
+          //     star.position.x = this.width - 150;
+          //     star.angle = 10;
+          //     break;
+          // }
 
           this.container.addChild(star);
 

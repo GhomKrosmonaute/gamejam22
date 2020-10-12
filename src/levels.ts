@@ -37,6 +37,7 @@ export const levels = {
     disableButton: true,
     disableBonuses: true,
     disableGauge: true,
+    disableScore: true,
     hooks: [
       new level.Hook({
         event: "setup",

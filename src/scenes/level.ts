@@ -24,6 +24,7 @@ export interface LevelOptions {
   disableBonuses: boolean;
   disableButton: boolean;
   disableGauge: boolean;
+  disableScore: boolean;
   variant: LevelVariant;
   maxScore: number;
   dropSpeed: number;
@@ -46,7 +47,8 @@ export interface LevelOptions {
 export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableBonuses: false,
   disableButton: false,
-  disableGauge: true,
+  disableGauge: false,
+  disableScore: false,
   variant: "turnBased",
   dropSpeed: 0.001,
   maxScore: 1000,
@@ -331,6 +333,7 @@ export class Level extends entity.CompositeEntity {
   _teardown() {
     this.container.removeChildren();
     this._entityConfig.container.removeChildren();
+    this.disablingAnimations.clear();
     this.removeAllListeners();
   }
 
