@@ -1,11 +1,18 @@
 import * as level from "./scenes/level";
 
 import * as popup from "./entities/popup";
+import * as bonuses from "./entities/bonus";
 
 export const levels = {
   // first real level
   "Level 1": new level.Level({
     variant: "turnBased",
+    initialBonuses: [
+      {
+        bonus: bonuses.swapBonus,
+        quantity: 3,
+      },
+    ],
   }),
 
   // Infections
