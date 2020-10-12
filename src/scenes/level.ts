@@ -73,22 +73,22 @@ export type LevelEventParams<
   EventName extends LevelEventName
 > = LevelEvents[EventName];
 
+export interface HookOptions<Entity, EventName extends LevelEventName> {
+  event: EventName;
+  /** Filter function, trigger hook if it returns `true` */
+  filter?: (...params: LevelEventParams<EventName>) => boolean | void;
+  /** Entity to activate on hook is triggered */
+  entity: Entity;
+  once?: true;
+}
+
 export class Hook<
-  E extends entity.Entity = entity.Entity,
+  Entity extends entity.Entity = entity.Entity,
   EventName extends LevelEventName = LevelEventName
 > extends entity.CompositeEntity {
   public emitter: PIXI.utils.EventEmitter;
 
-  constructor(
-    private options: {
-      event: EventName;
-      /** Filter function, trigger hook if it returns `true` */
-      filter?: (...params: LevelEventParams<EventName>) => boolean | void;
-      /** Entity to activate on hook is triggered */
-      entity: E;
-      once?: true;
-    }
-  ) {
+  constructor(private options: HookOptions<Entity, EventName>) {
     super();
   }
 
