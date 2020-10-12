@@ -193,15 +193,11 @@ export class Grid extends entity.CompositeEntity {
 
     const normals = this.nucleotides.filter((n) => n.type === "normal");
 
-    console.log(normals.map((n) => n.colorName));
-
     if (normals.length < length) {
       return null;
     }
 
     let current = crisprUtil.random(normals);
-
-    console.log("start by", current.colorName);
 
     while (colorNames.length < length) {
       alreadyPassed.push(current);
@@ -217,17 +213,8 @@ export class Grid extends entity.CompositeEntity {
         return null;
       }
 
-      console.log(
-        "available neighbors",
-        neighbors.map((n) => n.colorName)
-      );
-
       current = crisprUtil.random(neighbors);
-
-      console.log("next", current.colorName);
     }
-
-    console.log("output", colorNames);
 
     return colorNames;
   }
