@@ -223,7 +223,9 @@ export class GoButton extends entity.CompositeEntity {
   }
 
   protected _update() {
-    const disabled = this.level.isDisablingAnimationInProgress;
+    const disabled =
+      this.level.options.disableButton ||
+      this.level.isDisablingAnimationInProgress;
     this.sprite.buttonMode = !disabled;
     this.sprite.interactive = !disabled;
     this.text.style.fill = !disabled ? "#000000" : "#4e535d";

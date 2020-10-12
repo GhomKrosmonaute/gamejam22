@@ -45,7 +45,6 @@ export const fullColorNames: { [k in ColorName]: string } = {
 export class Nucleotide extends entity.CompositeEntity {
   public _container: PIXI.Container;
   public type: NucleotideType = "normal";
-  public colorName: ColorName = getRandomColorName();
   public isHovered = false;
   public isHearthBeatActive = false;
   public shakes: anim.DisplayObjectShakesManager;
@@ -69,7 +68,8 @@ export class Nucleotide extends entity.CompositeEntity {
     public readonly fullRadius: number,
     public parent: "grid" | "sequence",
     position = new PIXI.Point(),
-    public rotation = 0
+    public rotation = 0,
+    public colorName: ColorName = getRandomColorName()
   ) {
     super();
 

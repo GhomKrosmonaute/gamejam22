@@ -48,7 +48,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
     this.options = util.fillInOptions(options, defaultPopupOptions);
 
-    this._id = "popup:" + Math.random();
+    this._id = "popup";
 
     this.container.position.set(
       this.options.width * -0.5,
@@ -191,12 +191,16 @@ export class TerminatedLevelPopup extends Popup {
   }
 
   protected _setup() {
-    const checks = {
-      "No infection & no bonus used":
-        !this.level.wasInfected && !this.level.bonusesManager.wasBonusUsed,
+    const checks: { [k: string]: boolean } = {
       "Max score reached": this.level.score >= this.level.options.maxScore,
       "No virus has escaped": !this.level.someVirusHasEscaped,
     };
+
+    if (this.level.options.disableBonuses) {
+      checks["Not infected"] = !this.level.wasInfected;
+    } else {
+      checks["No bonus used"] = !this.level.bonusesManager.wasBonusUsed;
+    }
 
     const starCount = Object.values(checks).filter((check) => check).length;
 

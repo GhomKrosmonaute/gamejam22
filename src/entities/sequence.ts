@@ -314,13 +314,16 @@ export class Sequence extends entity.CompositeEntity {
     this.virus = new virus.Virus("mini");
 
     const id = "sequenceInjection:" + Math.random();
-    this.level.disablingAnimations.add(id);
 
     this._activateChildEntity(this.virus, this.level.config);
 
     return new entity.EntitySequence([
       new entity.FunctionalEntity({
-        requestTransition: () => this.virus.isSetup,
+        requestTransition: () =>
+          this.virus.isSetup && !this.level.disablingAnimations.has("popup"),
+      }),
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimations.add(id);
       }),
       this.virus.come(),
       new entity.FunctionCallEntity(() => this._initNucleotides()),
@@ -336,8 +339,6 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _initNucleotides() {
-    // todo: force matching if level forceMatching flag is true
-
     const {
       width,
       height,
@@ -362,12 +363,9 @@ export class Sequence extends entity.CompositeEntity {
         this.level.options.sequenceNucleotideRadius,
         "sequence",
         position,
-        Math.random()
+        Math.random(),
+        this.level.options.forceMatching ? forcedSequence[i] : null
       );
-
-      if (this.level.options.forceMatching) {
-        n.colorName = forcedSequence[i];
-      }
 
       if (this.virus) {
         crisprUtil.positionAlongMembrane(n.position, this.virus.angle);

@@ -125,7 +125,9 @@ export class Grid extends entity.CompositeEntity {
 
     let hovered: nucleotide.Nucleotide;
 
-    const bonus = this.level.bonusesManager.getSelectedBonus();
+    const bonus = this.level.options.disableBonuses
+      ? null
+      : this.level.bonusesManager.getSelectedBonus();
     if (!bonus) {
       hovered = this.getHovered();
       if (!hovered) return;

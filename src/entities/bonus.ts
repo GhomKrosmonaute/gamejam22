@@ -254,12 +254,24 @@ export const syringeBonus = new SyringeBonus();
 export const healBonus = new HealBonus();
 export const swapBonus = new SwapBonus();
 
+export interface InitialBonus {
+  bonus: Bonus;
+  quantity?: number;
+}
+
+export type InitialBonuses = InitialBonus[];
+
 export class BonusesManager extends entity.CompositeEntity {
   public container: PIXI.Container;
   public bonuses: Bonus[] = [];
   public selected: string;
   public shakeAmount = 3;
   public wasBonusUsed = false;
+  private bonusBackground: PIXI.Sprite;
+
+  constructor(private initialBonuses: InitialBonuses) {
+    super();
+  }
 
   get level(): level.Level {
     return this._entityConfig.level;
@@ -269,7 +281,17 @@ export class BonusesManager extends entity.CompositeEntity {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
 
-    this.add(swapBonus, 5).add(healBonus).add(syringeBonus);
+    this.bonusBackground = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources[
+        "images/hud_bonus_background.png"
+      ].texture
+    );
+    this.bonusBackground.position.set(
+      this._entityConfig.app.view.width * 0.07,
+      this._entityConfig.app.view.height * 0.88
+    );
+    this.bonusBackground.scale.set(0.65);
+    this.container.addChild(this.bonusBackground);
 
     this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
       if (bonus instanceof Bonus) {
@@ -300,6 +322,10 @@ export class BonusesManager extends entity.CompositeEntity {
           })
         );
       }
+    });
+
+    this.initialBonuses.forEach(({ bonus, quantity }) => {
+      this.add(bonus, quantity ?? 1);
     });
   }
 

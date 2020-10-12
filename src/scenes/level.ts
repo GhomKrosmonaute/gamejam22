@@ -21,6 +21,8 @@ export type LevelVariant = "turnBased" | "continuous" | "long";
 export type LevelState = "crunch" | "regenerate" | "bonus";
 
 export interface LevelOptions {
+  disableBonuses: boolean;
+  disableButton: boolean;
   variant: LevelVariant;
   maxScore: number;
   dropSpeed: number;
@@ -37,9 +39,12 @@ export interface LevelOptions {
   gridShape: grid.GridShape;
   forceMatching: boolean;
   hooks: Hook[];
+  initialBonuses: bonuses.InitialBonuses;
 }
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
+  disableBonuses: false,
+  disableButton: false,
   variant: "turnBased",
   dropSpeed: 0.001,
   maxScore: 1000,
@@ -56,6 +61,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   gridShape: "full",
   forceMatching: false,
   hooks: [],
+  initialBonuses: [],
 };
 
 export type LevelEventName = keyof LevelEvents;
@@ -63,29 +69,50 @@ export type LevelEventParams<
   EventName extends LevelEventName
 > = LevelEvents[EventName];
 
-export interface Hook<
+export class Hook<
   E extends entity.Entity = entity.Entity,
   EventName extends LevelEventName = LevelEventName
-> {
-  event: EventName;
-  /** Filter function, trigger hook if it returns `true` */
-  filter?: (...params: LevelEventParams<EventName>) => boolean | void;
-  /** Entity to activate on hook is triggered */
-  entity: E;
-  once?: true;
+> extends entity.CompositeEntity {
+  public emitter: PIXI.utils.EventEmitter;
+
+  constructor(
+    private options: {
+      event: EventName;
+      /** Filter function, trigger hook if it returns `true` */
+      filter?: (...params: LevelEventParams<EventName>) => boolean | void;
+      /** Entity to activate on hook is triggered */
+      entity: E;
+      once?: true;
+    }
+  ) {
+    super();
+  }
+
+  protected _setup() {
+    this[this.options.once ? "_once" : "_on"](
+      this.emitter,
+      this.options.event,
+      (...params) => {
+        if (!this.options.filter || this.options.filter(...params)) {
+          this._activateChildEntity(this.options.entity);
+        }
+      }
+    );
+  }
 }
 
 export interface LevelEvents {
   setup: [];
+  infected: [];
   pathUpdated: [];
-  maxScoreReached: [];
   ringReached: [ring: hud.Ring, index: number];
   scoreUpdated: [score: number];
-  initiatedSequenceManager: [];
-  clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
   clickedBonus: [bonus: bonuses.Bonus];
+  maxScoreReached: [];
+  clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
   activatedChildEntity: [entity: entity.Entity];
   deactivatedChildEntity: [entity: entity.Entity];
+  initiatedSequenceManager: [];
 }
 
 export class Level extends entity.CompositeEntity {
@@ -103,7 +130,6 @@ export class Level extends entity.CompositeEntity {
   public path: path.Path;
   public grid: grid.Grid;
   public state: LevelState = "crunch";
-  private bonusBackground: PIXI.Sprite;
   private goButton: hud.GoButton;
 
   // game
@@ -152,10 +178,8 @@ export class Level extends entity.CompositeEntity {
 
   private _initHooks() {
     this.options.hooks.forEach((hook) => {
-      this[hook.once ? "once" : "on"](hook.event, (...params) => {
-        if (!hook.filter || hook.filter(...params))
-          this._activateChildEntity(hook.entity);
-      });
+      hook.emitter = this;
+      this._activateChildEntity(hook);
     });
   }
 
@@ -229,18 +253,10 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initBonuses() {
-    this.bonusBackground = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/hud_bonus_background.png"
-      ].texture
+    if (this.options.disableBonuses) return;
+    this.bonusesManager = new bonuses.BonusesManager(
+      this.options.initialBonuses
     );
-    this.bonusBackground.position.set(
-      this._entityConfig.app.view.width * 0.07,
-      this._entityConfig.app.view.height * 0.88
-    );
-    this.bonusBackground.scale.set(0.65);
-    this.container.addChild(this.bonusBackground);
-    this.bonusesManager = new bonuses.BonusesManager();
     this._activateChildEntity(this.bonusesManager, this.config);
   }
 
@@ -348,7 +364,7 @@ export class Level extends entity.CompositeEntity {
     this.disablingAnimations.add("game");
 
     if (this.grid.isGameOver()) {
-      this._transition = entity.makeTransition("game_over");
+      this.gameOver();
       return;
     }
 
@@ -458,11 +474,13 @@ export class Level extends entity.CompositeEntity {
   }
 
   public onInfection(infectionCount = 1): void {
+    this.emit("infected");
+
     this.disablingAnimations.add("game");
     this.wasInfected = true;
 
     if (this.grid.isGameOver()) {
-      this._transition = entity.makeTransition("game_over");
+      this.gameOver();
       return;
     }
 
