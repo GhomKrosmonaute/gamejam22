@@ -27,6 +27,7 @@ export class Path extends entity.CompositeEntity {
     );
 
     this._on(this, "updated", () => {
+      this.level.emit("pathUpdated");
       this.refresh();
     });
   }

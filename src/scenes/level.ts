@@ -8,6 +8,7 @@ import * as anim from "../animations";
 
 import * as minimap from "./minimap";
 
+import * as nucleotide from "../entities/nucleotide";
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
 import * as popup from "../entities/popup";
@@ -35,6 +36,7 @@ export interface LevelOptions {
   endsBy: "maxScoreReached" | "none";
   gridShape: grid.GridShape;
   forceMatching: boolean;
+  hooks: Hook[];
 }
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
@@ -53,30 +55,44 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   endsBy: "maxScoreReached",
   gridShape: "full",
   forceMatching: false,
+  hooks: [],
 };
 
-/**
- * Emits:
- * - maxScoreReached()
- * - ringReached(ring: PIXI.Sprite, index: number)
- * - scoreUpdated(score: number)
- * - initiatedSequenceManager
- */
+export type LevelEventName = keyof LevelEvents;
+export type LevelEventParams<
+  EventName extends LevelEventName
+> = LevelEvents[EventName];
+
+export interface Hook<
+  E extends entity.Entity = entity.Entity,
+  EventName extends LevelEventName = LevelEventName
+> {
+  event: EventName;
+  /** Filter function, trigger hook if it returns `true` */
+  filter?: (...params: LevelEventParams<EventName>) => boolean | void;
+  /** Entity to activate on hook is triggered */
+  entity: E;
+  once?: true;
+}
+
+export interface LevelEvents {
+  setup: [];
+  pathUpdated: [];
+  maxScoreReached: [];
+  ringReached: [ring: hud.Ring, index: number];
+  scoreUpdated: [score: number];
+  initiatedSequenceManager: [];
+  clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
+  clickedBonus: [bonus: bonuses.Bonus];
+  activatedChildEntity: [entity: entity.Entity];
+  deactivatedChildEntity: [entity: entity.Entity];
+}
+
 export class Level extends entity.CompositeEntity {
   // system
   /**
-   * Disable continuous events while `disablingAnimations` contains one or more elements.
-   *
+   * Disable continuous events while `disablingAnimations` contains one or more elements. <br>
    * **Flag accessor**: `<Level>.isDisablingAnimationInProgress`
-   *
-   * set a disabling animation:
-   * ```ts
-   * disablingAnimations.add(identifier as string)
-   * ```
-   * remove a disabling animation:
-   * ```ts
-   * disablingAnimations.delete(identifier as string)
-   * ```
    */
   public disablingAnimations: Set<string> = new Set();
   public container = new PIXI.Container();
@@ -102,6 +118,24 @@ export class Level extends entity.CompositeEntity {
     this.score = this.options.baseScore;
   }
 
+  emit<K extends LevelEventName>(event: K, ...params: LevelEventParams<K>) {
+    return super.emit(event, ...params);
+  }
+
+  on<K extends LevelEventName>(
+    event: K,
+    callback: (...params: LevelEventParams<K>) => any
+  ): this {
+    return super.on(event, callback);
+  }
+
+  once<K extends LevelEventName>(
+    event: K,
+    callback: (...params: LevelEventParams<K>) => any
+  ): this {
+    return super.once(event, callback);
+  }
+
   get minimap(): minimap.Minimap {
     return this._entityConfig.minimap;
   }
@@ -114,6 +148,15 @@ export class Level extends entity.CompositeEntity {
 
   get cursor(): PIXI.Point {
     return this.grid.cursor;
+  }
+
+  private _initHooks() {
+    this.options.hooks.forEach((hook) => {
+      this[hook.once ? "once" : "on"](hook.event, (...params) => {
+        if (!hook.filter || hook.filter(...params))
+          this._activateChildEntity(hook.entity);
+      });
+    });
   }
 
   private _initBackground() {
@@ -145,7 +188,7 @@ export class Level extends entity.CompositeEntity {
 
   private _initPath() {
     this.path = new path.Path();
-    this._on(this.path, "updated", this.refresh);
+    this.on("pathUpdated", this.refresh);
     this._activateChildEntity(this.path, this.config);
   }
 
@@ -206,18 +249,18 @@ export class Level extends entity.CompositeEntity {
       this.options.gaugeRingCount,
       this.options.maxScore
     );
-    this._on(this, "activatedChildEntity", (entity: entity.EntityBase) => {
+    this.on("activatedChildEntity", (entity) => {
       if (entity === this.gauge) {
         this.gauge.setValue(0);
       }
     });
     this._activateChildEntity(this.gauge, this.config);
-    this._on(this.gauge, "ringReached", (ring: hud.Ring) => {
+    this.on("ringReached", (ring) => {
       ring.tint = 0x6bffff;
       this._activateChildEntity(anim.tweenShaking(ring, 1000, 6, 0));
     });
     // setup shockwave on max score is reached
-    this._on(this, "maxScoreReached", () => {
+    this.on("maxScoreReached", () => {
       this.gauge.bubbleRings({
         timeBetween: 100,
         forEach: (ring: hud.Ring) => {
@@ -236,6 +279,7 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
 
+    this._initHooks();
     this._initBackground();
     this._initGrid();
     this._initPath();
@@ -250,6 +294,8 @@ export class Level extends entity.CompositeEntity {
 
     this.wasInfected = false;
     this.someVirusHasEscaped = false;
+
+    this.emit("setup");
   }
 
   _update() {
@@ -270,6 +316,7 @@ export class Level extends entity.CompositeEntity {
   _teardown() {
     this.container.removeChildren();
     this._entityConfig.container.removeChildren();
+    this.removeAllListeners();
   }
 
   gameOver() {

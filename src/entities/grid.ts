@@ -195,12 +195,10 @@ export class Grid extends entity.CompositeEntity {
       current = crisprUtil.random(this.nucleotides);
     }
 
-    for (let i = 0; i < length; i++) {
+    while (colorNames.length < length) {
       alreadyPassed.push(current);
       if (current.type === "normal") {
         colorNames.push(current.colorName);
-      } else {
-        i--;
       }
 
       const neighbors = this.getNeighbors(current).filter((n) => {
@@ -217,8 +215,6 @@ export class Grid extends entity.CompositeEntity {
 
       current = crisprUtil.random(neighbors);
     }
-
-    if (colorNames.length !== length) throw new Error("oops");
 
     return colorNames;
   }

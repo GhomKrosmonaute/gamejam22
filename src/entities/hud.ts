@@ -13,10 +13,6 @@ import * as level from "../scenes/level";
  */
 export type Ring = PIXI.Sprite & { base?: PIXI.Point };
 
-/**
- * Emits:
- * - ringReached( ring: Ring, index: number )
- */
 export class Gauge extends entity.CompositeEntity {
   private _container = new PIXI.Container();
   private _rings = new PIXI.Container();
@@ -29,6 +25,10 @@ export class Gauge extends entity.CompositeEntity {
 
   constructor(private _ringCount: number, private _maxValue: number) {
     super();
+  }
+
+  get level(): level.Level {
+    return this._entityConfig.level;
   }
 
   /**
@@ -136,7 +136,11 @@ export class Gauge extends entity.CompositeEntity {
       ring.base.copyFrom(position);
 
       this._once(ring, "reached", () => {
-        this.emit("ringReached", ring, this._rings.children.indexOf(ring));
+        this.level.emit(
+          "ringReached",
+          ring,
+          this._rings.children.indexOf(ring)
+        );
       });
 
       this._rings.addChild(ring);

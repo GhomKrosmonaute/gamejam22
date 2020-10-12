@@ -1,5 +1,7 @@
 import * as level from "./scenes/level";
 
+import * as popup from "./entities/popup";
+
 export const levels = {
   // first real level
   "Level 1": new level.Level({
@@ -31,6 +33,16 @@ export const levels = {
     forceMatching: true,
     gaugeRingCount: 0,
     maxScore: 50,
+    hooks: [
+      {
+        event: "setup",
+        once: true,
+        entity: new popup.TutorialPopup({
+          title: "Welcome inside my body.",
+          content: "Try to crunch-it!",
+        }),
+      },
+    ],
   }),
 };
 

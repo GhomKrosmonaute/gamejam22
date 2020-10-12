@@ -3,11 +3,26 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
+import * as util from "booyah/src/util";
 
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
 
 import * as level from "../scenes/level";
+
+export interface PopupOptions {
+  withBackground: boolean;
+  closeOnBackgroundClick: boolean;
+  height: number;
+  width: number;
+}
+
+export const defaultPopupOptions = {
+  withBackground: false,
+  closeOnBackgroundClick: false,
+  width: crisprUtil.width * 0.8, // 864
+  height: crisprUtil.height * 0.7, // 1344
+};
 
 /**
  * Emits:
@@ -21,20 +36,22 @@ export abstract class Popup extends entity.CompositeEntity {
   public shaker: anim.DisplayObjectShakesManager;
   public background?: PIXI.Sprite;
 
-  public readonly width = crisprUtil.width * 0.8; // 864
-  public readonly height = crisprUtil.height * 0.7; // 1344
-  public readonly center = new PIXI.Point(this.width / 2, this.height / 2);
-
   /** popup body container */
   public readonly container = new PIXI.Container();
 
   // todo: add an optional popup background as sprite
 
-  constructor(public readonly withBackground: boolean = false) {
+  constructor(public readonly options: Partial<PopupOptions>) {
     super();
+
+    this.options = util.fillInOptions(options, defaultPopupOptions);
+
     this._id = "popup:" + Math.random();
 
-    this.container.position.set(this.width * -0.5, this.height * -0.5);
+    this.container.position.set(
+      this.options.width * -0.5,
+      this.options.height * -0.5
+    );
     this._container.position.set(crisprUtil.width / 2, crisprUtil.height / 2);
     this._container.addChild(this.container);
 
@@ -45,21 +62,43 @@ export abstract class Popup extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
+  get center(): PIXI.Point {
+    return new PIXI.Point(this.options.width / 2, this.options.height / 2);
+  }
+
+  get width(): number {
+    return this.options.width;
+  }
+
+  get height(): number {
+    return this.options.height;
+  }
+
+  heightByPercentage(percent: number): number {
+    return crisprUtil.proportion(percent, 0, 100, 0, this.options.height);
+  }
+
   setup(frameInfo: entity.FrameInfo, entityConfig: entity.EntityConfig) {
     super.setup(frameInfo, entityConfig);
 
     // background
-    if (this.withBackground) {
+    if (this.options.withBackground) {
       this.background = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
           "images/popup_background.png"
         ].texture
       );
-      this.background.width = this.width;
-      this.background.height = this.height;
+      this.background.width = this.options.width;
+      this.background.height = this.options.height;
 
       this.container.addChildAt(this.background, 0);
-      this.emit("backgroundLoaded", this.background);
+
+      // use background as closure button
+      if (this.options.closeOnBackgroundClick) {
+        this.button(this.background, () => {
+          this.close();
+        });
+      }
     }
 
     this.level.disablingAnimations.add(this._id);
@@ -134,7 +173,10 @@ export class TerminatedLevelPopup extends Popup {
   // todo: make popup with stars and score of level
 
   constructor() {
-    super(true);
+    super({
+      withBackground: true,
+      closeOnBackgroundClick: true,
+    });
   }
 
   protected _setup() {
@@ -301,31 +343,25 @@ export class TerminatedLevelPopup extends Popup {
         },
       });
     }
-
-    // use background as closure button
-    if (this.withBackground) {
-      this._once(this, "backgroundLoaded", (background: PIXI.Sprite) => {
-        this.button(background, () => {
-          this.close();
-        });
-      });
-    }
   }
 }
 
 export class TutorialPopup extends Popup {
   constructor(
-    public options: {
+    public _options: {
       title: string;
       content: string;
       exampleImage?: PIXI.Sprite;
     }
   ) {
-    super(true);
+    super({
+      withBackground: true,
+      closeOnBackgroundClick: true,
+    });
   }
 
   protected _setup() {
-    const text = crisprUtil.makeText(this.options.title, {
+    const text = crisprUtil.makeText(this._options.title, {
       fontSize: 150,
       fill: 0xffffff,
       wordWrapWidth: this.width * 0.9,
@@ -333,7 +369,7 @@ export class TutorialPopup extends Popup {
     });
     text.position.set(this.center.x, text.height / 2);
 
-    const content = crisprUtil.makeText(this.options.content, {
+    const content = crisprUtil.makeText(this._options.content, {
       fill: 0xffffff,
       wordWrapWidth: this.width * 0.9,
       wordWrap: true,
