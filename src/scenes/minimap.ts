@@ -2,11 +2,13 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as scroll from "booyah/src/scroll";
+import * as tween from "booyah/src/tween";
 
 import * as levels from "../levels";
 
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
+import * as easing from "booyah/dist/easing";
 
 export class Minimap extends entity.CompositeEntity {
   private background: PIXI.Sprite;
@@ -90,7 +92,28 @@ export class Minimap extends entity.CompositeEntity {
       });
 
       this._on(levelSprite, "pointerup", () => {
-        this.setLevel(<levels.LevelName>levelName);
+        levelSprite.filters = [new PIXI.filters.AlphaFilter(1)];
+        this._activateChildEntity(
+          new tween.Tween({
+            from: 0,
+            to: 1,
+            duration: 500,
+            onUpdate: (value) => {
+              levelSprite.scale.set(crisprUtil.proportion(value, 0, 1, 1, 10));
+              (levelSprite
+                .filters[0] as PIXI.filters.AlphaFilter).alpha = crisprUtil.proportion(
+                value,
+                0,
+                1,
+                1,
+                0
+              );
+            },
+            onTeardown: () => {
+              this.setLevel(<levels.LevelName>levelName);
+            },
+          })
+        );
       });
 
       levelSprite.addChild(text);
@@ -152,6 +175,7 @@ export class Minimap extends entity.CompositeEntity {
   }
 
   private setLevel(levelName: levels.LevelName) {
+    this;
     this._transition = entity.makeTransition(levelName);
   }
 }
