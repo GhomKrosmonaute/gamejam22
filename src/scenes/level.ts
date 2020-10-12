@@ -338,7 +338,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   gameOver() {
-    this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
+    this._activateChildEntity(new popup.TerminatedLevelPopup({}), this.config);
   }
 
   exit() {

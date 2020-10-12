@@ -51,12 +51,15 @@ export const levels = {
         once: true,
         entity: new popup.TutorialPopup({
           title: "Tutorial",
-          content: "Draw a line to make a sequence",
+          content:
+            "Try to crunch your first sequence! Simply reproduce on the grid the sequence which floats above.",
         }),
       }),
       new level.Hook({
         event: "sequenceDown",
-        entity: new popup.TerminatedLevelPopup(),
+        entity: new popup.TerminatedLevelPopup({
+          tutorial: true,
+        }),
       }),
     ],
   }),

@@ -184,7 +184,11 @@ export class ExamplePopup extends Popup {
 export class TerminatedLevelPopup extends Popup {
   // todo: make popup with stars and score of level
 
-  constructor() {
+  constructor(
+    private _options: {
+      tutorial?: boolean;
+    }
+  ) {
     super({
       withBackground: true,
       closeOnBackgroundClick: true,
@@ -196,19 +200,23 @@ export class TerminatedLevelPopup extends Popup {
       this.level.exit();
     });
 
-    const checks: { [k: string]: boolean } = {
-      "No virus has escaped": !this.level.someVirusHasEscaped,
-    };
+    const checks: { [k: string]: boolean } = {};
 
-    if (!this.level.options.disableScore) {
-      checks["Max score reached"] =
-        this.level.score >= this.level.options.maxScore;
-    }
-
-    if (this.level.options.disableBonuses) {
-      checks["Not infected"] = !this.level.wasInfected;
+    if (this._options.tutorial) {
+      checks["Finish tutorial part"] = true;
     } else {
-      checks["No bonus used"] = !this.level.bonusesManager.wasBonusUsed;
+      checks["No virus has escaped"] = !this.level.someVirusHasEscaped;
+
+      if (!this.level.options.disableScore) {
+        checks["Max score reached"] =
+          this.level.score >= this.level.options.maxScore;
+      }
+
+      if (this.level.options.disableBonuses) {
+        checks["Not infected"] = !this.level.wasInfected;
+      } else {
+        checks["No bonus used"] = !this.level.bonusesManager.wasBonusUsed;
+      }
     }
 
     const starCount = Object.values(checks).filter((check) => check).length;
