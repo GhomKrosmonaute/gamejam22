@@ -36,6 +36,7 @@ export const levels = {
     endsBy: "none",
     disableButton: true,
     disableBonuses: true,
+    disableGauge: true,
     hooks: [
       new level.Hook({
         event: "setup",
@@ -46,11 +47,8 @@ export const levels = {
         }),
       }),
       new level.Hook({
-        event: "scoreUpdated",
+        event: "maxScoreReached",
         entity: new popup.TerminatedLevelPopup(),
-        filter: (score) => {
-          return score > 0;
-        },
       }),
     ],
   }),

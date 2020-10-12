@@ -166,6 +166,8 @@ export class Gauge extends entity.CompositeEntity {
         this._activateChildEntity(anim.popup(ring, 200, resolve));
       },
     });
+
+    this.setValue(0);
   }
 
   _update() {
@@ -223,9 +225,7 @@ export class GoButton extends entity.CompositeEntity {
   }
 
   protected _update() {
-    const disabled =
-      this.level.options.disableButton ||
-      this.level.isDisablingAnimationInProgress;
+    const disabled = this.level.isDisablingAnimationInProgress;
     this.sprite.buttonMode = !disabled;
     this.sprite.interactive = !disabled;
     this.text.style.fill = !disabled ? "#000000" : "#4e535d";

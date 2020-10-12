@@ -48,7 +48,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
     this.options = util.fillInOptions(options, defaultPopupOptions);
 
-    this._id = "popup";
+    this._id = "popup:" + Math.random();
 
     this.container.position.set(
       this.options.width * -0.5,
@@ -104,11 +104,11 @@ export abstract class Popup extends entity.CompositeEntity {
     }
 
     this.level.disablingAnimations.add(this._id);
+    this.level.disablingAnimations.add("popup");
 
     this._entityConfig.container.addChild(this._container);
 
     this._activateChildEntity(anim.popup(this._container, 700));
-
     this._activateChildEntity(this.shaker);
   }
 
@@ -138,6 +138,7 @@ export abstract class Popup extends entity.CompositeEntity {
         this._entityConfig.container.removeChild(this._container);
         this.shaker.removeAllShakes();
         this.level.disablingAnimations.delete(this._id);
+        this.level.disablingAnimations.delete("popup");
         this._transition = entity.makeTransition();
         this.emit("closed");
       })

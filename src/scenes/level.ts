@@ -23,6 +23,7 @@ export type LevelState = "crunch" | "regenerate" | "bonus";
 export interface LevelOptions {
   disableBonuses: boolean;
   disableButton: boolean;
+  disableGauge: boolean;
   variant: LevelVariant;
   maxScore: number;
   dropSpeed: number;
@@ -45,6 +46,7 @@ export interface LevelOptions {
 export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableBonuses: false,
   disableButton: false,
+  disableGauge: true,
   variant: "turnBased",
   dropSpeed: 0.001,
   maxScore: 1000,
@@ -88,13 +90,17 @@ export class Hook<
     super();
   }
 
+  get level(): Level {
+    return this._entityConfig.level;
+  }
+
   protected _setup() {
     this[this.options.once ? "_once" : "_on"](
       this.emitter,
       this.options.event,
       (...params) => {
         if (!this.options.filter || this.options.filter(...params)) {
-          this._activateChildEntity(this.options.entity);
+          this._activateChildEntity(this.options.entity, this.level.config);
         }
       }
     );
@@ -238,6 +244,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initButton() {
+    if (this.options.disableButton) return;
+
     this.goButton = new hud.GoButton();
     this._activateChildEntity(this.goButton, this.config);
   }
@@ -251,15 +259,12 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initGauge() {
+    if (this.options.disableGauge) return;
+
     this.gauge = new hud.Gauge(
       this.options.gaugeRingCount,
       this.options.maxScore
     );
-    this.on("activatedChildEntity", (entity) => {
-      if (entity === this.gauge) {
-        this.gauge.setValue(0);
-      }
-    });
     this._activateChildEntity(this.gauge, this.config);
     this.on("ringReached", (ring) => {
       ring.tint = 0x6bffff;
@@ -340,10 +345,13 @@ export class Level extends entity.CompositeEntity {
       this.emit("maxScoreReached");
       this.score = this.options.maxScore;
     } else {
-      this.emit("scoreUpdated", score);
       this.score += score;
     }
-    this.gauge.setValue(this.score);
+    this.emit("scoreUpdated", score);
+
+    if (!this.options.disableGauge) {
+      this.gauge.setValue(this.score);
+    }
   }
 
   get isDisablingAnimationInProgress(): boolean {
@@ -415,7 +423,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   public setGoButtonText(text: string) {
-    this.goButton.setText(text);
+    if (!this.options.disableButton) this.goButton.setText(text);
   }
 
   public refresh(): void {
