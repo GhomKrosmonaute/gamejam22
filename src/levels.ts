@@ -7,6 +7,7 @@ export const levels = {
   // first real level
   "Level 1": new level.Level({
     variant: "turnBased",
+    maxScore: 200,
     initialBonuses: [
       {
         bonus: bonuses.swapBonus,
@@ -14,6 +15,14 @@ export const levels = {
       },
     ],
     hooks: [
+      new level.Hook({
+        event: "setup",
+        once: true,
+        entity: new popup.TutorialPopup({
+          title: "Enjoy!",
+          content: "Let's try the normal turn by turn level.\n\nReach 200 pts!",
+        }),
+      }),
       new level.Hook({
         event: "maxScoreReached",
         entity: new popup.TerminatedLevelPopup(),

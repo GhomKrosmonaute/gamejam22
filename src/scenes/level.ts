@@ -435,7 +435,7 @@ export class Level extends entity.CompositeEntity {
     });
 
     // Makes holes in the grid that corresponds to the used nucleotides
-    this.path.crunch();
+    this.path.crunch(() => {});
   }
 
   public setGoButtonText(text: string) {
