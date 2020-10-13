@@ -13,11 +13,42 @@ export const levels = {
         quantity: 3,
       },
     ],
+    hooks: [
+      new level.Hook({
+        event: "maxScoreReached",
+        entity: new popup.TerminatedLevelPopup(),
+      }),
+    ],
   }),
 
   // Infections
   "Tuto 3": new level.Level({
     variant: "turnBased",
+    gridShape: "medium",
+    scissorCount: 4,
+    sequenceLength: 6,
+    disableGauge: true,
+    disableScore: true,
+    disableBonuses: true,
+    disableExtraSequence: true,
+    checks: {
+      "Surviving infection": (level) => !level.failed,
+    },
+    hooks: [
+      new level.Hook({
+        event: "setup",
+        once: true,
+        entity: new popup.TutorialPopup({
+          title: "Tutorial",
+          content:
+            "If you no longer have a solution, click on the Skip button ... But beware of infection!",
+        }),
+      }),
+      new level.Hook({
+        event: "sequenceDown",
+        entity: new popup.TerminatedLevelPopup(),
+      }),
+    ],
   }),
 
   // Missing Scissors
@@ -25,10 +56,29 @@ export const levels = {
     variant: "turnBased",
     gridShape: "mini",
     scissorCount: 1,
-    sequenceLength: 3,
+    sequenceLength: 4,
     forceMatching: true,
-    gaugeRingCount: 0,
-    maxScore: 50,
+    disableButton: true,
+    disableBonuses: true,
+    disableGauge: true,
+    disableScore: true,
+    checks: {
+      "Includes scissors": () => true,
+    },
+    hooks: [
+      new level.Hook({
+        event: "setup",
+        once: true,
+        entity: new popup.TutorialPopup({
+          title: "Tutorial",
+          content: "Crunch a sequence, but includes scissors!",
+        }),
+      }),
+      new level.Hook({
+        event: "sequenceDown",
+        entity: new popup.TerminatedLevelPopup(),
+      }),
+    ],
   }),
 
   // Sequence de 3
@@ -38,13 +88,13 @@ export const levels = {
     scissorCount: 0,
     sequenceLength: 3,
     forceMatching: true,
-    gaugeRingCount: 0,
-    maxScore: 1,
-    endsBy: "none",
     disableButton: true,
     disableBonuses: true,
     disableGauge: true,
     disableScore: true,
+    checks: {
+      "Crunch a sequence": () => true,
+    },
     hooks: [
       new level.Hook({
         event: "setup",
@@ -57,9 +107,7 @@ export const levels = {
       }),
       new level.Hook({
         event: "sequenceDown",
-        entity: new popup.TerminatedLevelPopup({
-          tutorial: true,
-        }),
+        entity: new popup.TerminatedLevelPopup(),
       }),
     ],
   }),

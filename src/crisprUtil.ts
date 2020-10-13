@@ -106,14 +106,16 @@ export interface Range {
 /**
  * @param target
  * @param angle in degrees
+ * @param radius
+ * @param centerY
  */
 export function positionAlongMembrane(
   target: PIXI.DisplayObject | PIXI.Point,
-  angle: number
+  angle: number,
+  radius = 1337,
+  centerY = 320 + radius
 ): void {
   const rotation = geom.degreesToRadians(angle);
-  const radius = 1337;
-  const centerY = 320 + radius;
   if (target instanceof PIXI.Point) {
     target.set(
       radius * Math.cos(rotation + Math.PI / 2) + 1080 / 2,

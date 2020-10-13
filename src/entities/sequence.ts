@@ -351,7 +351,9 @@ export class Sequence extends entity.CompositeEntity {
 
     if (this.level.options.forceMatching) {
       forcedSequence = this.level.grid.getRandomPath(this.baseLength);
-      if (!forcedSequence) throw new Error("oops-bis");
+      while (!forcedSequence) {
+        forcedSequence = this.level.grid.getRandomPath(this.baseLength);
+      }
     }
 
     for (let i = 0; i < this.baseLength; i++) {

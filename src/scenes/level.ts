@@ -21,6 +21,7 @@ export type LevelVariant = "turnBased" | "continuous" | "long";
 export type LevelState = "crunch" | "regenerate" | "bonus";
 
 export interface LevelOptions {
+  disableExtraSequence: boolean;
   disableBonuses: boolean;
   disableButton: boolean;
   disableGauge: boolean;
@@ -37,14 +38,15 @@ export interface LevelOptions {
   scissorCount: number;
   nucleotideRadius: number;
   sequenceNucleotideRadius: number;
-  endsBy: "maxScoreReached" | "none";
   gridShape: grid.GridShape;
   forceMatching: boolean;
   hooks: Hook[];
   initialBonuses: bonuses.InitialBonuses;
+  checks: { [text: string]: (level: Level) => boolean };
 }
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
+  disableExtraSequence: false,
   disableBonuses: false,
   disableButton: false,
   disableGauge: false,
@@ -61,11 +63,16 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   scissorCount: 6,
   nucleotideRadius: crisprUtil.width / 13.44,
   sequenceNucleotideRadius: crisprUtil.width * 0.04,
-  endsBy: "maxScoreReached",
   gridShape: "full",
   forceMatching: false,
   hooks: [],
   initialBonuses: [],
+  checks: {
+    "No virus has escaped": (level) => !level.someVirusHasEscaped,
+    "Max score reached": (level) => level.score >= level.options.maxScore,
+    "Not infected": (level) => !level.wasInfected,
+    "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
+  },
 };
 
 export type LevelEventName = keyof LevelEvents;
@@ -148,6 +155,7 @@ export class Level extends entity.CompositeEntity {
   public someVirusHasEscaped = false;
   public crunchCount = 0;
   public score: number;
+  public failed = false;
 
   constructor(public readonly options: Partial<LevelOptions>) {
     super();
@@ -283,11 +291,6 @@ export class Level extends entity.CompositeEntity {
         forEach: (ring: hud.Ring) => {
           ring.tint = 0x007784;
         },
-        callback: () => {
-          if (this.options.endsBy === "maxScoreReached") {
-            this.gameOver();
-          }
-        },
       });
     });
   }
@@ -338,7 +341,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   gameOver() {
-    this._activateChildEntity(new popup.TerminatedLevelPopup({}), this.config);
+    this.failed = true;
+    this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
   }
 
   exit() {
@@ -385,6 +389,11 @@ export class Level extends entity.CompositeEntity {
     if (countSequences < this.sequenceManager.sequenceCountLimit) {
       actions.push(
         new entity.FunctionCallEntity(() => {
+          if (this.options.disableExtraSequence) {
+            this.disablingAnimations.delete("game");
+            return;
+          }
+
           this.sequenceManager.add();
         })
       );
@@ -495,6 +504,8 @@ export class Level extends entity.CompositeEntity {
       new entity.EntitySequence([
         infectionSequence,
         new entity.FunctionCallEntity(() => {
+          if (this.options.disableExtraSequence) return;
+
           this.sequenceManager.add();
         }),
       ])
