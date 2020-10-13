@@ -440,9 +440,15 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   down(addScore: boolean, callback?: () => any) {
-    this.level.disablingAnimations.add("down");
+    this.level.sequenceWasCrunched = true;
+    this.level.crunchedSequenceCount++;
+
+    this.level.disablingAnimations.add("sequenceDown");
+
     const isLong = this.level.options.variant === "long";
+
     const fully = this.nucleotides.every((n) => n.state === "inactive");
+
     anim.sequenced({
       sequence: this.nucleotides,
       timeBetween: isLong ? 80 : 200,
@@ -520,7 +526,7 @@ export class Sequence extends entity.CompositeEntity {
       callback: () => {
         const end = () => {
           this.level.sequenceManager.sequences.delete(this);
-          this.level.disablingAnimations.delete("down");
+          this.level.disablingAnimations.delete("sequenceDown");
           this.level.emit("sequenceDown");
           this._transition = entity.makeTransition();
           callback?.();

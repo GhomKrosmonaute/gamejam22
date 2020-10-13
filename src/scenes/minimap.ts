@@ -11,14 +11,18 @@ import * as crisprUtil from "../crisprUtil";
 
 export class Minimap extends entity.CompositeEntity {
   private background: PIXI.Sprite;
-  private container = new PIXI.Container();
-  private buttons = new PIXI.Container();
+  private container: PIXI.Container;
+  private buttons: PIXI.Container;
   private particles: PIXI.Sprite;
   private particlesBis: PIXI.Sprite;
-  private links = new PIXI.Graphics();
+  private links: PIXI.Graphics;
   private scrollBox: scroll.Scrollbox;
 
   protected _setup() {
+    this.links = new PIXI.Graphics();
+    this.container = new PIXI.Container();
+    this.buttons = new PIXI.Container();
+
     this.background = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         "images/cellule_background.png"
@@ -61,7 +65,6 @@ export class Minimap extends entity.CompositeEntity {
 
     this.container.addChild(this.particles);
     this.container.addChild(this.particlesBis);
-
     this.container.addChild(this.links);
 
     for (const levelName in levels.levels) {
@@ -152,6 +155,8 @@ export class Minimap extends entity.CompositeEntity {
   }
 
   protected _update() {
+    if (!this.isSetup) return;
+
     this.links.position.copyFrom(this.scrollBox.currentScroll);
     this.links.clear();
     this.links.lineStyle(150, 0xffffff, 0.1);
@@ -166,15 +171,17 @@ export class Minimap extends entity.CompositeEntity {
   }
 
   protected _teardown() {
-    this.background = null;
-    this.particles = null;
     this.container.removeChildren();
     this.buttons.removeChildren();
-    this._entityConfig.container.removeChild(this.container);
+    this._entityConfig.container.removeChildren();
+    this.buttons = null;
+    this.container = null;
+    this.background = null;
+    this.particles = null;
+    this.links = null;
   }
 
   private setLevel(levelName: levels.LevelName) {
-    this;
     this._transition = entity.makeTransition(levelName);
   }
 }

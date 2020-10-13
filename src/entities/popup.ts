@@ -34,6 +34,8 @@ export const defaultPopupOptions = {
  * - backgroundLoaded( background: PIXI.Sprite )
  */
 export abstract class Popup extends entity.CompositeEntity {
+  protected abstract onSetup(): any;
+
   private _id: string;
   private _container = new PIXI.Container();
   private _height: number;
@@ -88,7 +90,7 @@ export abstract class Popup extends entity.CompositeEntity {
     this.body.position.y = this._height * -0.5;
   }
 
-  row(container: PIXI.Container, height?: number): this {
+  addRow(container: PIXI.Container, height?: number): this {
     height = height ?? container.height;
 
     container.position.y += this.height;
@@ -100,78 +102,150 @@ export abstract class Popup extends entity.CompositeEntity {
     return this;
   }
 
-  setup(frameInfo: entity.FrameInfo, entityConfig: entity.EntityConfig) {
-    super.setup(frameInfo, entityConfig);
+  _setup() {
+    this.level.disablingAnimations.add(this._id);
+    this.level.disablingAnimations.add("popup");
 
     this._once(this, "closed", () => {
       this.options.onClose(this.level);
     });
 
-    // background
-    if (this.options.withBackground) {
-      this.background = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/popup_background.png"
-        ].texture
-      );
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        new entity.FunctionalEntity({
+          requestTransition: () => {
+            return (
+              !this.level.disablingAnimations.has("sequenceDown") &&
+              !this.level.disablingAnimations.has("pathCrunch")
+            );
+          },
+        }),
+        new entity.FunctionCallEntity(() => {
+          // background
+          if (this.options.withBackground) {
+            this.background = new PIXI.Sprite(
+              this._entityConfig.app.loader.resources[
+                "images/popup_background.png"
+              ].texture
+            );
 
-      this.body.addChildAt(this.background, 0);
+            this.body.addChildAt(this.background, 0);
 
-      this.background.width = this.width;
-      this.background.position.y = -50;
+            this.background.width = this.width;
+            this.background.position.y = -50;
 
-      // use background as closure button
-      if (this.options.closeOnBackgroundClick) {
-        this.button(this.background, () => {
-          this.close();
-        });
-      }
-    }
+            // use background as closure button
+            if (this.options.closeOnBackgroundClick) {
+              this.button(this.background, () => {
+                this.close();
+              });
+            }
+          }
 
-    this.level.disablingAnimations.add(this._id);
-    this.level.disablingAnimations.add("popup");
+          this._entityConfig.container.addChild(this._container);
 
-    this._entityConfig.container.addChild(this._container);
+          this._activateChildEntity(anim.popup(this._container, 700));
+          this._activateChildEntity(this.shaker);
 
-    this._activateChildEntity(anim.popup(this._container, 700));
-    this._activateChildEntity(this.shaker);
-
-    this.emit("setup");
+          this.onSetup();
+        }),
+      ])
+    );
   }
 
-  /**
-   * In order:
-   * 1. animate popup closure
-   * 2. clean all containers
-   * 3. clean all shakers
-   * 4. reactivate level interactions
-   * 5. make transition
-   * 6. emit "closed" event
-   */
+  _teardown() {
+    this.level.disablingAnimations.delete(this._id);
+    this.level.disablingAnimations.delete("popup");
+    this.body.removeChildren();
+    this.shaker.removeAllShakes();
+    this._container.removeChild(this.body);
+    this._entityConfig.container.removeChild(this._container);
+  }
+
   close() {
     this._activateChildEntity(
       anim.sink(this._container, 150, () => {
-        this.body.removeChildren();
-        this._container.removeChild(this.body);
-        this._entityConfig.container.removeChild(this._container);
-        this.shaker.removeAllShakes();
-        this.level.disablingAnimations.delete(this._id);
-        this.level.disablingAnimations.delete("popup");
-        this._transition = entity.makeTransition();
         this.emit("closed");
+        this._transition = entity.makeTransition();
       })
     );
   }
 
   button(button: PIXI.Container, callback: () => any) {
     if (!this.body.children.includes(button)) {
-      this.row(button, 150);
+      this.addRow(button, 150);
     }
     button.buttonMode = true;
     button.interactive = true;
     this._on(button, "pointerup", () => {
       callback();
     });
+  }
+}
+
+export class FailedLevelPopup extends Popup {
+  private checked: { [text: string]: boolean };
+
+  constructor() {
+    super({
+      adjustHeight: true,
+      withBackground: true,
+      closeOnBackgroundClick: true,
+      onClose: (level) => level.exit(),
+    });
+  }
+
+  get checks() {
+    return this.level.options.checks;
+  }
+
+  onSetup() {
+    this.checked = {};
+
+    for (const text in this.checks)
+      this.checked[text] = this.checks[text](this.level);
+
+    // add title
+    {
+      let title = crisprUtil.makeText("Failed...", {
+        fontSize: 250,
+        stroke: 0xffffff,
+        strokeThickness: 10,
+      });
+
+      title.position.x = this.center.x;
+      title.position.y = 90;
+
+      this.addRow(title, 350);
+    }
+
+    // add lines
+    {
+      Object.entries(this.checked).map(([key, check], i) => {
+        const line = new PIXI.Container();
+
+        const text = crisprUtil.makeText(key, {
+          stroke: 0xffffff,
+          strokeThickness: 10,
+        });
+
+        text.position.set(this.center.x, 50);
+
+        line.addChild(text);
+
+        const icon = crisprUtil.makeText(check ? "✅" : "❌", {
+          align: "right",
+          strokeThickness: 20,
+          stroke: 0x000000,
+        });
+
+        icon.position.set(this.width - 100, 50);
+
+        line.addChild(icon);
+
+        this.addRow(line, 100);
+      });
+    }
   }
 }
 
@@ -194,175 +268,173 @@ export class TerminatedLevelPopup extends Popup {
     return this.level.options.checks;
   }
 
-  protected _setup() {
-    this._once(this, "setup", () => {
-      this.checked = {};
+  onSetup() {
+    this.checked = {};
 
-      for (const text in this.checks)
-        this.checked[text] = this.checks[text](this.level);
+    for (const text in this.checks)
+      this.checked[text] = this.checks[text](this.level);
 
-      this.checkCount = Object.values(this.checks).length;
-      this.checkedCount = Object.values(this.checked).filter(
-        (check) => check === true
-      ).length;
-      this.starCount = Math.round((this.checkedCount / this.checkCount) * 3);
+    this.checkCount = Object.values(this.checks).length;
+    this.checkedCount = Object.values(this.checked).filter(
+      (check) => check === true
+    ).length;
+    this.starCount = Math.round((this.checkedCount / this.checkCount) * 3);
 
-      // add star-based children
-      {
-        let title: PIXI.Text;
+    // add star-based children
+    {
+      let title: PIXI.Text;
 
-        if (this.starCount === 3) {
-          title = crisprUtil.makeText("Awesome!", {
-            fontSize: 250,
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
-        } else if (this.starCount === 2) {
-          title = crisprUtil.makeText("Great!", {
-            fontSize: 200,
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
-        } else if (this.starCount === 1) {
-          title = crisprUtil.makeText("Well done", {
-            fontSize: 150,
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
-        } else {
-          title = crisprUtil.makeText("Too bad...", {
-            fontSize: 100,
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
-          // todo: retry button
-        }
-
-        title.position.x = this.center.x;
-        title.position.y = 90;
-
-        this.row(title, 350);
-      }
-
-      // add stars
-      {
-        const stars = new PIXI.Container();
-
-        anim.sequenced({
-          sequence: new Array(3).fill(0),
-          timeBetween: 200,
-          delay: 500,
-          onStep: (resolve, _, index) => {
-            const star = new PIXI.Sprite(
-              this._entityConfig.app.loader.resources["images/star.png"].texture
-            );
-
-            star.scale.set(0);
-            star.anchor.set(0.5);
-
-            if (index >= this.starCount) {
-              star.tint = 0x666666;
-            }
-
-            switch (index) {
-              case 0:
-                star.position.x = this.center.x / 2 - 50;
-                star.angle = -10;
-                break;
-              case 1:
-                star.position.x = this.center.x;
-                star.position.y = -20;
-                break;
-              case 2:
-                star.position.x = this.center.x + this.center.x / 2 + 50;
-                star.angle = 10;
-                break;
-            }
-
-            stars.addChild(star);
-
-            this._activateChildEntity(anim.popup(star, 400, resolve));
-          },
+      if (this.starCount === 3) {
+        title = crisprUtil.makeText("Awesome!", {
+          fontSize: 250,
+          stroke: 0xffffff,
+          strokeThickness: 10,
         });
-
-        this.row(stars, 200);
+      } else if (this.starCount === 2) {
+        title = crisprUtil.makeText("Great!", {
+          fontSize: 200,
+          stroke: 0xffffff,
+          strokeThickness: 10,
+        });
+      } else if (this.starCount === 1) {
+        title = crisprUtil.makeText("Well done", {
+          fontSize: 150,
+          stroke: 0xffffff,
+          strokeThickness: 10,
+        });
+      } else {
+        title = crisprUtil.makeText("Too bad...", {
+          fontSize: 100,
+          stroke: 0xffffff,
+          strokeThickness: 10,
+        });
+        // todo: retry button
       }
 
-      // add score
-      if (!this.level.options.disableScore) {
-        const score = crisprUtil.makeText(
-          `Score: ${this.level.score} pts (${crisprUtil.proportion(
-            this.level.score,
-            0,
-            this.level.options.maxScore,
-            0,
-            100,
-            true
-          )}%)`,
-          {
-            fontSize: 85,
-            fill: 0xffffff,
-            strokeThickness: 20,
-            stroke: 0x000000,
+      title.position.x = this.center.x;
+      title.position.y = 90;
+
+      this.addRow(title, 350);
+    }
+
+    // add stars
+    {
+      const stars = new PIXI.Container();
+
+      anim.sequenced({
+        sequence: new Array(3).fill(0),
+        timeBetween: 200,
+        delay: 500,
+        onStep: (resolve, _, index) => {
+          const star = new PIXI.Sprite(
+            this._entityConfig.app.loader.resources["images/star.png"].texture
+          );
+
+          star.scale.set(0);
+          star.anchor.set(0.5);
+
+          if (index >= this.starCount) {
+            star.tint = 0x666666;
           }
-        );
 
-        score.position.set(this.center.x, 40);
+          switch (index) {
+            case 0:
+              star.position.x = this.center.x / 2 - 50;
+              star.angle = -10;
+              break;
+            case 1:
+              star.position.x = this.center.x;
+              star.position.y = -20;
+              break;
+            case 2:
+              star.position.x = this.center.x + this.center.x / 2 + 50;
+              star.angle = 10;
+              break;
+          }
 
-        score.scale.set(0);
+          stars.addChild(star);
 
-        this.row(score, 100);
+          this._activateChildEntity(anim.popup(star, 400, resolve));
+        },
+      });
 
-        this._activateChildEntity(anim.popup(score, 800));
-        this._activateChildEntity(
-          new tween.Tween({
-            from: 0,
-            to: this.level.score,
-            easing: easing.easeInQuad,
-            duration: 1000,
-            onUpdate: (value) =>
-              (score.text = `Score: ${Math.floor(value)} pts (${Math.floor(
-                crisprUtil.proportion(
-                  value,
-                  0,
-                  this.level.options.maxScore,
-                  0,
-                  100,
-                  true
-                )
-              )}%)`),
-          })
-        );
-      }
+      this.addRow(stars, 200);
+    }
 
-      // add lines
-      {
-        Object.entries(this.checked).map(([key, check], i) => {
-          const line = new PIXI.Container();
+    // add score
+    if (!this.level.options.disableScore) {
+      const score = crisprUtil.makeText(
+        `Score: ${this.level.score} pts (${crisprUtil.proportion(
+          this.level.score,
+          0,
+          this.level.options.maxScore,
+          0,
+          100,
+          true
+        )}%)`,
+        {
+          fontSize: 85,
+          fill: 0xffffff,
+          strokeThickness: 20,
+          stroke: 0x000000,
+        }
+      );
 
-          const text = crisprUtil.makeText(key, {
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
+      score.position.set(this.center.x, 40);
 
-          text.position.set(this.center.x, 50);
+      score.scale.set(0);
 
-          line.addChild(text);
+      this.addRow(score, 100);
 
-          const icon = crisprUtil.makeText(check ? "✅" : "❌", {
-            align: "right",
-            strokeThickness: 20,
-            stroke: 0x000000,
-          });
+      this._activateChildEntity(anim.popup(score, 800));
+      this._activateChildEntity(
+        new tween.Tween({
+          from: 0,
+          to: this.level.score,
+          easing: easing.easeInQuad,
+          duration: 1000,
+          onUpdate: (value) =>
+            (score.text = `Score: ${Math.floor(value)} pts (${Math.floor(
+              crisprUtil.proportion(
+                value,
+                0,
+                this.level.options.maxScore,
+                0,
+                100,
+                true
+              )
+            )}%)`),
+        })
+      );
+    }
 
-          icon.position.set(this.width - 100, 50);
+    // add lines
+    {
+      Object.entries(this.checked).map(([key, check], i) => {
+        const line = new PIXI.Container();
 
-          line.addChild(icon);
-
-          this.row(line, 100);
+        const text = crisprUtil.makeText(key, {
+          stroke: 0xffffff,
+          strokeThickness: 10,
         });
-      }
-    });
+
+        text.position.set(this.center.x, 50);
+
+        line.addChild(text);
+
+        const icon = crisprUtil.makeText(check ? "✅" : "❌", {
+          align: "right",
+          strokeThickness: 20,
+          stroke: 0x000000,
+        });
+
+        icon.position.set(this.width - 100, 50);
+
+        line.addChild(icon);
+
+        this.addRow(line, 100);
+      });
+    }
   }
 }
 
@@ -384,26 +456,24 @@ export class TutorialPopup extends Popup {
     });
   }
 
-  protected _setup() {
-    this._once(this, "setup", () => {
-      this.text = crisprUtil.makeText(this._options.title, {
-        fontSize: 150,
-        fill: 0xffffff,
-        wordWrapWidth: this.width * 0.9,
-        wordWrap: true,
-      });
-
-      this.content = crisprUtil.makeText(this._options.content, {
-        fill: 0xffffff,
-        wordWrapWidth: this.width * 0.9,
-        wordWrap: true,
-      });
-
-      this.text.position.set(this.center.x, 150);
-
-      this.content.position.set(this.center.x, 200);
-
-      this.row(this.text, 300).row(this.content, 400);
+  onSetup() {
+    this.text = crisprUtil.makeText(this._options.title, {
+      fontSize: 150,
+      fill: 0xffffff,
+      wordWrapWidth: this.width * 0.9,
+      wordWrap: true,
     });
+
+    this.content = crisprUtil.makeText(this._options.content, {
+      fill: 0xffffff,
+      wordWrapWidth: this.width * 0.9,
+      wordWrap: true,
+    });
+
+    this.text.position.set(this.center.x, 150);
+
+    this.content.position.set(this.center.x, 200);
+
+    this.addRow(this.text, 300).addRow(this.content, 400);
   }
 }

@@ -21,6 +21,8 @@ export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
 
 export type GridShape = "mini" | "medium" | "full";
 
+const DEBUG = false;
+
 /** Represent the game nucleotides grid
  *
  * Emits
@@ -60,6 +62,12 @@ export class Grid extends entity.CompositeEntity {
     this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointermove", this._onPointerMove);
 
+    if (DEBUG) {
+      this.on("drag", (n: nucleotide.Nucleotide) => {
+        console.log(this.getGridPositionOf(n));
+      });
+    }
+
     this._entityConfig.container.addChild(this.container);
 
     this.nucleotideContainer = new PIXI.Container();
@@ -73,6 +81,17 @@ export class Grid extends entity.CompositeEntity {
         if (
           this.shape === "mini" &&
           (x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0))
+        )
+          continue;
+        if (
+          this.shape === "medium" &&
+          (x < 1 ||
+            x > 5 ||
+            y < 1 ||
+            y > 5 ||
+            (x === 1 && y === 1) ||
+            (x === 5 && y === 1) ||
+            (x !== 3 && x > 0 && x < 6 && y === 5))
         )
           continue;
 
