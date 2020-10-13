@@ -6,7 +6,6 @@ import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
 
 import * as anim from "../animations";
-import * as levels from "../levels";
 import * as crisprUtil from "../crisprUtil";
 
 import * as level from "../scenes/level";
@@ -91,7 +90,7 @@ export abstract class Popup extends entity.CompositeEntity {
     this.body.position.y = this._height * -0.5;
   }
 
-  row(container: PIXI.Container, height?: number): this {
+  addRow(container: PIXI.Container, height?: number): this {
     height = height ?? container.height;
 
     container.position.y += this.height;
@@ -104,6 +103,9 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   _setup() {
+    this.level.disablingAnimations.add(this._id);
+    this.level.disablingAnimations.add("popup");
+
     this._once(this, "closed", () => {
       this.options.onClose(this.level);
     });
@@ -140,9 +142,6 @@ export abstract class Popup extends entity.CompositeEntity {
             }
           }
 
-          this.level.disablingAnimations.add(this._id);
-          this.level.disablingAnimations.add("popup");
-
           this._entityConfig.container.addChild(this._container);
 
           this._activateChildEntity(anim.popup(this._container, 700));
@@ -155,35 +154,26 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   _teardown() {
-    this.body.removeChildren();
-    this._container.removeChild(this.body);
-    this._entityConfig.container.removeChild(this._container);
-    this.shaker.removeAllShakes();
     this.level.disablingAnimations.delete(this._id);
     this.level.disablingAnimations.delete("popup");
+    this.body.removeChildren();
+    this.shaker.removeAllShakes();
+    this._container.removeChild(this.body);
+    this._entityConfig.container.removeChild(this._container);
   }
 
-  /**
-   * In order:
-   * 1. animate popup closure
-   * 2. clean all containers
-   * 3. clean all shakers
-   * 4. reactivate level interactions
-   * 5. make transition
-   * 6. emit "closed" event
-   */
   close() {
     this._activateChildEntity(
       anim.sink(this._container, 150, () => {
-        this._transition = entity.makeTransition();
         this.emit("closed");
+        this._transition = entity.makeTransition();
       })
     );
   }
 
   button(button: PIXI.Container, callback: () => any) {
     if (!this.body.children.includes(button)) {
-      this.row(button, 150);
+      this.addRow(button, 150);
     }
     button.buttonMode = true;
     button.interactive = true;
@@ -226,7 +216,7 @@ export class FailedLevelPopup extends Popup {
       title.position.x = this.center.x;
       title.position.y = 90;
 
-      this.row(title, 350);
+      this.addRow(title, 350);
     }
 
     // add lines
@@ -253,7 +243,7 @@ export class FailedLevelPopup extends Popup {
 
         line.addChild(icon);
 
-        this.row(line, 100);
+        this.addRow(line, 100);
       });
     }
   }
@@ -324,7 +314,7 @@ export class TerminatedLevelPopup extends Popup {
       title.position.x = this.center.x;
       title.position.y = 90;
 
-      this.row(title, 350);
+      this.addRow(title, 350);
     }
 
     // add stars
@@ -368,7 +358,7 @@ export class TerminatedLevelPopup extends Popup {
         },
       });
 
-      this.row(stars, 200);
+      this.addRow(stars, 200);
     }
 
     // add score
@@ -394,7 +384,7 @@ export class TerminatedLevelPopup extends Popup {
 
       score.scale.set(0);
 
-      this.row(score, 100);
+      this.addRow(score, 100);
 
       this._activateChildEntity(anim.popup(score, 800));
       this._activateChildEntity(
@@ -442,7 +432,7 @@ export class TerminatedLevelPopup extends Popup {
 
         line.addChild(icon);
 
-        this.row(line, 100);
+        this.addRow(line, 100);
       });
     }
   }
@@ -484,6 +474,6 @@ export class TutorialPopup extends Popup {
 
     this.content.position.set(this.center.x, 200);
 
-    this.row(this.text, 300).row(this.content, 400);
+    this.addRow(this.text, 300).addRow(this.content, 400);
   }
 }
