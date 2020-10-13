@@ -155,7 +155,12 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   _teardown() {
-    this.close();
+    this.body.removeChildren();
+    this._container.removeChild(this.body);
+    this._entityConfig.container.removeChild(this._container);
+    this.shaker.removeAllShakes();
+    this.level.disablingAnimations.delete(this._id);
+    this.level.disablingAnimations.delete("popup");
   }
 
   /**
@@ -170,12 +175,6 @@ export abstract class Popup extends entity.CompositeEntity {
   close() {
     this._activateChildEntity(
       anim.sink(this._container, 150, () => {
-        this.body.removeChildren();
-        this._container.removeChild(this.body);
-        this._entityConfig.container.removeChild(this._container);
-        this.shaker.removeAllShakes();
-        this.level.disablingAnimations.delete(this._id);
-        this.level.disablingAnimations.delete("popup");
         this._transition = entity.makeTransition();
         this.emit("closed");
       })
