@@ -1,11 +1,14 @@
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
+import * as util from "booyah/src/util";
 
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
-import * as game from "../game";
 
+import * as minimap from "./minimap";
+
+import * as nucleotide from "../entities/nucleotide";
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
 import * as popup from "../entities/popup";
@@ -17,66 +20,169 @@ import * as hud from "../entities/hud";
 export type LevelVariant = "turnBased" | "continuous" | "long";
 export type LevelState = "crunch" | "regenerate" | "bonus";
 
-const dropSpeed = 0.001;
+export interface LevelOptions {
+  disableExtraSequence: boolean;
+  disableBonuses: boolean;
+  disableButton: boolean;
+  disableGauge: boolean;
+  disableScore: boolean;
+  variant: LevelVariant;
+  maxScore: number;
+  dropSpeed: number;
+  baseGain: number;
+  baseScore: number;
+  gaugeRingCount: number;
+  sequenceLength: number | null;
+  colCount: number;
+  rowCount: number;
+  scissorCount: number;
+  nucleotideRadius: number;
+  sequenceNucleotideRadius: number;
+  gridShape: grid.GridShape;
+  forceMatching: boolean;
+  hooks: Hook[];
+  initialBonuses: bonuses.InitialBonuses;
+  checks: { [text: string]: (level: Level) => boolean };
+}
 
-/**
- * Emits:
- * - maxScoreReached()
- * - ringReached(ring: PIXI.Sprite, index: number)
- * - scoreUpdated(score: number)
- */
+export const defaultLevelOptions: Readonly<LevelOptions> = {
+  disableExtraSequence: false,
+  disableBonuses: false,
+  disableButton: false,
+  disableGauge: false,
+  disableScore: false,
+  variant: "turnBased",
+  dropSpeed: 0.001,
+  maxScore: 1000,
+  baseGain: 10,
+  baseScore: 0,
+  gaugeRingCount: 5,
+  sequenceLength: null,
+  colCount: 7,
+  rowCount: 7,
+  scissorCount: 6,
+  nucleotideRadius: crisprUtil.width / 13.44,
+  sequenceNucleotideRadius: crisprUtil.width * 0.04,
+  gridShape: "full",
+  forceMatching: false,
+  hooks: [],
+  initialBonuses: [],
+  checks: {
+    "No virus has escaped": (level) => !level.someVirusHasEscaped,
+    "Max score reached": (level) => level.score >= level.options.maxScore,
+    "Not infected": (level) => !level.wasInfected,
+    "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
+  },
+};
+
+export type LevelEventName = keyof LevelEvents;
+export type LevelEventParams<
+  EventName extends LevelEventName
+> = LevelEvents[EventName];
+
+export interface HookOptions<Entity, EventName extends LevelEventName> {
+  event: EventName;
+  /** Filter function, trigger hook if it returns `true` */
+  filter?: (...params: LevelEventParams<EventName>) => boolean | void;
+  /** Entity to activate on hook is triggered */
+  entity: Entity;
+  once?: true;
+}
+
+export class Hook<
+  Entity extends entity.Entity = entity.Entity,
+  EventName extends LevelEventName = LevelEventName
+> extends entity.CompositeEntity {
+  public emitter: PIXI.utils.EventEmitter;
+
+  constructor(private options: HookOptions<Entity, EventName>) {
+    super();
+  }
+
+  get level(): Level {
+    return this._entityConfig.level;
+  }
+
+  protected _setup() {
+    this[this.options.once ? "_once" : "_on"](
+      this.emitter,
+      this.options.event,
+      (...params) => {
+        if (
+          !this.options.filter ||
+          this.options.filter.bind(this.emitter)(...params)
+        ) {
+          this._activateChildEntity(this.options.entity, this.level.config);
+        }
+      }
+    );
+  }
+}
+
+export interface LevelEvents {
+  setup: [];
+  infected: [];
+  pathUpdated: [];
+  ringReached: [ring: hud.Ring, index: number];
+  sequenceDown: [];
+  scoreUpdated: [score: number];
+  clickedBonus: [bonus: bonuses.Bonus];
+  maxScoreReached: [];
+  clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
+  activatedChildEntity: [entity: entity.Entity];
+  deactivatedChildEntity: [entity: entity.Entity];
+}
+
 export class Level extends entity.CompositeEntity {
+  // system
+  /**
+   * Disable continuous events while `disablingAnimations` contains one or more elements. <br>
+   * **Flag accessor**: `<Level>.isDisablingAnimationInProgress`
+   */
+  public disablingAnimations: Set<string> = new Set();
   public container = new PIXI.Container();
-  public nucleotideRadius = crisprUtil.width / 13.44;
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;
-  public examplePopup: popup.Popup;
-  public terminatedLevelPopup: popup.Popup;
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
   public state: LevelState = "crunch";
+  private goButton: hud.GoButton;
+
+  // game
   public wasInfected = false;
   public someVirusHasEscaped = false;
+  public crunchCount = 0;
+  public score: number;
+  public failed = false;
 
-  /**
-   * Disable continuous events while `disablingAnimations` contains one or more elements.
-   *
-   * **Flag accessor**: `<Level>.isDisablingAnimationInProgress`
-   *
-   * set a disabling animation:
-   * ```ts
-   * disablingAnimations.add(identifier as string)
-   * ```
-   * remove a disabling animation:
-   * ```ts
-   * disablingAnimations.delete(identifier as string)
-   * ```
-   */
-  public disablingAnimations: Set<string> = new Set();
-
-  public swapBonus = new bonuses.SwapBonus();
-  public healBonus = new bonuses.HealBonus();
-  public syringeBonus = new bonuses.SyringeBonus();
-
-  public readonly colCount = 7;
-  public readonly rowCount = 7;
-  public readonly cutCount = 6;
-
-  private bonusBackground: PIXI.Sprite;
-  private goButton: PIXI.Container & { text?: PIXI.Text };
-  private crunchCount = 0;
-
-  public score = 0;
-
-  constructor(
-    public readonly levelVariant: LevelVariant,
-    public readonly maxScore = 1000,
-    public readonly gaugeRingCount = 5,
-    public readonly baseScore = 10
-  ) {
+  constructor(public readonly options: Partial<LevelOptions>) {
     super();
+    this.options = util.fillInOptions(this.options, defaultLevelOptions);
+    this.score = this.options.baseScore;
+  }
+
+  emit<K extends LevelEventName>(event: K, ...params: LevelEventParams<K>) {
+    return super.emit(event, ...params);
+  }
+
+  on<K extends LevelEventName>(
+    event: K,
+    callback: (...params: LevelEventParams<K>) => any
+  ): this {
+    return super.on(event, callback);
+  }
+
+  once<K extends LevelEventName>(
+    event: K,
+    callback: (...params: LevelEventParams<K>) => any
+  ): this {
+    return super.once(event, callback);
+  }
+
+  get minimap(): minimap.Minimap {
+    return this._entityConfig.minimap;
   }
 
   get config(): entity.EntityConfig {
@@ -89,16 +195,10 @@ export class Level extends entity.CompositeEntity {
     return this.grid.cursor;
   }
 
-  private _initPopups() {
-    this.examplePopup = new popup.ExamplePopup();
-    this.terminatedLevelPopup = new popup.TerminatedLevelPopup();
-
-    // activate the popup entity to open it (close with popup.close())
-    this._activateChildEntity(this.examplePopup, this.config);
-
-    // test terminatedLevelPopup after examplePopup is closed
-    this._on(this.examplePopup, "closed", () => {
-      this._activateChildEntity(this.terminatedLevelPopup, this.config);
+  private _initHooks() {
+    this.options.hooks.forEach((hook) => {
+      hook.emitter = this;
+      this._activateChildEntity(hook);
     });
   }
 
@@ -131,16 +231,17 @@ export class Level extends entity.CompositeEntity {
 
   private _initPath() {
     this.path = new path.Path();
-    this._on(this.path, "updated", this._refresh);
+    this.on("pathUpdated", this.refresh);
     this._activateChildEntity(this.path, this.config);
   }
 
   private _initGrid() {
     this.grid = new grid.Grid(
-      this.colCount,
-      this.rowCount,
-      this.cutCount,
-      this.nucleotideRadius
+      this.options.colCount,
+      this.options.rowCount,
+      this.options.scissorCount,
+      this.options.nucleotideRadius,
+      this.options.gridShape
     );
     this._on(this.grid, "pointerup", this._attemptCrunch);
     this._activateChildEntity(this.grid, this.config);
@@ -148,13 +249,6 @@ export class Level extends entity.CompositeEntity {
 
   private _initSequences() {
     this.sequenceManager = new sequence.SequenceManager();
-
-    this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
-      if (child !== this.sequenceManager) return;
-
-      this.sequenceManager.addSequenceAccordingToLevelVariant();
-    });
-
     this._activateChildEntity(this.sequenceManager, this.config);
   }
 
@@ -164,74 +258,34 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initButton() {
-    this.goButton = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/hud_go_button.png"
-      ].texture
-    );
-    this.goButton.position.set(
-      this._entityConfig.app.view.width * 0.734,
-      this._entityConfig.app.view.height * 0.8715
-    );
-    this.goButton.interactive = true;
-    this.goButton.buttonMode = true;
-    this._on(this.goButton, "pointerup", this._onGo);
-    this.container.addChild(this.goButton);
+    if (this.options.disableButton) return;
 
-    this.goButton.text = crisprUtil.makeText("GO", {
-      fill: 0x000000,
-    });
-    this.goButton.text.position.set(
-      this.goButton.width / 2,
-      this.goButton.height / 2
-    );
-    this.goButton.addChild(this.goButton.text);
+    this.goButton = new hud.GoButton();
+    this._activateChildEntity(this.goButton, this.config);
   }
 
   private _initBonuses() {
-    this.bonusBackground = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/hud_bonus_background.png"
-      ].texture
+    if (this.options.disableBonuses) return;
+    this.bonusesManager = new bonuses.BonusesManager(
+      this.options.initialBonuses
     );
-    this.bonusBackground.position.set(
-      this._entityConfig.app.view.width * 0.07,
-      this._entityConfig.app.view.height * 0.88
-    );
-    this.bonusBackground.scale.set(0.65);
-    // todo: continue
-    this.container.addChild(this.bonusBackground);
-    this.bonusesManager = new bonuses.BonusesManager();
-    this._on(this, "activatedChildEntity", (child: entity.EntityBase) => {
-      if (child === this.bonusesManager) {
-        this.bonusesManager.add(this.swapBonus, 5);
-        this.bonusesManager.add(this.healBonus, 5);
-        this.bonusesManager.add(this.syringeBonus, 5);
-        this._on(this.sequenceManager, "crunch", () => {
-          this.crunchCount++;
-          if (this.crunchCount % 2 === 0) {
-            this.bonusesManager.add(this.swapBonus);
-          }
-        });
-      }
-    });
     this._activateChildEntity(this.bonusesManager, this.config);
   }
 
   private _initGauge() {
-    this.gauge = new hud.Gauge(this.gaugeRingCount, this.maxScore);
-    this._on(this, "activatedChildEntity", (entity: entity.EntityBase) => {
-      if (entity === this.gauge) {
-        this.gauge.setValue(0);
-      }
-    });
+    if (this.options.disableGauge) return;
+
+    this.gauge = new hud.Gauge(
+      this.options.gaugeRingCount,
+      this.options.maxScore
+    );
     this._activateChildEntity(this.gauge, this.config);
-    this._on(this.gauge, "ringReached", (ring: hud.Ring) => {
+    this.on("ringReached", (ring) => {
       ring.tint = 0x6bffff;
       this._activateChildEntity(anim.tweenShaking(ring, 1000, 6, 0));
     });
     // setup shockwave on max score is reached
-    this._on(this, "maxScoreReached", () => {
+    this.on("maxScoreReached", () => {
       this.gauge.bubbleRings({
         timeBetween: 100,
         forEach: (ring: hud.Ring) => {
@@ -245,6 +299,7 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
 
+    this._initHooks();
     this._initBackground();
     this._initGrid();
     this._initPath();
@@ -254,78 +309,59 @@ export class Level extends entity.CompositeEntity {
     this._initBonuses();
     this._initButton();
     this._initGauge();
-    //this._initPopups();
 
-    this._refresh();
-    this.isGuiLocked = false;
+    this.refresh();
 
     this.wasInfected = false;
     this.someVirusHasEscaped = false;
+
+    this.emit("setup");
   }
 
   _update() {
     if (
-      this.levelVariant !== "continuous" ||
+      this.options.variant !== "continuous" ||
       this.isDisablingAnimationInProgress
     )
       return;
 
-    const droppedSequences = this.sequenceManager.advanceSequences(dropSpeed);
+    const droppedSequences = this.sequenceManager.advanceSequences(
+      this.options.dropSpeed
+    );
     if (droppedSequences.length > 0) {
-      this._onInfection(droppedSequences.length);
+      this.onInfection(droppedSequences.length);
     }
   }
 
   _teardown() {
-    this._entityConfig.container.removeChild(this.container);
-    this.gauge = null;
-    this.path = null;
-    this.grid = null;
-    this.sequenceManager = null;
+    this.container.removeChildren();
+    this._entityConfig.container.removeChildren();
+    this.disablingAnimations.clear();
+    this.removeAllListeners();
+  }
+
+  gameOver() {
+    this.failed = true;
+    this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
+  }
+
+  exit() {
+    this._transition = entity.makeTransition();
   }
 
   addScore(score: number) {
-    if (this.score === this.maxScore) {
+    if (this.score === this.options.maxScore) {
       return;
-    } else if (this.score + score >= this.maxScore) {
+    } else if (this.score + score >= this.options.maxScore) {
       this.emit("maxScoreReached");
-      this.score = this.maxScore;
+      this.score = this.options.maxScore;
     } else {
-      this.emit("scoreUpdated", score);
       this.score += score;
     }
-    this.gauge.setValue(this.score);
-  }
+    this.emit("scoreUpdated", score);
 
-  private _onGo(): void {
-    if (this.isGuiLocked) return;
-
-    if (this.path.items.length > 0) return;
-
-    if (this.levelVariant === "turnBased" || this.levelVariant === "long") {
-      if (this.grid.containsHoles()) {
-        this._regenerate();
-      } else {
-        // TODO: add confirm dialog "Are you sure?"
-
-        this._activateChildEntity(
-          new entity.EntitySequence([
-            new entity.FunctionCallEntity(() => {
-              this.isGuiLocked = true;
-              this.grid.regenerate(5, (n) => n.state === "present");
-            }),
-            new entity.WaitingEntity(1200),
-            new entity.FunctionCallEntity(() => {
-              this._endTurn();
-              this._refresh();
-            }),
-          ])
-        );
-      }
-    } else {
-      // As if the sequence dropped all the way down
-      this.sequenceManager.dropSequences();
-      this._onInfection();
+    if (!this.options.disableGauge) {
+      this.gauge.setValue(this.score);
     }
   }
 
@@ -333,29 +369,18 @@ export class Level extends entity.CompositeEntity {
     return this.disablingAnimations.size > 0;
   }
 
-  get isGuiLocked(): boolean {
-    return !this.goButton.buttonMode || this.isDisablingAnimationInProgress;
-  }
+  public endTurn(): void {
+    this.disablingAnimations.add("game");
 
-  set isGuiLocked(value: boolean) {
-    this.goButton.buttonMode = !value;
-    this.goButton.interactive = !value;
-    this.goButton.text.style.fill = !value ? "#000000" : "#4e535d";
-    for (const bonusName in this.bonusesManager.sprites) {
-      this.bonusesManager.sprites[bonusName].buttonMode = !value;
-    }
-  }
-
-  private _endTurn(): void {
     if (this.grid.isGameOver()) {
-      this._transition = entity.makeTransition("game_over");
+      this.gameOver();
       return;
     }
 
     // Create a list of "actions" that will take place at the end of calling this function
     let actions: entity.Entity[] = [];
 
-    const countSequences = this.sequenceManager.countSequences;
+    const countSequences = this.sequenceManager.sequenceCount;
     if (countSequences > 0) {
       const infectionSequence = this.grid.infect(countSequences * 5);
       actions.push(infectionSequence);
@@ -364,16 +389,15 @@ export class Level extends entity.CompositeEntity {
     if (countSequences < this.sequenceManager.sequenceCountLimit) {
       actions.push(
         new entity.FunctionCallEntity(() => {
-          this.sequenceManager.addSequenceAccordingToLevelVariant();
+          if (this.options.disableExtraSequence) {
+            this.disablingAnimations.delete("game");
+            return;
+          }
+
+          this.sequenceManager.add();
         })
       );
     }
-
-    actions.push(
-      new entity.FunctionCallEntity(() => {
-        this.isGuiLocked = false;
-      })
-    );
 
     if (actions.length > 0) {
       this._activateChildEntity(new entity.EntitySequence(actions));
@@ -390,21 +414,23 @@ export class Level extends entity.CompositeEntity {
     }
 
     this.sequenceManager.crunch(this.path, async () => {
-      if (this.levelVariant === "turnBased") {
-        this.sequenceManager.distributeSequences();
+      if (this.options.variant === "turnBased") {
+        this.sequenceManager.adjustRelativePositionOfSequences();
       }
 
+      const first = [...this.sequenceManager.sequences][0];
+
       if (
-        this.levelVariant === "long" &&
-        this.sequenceManager.sequences[0] &&
-        this.sequenceManager.sequences[0].maxActiveLength < 3
+        this.options.variant === "long" &&
+        first &&
+        first.maxActiveLength < 3
       ) {
         await new Promise((resolve) => {
-          this.sequenceManager.sequences[0].down(true, resolve);
+          first.down(true, resolve);
         });
       }
-      if (this.sequenceManager.countSequences === 0) {
-        this._regenerate();
+      if (this.sequenceManager.sequenceCount === 0) {
+        this.regenerate();
       }
     });
 
@@ -413,13 +439,11 @@ export class Level extends entity.CompositeEntity {
   }
 
   public setGoButtonText(text: string) {
-    this.goButton.text.style.fontSize = text.length > 6 ? 50 : 70;
-    this.goButton.text.text = text;
+    if (!this.options.disableButton) this.goButton.setText(text);
   }
 
-  private _refresh(): void {
+  public refresh(): void {
     if (this.path.items.length > 0) {
-      this.goButton.interactive = false;
       const match = this.sequenceManager.matchesSequence(this.path);
       if (match === true) {
         this.setGoButtonText("MATCH");
@@ -428,15 +452,16 @@ export class Level extends entity.CompositeEntity {
       }
     } else {
       this.setGoButtonText("SKIP");
-      this.goButton.interactive = true;
     }
     this.sequenceManager.updateHighlighting(this.path);
   }
 
-  private _regenerate(): void {
+  public regenerate(): void {
+    this.disablingAnimations.add("game");
+
     // Switch to regenerate mode
     this.state = "regenerate";
-    this._refresh();
+    this.refresh();
 
     const regen = () => {
       const newNucleotides = this.grid.fillHoles();
@@ -448,8 +473,8 @@ export class Level extends entity.CompositeEntity {
           new entity.FunctionCallEntity(() => {
             this.state = "crunch";
 
-            this._endTurn();
-            this._refresh();
+            this.endTurn();
+            this.refresh();
           }),
         ])
       );
@@ -462,11 +487,14 @@ export class Level extends entity.CompositeEntity {
     }
   }
 
-  private _onInfection(infectionCount = 1): void {
+  public onInfection(infectionCount = 1): void {
+    this.emit("infected");
+
+    this.disablingAnimations.add("game");
     this.wasInfected = true;
 
     if (this.grid.isGameOver()) {
-      this._transition = entity.makeTransition("game_over");
+      this.gameOver();
       return;
     }
 
@@ -474,13 +502,11 @@ export class Level extends entity.CompositeEntity {
 
     this._activateChildEntity(
       new entity.EntitySequence([
-        new entity.FunctionCallEntity(() => {
-          this.disablingAnimations.add("infection");
-        }),
         infectionSequence,
         new entity.FunctionCallEntity(() => {
-          this.sequenceManager.addSequenceAccordingToLevelVariant();
-          this.disablingAnimations.delete("infection");
+          if (this.options.disableExtraSequence) return;
+
+          this.sequenceManager.add();
         }),
       ])
     );

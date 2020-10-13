@@ -3,11 +3,30 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
+import * as util from "booyah/src/util";
 
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
 
 import * as level from "../scenes/level";
+
+export interface PopupOptions {
+  withBackground: boolean;
+  closeOnBackgroundClick: boolean;
+  adjustHeight: boolean;
+  height: number;
+  width: number;
+  onClose: (level: level.Level) => any;
+}
+
+export const defaultPopupOptions = {
+  withBackground: false,
+  closeOnBackgroundClick: false,
+  width: crisprUtil.width * 0.8, // 864
+  height: crisprUtil.height * 0.7, // 1344
+  adjustHeight: false,
+  onClose: () => {},
+};
 
 /**
  * Emits:
@@ -17,58 +36,107 @@ import * as level from "../scenes/level";
 export abstract class Popup extends entity.CompositeEntity {
   private _id: string;
   private _container = new PIXI.Container();
+  private _height: number;
 
   public shaker: anim.DisplayObjectShakesManager;
   public background?: PIXI.Sprite;
 
-  public readonly width = crisprUtil.width * 0.8; // 864
-  public readonly height = crisprUtil.height * 0.7; // 1344
-  public readonly center = new PIXI.Point(this.width / 2, this.height / 2);
-
-  /** popup body container */
-  public readonly container = new PIXI.Container();
+  public readonly body = new PIXI.Container();
 
   // todo: add an optional popup background as sprite
 
-  constructor(public readonly withBackground: boolean = false) {
+  constructor(public readonly options: Partial<PopupOptions>) {
     super();
+
+    this.options = util.fillInOptions(options, defaultPopupOptions);
+
     this._id = "popup:" + Math.random();
 
-    this.container.position.set(this.width * -0.5, this.height * -0.5);
     this._container.position.set(crisprUtil.width / 2, crisprUtil.height / 2);
-    this._container.addChild(this.container);
+    this._container.addChild(this.body);
 
-    this.shaker = new anim.DisplayObjectShakesManager(this.container);
+    this.shaker = new anim.DisplayObjectShakesManager(this.body);
+
+    this.body.position.x = this.width * -0.5;
+
+    this._height = this.options.adjustHeight ? 0 : this.options.height;
   }
 
   get level(): level.Level {
     return this._entityConfig.level;
   }
 
+  get center(): PIXI.Point {
+    return new PIXI.Point(this.width / 2, this.height / 2);
+  }
+
+  get width(): number {
+    return this.options.width;
+  }
+
+  get height(): number {
+    return this._height;
+  }
+
+  set height(n) {
+    this._height = n;
+
+    if (this.options.withBackground && this.background) {
+      this.background.height = this._height + 100;
+    }
+
+    this.body.position.y = this._height * -0.5;
+  }
+
+  row(container: PIXI.Container, height?: number): this {
+    height = height ?? container.height;
+
+    container.position.y += this.height;
+
+    this.body.addChild(container);
+
+    this.height += height;
+
+    return this;
+  }
+
   setup(frameInfo: entity.FrameInfo, entityConfig: entity.EntityConfig) {
     super.setup(frameInfo, entityConfig);
 
+    this._once(this, "closed", () => {
+      this.options.onClose(this.level);
+    });
+
     // background
-    if (this.withBackground) {
+    if (this.options.withBackground) {
       this.background = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
           "images/popup_background.png"
         ].texture
       );
-      this.background.width = this.width;
-      this.background.height = this.height;
 
-      this.container.addChildAt(this.background, 0);
-      this.emit("backgroundLoaded", this.background);
+      this.body.addChildAt(this.background, 0);
+
+      this.background.width = this.width;
+      this.background.position.y = -50;
+
+      // use background as closure button
+      if (this.options.closeOnBackgroundClick) {
+        this.button(this.background, () => {
+          this.close();
+        });
+      }
     }
 
     this.level.disablingAnimations.add(this._id);
+    this.level.disablingAnimations.add("popup");
 
     this._entityConfig.container.addChild(this._container);
 
     this._activateChildEntity(anim.popup(this._container, 700));
-
     this._activateChildEntity(this.shaker);
+
+    this.emit("setup");
   }
 
   /**
@@ -83,224 +151,259 @@ export abstract class Popup extends entity.CompositeEntity {
   close() {
     this._activateChildEntity(
       anim.sink(this._container, 150, () => {
-        this.container.removeChildren();
-        this._container.removeChild(this.container);
+        this.body.removeChildren();
+        this._container.removeChild(this.body);
         this._entityConfig.container.removeChild(this._container);
         this.shaker.removeAllShakes();
         this.level.disablingAnimations.delete(this._id);
+        this.level.disablingAnimations.delete("popup");
         this._transition = entity.makeTransition();
         this.emit("closed");
       })
     );
   }
 
-  button(displayObject: PIXI.DisplayObject, callback?: () => any) {
-    if (!this.container.children.includes(displayObject)) {
-      this.container.addChild(displayObject);
+  button(button: PIXI.Container, callback: () => any) {
+    if (!this.body.children.includes(button)) {
+      this.row(button, 150);
     }
-    displayObject.buttonMode = true;
-    displayObject.interactive = true;
-    this._on(displayObject, "pointerup", () => {
-      callback?.();
+    button.buttonMode = true;
+    button.interactive = true;
+    this._on(button, "pointerup", () => {
+      callback();
     });
-  }
-}
-
-export class ExamplePopup extends Popup {
-  private text: PIXI.Text;
-
-  protected _setup() {
-    // make text with anchor already set on middle
-    this.text = crisprUtil.makeText("Click-me for close popup!", {
-      fontSize: 100,
-      stroke: 0xffffff,
-      strokeThickness: 10,
-    });
-
-    // place text on center of popup
-    this.text.position.copyFrom(this.center);
-
-    // use this text as button for close popup
-    this.button(this.text, () => {
-      this.close();
-    });
-
-    // start popup shaking (all shakers are automatically removed on closure)
-    this.shaker.setShake("example", 3);
   }
 }
 
 export class TerminatedLevelPopup extends Popup {
-  // todo: make popup with stars and score of level
+  private checked: { [text: string]: boolean };
+  private starCount: number; // sur 3
+  private checkCount: number;
+  private checkedCount: number;
 
   constructor() {
-    super(true);
+    super({
+      adjustHeight: true,
+      withBackground: true,
+      closeOnBackgroundClick: true,
+      onClose: (level) => level.exit(),
+    });
+  }
+
+  get checks() {
+    return this.level.options.checks;
   }
 
   protected _setup() {
-    const checks = {
-      "No infection": !this.level.wasInfected,
-      "Max score reached": this.level.score >= this.level.maxScore,
-      "No virus has escaped": !this.level.someVirusHasEscaped,
-    };
+    this._once(this, "setup", () => {
+      this.checked = {};
 
-    const starCount = Object.values(checks).filter((check) => check).length;
+      for (const text in this.checks)
+        this.checked[text] = this.checks[text](this.level);
 
-    // add checks content
-    {
-      Object.entries(checks).map(([key, check], i) => {
-        const line = new PIXI.Container();
-        line.position.set(0, this.center.y + 300 + i * 100);
-        this.container.addChild(line);
+      this.checkCount = Object.values(this.checks).length;
+      this.checkedCount = Object.values(this.checked).filter(
+        (check) => check === true
+      ).length;
+      this.starCount = Math.round((this.checkedCount / this.checkCount) * 3);
 
-        const text = crisprUtil.makeText(key, {
-          stroke: 0xffffff,
-          strokeThickness: 10,
-        });
-        text.position.x = this.center.x;
-        line.addChild(text);
+      // add star-based children
+      {
+        let title: PIXI.Text;
 
-        const icon = crisprUtil.makeText(check ? "✅" : "❌", {
-          align: "right",
-          strokeThickness: 20,
-          stroke: 0x000000,
-        });
-        icon.position.x = this.width - 100;
-        line.addChild(icon);
-      });
-    }
-
-    // add star-based children
-    {
-      let title: PIXI.Text;
-
-      switch (starCount) {
-        case 1:
-          title = crisprUtil.makeText("Well done", {
-            fontSize: 150,
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
-          break;
-        case 2:
-          title = crisprUtil.makeText("Great!", {
-            fontSize: 200,
-            stroke: 0xffffff,
-            strokeThickness: 10,
-          });
-          break;
-        case 3:
+        if (this.starCount === 3) {
           title = crisprUtil.makeText("Awesome!", {
             fontSize: 250,
             stroke: 0xffffff,
             strokeThickness: 10,
           });
-          break;
-        default:
+        } else if (this.starCount === 2) {
+          title = crisprUtil.makeText("Great!", {
+            fontSize: 200,
+            stroke: 0xffffff,
+            strokeThickness: 10,
+          });
+        } else if (this.starCount === 1) {
+          title = crisprUtil.makeText("Well done", {
+            fontSize: 150,
+            stroke: 0xffffff,
+            strokeThickness: 10,
+          });
+        } else {
           title = crisprUtil.makeText("Too bad...", {
             fontSize: 100,
             stroke: 0xffffff,
             strokeThickness: 10,
           });
-        // todo: retry button
+          // todo: retry button
+        }
+
+        title.position.x = this.center.x;
+        title.position.y = 90;
+
+        this.row(title, 350);
       }
 
-      title.position.set(this.center.x, this.center.y - 500);
-      this.container.addChild(title);
-    }
+      // add stars
+      {
+        const stars = new PIXI.Container();
 
-    // add score
-    {
-      const score = crisprUtil.makeText(
-        `Score: ${this.level.score} pts (${crisprUtil.proportion(
-          this.level.score,
-          0,
-          this.level.maxScore,
-          0,
-          100,
-          true
-        )}%)`,
-        {
-          fontSize: 100,
-          fill: 0xffffff,
-          strokeThickness: 20,
-          stroke: 0x000000,
-        }
-      );
+        anim.sequenced({
+          sequence: new Array(3).fill(0),
+          timeBetween: 200,
+          delay: 500,
+          onStep: (resolve, _, index) => {
+            const star = new PIXI.Sprite(
+              this._entityConfig.app.loader.resources["images/star.png"].texture
+            );
 
-      score.position.set(this.center.x, this.center.y + 100);
-      score.scale.set(0);
+            star.scale.set(0);
+            star.anchor.set(0.5);
 
-      this.container.addChild(score);
+            if (index >= this.starCount) {
+              star.tint = 0x666666;
+            }
 
-      this._activateChildEntity(anim.popup(score, 800));
-      this._activateChildEntity(
-        new tween.Tween({
-          from: 0,
-          to: this.level.score,
-          easing: easing.easeInQuad,
-          duration: 3000,
-          onUpdate: (value) =>
-            (score.text = `Score: ${Math.floor(value)} pts (${Math.floor(
-              crisprUtil.proportion(value, 0, this.level.maxScore, 0, 100, true)
-            )}%)`),
-        })
-      );
-    }
+            switch (index) {
+              case 0:
+                star.position.x = this.center.x / 2 - 50;
+                star.angle = -10;
+                break;
+              case 1:
+                star.position.x = this.center.x;
+                star.position.y = -20;
+                break;
+              case 2:
+                star.position.x = this.center.x + this.center.x / 2 + 50;
+                star.angle = 10;
+                break;
+            }
 
-    // add stars
-    {
-      anim.sequenced({
-        sequence: Object.keys(checks),
-        timeBetween: 200,
-        delay: 500,
-        onStep: (resolve, check, index) => {
-          const star = new PIXI.Sprite(
-            this._entityConfig.app.loader.resources["images/star.png"].texture
-          );
+            stars.addChild(star);
 
-          star.scale.set(0);
-          star.anchor.set(0.5);
-
-          if (index >= starCount) {
-            star.tint = 0x666666;
-          }
-
-          star.position.y = this.center.y - 200;
-
-          switch (index) {
-            case 0:
-              star.position.x = 150;
-              star.angle = -10;
-              break;
-            case 1:
-              star.position.x = this.center.x;
-              star.position.y -= 30;
-              break;
-            case 2:
-              star.position.x = this.width - 150;
-              star.angle = 10;
-              break;
-          }
-
-          this.container.addChild(star);
-
-          this._activateChildEntity(
-            anim.popup(star, 400, () => {
-              resolve();
-            })
-          );
-        },
-      });
-    }
-
-    // use background as closure button
-    if (this.withBackground) {
-      this._once(this, "backgroundLoaded", (background: PIXI.Sprite) => {
-        this.button(background, () => {
-          this.close();
+            this._activateChildEntity(anim.popup(star, 400, resolve));
+          },
         });
-      });
+
+        this.row(stars, 200);
+      }
+
+      // add score
+      if (!this.level.options.disableScore) {
+        const score = crisprUtil.makeText(
+          `Score: ${this.level.score} pts (${crisprUtil.proportion(
+            this.level.score,
+            0,
+            this.level.options.maxScore,
+            0,
+            100,
+            true
+          )}%)`,
+          {
+            fontSize: 85,
+            fill: 0xffffff,
+            strokeThickness: 20,
+            stroke: 0x000000,
+          }
+        );
+
+        score.position.set(this.center.x, 40);
+
+        score.scale.set(0);
+
+        this.row(score, 100);
+
+        this._activateChildEntity(anim.popup(score, 800));
+        this._activateChildEntity(
+          new tween.Tween({
+            from: 0,
+            to: this.level.score,
+            easing: easing.easeInQuad,
+            duration: 1000,
+            onUpdate: (value) =>
+              (score.text = `Score: ${Math.floor(value)} pts (${Math.floor(
+                crisprUtil.proportion(
+                  value,
+                  0,
+                  this.level.options.maxScore,
+                  0,
+                  100,
+                  true
+                )
+              )}%)`),
+          })
+        );
+      }
+
+      // add lines
+      {
+        Object.entries(this.checked).map(([key, check], i) => {
+          const line = new PIXI.Container();
+
+          const text = crisprUtil.makeText(key, {
+            stroke: 0xffffff,
+            strokeThickness: 10,
+          });
+
+          text.position.set(this.center.x, 50);
+
+          line.addChild(text);
+
+          const icon = crisprUtil.makeText(check ? "✅" : "❌", {
+            align: "right",
+            strokeThickness: 20,
+            stroke: 0x000000,
+          });
+
+          icon.position.set(this.width - 100, 50);
+
+          line.addChild(icon);
+
+          this.row(line, 100);
+        });
+      }
+    });
+  }
+}
+
+export class TutorialPopup extends Popup {
+  private text: PIXI.Text;
+  private content: PIXI.Text;
+
+  constructor(
+    public _options: {
+      title: string;
+      content: string;
+      exampleImage?: PIXI.Sprite;
     }
+  ) {
+    super({
+      withBackground: true,
+      closeOnBackgroundClick: true,
+      adjustHeight: true,
+    });
+  }
+
+  protected _setup() {
+    this._once(this, "setup", () => {
+      this.text = crisprUtil.makeText(this._options.title, {
+        fontSize: 150,
+        fill: 0xffffff,
+        wordWrapWidth: this.width * 0.9,
+        wordWrap: true,
+      });
+
+      this.content = crisprUtil.makeText(this._options.content, {
+        fill: 0xffffff,
+        wordWrapWidth: this.width * 0.9,
+        wordWrap: true,
+      });
+
+      this.text.position.set(this.center.x, 150);
+
+      this.content.position.set(this.center.x, 200);
+
+      this.row(this.text, 300).row(this.content, 400);
+    });
   }
 }

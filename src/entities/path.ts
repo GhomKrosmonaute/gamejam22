@@ -1,8 +1,11 @@
 import * as PIXI from "pixi.js";
-import * as _ from "underscore";
+
 import * as entity from "booyah/src/entity";
+
 import * as nucleotide from "./nucleotide";
+
 import * as level from "../scenes/level";
+
 import * as anim from "../animations";
 
 /**
@@ -27,6 +30,7 @@ export class Path extends entity.CompositeEntity {
     );
 
     this._on(this, "updated", () => {
+      this.level.emit("pathUpdated");
       this.refresh();
     });
   }
@@ -59,7 +63,7 @@ export class Path extends entity.CompositeEntity {
 
   get maxLength(): number {
     return Math.max(
-      ...this.level.sequenceManager.sequences.map((s) => s.baseLength)
+      ...[...this.level.sequenceManager.sequences].map((s) => s.baseLength)
     );
   }
 
@@ -80,7 +84,8 @@ export class Path extends entity.CompositeEntity {
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
-    if (n.state === "missing" || this.level.isGuiLocked) return false;
+    if (n.state === "missing" || this.level.isDisablingAnimationInProgress)
+      return false;
 
     // check the cancellation & cancel to previous nucleotide
     const index = this.items.indexOf(n);
@@ -101,7 +106,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   add(n: nucleotide.Nucleotide): boolean {
-    if (this.level.isGuiLocked) return false;
+    if (this.level.isDisablingAnimationInProgress) return false;
 
     // not add scissors on first position
     if (this.first && this.first.type === "scissors") {
@@ -188,8 +193,8 @@ export class Path extends entity.CompositeEntity {
             item.sprite,
             duration,
             function () {
-              this.state = "missing";
               this.once("stateChanged", resolve);
+              this.state = "missing";
             }.bind(item)
           )
         );
