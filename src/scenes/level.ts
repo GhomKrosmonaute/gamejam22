@@ -26,6 +26,7 @@ export interface LevelOptions {
   disableButton: boolean;
   disableGauge: boolean;
   disableScore: boolean;
+  retryOnFail: boolean;
   variant: LevelVariant;
   maxScore: number;
   dropSpeed: number;
@@ -51,6 +52,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableButton: false,
   disableGauge: false,
   disableScore: false,
+  retryOnFail: false,
   variant: "turnBased",
   dropSpeed: 0.001,
   maxScore: 1000,
@@ -85,8 +87,9 @@ export interface HookOptions<Entity, EventName extends LevelEventName> {
   /** Filter function, trigger hook if it returns `true` */
   filter?: (...params: LevelEventParams<EventName>) => boolean | void;
   /** Entity to activate on hook is triggered */
-  entity: Entity;
+  entity?: Entity;
   once?: true;
+  reset?: ((level: Level) => Partial<LevelOptions>) | Partial<LevelOptions>;
 }
 
 export class Hook<
@@ -112,7 +115,22 @@ export class Hook<
           !this.options.filter ||
           this.options.filter.bind(this.emitter)(...params)
         ) {
-          this._activateChildEntity(this.options.entity, this.level.config);
+          if (this.options.reset) {
+            const newOptions =
+              typeof this.options.reset === "function"
+                ? this.options.reset(this.level)
+                : this.options.reset;
+
+            this.level._teardown();
+            this.level.options = {
+              ...this.level.options,
+              ...newOptions,
+            };
+            this.level._setup();
+          }
+          if (this.options.entity) {
+            this._activateChildEntity(this.options.entity, this.level.config);
+          }
         }
       }
     );
@@ -156,8 +174,11 @@ export class Level extends entity.CompositeEntity {
   public crunchCount = 0;
   public score: number;
   public failed = false;
+  public sequenceWasCrunched = false;
+  public scissorsWasIncludes = false;
+  public crunchedSequenceCount = 0;
 
-  constructor(public readonly options: Partial<LevelOptions>) {
+  constructor(public options: Partial<LevelOptions>) {
     super();
     this.options = util.fillInOptions(this.options, defaultLevelOptions);
     this.score = this.options.baseScore;
@@ -342,7 +363,11 @@ export class Level extends entity.CompositeEntity {
 
   gameOver() {
     this.failed = true;
-    this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
+    if (this.options.retryOnFail) {
+      this._activateChildEntity(new popup.FailedLevelPopup(), this.config);
+    } else {
+      this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
+    }
   }
 
   exit() {

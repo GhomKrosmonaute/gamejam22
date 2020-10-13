@@ -440,9 +440,15 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   down(addScore: boolean, callback?: () => any) {
+    this.level.sequenceWasCrunched = true;
+    this.level.crunchedSequenceCount++;
+
     this.level.disablingAnimations.add("sequenceDown");
+
     const isLong = this.level.options.variant === "long";
+
     const fully = this.nucleotides.every((n) => n.state === "inactive");
+
     anim.sequenced({
       sequence: this.nucleotides,
       timeBetween: isLong ? 80 : 200,

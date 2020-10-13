@@ -6,6 +6,7 @@ import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
 
 import * as anim from "../animations";
+import * as levels from "../levels";
 import * as crisprUtil from "../crisprUtil";
 
 import * as level from "../scenes/level";
@@ -153,6 +154,10 @@ export abstract class Popup extends entity.CompositeEntity {
     );
   }
 
+  _teardown() {
+    this.close();
+  }
+
   /**
    * In order:
    * 1. animate popup closure
@@ -186,6 +191,72 @@ export abstract class Popup extends entity.CompositeEntity {
     this._on(button, "pointerup", () => {
       callback();
     });
+  }
+}
+
+export class FailedLevelPopup extends Popup {
+  private checked: { [text: string]: boolean };
+
+  constructor() {
+    super({
+      adjustHeight: true,
+      withBackground: true,
+      closeOnBackgroundClick: true,
+      onClose: (level) => level.exit(),
+    });
+  }
+
+  get checks() {
+    return this.level.options.checks;
+  }
+
+  onSetup() {
+    this.checked = {};
+
+    for (const text in this.checks)
+      this.checked[text] = this.checks[text](this.level);
+
+    // add title
+    {
+      let title = crisprUtil.makeText("Failed...", {
+        fontSize: 250,
+        stroke: 0xffffff,
+        strokeThickness: 10,
+      });
+
+      title.position.x = this.center.x;
+      title.position.y = 90;
+
+      this.row(title, 350);
+    }
+
+    // add lines
+    {
+      Object.entries(this.checked).map(([key, check], i) => {
+        const line = new PIXI.Container();
+
+        const text = crisprUtil.makeText(key, {
+          stroke: 0xffffff,
+          strokeThickness: 10,
+        });
+
+        text.position.set(this.center.x, 50);
+
+        line.addChild(text);
+
+        const icon = crisprUtil.makeText(check ? "✅" : "❌", {
+          align: "right",
+          strokeThickness: 20,
+          stroke: 0x000000,
+        });
+
+        icon.position.set(this.width - 100, 50);
+
+        line.addChild(icon);
+
+        this.row(line, 100);
+      });
+    }
   }
 }
 

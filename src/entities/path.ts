@@ -180,6 +180,9 @@ export class Path extends entity.CompositeEntity {
   crunch(callback?: () => any) {
     this.isCrunchAnimationRunning = true;
     this.level.disablingAnimations.add("pathCrunch");
+    if (this.correctlyContainsScissors()) {
+      this.level.scissorsWasIncludes = true;
+    }
     anim.sequenced({
       sequence: this.items,
       timeBetween: 50,
