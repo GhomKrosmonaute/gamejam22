@@ -45,7 +45,6 @@ export const fullColorNames: { [k in ColorName]: string } = {
 export class Nucleotide extends entity.CompositeEntity {
   public _container: PIXI.Container;
   public type: NucleotideType = "normal";
-  public colorName: ColorName = getRandomColorName();
   public isHovered = false;
   public isHearthBeatActive = false;
   public shakes: anim.DisplayObjectShakesManager;
@@ -69,7 +68,8 @@ export class Nucleotide extends entity.CompositeEntity {
     public readonly fullRadius: number,
     public parent: "grid" | "sequence",
     position = new PIXI.Point(),
-    public rotation = 0
+    public rotation = 0,
+    public colorName: ColorName = getRandomColorName()
   ) {
     super();
 
@@ -148,7 +148,11 @@ export class Nucleotide extends entity.CompositeEntity {
     if (isHighlighted && !this._isHighlighted) {
       this.shakes.setShake("highlight", 2);
 
-      this.sprite.scale.set(this.parent === "grid" ? 0.9 : 1.1);
+      if (this.parent === "grid") {
+        this._container.scale.set(0.9);
+      } else {
+        this.sprite.scale.set(1.1);
+      }
 
       this._highlightSprite = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
@@ -163,7 +167,11 @@ export class Nucleotide extends entity.CompositeEntity {
     } else if (!isHighlighted && this._isHighlighted) {
       this.shakes.removeShake("highlight");
 
-      this.sprite.scale.set(1);
+      if (this.parent === "grid") {
+        this._container.scale.set(1);
+      } else {
+        this.sprite.scale.set(1);
+      }
 
       this._container.removeChild(this._highlightSprite);
       this._highlightSprite = null;
@@ -405,7 +413,7 @@ export class Nucleotide extends entity.CompositeEntity {
   private _createAnimatedSprite(): entity.AnimatedSpriteEntity {
     let animatedSprite: entity.AnimatedSpriteEntity;
     if (this.type === "normal") {
-      this.generateColor();
+      if (!this.colorName) this.generateColor();
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources[
           `images/nucleotide_${this.fullColorName}.json`

@@ -2,29 +2,12 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as scroll from "booyah/src/scroll";
+import * as tween from "booyah/src/tween";
 
-import * as level from "./level";
+import * as levels from "../levels";
 
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
-import { height } from "../crisprUtil";
-
-export type LevelName = keyof Levels;
-export type Levels = typeof levels;
-export const levels = {
-  turnBased: new level.Level("turnBased"),
-  continuous: new level.Level("continuous"),
-  long: new level.Level("long"),
-  turnBased1: new level.Level("turnBased"),
-  continuous1: new level.Level("continuous"),
-  long1: new level.Level("long"),
-  turnBased2: new level.Level("turnBased"),
-  continuous2: new level.Level("continuous"),
-  long31: new level.Level("long"),
-  turnBased23: new level.Level("turnBased"),
-  continuou3s2: new level.Level("continuous"),
-};
-export const levelNames = Object.keys(levels);
 
 export class Minimap extends entity.CompositeEntity {
   private background: PIXI.Sprite;
@@ -81,12 +64,12 @@ export class Minimap extends entity.CompositeEntity {
 
     this.container.addChild(this.links);
 
-    for (const levelName in levels) {
+    for (const levelName in levels.levels) {
       // make a button
       const position = new PIXI.Point(
         crisprUtil.approximate(crisprUtil.width * 0.5, 50),
         crisprUtil.proportion(
-          levelNames.indexOf(levelName),
+          levels.levelNames.indexOf(levelName),
           -0.5,
           4 - 0.5,
           200,
@@ -108,7 +91,28 @@ export class Minimap extends entity.CompositeEntity {
       });
 
       this._on(levelSprite, "pointerup", () => {
-        this.setLevel(<LevelName>levelName);
+        levelSprite.filters = [new PIXI.filters.AlphaFilter(1)];
+        this._activateChildEntity(
+          new tween.Tween({
+            from: 0,
+            to: 1,
+            duration: 500,
+            onUpdate: (value) => {
+              levelSprite.scale.set(crisprUtil.proportion(value, 0, 1, 1, 10));
+              (levelSprite
+                .filters[0] as PIXI.filters.AlphaFilter).alpha = crisprUtil.proportion(
+                value,
+                0,
+                1,
+                1,
+                0
+              );
+            },
+            onTeardown: () => {
+              this.setLevel(<levels.LevelName>levelName);
+            },
+          })
+        );
       });
 
       levelSprite.addChild(text);
@@ -169,8 +173,8 @@ export class Minimap extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this.container);
   }
 
-  private setLevel(levelName: LevelName) {
-    this._teardown();
-    this._activateChildEntity(levels[levelName]);
+  private setLevel(levelName: levels.LevelName) {
+    this;
+    this._transition = entity.makeTransition(levelName);
   }
 }

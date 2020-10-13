@@ -45,12 +45,15 @@ export function middle(a: PIXI.Point, b: PIXI.Point): PIXI.Point {
 export function random(): number;
 /** random between 0 and X */
 export function random(min: number): number;
-/** random choice on number array */
-export function random(min: number[]): number;
+/** random pick in array */
+export function random<T>(min: T[]): T;
 /** random in range */
 export function random(min: number, max: number): number;
 /** polyvalent random util */
-export function random(min?: number[] | number, max?: number): number {
+export function random<T>(
+  min?: (number | T)[] | number,
+  max?: number
+): number | T {
   let rand = Math.random();
   if (typeof min === "undefined") {
     return rand;
@@ -94,16 +97,25 @@ export function approximate(base: number, shift: number): number {
   return random(base - shift, base + shift);
 }
 
+export interface Range {
+  top: number;
+  middle: number;
+  bottom: number;
+}
+
 /**
+ * @param target
  * @param angle in degrees
+ * @param radius
+ * @param centerY
  */
 export function positionAlongMembrane(
   target: PIXI.DisplayObject | PIXI.Point,
-  angle: number
+  angle: number,
+  radius = 1337,
+  centerY = 320 + radius
 ): void {
   const rotation = geom.degreesToRadians(angle);
-  const radius = 1337;
-  const centerY = 320 + radius;
   if (target instanceof PIXI.Point) {
     target.set(
       radius * Math.cos(rotation + Math.PI / 2) + 1080 / 2,
