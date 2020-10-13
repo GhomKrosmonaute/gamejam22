@@ -22,10 +22,12 @@ jobs:
         run: yarn dist
 
       - name: Upload to DigitalOcean
-        uses: koraykoska/s3-upload-github-action@master
+        uses: idlefingers/do-space-sync-action@master
+        with:
+          args: --acl public-read
         env:
-          FILE: ./dist/
-          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
-          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          SOURCE_DIR: ./dist/
+          SPACE_NAME: ${{ secrets.SPACE_NAME }}
+          SPACE_REGION: ${{ secrets.SPACE_REGION }}
+          SPACE_ACCESS_KEY_ID: ${{ secrets.SPACE_ACCESS_KEY_ID }}
+          SPACE_SECRET_ACCESS_KEY: ${{ secrets.SPACE_SECRET_ACCESS_KEY }}
