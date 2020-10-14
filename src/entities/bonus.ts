@@ -48,7 +48,7 @@ export abstract class Bonus extends entity.CompositeEntity {
         strokeThickness: 40,
         stroke: 0x444444,
       });
-      text.position.set(-100, 120);
+      text.position.set(-100, -100);
       this.sprite.addChild(text);
     }
   }
@@ -279,16 +279,13 @@ export class BonusesManager extends entity.CompositeEntity {
 
   _setup() {
     this.container = new PIXI.Container();
+    this.container.position.set(0, this._entityConfig.app.view.height - 170);
     this._entityConfig.container.addChild(this.container);
 
     this.bonusBackground = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         "images/hud_bonus_background.png"
       ].texture
-    );
-    this.bonusBackground.position.set(
-      this._entityConfig.app.view.width * 0.07,
-      this._entityConfig.app.view.height * 0.88
     );
     this.bonusBackground.scale.set(0.65);
     this.container.addChild(this.bonusBackground);
@@ -351,10 +348,7 @@ export class BonusesManager extends entity.CompositeEntity {
       bonus.count += count;
       return;
     }
-    const position = new PIXI.Point(
-      160 + this.bonuses.length * 190,
-      this._entityConfig.app.view.height * 0.935
-    );
+    const position = new PIXI.Point(100 + this.bonuses.length * 190, 100);
     const sprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         `images/bonus_${bonus.name}.png`
