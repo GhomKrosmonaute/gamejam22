@@ -6,6 +6,8 @@ import * as tween from "booyah/src/tween";
 
 import * as levels from "../levels";
 
+import * as level from "./level";
+
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
 
@@ -17,6 +19,7 @@ export class Minimap extends entity.CompositeEntity {
   private particlesBis: PIXI.Sprite;
   private links: PIXI.Graphics;
   private scrollBox: scroll.Scrollbox;
+  private levelSprites: { [title: string]: PIXI.Sprite } = {};
 
   protected _setup() {
     this.links = new PIXI.Graphics();
@@ -132,6 +135,8 @@ export class Minimap extends entity.CompositeEntity {
       this._activateChildEntity(shaking);
 
       this.buttons.addChild(levelSprite);
+
+      this.levelSprites[levelName] = levelSprite;
     }
 
     this.scrollBox = new scroll.Scrollbox({
@@ -151,6 +156,7 @@ export class Minimap extends entity.CompositeEntity {
     this.scrollBox.refresh();
 
     this._entityConfig.container.addChild(this.container);
+    this._entityConfig.minimap = this;
   }
 
   protected _update() {
@@ -182,5 +188,11 @@ export class Minimap extends entity.CompositeEntity {
 
   private setLevel(levelName: levels.LevelName) {
     this._transition = entity.makeTransition(levelName);
+  }
+
+  public setResult(levelName: levels.LevelName, results: level.LevelResults) {
+    const text = crisprUtil.makeText(JSON.stringify(results.checks));
+    this.levelSprites[levelName].removeChildren();
+    this.levelSprites[levelName].addChild(text);
   }
 }

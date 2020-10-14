@@ -6,7 +6,7 @@ import * as bonuses from "./entities/bonus";
 export const levels = {
   // first real level
   "Level 1": () =>
-    new level.Level({
+    new level.Level("Level 1", {
       variant: "turnBased",
       maxScore: 200,
       initialBonuses: [
@@ -33,7 +33,7 @@ export const levels = {
     }),
 
   Tutorial: () =>
-    new level.Level({
+    new level.Level("Tutorial", {
       variant: "turnBased",
       gridShape: "mini",
       scissorCount: 0,

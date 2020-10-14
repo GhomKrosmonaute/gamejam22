@@ -5,6 +5,7 @@ import * as util from "booyah/src/util";
 
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
+import * as levels from "../levels";
 
 import * as minimap from "./minimap";
 
@@ -18,6 +19,13 @@ import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
+
+export interface LevelResults {
+  checks: { [text: string]: boolean };
+  checkCount: number;
+  checkedCount: number;
+  starCount: number;
+}
 
 export interface LevelOptions {
   disableExtraSequence: boolean;
@@ -178,7 +186,10 @@ export class Level extends entity.CompositeEntity {
   public scissorsWasIncludes = false;
   public crunchedSequenceCount = 0;
 
-  constructor(public options: Partial<LevelOptions>) {
+  constructor(
+    public name: levels.LevelName,
+    public options: Partial<LevelOptions>
+  ) {
     super();
     this.options = util.fillInOptions(this.options, defaultLevelOptions);
     this.score = this.options.baseScore;
@@ -387,8 +398,33 @@ export class Level extends entity.CompositeEntity {
     if (this.options.retryOnFail) {
       this._activateChildEntity(new popup.FailedLevelPopup(), this.config);
     } else {
+      this.minimap.setResult(this.name, this.getResults());
       this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
     }
+  }
+
+  getResults(): LevelResults {
+    const checks: { [text: string]: boolean } = {};
+    let checkCount = 0;
+    let checkedCount = 0;
+
+    for (const text in this.options.checks) {
+      checks[text] = this.options.checks[text](this);
+
+      checkCount++;
+      if (checks[text]) {
+        checkedCount++;
+      }
+    }
+
+    const starCount = Math.floor((checkedCount / checkCount) * 3);
+
+    return {
+      checks,
+      checkCount,
+      checkedCount,
+      starCount,
+    };
   }
 
   exit() {

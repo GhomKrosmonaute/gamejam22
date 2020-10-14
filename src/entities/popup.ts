@@ -36,16 +36,14 @@ export const defaultPopupOptions = {
 export abstract class Popup extends entity.CompositeEntity {
   protected abstract onSetup(): any;
 
-  private _id: string;
   private _container = new PIXI.Container();
   private _height: number;
 
   public shaker: anim.ShakesManager;
-  public background?: PIXI.Sprite;
+  public background?: PIXI.Graphics;
+  public bodyBackground?: PIXI.Sprite;
 
   public readonly body = new PIXI.Container();
-
-  // todo: add an optional popup background as sprite
 
   constructor(public readonly options: Partial<PopupOptions>) {
     super();
@@ -80,25 +78,38 @@ export abstract class Popup extends entity.CompositeEntity {
           },
         }),
         new entity.FunctionCallEntity(() => {
-          // background
+          // use transparent background as closure button
+          if (this.options.closeOnBackgroundClick) {
+            this.background = new PIXI.Graphics();
+            this.background
+              .beginFill(0x000000, 0.00001)
+              .drawRect(
+                crisprUtil.width * -0.5,
+                crisprUtil.height * -0.5,
+                crisprUtil.width,
+                crisprUtil.height
+              )
+              .endFill();
+
+            this.button(this.background, () => {
+              this.close();
+            });
+
+            this._container.addChild(this.background);
+          }
+
+          // background of body
           if (this.options.withBackground) {
-            this.background = new PIXI.Sprite(
+            this.bodyBackground = new PIXI.Sprite(
               this._entityConfig.app.loader.resources[
                 "images/popup_background.png"
               ].texture
             );
 
-            this.body.addChildAt(this.background, 0);
+            this.body.addChild(this.bodyBackground);
 
-            this.background.width = this.width;
-            this.background.position.y = -50;
-
-            // use background as closure button
-            if (this.options.closeOnBackgroundClick) {
-              this.button(this.background, () => {
-                this.close();
-              });
-            }
+            this.bodyBackground.width = this.width;
+            this.bodyBackground.position.y = -50;
           }
 
           this._entityConfig.container.addChild(this._container);
@@ -139,8 +150,8 @@ export abstract class Popup extends entity.CompositeEntity {
   set height(n) {
     this._height = n;
 
-    if (this.options.withBackground && this.background) {
-      this.background.height = this._height + 100;
+    if (this.options.withBackground && this.bodyBackground) {
+      this.bodyBackground.height = this._height + 100;
     }
 
     this.body.position.y = this._height * -0.5;
@@ -179,6 +190,12 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 }
 
+export class FloatingPopup extends Popup {
+  onSetup() {
+    this.level.disablingAnimations.delete("popup");
+  }
+}
+
 export abstract class EndOfLevelPopup extends Popup {
   constructor() {
     super({
@@ -194,8 +211,10 @@ export abstract class EndOfLevelPopup extends Popup {
   }
 
   protected addCheckLines() {
-    for (const text in this.checks) {
-      const check = this.checks[text](this.level);
+    const results = this.level.getResults();
+
+    for (const text in results.checks) {
+      const check = this.checks[text];
 
       const line = new PIXI.Container();
 
@@ -244,40 +263,26 @@ export class FailedLevelPopup extends EndOfLevelPopup {
 }
 
 export class TerminatedLevelPopup extends EndOfLevelPopup {
-  private checked: { [text: string]: boolean };
-  private starCount: number; // sur 3
-  private checkCount: number;
-  private checkedCount: number;
-
   onSetup() {
-    this.checked = {};
-
-    for (const text in this.checks)
-      this.checked[text] = this.checks[text](this.level);
-
-    this.checkCount = Object.values(this.checks).length;
-    this.checkedCount = Object.values(this.checked).filter(
-      (check) => check === true
-    ).length;
-    this.starCount = Math.round((this.checkedCount / this.checkCount) * 3);
+    const results = this.level.getResults();
 
     // add star-based children
     {
       let title: PIXI.Text;
 
-      if (this.starCount === 3) {
+      if (results.starCount === 3) {
         title = crisprUtil.makeText("Awesome!", {
           fontSize: 250,
           stroke: 0xffffff,
           strokeThickness: 10,
         });
-      } else if (this.starCount === 2) {
+      } else if (results.starCount === 2) {
         title = crisprUtil.makeText("Great!", {
           fontSize: 200,
           stroke: 0xffffff,
           strokeThickness: 10,
         });
-      } else if (this.starCount === 1) {
+      } else if (results.starCount === 1) {
         title = crisprUtil.makeText("Well done", {
           fontSize: 150,
           stroke: 0xffffff,
@@ -314,7 +319,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
           star.scale.set(0);
           star.anchor.set(0.5);
 
-          if (index >= this.starCount) {
+          if (index >= results.starCount) {
             star.tint = 0x666666;
           }
 
