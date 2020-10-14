@@ -10,8 +10,21 @@ import * as crisprUtil from "../crisprUtil";
 
 import * as level from "../scenes/level";
 
+export function makeCross(radius: number): PIXI.Graphics {
+  return new PIXI.Graphics()
+    .beginFill(0xffffff)
+    .drawCircle(0, 0, radius)
+    .endFill()
+    .lineStyle(radius / 6, 0x000000)
+    .moveTo(radius * -0.3, radius * -0.3)
+    .lineTo(radius * 0.3, radius * 0.3)
+    .moveTo(radius * -0.3, radius * 0.3)
+    .lineTo(radius * 0.3, radius * -0.3);
+}
+
 export interface PopupOptions {
   withBackground: boolean;
+  withClosureCross: boolean;
   closeOnBackgroundClick: boolean;
   closeOnBodyClick: boolean;
   adjustHeight: boolean;
@@ -22,6 +35,7 @@ export interface PopupOptions {
 
 export const defaultPopupOptions = {
   withBackground: false,
+  withClosureCross: true,
   closeOnBackgroundClick: false,
   closeOnBodyClick: false,
   width: crisprUtil.width * 0.8, // 864
@@ -42,6 +56,7 @@ export abstract class Popup extends entity.CompositeEntity {
   private _height: number;
 
   public shaker: anim.ShakesManager;
+  public cross?: PIXI.Graphics;
   public background?: PIXI.Graphics;
   public bodyBackground?: PIXI.Sprite;
 
@@ -98,9 +113,10 @@ export abstract class Popup extends entity.CompositeEntity {
               this.close();
             });
 
-            this._container.addChild(this.background);
+            this._container.addChildAt(this.background, 0);
           }
 
+          // close on body click
           if (this.options.closeOnBodyClick) {
             this.button(this.body, () => {
               this.close();
@@ -119,6 +135,15 @@ export abstract class Popup extends entity.CompositeEntity {
 
             this.bodyBackground.width = this.width;
             this.bodyBackground.position.y = -50;
+          }
+
+          // closure cross
+          if (this.options.withClosureCross) {
+            this.cross = makeCross(50);
+            this.cross.position.set(this.width - 150, 75);
+            this.button(this.cross, () => {
+              this.close();
+            });
           }
 
           this._entityConfig.container.addChild(this._container);
