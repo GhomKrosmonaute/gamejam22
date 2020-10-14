@@ -52,8 +52,6 @@ export abstract class Popup extends entity.CompositeEntity {
 
     this.options = util.fillInOptions(options, defaultPopupOptions);
 
-    this._id = "popup:" + Math.random();
-
     this._container.position.set(crisprUtil.width / 2, crisprUtil.height / 2);
     this._container.addChild(this.body);
 
@@ -103,7 +101,6 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   _setup() {
-    this.level.disablingAnimations.add(this._id);
     this.level.disablingAnimations.add("popup");
 
     this._once(this, "closed", () => {
@@ -115,8 +112,8 @@ export abstract class Popup extends entity.CompositeEntity {
         new entity.FunctionalEntity({
           requestTransition: () => {
             return (
-              !this.level.disablingAnimations.has("sequenceDown") &&
-              !this.level.disablingAnimations.has("pathCrunch")
+              !this.level.disablingAnimations.has("sequence.down") &&
+              !this.level.disablingAnimations.has("path.crunch")
             );
           },
         }),
@@ -154,7 +151,6 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   _teardown() {
-    this.level.disablingAnimations.delete(this._id);
     this.level.disablingAnimations.delete("popup");
     this.body.removeChildren();
     this.shaker.removeAllShakes();

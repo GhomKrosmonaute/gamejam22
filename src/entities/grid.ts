@@ -543,13 +543,23 @@ export class Grid extends entity.CompositeEntity {
       .value();
 
     // Stagger infections after the other
-    const sequence: entity.Entity[] = [];
+    const sequence: entity.Entity[] = [
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimations.add("grid.infect");
+      }),
+    ];
     for (let i = 0; i < infections.length; i++) {
       sequence.push(
         new entity.FunctionCallEntity(() => (infections[i].state = "infected"))
       );
       sequence.push(new entity.WaitingEntity(100));
     }
+
+    sequence.push(
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimations.delete("grid.infect");
+      })
+    );
 
     return new entity.EntitySequence(sequence);
   }
