@@ -206,15 +206,11 @@ export abstract class EndOfLevelPopup extends Popup {
     });
   }
 
-  get checks() {
-    return this.level.options.checks;
-  }
-
   protected addCheckLines() {
     const results = this.level.getResults();
 
     for (const text in results.checks) {
-      const check = this.checks[text];
+      const check = results.checks[text];
 
       const line = new PIXI.Container();
 

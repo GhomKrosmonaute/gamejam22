@@ -404,6 +404,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   getResults(): LevelResults {
+    console.log("checks", this.options.checks);
+
     const checks: { [text: string]: boolean } = {};
     let checkCount = 0;
     let checkedCount = 0;
@@ -417,7 +419,9 @@ export class Level extends entity.CompositeEntity {
       }
     }
 
-    const starCount = Math.floor((checkedCount / checkCount) * 3);
+    const starCount = Math.floor((checkedCount / checkCount + 0.1) * 3);
+
+    console.log("results", checks);
 
     return {
       checks,
@@ -428,6 +432,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   exit() {
+    this.minimap.setResult(this.name, this.getResults());
     this._transition = entity.makeTransition();
   }
 

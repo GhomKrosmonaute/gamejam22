@@ -19,7 +19,6 @@ export class Minimap extends entity.CompositeEntity {
   private particlesBis: PIXI.Sprite;
   private links: PIXI.Graphics;
   private scrollBox: scroll.Scrollbox;
-  private levelSprites: { [title: string]: PIXI.Sprite } = {};
 
   protected _setup() {
     this.links = new PIXI.Graphics();
@@ -121,6 +120,14 @@ export class Minimap extends entity.CompositeEntity {
         );
       });
 
+      const data = localStorage.getItem(levelName);
+
+      if (data) {
+        const result: level.LevelResults = JSON.parse(data);
+
+        text.text += "\n" + "⭐".repeat(result.starCount);
+      }
+
       levelSprite.addChild(text);
 
       const shaking = new anim.ShakesManager(levelSprite);
@@ -135,8 +142,6 @@ export class Minimap extends entity.CompositeEntity {
       this._activateChildEntity(shaking);
 
       this.buttons.addChild(levelSprite);
-
-      this.levelSprites[levelName] = levelSprite;
     }
 
     this.scrollBox = new scroll.Scrollbox({
@@ -191,8 +196,6 @@ export class Minimap extends entity.CompositeEntity {
   }
 
   public setResult(levelName: levels.LevelName, results: level.LevelResults) {
-    const text = crisprUtil.makeText(JSON.stringify(results.checks));
-    this.levelSprites[levelName].removeChildren();
-    this.levelSprites[levelName].addChild(text);
+    localStorage.setItem(levelName, JSON.stringify(results));
   }
 }
