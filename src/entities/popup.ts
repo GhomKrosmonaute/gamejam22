@@ -62,44 +62,6 @@ export abstract class Popup extends entity.CompositeEntity {
     this._height = this.options.adjustHeight ? 0 : this.options.height;
   }
 
-  get level(): level.Level {
-    return this._entityConfig.level;
-  }
-
-  get center(): PIXI.Point {
-    return new PIXI.Point(this.width / 2, this.height / 2);
-  }
-
-  get width(): number {
-    return this.options.width;
-  }
-
-  get height(): number {
-    return this._height;
-  }
-
-  set height(n) {
-    this._height = n;
-
-    if (this.options.withBackground && this.background) {
-      this.background.height = this._height + 100;
-    }
-
-    this.body.position.y = this._height * -0.5;
-  }
-
-  addRow(container: PIXI.Container, height?: number): this {
-    height = height ?? container.height;
-
-    container.position.y += this.height;
-
-    this.body.addChild(container);
-
-    this.height += height;
-
-    return this;
-  }
-
   _setup() {
     this.level.disablingAnimations.add("popup");
 
@@ -156,6 +118,44 @@ export abstract class Popup extends entity.CompositeEntity {
     this.shaker.removeAllShakes();
     this._container.removeChild(this.body);
     this._entityConfig.container.removeChild(this._container);
+  }
+
+  get level(): level.Level {
+    return this._entityConfig.level;
+  }
+
+  get center(): PIXI.Point {
+    return new PIXI.Point(this.width / 2, this.height / 2);
+  }
+
+  get width(): number {
+    return this.options.width;
+  }
+
+  get height(): number {
+    return this._height;
+  }
+
+  set height(n) {
+    this._height = n;
+
+    if (this.options.withBackground && this.background) {
+      this.background.height = this._height + 100;
+    }
+
+    this.body.position.y = this._height * -0.5;
+  }
+
+  addRow(container: PIXI.Container, height?: number): this {
+    height = height ?? container.height;
+
+    container.position.y += this.height;
+
+    this.body.addChild(container);
+
+    this.height += height;
+
+    return this;
   }
 
   close() {
