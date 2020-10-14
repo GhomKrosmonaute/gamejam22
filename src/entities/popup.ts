@@ -23,6 +23,7 @@ export function makeCross(radius: number): PIXI.Graphics {
 }
 
 export interface PopupOptions {
+  from: PIXI.Point;
   withBackground: boolean;
   withClosureCross: boolean;
   closeOnBackgroundClick: boolean;
@@ -33,7 +34,8 @@ export interface PopupOptions {
   onClose: (level: level.Level) => any;
 }
 
-export const defaultPopupOptions = {
+export const defaultPopupOptions: PopupOptions = {
+  from: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
   withBackground: false,
   withClosureCross: true,
   closeOnBackgroundClick: false,
@@ -41,7 +43,7 @@ export const defaultPopupOptions = {
   width: crisprUtil.width * 0.8, // 864
   height: crisprUtil.height * 0.7, // 1344
   adjustHeight: false,
-  onClose: () => {},
+  onClose: () => null,
 };
 
 /**
@@ -70,7 +72,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
   _setup() {
     this._container = new PIXI.Container();
-    this._container.position.set(crisprUtil.width / 2, crisprUtil.height / 2);
+    this._container.position.copyFrom(this.options.from);
     this._container.addChild(this.body);
 
     this.shaker = new anim.ShakesManager(this.body);
@@ -148,7 +150,20 @@ export abstract class Popup extends entity.CompositeEntity {
 
           this._entityConfig.container.addChild(this._container);
 
-          this._activateChildEntity(anim.popup(this._container, 700));
+          this._activateChildEntity(
+            new entity.ParallelEntity([
+              anim.popup(this._container, 700),
+              new tween.Tween({
+                duration: 700,
+                obj: this._container,
+                property: "position",
+                from: this.options.from,
+                to: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
+                easing: easing.easeOutBack,
+                interpolate: tween.interpolation.point,
+              }),
+            ])
+          );
           this._activateChildEntity(this.shaker);
 
           this.onSetup();
@@ -206,10 +221,20 @@ export abstract class Popup extends entity.CompositeEntity {
 
   close() {
     this._activateChildEntity(
-      anim.sink(this._container, 150, () => {
-        this.emit("closed");
-        this._transition = entity.makeTransition();
-      })
+      new entity.ParallelEntity([
+        anim.sink(this._container, 150, () => {
+          this.emit("closed");
+          this._transition = entity.makeTransition();
+        }),
+        new tween.Tween({
+          duration: 200,
+          obj: this._container,
+          property: "position",
+          from: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
+          to: this.options.from,
+          interpolate: tween.interpolation.point,
+        }),
+      ])
     );
   }
 
@@ -275,6 +300,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
     super({
       adjustHeight: true,
       withBackground: true,
+      withClosureCross: false,
       closeOnBackgroundClick: true,
       onClose: (level) => level.exit(),
     });
@@ -483,6 +509,7 @@ export class StatePopup extends ChecksPopup {
       closeOnBackgroundClick: true,
       withBackground: true,
       adjustHeight: true,
+      from: new PIXI.Point(200, 100),
     });
   }
 
