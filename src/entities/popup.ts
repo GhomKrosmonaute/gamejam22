@@ -211,13 +211,13 @@ export class FloatingPopup extends Popup {
 }
 
 export abstract class ChecksPopup extends Popup {
-  protected addCheckLines() {
+  protected addCheckRows() {
     const results = this.level.getResults();
 
     for (const text in results.checks) {
       const check = results.checks[text];
 
-      const line = new PIXI.Container();
+      const row = new PIXI.Container();
 
       const pixiText = crisprUtil.makeText(text, {
         stroke: 0xffffff,
@@ -226,7 +226,7 @@ export abstract class ChecksPopup extends Popup {
 
       pixiText.position.set(this.center.x, 50);
 
-      line.addChild(pixiText);
+      row.addChild(pixiText);
 
       const icon = crisprUtil.makeText(check ? "✅" : "❌", {
         align: "right",
@@ -236,9 +236,9 @@ export abstract class ChecksPopup extends Popup {
 
       icon.position.set(this.width - 100, 50);
 
-      line.addChild(icon);
+      row.addChild(icon);
 
-      this.addRow(line, 100);
+      this.addRow(row, 100);
     }
   }
 }
@@ -270,7 +270,7 @@ export class FailedLevelPopup extends EndOfLevelPopup {
       this.addRow(title, 350);
     }
 
-    this.addCheckLines();
+    this.addCheckRows();
   }
 }
 
@@ -406,7 +406,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
       );
     }
 
-    this.addCheckLines();
+    this.addCheckRows();
   }
 }
 
@@ -460,6 +460,16 @@ export class StatePopup extends ChecksPopup {
   }
 
   onSetup() {
-    this.addCheckLines();
+    const text = crisprUtil.makeText(this.level.name, {
+      fontSize: 150,
+      fill: 0xffffff,
+    });
+
+    text.position.x = this.center.x;
+    text.position.y = 100;
+
+    this.addRow(text, 200);
+
+    this.addCheckRows();
   }
 }

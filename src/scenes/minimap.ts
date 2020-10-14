@@ -196,6 +196,11 @@ export class Minimap extends entity.CompositeEntity {
   }
 
   public setResult(levelName: levels.LevelName, results: level.LevelResults) {
-    localStorage.setItem(levelName, JSON.stringify(results));
+    let oldResults: level.LevelResults;
+    const data = localStorage.getItem(levelName);
+    if (data) oldResults = JSON.parse(data);
+    if (!oldResults || oldResults.checkedCount < results.checkedCount) {
+      localStorage.setItem(levelName, JSON.stringify(results));
+    }
   }
 }
