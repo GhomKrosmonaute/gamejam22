@@ -5,6 +5,7 @@ import * as util from "booyah/src/util";
 
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
+import * as levels from "../levels";
 
 import * as minimap from "./minimap";
 
@@ -18,7 +19,13 @@ import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
-export type LevelState = "crunch" | "regenerate" | "bonus";
+
+export interface LevelResults {
+  checks: { [text: string]: boolean };
+  checkCount: number;
+  checkedCount: number;
+  starCount: number;
+}
 
 export interface LevelOptions {
   disableExtraSequence: boolean;
@@ -151,7 +158,7 @@ export interface LevelEvents {
   deactivatedChildEntity: [entity: entity.Entity];
 }
 
-const DEBUG = true;
+const DEBUG = false;
 
 export class Level extends entity.CompositeEntity {
   // system
@@ -167,7 +174,6 @@ export class Level extends entity.CompositeEntity {
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
-  public state: LevelState = "crunch";
   private goButton: hud.GoButton;
 
   // game
@@ -180,7 +186,10 @@ export class Level extends entity.CompositeEntity {
   public scissorsWasIncludes = false;
   public crunchedSequenceCount = 0;
 
-  constructor(public options: Partial<LevelOptions>) {
+  constructor(
+    public name: levels.LevelName,
+    public options: Partial<LevelOptions>
+  ) {
     super();
     this.options = util.fillInOptions(this.options, defaultLevelOptions);
     this.score = this.options.baseScore;
@@ -335,9 +344,6 @@ export class Level extends entity.CompositeEntity {
 
     this.refresh();
 
-    this.wasInfected = false;
-    this.someVirusHasEscaped = false;
-
     this.emit("setup");
 
     if (DEBUG) {
@@ -389,11 +395,37 @@ export class Level extends entity.CompositeEntity {
     if (this.options.retryOnFail) {
       this._activateChildEntity(new popup.FailedLevelPopup(), this.config);
     } else {
+      this.minimap.setResult(this.name, this.getResults());
       this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
     }
   }
 
+  getResults(): LevelResults {
+    const checks: { [text: string]: boolean } = {};
+    let checkCount = 0;
+    let checkedCount = 0;
+
+    for (const text in this.options.checks) {
+      checks[text] = this.options.checks[text](this);
+
+      checkCount++;
+      if (checks[text]) {
+        checkedCount++;
+      }
+    }
+
+    const starCount = Math.floor((checkedCount / checkCount + 0.1) * 3);
+
+    return {
+      checks,
+      checkCount,
+      checkedCount,
+      starCount,
+    };
+  }
+
   exit() {
+    this.minimap.setResult(this.name, this.getResults());
     this._transition = entity.makeTransition();
   }
 
@@ -513,7 +545,6 @@ export class Level extends entity.CompositeEntity {
     this.disablingAnimations.add("level.regenerate");
 
     // Switch to regenerate mode
-    this.state = "regenerate";
     this.refresh();
 
     const regen = () => {
@@ -524,8 +555,6 @@ export class Level extends entity.CompositeEntity {
         new entity.EntitySequence([
           new entity.WaitingEntity(1000),
           new entity.FunctionCallEntity(() => {
-            this.state = "crunch";
-
             this.endTurn();
             this.refresh();
 
@@ -546,7 +575,6 @@ export class Level extends entity.CompositeEntity {
     this.emit("infected");
 
     this.disablingAnimations.add("level.onInfection");
-    this.wasInfected = true;
 
     if (this.grid.isGameOver()) {
       this.gameOver();

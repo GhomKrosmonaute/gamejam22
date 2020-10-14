@@ -550,9 +550,12 @@ export class Grid extends entity.CompositeEntity {
     ];
     for (let i = 0; i < infections.length; i++) {
       sequence.push(
-        new entity.FunctionCallEntity(() => (infections[i].state = "infected"))
+        new entity.FunctionCallEntity(() => {
+          infections[i].state = "infected";
+        })
       );
       sequence.push(new entity.WaitingEntity(100));
+      this.level.wasInfected = true;
     }
 
     sequence.push(

@@ -6,6 +6,8 @@ import * as tween from "booyah/src/tween";
 
 import * as levels from "../levels";
 
+import * as level from "./level";
+
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
 
@@ -48,7 +50,7 @@ export class Minimap extends entity.CompositeEntity {
         amplitude: new PIXI.Point(0.5, 0.5),
         speed: new PIXI.Point(Math.random(), Math.random()),
       });
-      const shaking = new anim.DisplayObjectShakesManager(this.particles);
+      const shaking = new anim.ShakesManager(this.particles);
       shaking.setFloat("float", options);
       this._activateChildEntity(shaking);
     }
@@ -58,7 +60,7 @@ export class Minimap extends entity.CompositeEntity {
         amplitude: new PIXI.Point(2, 2),
         speed: new PIXI.Point(Math.random(), Math.random()),
       });
-      const shaking = new anim.DisplayObjectShakesManager(this.particlesBis);
+      const shaking = new anim.ShakesManager(this.particlesBis);
       shaking.setFloat("float", options);
       this._activateChildEntity(shaking);
     }
@@ -118,15 +120,23 @@ export class Minimap extends entity.CompositeEntity {
         );
       });
 
+      const data = localStorage.getItem(levelName);
+
+      if (data) {
+        const result: level.LevelResults = JSON.parse(data);
+
+        text.text += "\n" + "⭐".repeat(result.starCount);
+      }
+
       levelSprite.addChild(text);
 
-      const shaking = new anim.DisplayObjectShakesManager(levelSprite);
+      const shaking = new anim.ShakesManager(levelSprite);
       shaking.setFloat(
         "float",
         anim.makeFloatingOptions({
           active: { x: true, y: true },
-          amplitude: new PIXI.Point(1, 1),
-          speed: new PIXI.Point(Math.random() + 0.2, Math.random() + 0.2),
+          amplitude: new PIXI.Point(2, 1),
+          speed: new PIXI.Point(Math.random() + 0.5, Math.random() + 0.2),
         })
       );
       this._activateChildEntity(shaking);
@@ -138,7 +148,6 @@ export class Minimap extends entity.CompositeEntity {
       content: this.buttons,
       boxWidth: crisprUtil.width - 10,
       boxHeight: crisprUtil.height,
-      overflowY: "scroll",
       scrollbarSize: 25,
       contentMarginY: 500,
     });
@@ -152,6 +161,7 @@ export class Minimap extends entity.CompositeEntity {
     this.scrollBox.refresh();
 
     this._entityConfig.container.addChild(this.container);
+    this._entityConfig.minimap = this;
   }
 
   protected _update() {
@@ -183,5 +193,14 @@ export class Minimap extends entity.CompositeEntity {
 
   private setLevel(levelName: levels.LevelName) {
     this._transition = entity.makeTransition(levelName);
+  }
+
+  public setResult(levelName: levels.LevelName, results: level.LevelResults) {
+    let oldResults: level.LevelResults;
+    const data = localStorage.getItem(levelName);
+    if (data) oldResults = JSON.parse(data);
+    if (!oldResults || oldResults.checkedCount < results.checkedCount) {
+      localStorage.setItem(levelName, JSON.stringify(results));
+    }
   }
 }

@@ -2,6 +2,8 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 
+import * as popup from "./popup";
+
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
 
@@ -22,6 +24,7 @@ export class Gauge extends entity.CompositeEntity {
   private _barBaseWidth: number;
   private _triggered = false;
   private _value: number = 0;
+  private _statePopup: popup.StatePopup;
 
   constructor(private _ringCount: number, private _maxValue: number) {
     super();
@@ -40,9 +43,9 @@ export class Gauge extends entity.CompositeEntity {
     this._bar.width = this.getBarWidth();
     this._bar.position.set(this.getBarPosition(), 0);
     this._text.text =
-      this._value > 999
-        ? Math.floor(value / 1000) + "k"
-        : Math.floor(this._value) + " pts";
+      new Intl.NumberFormat("en", { maximumSignificantDigits: 2 }).format(
+        Math.floor(this._value)
+      ) + " pts";
     if (!this._triggered) {
       this._triggered = true;
       this._activateChildEntity(
@@ -99,6 +102,19 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   _setup() {
+    // todo: set clean position
+    this._container.position.set(-30, -25);
+
+    // add popup
+    this._statePopup = new popup.StatePopup();
+
+    this._container.interactive = true;
+    this._container.buttonMode = true;
+    this._on(this._container, "pointerup", () => {
+      if (this._statePopup.isSetup) return;
+      this._activateChildEntity(this._statePopup, entity.extendConfig({}));
+    });
+
     // assign sprites
     {
       this._background = new PIXI.Sprite(
@@ -207,8 +223,8 @@ export class GoButton extends entity.CompositeEntity {
       ].texture
     );
     this.sprite.position.set(
-      this._entityConfig.app.view.width * 0.734,
-      this._entityConfig.app.view.height * 0.8715
+      this._entityConfig.app.view.width * 0.785,
+      this._entityConfig.app.view.height * 0.887
     );
     this.sprite.interactive = true;
     this.sprite.buttonMode = true;
