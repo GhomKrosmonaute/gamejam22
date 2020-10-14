@@ -279,7 +279,7 @@ export class BonusesManager extends entity.CompositeEntity {
 
   _setup() {
     this.container = new PIXI.Container();
-    this.container.position.set(0, this._entityConfig.app.view.height - 170);
+    this.container.position.set(0, crispUtil.height - 200);
     this._entityConfig.container.addChild(this.container);
 
     this.bonusBackground = new PIXI.Sprite(
