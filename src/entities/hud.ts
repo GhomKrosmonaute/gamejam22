@@ -102,6 +102,9 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   _setup() {
+    // todo: set clean position
+    this._container.position.set(-40, -77);
+
     // add popup
     this._statePopup = new popup.StatePopup();
 
