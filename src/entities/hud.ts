@@ -251,18 +251,18 @@ export class GoButton extends entity.CompositeEntity {
         this.level.regenerate();
       } else {
         // TODO: add confirm dialog "Are you sure?"
+        this.level.disablingAnimations.add("goButton._onGo");
 
         this._activateChildEntity(
           new entity.EntitySequence([
             new entity.FunctionCallEntity(() => {
-              this.level.disablingAnimations.add("skipping");
               this.level.grid.regenerate(5, (n) => n.state === "present");
             }),
             new entity.WaitingEntity(1200),
             new entity.FunctionCallEntity(() => {
               this.level.endTurn();
               this.level.refresh();
-              this.level.disablingAnimations.delete("skipping");
+              this.level.disablingAnimations.delete("goButton._onGo");
             }),
           ])
         );

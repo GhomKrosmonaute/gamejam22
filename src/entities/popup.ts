@@ -52,8 +52,6 @@ export abstract class Popup extends entity.CompositeEntity {
 
     this.options = util.fillInOptions(options, defaultPopupOptions);
 
-    this._id = "popup:" + Math.random();
-
     this._container.position.set(crisprUtil.width / 2, crisprUtil.height / 2);
     this._container.addChild(this.body);
 
@@ -62,6 +60,64 @@ export abstract class Popup extends entity.CompositeEntity {
     this.body.position.x = this.width * -0.5;
 
     this._height = this.options.adjustHeight ? 0 : this.options.height;
+  }
+
+  _setup() {
+    this.level.disablingAnimations.add("popup");
+
+    this._once(this, "closed", () => {
+      this.options.onClose(this.level);
+    });
+
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        new entity.FunctionalEntity({
+          requestTransition: () => {
+            return (
+              !this.level.disablingAnimations.has("sequence.down") &&
+              !this.level.disablingAnimations.has("path.crunch")
+            );
+          },
+        }),
+        new entity.FunctionCallEntity(() => {
+          // background
+          if (this.options.withBackground) {
+            this.background = new PIXI.Sprite(
+              this._entityConfig.app.loader.resources[
+                "images/popup_background.png"
+              ].texture
+            );
+
+            this.body.addChildAt(this.background, 0);
+
+            this.background.width = this.width;
+            this.background.position.y = -50;
+
+            // use background as closure button
+            if (this.options.closeOnBackgroundClick) {
+              this.button(this.background, () => {
+                this.close();
+              });
+            }
+          }
+
+          this._entityConfig.container.addChild(this._container);
+
+          this._activateChildEntity(anim.popup(this._container, 700));
+          this._activateChildEntity(this.shaker);
+
+          this.onSetup();
+        }),
+      ])
+    );
+  }
+
+  _teardown() {
+    this.level.disablingAnimations.delete("popup");
+    this.body.removeChildren();
+    this.shaker.removeAllShakes();
+    this._container.removeChild(this.body);
+    this._entityConfig.container.removeChild(this._container);
   }
 
   get level(): level.Level {
@@ -100,66 +156,6 @@ export abstract class Popup extends entity.CompositeEntity {
     this.height += height;
 
     return this;
-  }
-
-  _setup() {
-    this.level.disablingAnimations.add(this._id);
-    this.level.disablingAnimations.add("popup");
-
-    this._once(this, "closed", () => {
-      this.options.onClose(this.level);
-    });
-
-    this._activateChildEntity(
-      new entity.EntitySequence([
-        new entity.FunctionalEntity({
-          requestTransition: () => {
-            return (
-              !this.level.disablingAnimations.has("sequenceDown") &&
-              !this.level.disablingAnimations.has("pathCrunch")
-            );
-          },
-        }),
-        new entity.FunctionCallEntity(() => {
-          // background
-          if (this.options.withBackground) {
-            this.background = new PIXI.Sprite(
-              this._entityConfig.app.loader.resources[
-                "images/popup_background.png"
-              ].texture
-            );
-
-            this.body.addChildAt(this.background, 0);
-
-            this.background.width = this.width;
-            this.background.position.y = -50;
-
-            // use background as closure button
-            if (this.options.closeOnBackgroundClick) {
-              this.button(this.background, () => {
-                this.close();
-              });
-            }
-          }
-
-          this._entityConfig.container.addChild(this._container);
-
-          this._activateChildEntity(anim.popup(this._container, 700));
-          this._activateChildEntity(this.shaker);
-
-          this.onSetup();
-        }),
-      ])
-    );
-  }
-
-  _teardown() {
-    this.level.disablingAnimations.delete(this._id);
-    this.level.disablingAnimations.delete("popup");
-    this.body.removeChildren();
-    this.shaker.removeAllShakes();
-    this._container.removeChild(this.body);
-    this._entityConfig.container.removeChild(this._container);
   }
 
   close() {

@@ -18,7 +18,6 @@ export class Path extends entity.CompositeEntity {
   public items: nucleotide.Nucleotide[] = [];
   public container = new PIXI.Container();
   public isValidSequence = false;
-  public isCrunchAnimationRunning = false;
 
   protected _setup() {
     this.container.position.copyFrom(this.level.grid);
@@ -178,8 +177,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   crunch(callback?: () => any) {
-    this.isCrunchAnimationRunning = true;
-    this.level.disablingAnimations.add("pathCrunch");
+    this.level.disablingAnimations.add("path.crunch");
     if (this.correctlyContainsScissors()) {
       this.level.scissorsWasIncludes = true;
     }
@@ -221,8 +219,7 @@ export class Path extends entity.CompositeEntity {
         this.level.addScore(score);
       },
       callback: () => {
-        this.level.disablingAnimations.delete("pathCrunch");
-        this.isCrunchAnimationRunning = false;
+        this.level.disablingAnimations.delete("path.crunch");
         this.emit("crunchAnimationFinished");
         callback?.();
       },

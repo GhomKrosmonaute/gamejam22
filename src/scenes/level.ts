@@ -151,6 +151,8 @@ export interface LevelEvents {
   deactivatedChildEntity: [entity: entity.Entity];
 }
 
+const DEBUG = true;
+
 export class Level extends entity.CompositeEntity {
   // system
   /**
@@ -337,6 +339,27 @@ export class Level extends entity.CompositeEntity {
     this.someVirusHasEscaped = false;
 
     this.emit("setup");
+
+    if (DEBUG) {
+      let lastDisablingAnimations = [...this.disablingAnimations];
+      setInterval(() => {
+        if (
+          lastDisablingAnimations.some(
+            (flag) => !this.disablingAnimations.has(flag)
+          ) ||
+          [...this.disablingAnimations].some(
+            (flag) => !lastDisablingAnimations.includes(flag)
+          )
+        ) {
+          lastDisablingAnimations = [...this.disablingAnimations];
+          console.log(
+            "disabling animations:",
+            lastDisablingAnimations.length,
+            ...lastDisablingAnimations
+          );
+        }
+      }, 1);
+    }
   }
 
   _update() {
@@ -395,9 +418,10 @@ export class Level extends entity.CompositeEntity {
   }
 
   public endTurn(): void {
-    this.disablingAnimations.add("game");
+    this.disablingAnimations.add("level.endTurn");
 
     if (this.grid.isGameOver()) {
+      this.disablingAnimations.delete("level.endTurn");
       this.gameOver();
       return;
     }
@@ -414,18 +438,22 @@ export class Level extends entity.CompositeEntity {
     if (countSequences < this.sequenceManager.sequenceCountLimit) {
       actions.push(
         new entity.FunctionCallEntity(() => {
+          this.disablingAnimations.delete("level.endTurn");
           if (this.options.disableExtraSequence) {
-            this.disablingAnimations.delete("game");
             return;
           }
 
           this.sequenceManager.add();
         })
       );
+    } else {
+      this.disablingAnimations.delete("level.endTurn");
     }
 
     if (actions.length > 0) {
       this._activateChildEntity(new entity.EntitySequence(actions));
+    } else {
+      this.disablingAnimations.delete("level.endTurn");
     }
   }
 
@@ -482,7 +510,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   public regenerate(): void {
-    this.disablingAnimations.add("game");
+    this.disablingAnimations.add("level.regenerate");
 
     // Switch to regenerate mode
     this.state = "regenerate";
@@ -500,12 +528,14 @@ export class Level extends entity.CompositeEntity {
 
             this.endTurn();
             this.refresh();
+
+            this.disablingAnimations.delete("level.regenerate");
           }),
         ])
       );
     };
 
-    if (this.path.isCrunchAnimationRunning) {
+    if (this.disablingAnimations.has("path.crunch")) {
       this._once(this.path, "crunchAnimationFinished", () => regen());
     } else {
       regen();
@@ -515,7 +545,7 @@ export class Level extends entity.CompositeEntity {
   public onInfection(infectionCount = 1): void {
     this.emit("infected");
 
-    this.disablingAnimations.add("game");
+    this.disablingAnimations.add("level.onInfection");
     this.wasInfected = true;
 
     if (this.grid.isGameOver()) {
@@ -529,7 +559,10 @@ export class Level extends entity.CompositeEntity {
       new entity.EntitySequence([
         infectionSequence,
         new entity.FunctionCallEntity(() => {
-          if (this.options.disableExtraSequence) return;
+          if (this.options.disableExtraSequence) {
+            this.disablingAnimations.delete("level.onInfection");
+            return;
+          }
 
           this.sequenceManager.add();
         }),

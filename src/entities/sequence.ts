@@ -23,7 +23,7 @@ export class SequenceManager extends entity.CompositeEntity {
   public sequences = new Set<Sequence>();
   public container: PIXI.Container;
 
-  private adjustment: entity.ParallelEntity = null;
+  private adjustment: entity.Entity = null;
 
   _setup() {
     this.container = new PIXI.Container();
@@ -181,11 +181,8 @@ export class SequenceManager extends entity.CompositeEntity {
 
     if (droppedSequences.length > 0) {
       droppedSequences.forEach((s, i) => {
-        this.level.disablingAnimations.add(`dropSequence-${i}`);
         s.nucleotides.forEach((n) => (n.sprite.tint = 0x000000));
-        s.down(false, () => {
-          this.level.disablingAnimations.delete(`dropSequence-${i}`);
-        });
+        s.down(false);
       });
     }
 
@@ -207,23 +204,34 @@ export class SequenceManager extends entity.CompositeEntity {
    * In the case that sequences are layed out, distributes them evenly
    */
   adjustRelativePositionOfSequences() {
+    this.level.disablingAnimations.add(
+      "sequence.adjustRelativePositionOfSequences"
+    );
+
     if (this.adjustment && this.adjustment.isSetup) {
       this._deactivateChildEntity(this.adjustment);
     }
 
-    this.adjustment = new entity.ParallelEntity(
-      [...this.sequences].map((s, i) => {
-        return new tween.Tween({
-          duration: 2000,
-          easing: easing.easeInOutQuad,
-          from: s.container.position.y,
-          to: this.getSequenceYByIndex(i),
-          onUpdate: function (value: number) {
-            (<Sequence>this).container.position.y = value;
-          }.bind(s),
-        });
-      })
-    );
+    this.adjustment = new entity.EntitySequence([
+      new entity.ParallelEntity(
+        [...this.sequences].map((s, i) => {
+          return new tween.Tween({
+            duration: 2000,
+            easing: easing.easeInOutQuad,
+            from: s.container.position.y,
+            to: this.getSequenceYByIndex(i),
+            onUpdate: function (value: number) {
+              (<Sequence>this).container.position.y = value;
+            }.bind(s),
+          });
+        })
+      ),
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimations.delete(
+          "sequence.adjustRelativePositionOfSequences"
+        );
+      }),
+    ]);
 
     this._activateChildEntity(this.adjustment);
   }
@@ -314,8 +322,6 @@ export class Sequence extends entity.CompositeEntity {
   _initVirus() {
     this.virus = new virus.Virus("mini");
 
-    const id = "sequenceInjection:" + Math.random();
-
     this._activateChildEntity(this.virus, this.level.config);
 
     return new entity.EntitySequence([
@@ -324,7 +330,7 @@ export class Sequence extends entity.CompositeEntity {
           this.virus.isSetup && !this.level.disablingAnimations.has("popup"),
       }),
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.add(id);
+        this.level.disablingAnimations.add("sequence._initVirus");
       }),
       this.virus.come(),
       new entity.FunctionCallEntity(() => this._initNucleotides()),
@@ -332,8 +338,7 @@ export class Sequence extends entity.CompositeEntity {
       new entity.WaitingEntity(1000),
       this.virus.stingOut(),
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.delete(id);
-        this.level.disablingAnimations.delete("game");
+        this.level.disablingAnimations.delete("sequence._initVirus");
       }),
       // todo: wait the crunch, then leave (if virus is not killed before)
     ]);
@@ -425,7 +430,6 @@ export class Sequence extends entity.CompositeEntity {
 
     if (this.level.options.variant === "long") {
       this._initNucleotides();
-      this.level.disablingAnimations.delete("game");
     } else {
       this._activateChildEntity(this._initVirus());
     }
@@ -443,7 +447,7 @@ export class Sequence extends entity.CompositeEntity {
     this.level.sequenceWasCrunched = true;
     this.level.crunchedSequenceCount++;
 
-    this.level.disablingAnimations.add("sequenceDown");
+    this.level.disablingAnimations.add("sequence.down");
 
     const isLong = this.level.options.variant === "long";
 
@@ -526,7 +530,7 @@ export class Sequence extends entity.CompositeEntity {
       callback: () => {
         const end = () => {
           this.level.sequenceManager.sequences.delete(this);
-          this.level.disablingAnimations.delete("sequenceDown");
+          this.level.disablingAnimations.delete("sequence.down");
           this.level.emit("sequenceDown");
           this._transition = entity.makeTransition();
           callback?.();
