@@ -211,7 +211,7 @@ export class FloatingPopup extends Popup {
 }
 
 export abstract class ChecksPopup extends Popup {
-  protected addCheckRows() {
+  protected addCheckRows(): this {
     const results = this.level.getResults();
 
     for (const text in results.checks) {
@@ -221,7 +221,7 @@ export abstract class ChecksPopup extends Popup {
 
       const pixiText = crisprUtil.makeText(text, {
         stroke: 0xffffff,
-        strokeThickness: 10,
+        strokeThickness: 15,
       });
 
       pixiText.position.set(this.center.x, 50);
@@ -240,6 +240,8 @@ export abstract class ChecksPopup extends Popup {
 
       this.addRow(row, 100);
     }
+
+    return this;
   }
 }
 
@@ -468,8 +470,19 @@ export class StatePopup extends ChecksPopup {
     text.position.x = this.center.x;
     text.position.y = 100;
 
-    this.addRow(text, 200);
+    const score = crisprUtil.makeText(
+      `Score: ${Math.floor(this.level.score)} / ${
+        this.level.options.maxScore
+      } pts`,
+      {
+        fontSize: 100,
+        fill: 0xffffff,
+      }
+    );
 
-    this.addCheckRows();
+    score.position.x = this.center.x;
+    score.position.y = 75;
+
+    this.addRow(text, 200).addRow(score, 150).addCheckRows();
   }
 }

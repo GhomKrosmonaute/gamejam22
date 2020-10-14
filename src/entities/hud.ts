@@ -43,9 +43,9 @@ export class Gauge extends entity.CompositeEntity {
     this._bar.width = this.getBarWidth();
     this._bar.position.set(this.getBarPosition(), 0);
     this._text.text =
-      this._value > 999
-        ? Math.floor(value / 1000) + "k"
-        : Math.floor(this._value) + " pts";
+      new Intl.NumberFormat("en", { maximumSignificantDigits: 2 }).format(
+        Math.floor(this._value)
+      ) + " pts";
     if (!this._triggered) {
       this._triggered = true;
       this._activateChildEntity(
