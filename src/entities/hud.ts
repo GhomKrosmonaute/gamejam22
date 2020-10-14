@@ -223,8 +223,8 @@ export class GoButton extends entity.CompositeEntity {
       ].texture
     );
     this.sprite.position.set(
-      this._entityConfig.app.view.width * 0.734,
-      this._entityConfig.app.view.height * 0.8715
+      this._entityConfig.app.view.width - 200,
+      this._entityConfig.app.view.height - 170
     );
     this.sprite.interactive = true;
     this.sprite.buttonMode = true;
