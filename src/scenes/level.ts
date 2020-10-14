@@ -344,9 +344,6 @@ export class Level extends entity.CompositeEntity {
 
     this.refresh();
 
-    this.wasInfected = false;
-    this.someVirusHasEscaped = false;
-
     this.emit("setup");
 
     if (DEBUG) {
@@ -404,8 +401,6 @@ export class Level extends entity.CompositeEntity {
   }
 
   getResults(): LevelResults {
-    console.log("checks", this.options.checks);
-
     const checks: { [text: string]: boolean } = {};
     let checkCount = 0;
     let checkedCount = 0;
@@ -420,8 +415,6 @@ export class Level extends entity.CompositeEntity {
     }
 
     const starCount = Math.floor((checkedCount / checkCount + 0.1) * 3);
-
-    console.log("results", checks);
 
     return {
       checks,
@@ -582,7 +575,6 @@ export class Level extends entity.CompositeEntity {
     this.emit("infected");
 
     this.disablingAnimations.add("level.onInfection");
-    this.wasInfected = true;
 
     if (this.grid.isGameOver()) {
       this.gameOver();

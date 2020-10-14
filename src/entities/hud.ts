@@ -2,6 +2,8 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 
+import * as popup from "./popup";
+
 import * as crisprUtil from "../crisprUtil";
 import * as anim from "../animations";
 
@@ -22,6 +24,7 @@ export class Gauge extends entity.CompositeEntity {
   private _barBaseWidth: number;
   private _triggered = false;
   private _value: number = 0;
+  private _statePopup: popup.StatePopup;
 
   constructor(private _ringCount: number, private _maxValue: number) {
     super();
@@ -99,6 +102,16 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   _setup() {
+    // add popup
+    this._statePopup = new popup.StatePopup();
+
+    this._container.interactive = true;
+    this._container.buttonMode = true;
+    this._on(this._container, "pointerup", () => {
+      if (this._statePopup.isSetup) return;
+      this._activateChildEntity(this._statePopup, entity.extendConfig({}));
+    });
+
     // assign sprites
     {
       this._background = new PIXI.Sprite(

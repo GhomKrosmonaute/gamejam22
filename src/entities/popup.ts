@@ -13,6 +13,7 @@ import * as level from "../scenes/level";
 export interface PopupOptions {
   withBackground: boolean;
   closeOnBackgroundClick: boolean;
+  closeOnBodyClick: boolean;
   adjustHeight: boolean;
   height: number;
   width: number;
@@ -22,6 +23,7 @@ export interface PopupOptions {
 export const defaultPopupOptions = {
   withBackground: false,
   closeOnBackgroundClick: false,
+  closeOnBodyClick: false,
   width: crisprUtil.width * 0.8, // 864
   height: crisprUtil.height * 0.7, // 1344
   adjustHeight: false,
@@ -36,7 +38,7 @@ export const defaultPopupOptions = {
 export abstract class Popup extends entity.CompositeEntity {
   protected abstract onSetup(): any;
 
-  private _container = new PIXI.Container();
+  private _container: PIXI.Container;
   private _height: number;
 
   public shaker: anim.ShakesManager;
@@ -49,7 +51,10 @@ export abstract class Popup extends entity.CompositeEntity {
     super();
 
     this.options = util.fillInOptions(options, defaultPopupOptions);
+  }
 
+  _setup() {
+    this._container = new PIXI.Container();
     this._container.position.set(crisprUtil.width / 2, crisprUtil.height / 2);
     this._container.addChild(this.body);
 
@@ -58,9 +63,7 @@ export abstract class Popup extends entity.CompositeEntity {
     this.body.position.x = this.width * -0.5;
 
     this._height = this.options.adjustHeight ? 0 : this.options.height;
-  }
 
-  _setup() {
     this.level.disablingAnimations.add("popup");
 
     this._once(this, "closed", () => {
@@ -98,6 +101,12 @@ export abstract class Popup extends entity.CompositeEntity {
             this._container.addChild(this.background);
           }
 
+          if (this.options.closeOnBodyClick) {
+            this.button(this.body, () => {
+              this.close();
+            });
+          }
+
           // background of body
           if (this.options.withBackground) {
             this.bodyBackground = new PIXI.Sprite(
@@ -125,10 +134,11 @@ export abstract class Popup extends entity.CompositeEntity {
 
   _teardown() {
     this.level.disablingAnimations.delete("popup");
-    this.body.removeChildren();
     this.shaker.removeAllShakes();
-    this._container.removeChild(this.body);
+    this.body.removeChildren();
+    this._container.removeChildren();
     this._entityConfig.container.removeChild(this._container);
+    this._container = null;
   }
 
   get level(): level.Level {
@@ -179,7 +189,11 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   button(button: PIXI.Container, callback: () => any) {
-    if (!this.body.children.includes(button)) {
+    if (
+      !this.body.children.includes(button) &&
+      button !== this.body &&
+      button !== this.background
+    ) {
       this.addRow(button, 150);
     }
     button.buttonMode = true;
@@ -196,16 +210,7 @@ export class FloatingPopup extends Popup {
   }
 }
 
-export abstract class EndOfLevelPopup extends Popup {
-  constructor() {
-    super({
-      adjustHeight: true,
-      withBackground: true,
-      closeOnBackgroundClick: true,
-      onClose: (level) => level.exit(),
-    });
-  }
-
+export abstract class ChecksPopup extends Popup {
   protected addCheckLines() {
     const results = this.level.getResults();
 
@@ -235,6 +240,17 @@ export abstract class EndOfLevelPopup extends Popup {
 
       this.addRow(line, 100);
     }
+  }
+}
+
+export abstract class EndOfLevelPopup extends ChecksPopup {
+  constructor() {
+    super({
+      adjustHeight: true,
+      withBackground: true,
+      closeOnBackgroundClick: true,
+      onClose: (level) => level.exit(),
+    });
   }
 }
 
@@ -431,5 +447,19 @@ export class TutorialPopup extends Popup {
     this.content.position.set(this.center.x, 200);
 
     this.addRow(this.text, 300).addRow(this.content, 400);
+  }
+}
+
+export class StatePopup extends ChecksPopup {
+  constructor() {
+    super({
+      closeOnBackgroundClick: true,
+      withBackground: true,
+      adjustHeight: true,
+    });
+  }
+
+  onSetup() {
+    this.addCheckLines();
   }
 }
