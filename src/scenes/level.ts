@@ -18,7 +18,6 @@ import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
-export type LevelState = "crunch" | "regenerate" | "bonus";
 
 export interface LevelOptions {
   disableExtraSequence: boolean;
@@ -151,7 +150,7 @@ export interface LevelEvents {
   deactivatedChildEntity: [entity: entity.Entity];
 }
 
-const DEBUG = true;
+const DEBUG = false;
 
 export class Level extends entity.CompositeEntity {
   // system
@@ -167,7 +166,6 @@ export class Level extends entity.CompositeEntity {
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
-  public state: LevelState = "crunch";
   private goButton: hud.GoButton;
 
   // game
@@ -513,7 +511,6 @@ export class Level extends entity.CompositeEntity {
     this.disablingAnimations.add("level.regenerate");
 
     // Switch to regenerate mode
-    this.state = "regenerate";
     this.refresh();
 
     const regen = () => {
@@ -524,8 +521,6 @@ export class Level extends entity.CompositeEntity {
         new entity.EntitySequence([
           new entity.WaitingEntity(1000),
           new entity.FunctionCallEntity(() => {
-            this.state = "crunch";
-
             this.endTurn();
             this.refresh();
 

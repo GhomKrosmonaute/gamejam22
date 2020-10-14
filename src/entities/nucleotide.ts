@@ -47,7 +47,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public type: NucleotideType = "normal";
   public isHovered = false;
   public isHearthBeatActive = false;
-  public shakes: anim.DisplayObjectShakesManager;
+  public shakes: anim.ShakesManager;
   public position: PIXI.Point;
 
   private _state: NucleotideState;
@@ -96,7 +96,7 @@ export class Nucleotide extends entity.CompositeEntity {
     this._container.scale.set(0);
     this._refreshScale();
 
-    this.shakes = new anim.DisplayObjectShakesManager(this._container);
+    this.shakes = new anim.ShakesManager(this._container);
 
     this._entityConfig.container.addChild(this._container);
 

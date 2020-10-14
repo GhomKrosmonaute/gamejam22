@@ -13,7 +13,7 @@ import * as crispUtil from "../crisprUtil";
 export abstract class Bonus extends entity.CompositeEntity {
   public isUpdateDisabled = false;
   public sprite: PIXI.Sprite;
-  public shakes: anim.DisplayObjectShakesManager;
+  public shakes: anim.ShakesManager;
   public position: PIXI.Point;
 
   private _count = 0;
@@ -371,7 +371,7 @@ export class BonusesManager extends entity.CompositeEntity {
 
     this.container.addChild(sprite);
 
-    bonus.shakes = new anim.DisplayObjectShakesManager(sprite);
+    bonus.shakes = new anim.ShakesManager(sprite);
 
     bonus.count = count;
 

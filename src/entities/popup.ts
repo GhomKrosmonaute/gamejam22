@@ -40,7 +40,7 @@ export abstract class Popup extends entity.CompositeEntity {
   private _container = new PIXI.Container();
   private _height: number;
 
-  public shaker: anim.DisplayObjectShakesManager;
+  public shaker: anim.ShakesManager;
   public background?: PIXI.Sprite;
 
   public readonly body = new PIXI.Container();
@@ -55,7 +55,7 @@ export abstract class Popup extends entity.CompositeEntity {
     this._container.position.set(crisprUtil.width / 2, crisprUtil.height / 2);
     this._container.addChild(this.body);
 
-    this.shaker = new anim.DisplayObjectShakesManager(this.body);
+    this.shaker = new anim.ShakesManager(this.body);
 
     this.body.position.x = this.width * -0.5;
 
@@ -179,9 +179,7 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 }
 
-export class FailedLevelPopup extends Popup {
-  private checked: { [text: string]: boolean };
-
+export abstract class EndOfLevelPopup extends Popup {
   constructor() {
     super({
       adjustHeight: true,
@@ -195,12 +193,38 @@ export class FailedLevelPopup extends Popup {
     return this.level.options.checks;
   }
 
+  protected addCheckLines() {
+    for (const text in this.checks) {
+      const check = this.checks[text](this.level);
+
+      const line = new PIXI.Container();
+
+      const pixiText = crisprUtil.makeText(text, {
+        stroke: 0xffffff,
+        strokeThickness: 10,
+      });
+
+      pixiText.position.set(this.center.x, 50);
+
+      line.addChild(pixiText);
+
+      const icon = crisprUtil.makeText(check ? "✅" : "❌", {
+        align: "right",
+        strokeThickness: 20,
+        stroke: 0x000000,
+      });
+
+      icon.position.set(this.width - 100, 50);
+
+      line.addChild(icon);
+
+      this.addRow(line, 100);
+    }
+  }
+}
+
+export class FailedLevelPopup extends EndOfLevelPopup {
   onSetup() {
-    this.checked = {};
-
-    for (const text in this.checks)
-      this.checked[text] = this.checks[text](this.level);
-
     // add title
     {
       let title = crisprUtil.makeText("Failed...", {
@@ -215,54 +239,15 @@ export class FailedLevelPopup extends Popup {
       this.addRow(title, 350);
     }
 
-    // add lines
-    {
-      Object.entries(this.checked).map(([key, check], i) => {
-        const line = new PIXI.Container();
-
-        const text = crisprUtil.makeText(key, {
-          stroke: 0xffffff,
-          strokeThickness: 10,
-        });
-
-        text.position.set(this.center.x, 50);
-
-        line.addChild(text);
-
-        const icon = crisprUtil.makeText(check ? "✅" : "❌", {
-          align: "right",
-          strokeThickness: 20,
-          stroke: 0x000000,
-        });
-
-        icon.position.set(this.width - 100, 50);
-
-        line.addChild(icon);
-
-        this.addRow(line, 100);
-      });
-    }
+    this.addCheckLines();
   }
 }
 
-export class TerminatedLevelPopup extends Popup {
+export class TerminatedLevelPopup extends EndOfLevelPopup {
   private checked: { [text: string]: boolean };
   private starCount: number; // sur 3
   private checkCount: number;
   private checkedCount: number;
-
-  constructor() {
-    super({
-      adjustHeight: true,
-      withBackground: true,
-      closeOnBackgroundClick: true,
-      onClose: (level) => level.exit(),
-    });
-  }
-
-  get checks() {
-    return this.level.options.checks;
-  }
 
   onSetup() {
     this.checked = {};
@@ -404,33 +389,7 @@ export class TerminatedLevelPopup extends Popup {
       );
     }
 
-    // add lines
-    {
-      Object.entries(this.checked).map(([key, check], i) => {
-        const line = new PIXI.Container();
-
-        const text = crisprUtil.makeText(key, {
-          stroke: 0xffffff,
-          strokeThickness: 10,
-        });
-
-        text.position.set(this.center.x, 50);
-
-        line.addChild(text);
-
-        const icon = crisprUtil.makeText(check ? "✅" : "❌", {
-          align: "right",
-          strokeThickness: 20,
-          stroke: 0x000000,
-        });
-
-        icon.position.set(this.width - 100, 50);
-
-        line.addChild(icon);
-
-        this.addRow(line, 100);
-      });
-    }
+    this.addCheckLines();
   }
 }
 

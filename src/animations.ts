@@ -392,7 +392,7 @@ export function shakingPoint({ anchor, amount }: ShakingOptions): PIXI.Point {
   return target;
 }
 
-export class DisplayObjectShakesManager extends entity.EntityBase {
+export class ShakesManager extends entity.EntityBase {
   private _shakes: Map<string, number> = new Map();
   public floatingOptions?: FloatingOptions;
   public anchor = new PIXI.Point();

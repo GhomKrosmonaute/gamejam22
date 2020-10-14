@@ -48,7 +48,7 @@ export class Minimap extends entity.CompositeEntity {
         amplitude: new PIXI.Point(0.5, 0.5),
         speed: new PIXI.Point(Math.random(), Math.random()),
       });
-      const shaking = new anim.DisplayObjectShakesManager(this.particles);
+      const shaking = new anim.ShakesManager(this.particles);
       shaking.setFloat("float", options);
       this._activateChildEntity(shaking);
     }
@@ -58,7 +58,7 @@ export class Minimap extends entity.CompositeEntity {
         amplitude: new PIXI.Point(2, 2),
         speed: new PIXI.Point(Math.random(), Math.random()),
       });
-      const shaking = new anim.DisplayObjectShakesManager(this.particlesBis);
+      const shaking = new anim.ShakesManager(this.particlesBis);
       shaking.setFloat("float", options);
       this._activateChildEntity(shaking);
     }
@@ -120,13 +120,13 @@ export class Minimap extends entity.CompositeEntity {
 
       levelSprite.addChild(text);
 
-      const shaking = new anim.DisplayObjectShakesManager(levelSprite);
+      const shaking = new anim.ShakesManager(levelSprite);
       shaking.setFloat(
         "float",
         anim.makeFloatingOptions({
           active: { x: true, y: true },
-          amplitude: new PIXI.Point(1, 1),
-          speed: new PIXI.Point(Math.random() + 0.2, Math.random() + 0.2),
+          amplitude: new PIXI.Point(2, 1),
+          speed: new PIXI.Point(Math.random() + 0.5, Math.random() + 0.2),
         })
       );
       this._activateChildEntity(shaking);
@@ -138,7 +138,6 @@ export class Minimap extends entity.CompositeEntity {
       content: this.buttons,
       boxWidth: crisprUtil.width - 10,
       boxHeight: crisprUtil.height,
-      overflowY: "scroll",
       scrollbarSize: 25,
       contentMarginY: 500,
     });
