@@ -21,7 +21,7 @@ import * as level from "../scenes/level";
  */
 export class SequenceManager extends entity.CompositeEntity {
   public sequences = new Set<Sequence>();
-  public container: PIXI.Container;
+  public container = new PIXI.Container();
 
   private adjustment: entity.Entity = null;
 
@@ -33,8 +33,8 @@ export class SequenceManager extends entity.CompositeEntity {
 
   _teardown() {
     this.sequences.clear();
+    this.container.removeChildren();
     this._entityConfig.container.removeChild(this.container);
-    this.container = null;
   }
 
   private _getSequenceRangeY(): crisprUtil.Range {
@@ -438,9 +438,9 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _teardown() {
-    this._entityConfig.container.removeChild(this.container);
-    this.container = null;
     this.nucleotides = [];
+    this.container.removeChildren();
+    this._entityConfig.container.removeChild(this.container);
   }
 
   down(addScore: boolean, callback?: () => any) {

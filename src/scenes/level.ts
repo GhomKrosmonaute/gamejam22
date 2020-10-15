@@ -18,6 +18,8 @@ import * as path from "../entities/path";
 import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
+const DEBUG = true;
+
 export type LevelVariant = "turnBased" | "continuous" | "long";
 
 export interface LevelResults {
@@ -159,8 +161,6 @@ export interface LevelEvents {
   activatedChildEntity: [entity: entity.Entity];
   deactivatedChildEntity: [entity: entity.Entity];
 }
-
-const DEBUG = false;
 
 export class Level extends entity.CompositeEntity {
   // system
@@ -601,8 +601,9 @@ export class Level extends entity.CompositeEntity {
       new entity.EntitySequence([
         infectionSequence,
         new entity.FunctionCallEntity(() => {
+          this.disablingAnimations.delete("level.onInfection");
+
           if (this.options.disableExtraSequence) {
-            this.disablingAnimations.delete("level.onInfection");
             return;
           }
 

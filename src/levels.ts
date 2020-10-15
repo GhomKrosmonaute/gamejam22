@@ -10,9 +10,19 @@ import * as bonuses from "./entities/bonus";
 import * as anim from "./animations";
 
 export const levels = {
-  // first real level
+  "Level 2": () =>
+    new level.Level("Level 2", {
+      variant: "continuous",
+      maxScore: 200,
+      forceMatching: true,
+      gaugeRings: [],
+      hooks: [],
+    }),
+
   "Level 1": () =>
     new level.Level("Level 1", {
+      variant: "turnBased",
+      maxScore: 200,
       gaugeRings: [
         (level, ring) =>
           level.activate(
@@ -33,8 +43,6 @@ export const levels = {
             ])
           ),
       ],
-      variant: "turnBased",
-      maxScore: 200,
       hooks: [
         new level.Hook({
           event: "setup",
