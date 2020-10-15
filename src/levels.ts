@@ -12,7 +12,7 @@ import * as anim from "./animations";
 export const levels = {
   "Level 3": () =>
     new level.Level("Level 3", {
-      variant: "long"
+      variant: "long",
     }),
 
   "Level 2": () =>
