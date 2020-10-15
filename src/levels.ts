@@ -10,6 +10,11 @@ import * as bonuses from "./entities/bonus";
 import * as anim from "./animations";
 
 export const levels = {
+  "Level 3": () =>
+    new level.Level("Level 3", {
+      variant: "long"
+    }),
+
   "Level 2": () =>
     new level.Level("Level 2", {
       variant: "continuous",
