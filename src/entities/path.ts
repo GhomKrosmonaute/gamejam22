@@ -185,13 +185,13 @@ export class Path extends entity.CompositeEntity {
       sequence: this.items,
       timeBetween: 50,
       onStep: (resolve, item, i) => {
-        const score = item.infected ? (i + 1) * 2 : i + 1;
+        const score = item.infected ? 15 : 10;
         const fill = item.infected ? item.fullColorName : "#ffeccc";
         const stroke = item.infected ? "#ffc200" : "black";
         const duration = item.infected ? 1000 : 500;
         this._activateChildEntity(
           anim.down(
-            item.sprite,
+            item.infected ? item.infectionSprite : item.sprite,
             duration,
             function () {
               this.once("stateChanged", resolve);
