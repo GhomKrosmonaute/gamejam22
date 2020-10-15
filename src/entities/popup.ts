@@ -23,6 +23,7 @@ export function makeCross(radius: number): PIXI.Graphics {
 }
 
 export interface PopupOptions {
+  logo: string;
   from: PIXI.Point;
   withBackground: boolean;
   withClosureCross: boolean;
@@ -35,6 +36,7 @@ export interface PopupOptions {
 }
 
 export const defaultPopupOptions: PopupOptions = {
+  logo: "",
   from: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
   withBackground: false,
   withClosureCross: true,
@@ -61,6 +63,7 @@ export abstract class Popup extends entity.CompositeEntity {
   public cross?: PIXI.Graphics;
   public background?: PIXI.Graphics;
   public bodyBackground?: PIXI.Sprite;
+  public logo?: PIXI.Text;
 
   public readonly body = new PIXI.Container();
 
@@ -148,6 +151,15 @@ export abstract class Popup extends entity.CompositeEntity {
             });
           }
 
+          // unicode logo
+          if (this.options.logo) {
+            this.logo = crisprUtil.makeText(this.options.logo, {
+              fontSize: 150,
+            });
+            this.logo.position.set(this.center.x, 100);
+            this.body.addChild(this.logo);
+          }
+
           this._entityConfig.container.addChild(this._container);
 
           this._activateChildEntity(
@@ -224,6 +236,7 @@ export abstract class Popup extends entity.CompositeEntity {
       new entity.ParallelEntity([
         anim.sink(this._container, 150, () => {
           this.emit("closed");
+          this.level.emit("closedPopup", this);
           this._transition = entity.makeTransition();
         }),
         new tween.Tween({
@@ -466,18 +479,22 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
 export class TutorialPopup extends Popup {
   private text: PIXI.Text;
   private content: PIXI.Text;
+  private image?: PIXI.Sprite | entity.AnimatedSpriteEntity;
 
   constructor(
     public _options: {
       title: string;
       content: string;
-      exampleImage?: PIXI.Sprite;
+      image?: string;
+      popupOptions?: Partial<PopupOptions>;
     }
   ) {
     super({
       withBackground: true,
       closeOnBackgroundClick: true,
       adjustHeight: true,
+      logo: "🧬",
+      ...(_options.popupOptions ?? {}),
     });
   }
 
@@ -495,11 +512,34 @@ export class TutorialPopup extends Popup {
       wordWrap: true,
     });
 
+    if (this._options.image) {
+      if (this._options.image.endsWith(".json")) {
+        this.image = util.makeAnimatedSprite(
+          this._entityConfig.app.loader.resources[this._options.image]
+        );
+        this._activateChildEntity(this.image);
+      } else {
+        this.image = new PIXI.Sprite(
+          this._entityConfig.app.loader.resources[this._options.image].texture
+        );
+      }
+    }
+
     this.text.position.set(this.center.x, 150);
+    this.content.position.set(this.center.x, this.content.height / 2);
 
-    this.content.position.set(this.center.x, 200);
+    this.addRow(this.text, 300).addRow(this.content);
 
-    this.addRow(this.text, 300).addRow(this.content, 400);
+    if (this._options.image) {
+      const sprite =
+        this.image instanceof PIXI.Sprite ? this.image : this.image.sprite;
+      sprite.anchor.set(0.5);
+      const ratioWH = sprite.height / sprite.width;
+      sprite.width = this.width / 3;
+      sprite.height = sprite.width * ratioWH;
+      sprite.position.set(this.center.x, sprite.height / 2 + 50);
+      this.addRow(sprite, sprite.height + 100);
+    }
   }
 }
 

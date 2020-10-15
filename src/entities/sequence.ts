@@ -21,20 +21,27 @@ import * as level from "../scenes/level";
  */
 export class SequenceManager extends entity.CompositeEntity {
   public sequences = new Set<Sequence>();
-  public container: PIXI.Container;
+  public container = new PIXI.Container();
 
   private adjustment: entity.Entity = null;
 
   _setup() {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
-    this.add();
+
+    if (this.level.options.sequences) {
+      for (const colors of this.level.options.sequences) {
+        this.set(colors);
+      }
+    } else {
+      this.add();
+    }
   }
 
   _teardown() {
     this.sequences.clear();
+    this.container.removeChildren();
     this._entityConfig.container.removeChild(this.container);
-    this.container = null;
   }
 
   private _getSequenceRangeY(): crisprUtil.Range {
@@ -50,8 +57,8 @@ export class SequenceManager extends entity.CompositeEntity {
         range.bottom = crisprUtil.height * 0.42;
         break;
       case "continuous":
-        range.top = crisprUtil.height * 0.2;
-        range.bottom = crisprUtil.height * 0.38;
+        range.top = crisprUtil.height * 0.22;
+        range.bottom = crisprUtil.height * 0.46;
         break;
       case "long":
         range.top = crisprUtil.height * 0.3;
@@ -85,10 +92,33 @@ export class SequenceManager extends entity.CompositeEntity {
       case "turnBased":
         return crisprUtil.random(4, 7);
       case "continuous":
-        return crisprUtil.random(3, 4);
+        return crisprUtil.random(3, 5);
       case "long":
         return 13;
     }
+  }
+
+  set(colors: nucleotide.ColorName[]) {
+    const {
+      width: nucleotideWidth,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      this.level.options.sequenceNucleotideRadius
+    );
+    const sequence = new Sequence(
+      colors,
+      new PIXI.Point(
+        crisprUtil.width / 2 - (colors.length * nucleotideWidth * 0.8) / 2,
+        this._getSequenceRangeY().top
+      )
+    );
+    this._activateChildEntity(
+      sequence,
+      entity.extendConfig({
+        container: this.container,
+      })
+    );
+    this.sequences.add(sequence);
+    this.adjustRelativePositionOfSequences();
   }
 
   add(length?: number) {
@@ -238,6 +268,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
   getSequenceYByIndex(index: number) {
     const range = this._getSequenceRangeY();
+    if (this.level.options.variant === "continuous") return range.top;
     if (this.sequences.size === 1) return range.middle;
     return crisprUtil.proportion(
       index,
@@ -289,15 +320,17 @@ export class SequenceManager extends entity.CompositeEntity {
  * Represent a sequence dropped by virus
  */
 export class Sequence extends entity.CompositeEntity {
+  public readonly baseLength: number;
   public nucleotides: nucleotide.Nucleotide[] = [];
   public container = new PIXI.Container();
   public virus?: virus.Virus;
 
   constructor(
-    public readonly baseLength: number,
+    public readonly base: number | nucleotide.ColorName[],
     private readonly basePosition: PIXI.Point
   ) {
     super();
+    this.baseLength = typeof base === "number" ? base : base.length;
     this.container.position.copyFrom(basePosition);
   }
 
@@ -352,9 +385,11 @@ export class Sequence extends entity.CompositeEntity {
       this.level.options.sequenceNucleotideRadius
     );
 
-    let forcedSequence: nucleotide.ColorName[];
+    let forcedSequence: nucleotide.ColorName[] = [];
 
-    if (this.level.options.forceMatching) {
+    if (Array.isArray(this.base)) {
+      forcedSequence = this.base.slice(0);
+    } else if (this.level.options.forceMatching) {
       forcedSequence = this.level.grid.getRandomPath(this.baseLength);
       while (!forcedSequence) {
         forcedSequence = this.level.grid.getRandomPath(this.baseLength);
@@ -372,7 +407,7 @@ export class Sequence extends entity.CompositeEntity {
         "sequence",
         position,
         Math.random(),
-        this.level.options.forceMatching ? forcedSequence[i] : null
+        forcedSequence[i]
       );
 
       if (this.virus) {
@@ -438,9 +473,9 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _teardown() {
-    this._entityConfig.container.removeChild(this.container);
-    this.container = null;
     this.nucleotides = [];
+    this.container.removeChildren();
+    this._entityConfig.container.removeChild(this.container);
   }
 
   down(addScore: boolean, callback?: () => any) {

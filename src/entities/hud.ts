@@ -206,6 +206,7 @@ export class Gauge extends entity.CompositeEntity {
 }
 
 export class GoButton extends entity.CompositeEntity {
+  public shaker: anim.ShakesManager;
   public container: PIXI.Container;
   public sprite: PIXI.Sprite;
   public text: PIXI.Text;
@@ -216,6 +217,8 @@ export class GoButton extends entity.CompositeEntity {
 
   protected _setup() {
     this.container = new PIXI.Container();
+    this.shaker = new anim.ShakesManager(this.container);
+    this._activateChildEntity(this.shaker);
 
     this.sprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[

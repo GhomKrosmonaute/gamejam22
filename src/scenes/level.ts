@@ -34,12 +34,13 @@ export interface LevelOptions {
   disableGauge: boolean;
   disableScore: boolean;
   retryOnFail: boolean;
+  displayTurnTitles: boolean;
   variant: LevelVariant;
   maxScore: number;
   dropSpeed: number;
   baseGain: number;
   baseScore: number;
-  gaugeRingCount: number;
+  gaugeRings: ((level: Level, ring: hud.Ring, index: number) => unknown)[];
   sequenceLength: number | null;
   colCount: number;
   rowCount: number;
@@ -47,6 +48,8 @@ export interface LevelOptions {
   nucleotideRadius: number;
   sequenceNucleotideRadius: number;
   gridShape: grid.GridShape;
+  presetScissors: grid.GridPreset | null;
+  sequences: nucleotide.ColorName[][] | null;
   forceMatching: boolean;
   hooks: Hook[];
   initialBonuses: bonuses.InitialBonuses;
@@ -60,13 +63,16 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableGauge: false,
   disableScore: false,
   retryOnFail: false,
+  displayTurnTitles: true,
   variant: "turnBased",
+  presetScissors: null,
   dropSpeed: 0.001,
   maxScore: 1000,
   baseGain: 10,
   baseScore: 0,
-  gaugeRingCount: 5,
+  gaugeRings: [],
   sequenceLength: null,
+  sequences: null,
   colCount: 7,
   rowCount: 7,
   scissorCount: 6,
@@ -147,6 +153,7 @@ export class Hook<
 export interface LevelEvents {
   setup: [];
   infected: [];
+  closedPopup: [popup.Popup];
   pathUpdated: [];
   ringReached: [ring: hud.Ring, index: number];
   sequenceDown: [];
@@ -158,8 +165,6 @@ export interface LevelEvents {
   deactivatedChildEntity: [entity: entity.Entity];
 }
 
-const DEBUG = false;
-
 export class Level extends entity.CompositeEntity {
   // system
   /**
@@ -167,6 +172,7 @@ export class Level extends entity.CompositeEntity {
    * **Flag accessor**: `<Level>.isDisablingAnimationInProgress`
    */
   public disablingAnimations: Set<string> = new Set();
+  public fallingStopped = false;
   public container = new PIXI.Container();
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
@@ -174,7 +180,7 @@ export class Level extends entity.CompositeEntity {
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
-  private goButton: hud.GoButton;
+  public goButton: hud.GoButton;
 
   // game
   public wasInfected = false;
@@ -193,6 +199,14 @@ export class Level extends entity.CompositeEntity {
     super();
     this.options = util.fillInOptions(this.options, defaultLevelOptions);
     this.score = this.options.baseScore;
+  }
+
+  activate(entity: entity.Entity) {
+    if (!entity.isSetup) this._activateChildEntity(entity, this.config);
+  }
+
+  deactivate(entity: entity.Entity) {
+    if (entity.isSetup) this._deactivateChildEntity(entity);
   }
 
   emit<K extends LevelEventName>(event: K, ...params: LevelEventParams<K>) {
@@ -273,7 +287,8 @@ export class Level extends entity.CompositeEntity {
       this.options.rowCount,
       this.options.scissorCount,
       this.options.nucleotideRadius,
-      this.options.gridShape
+      this.options.gridShape,
+      this.options.presetScissors
     );
     this._on(this.grid, "pointerup", this._attemptCrunch);
     this._activateChildEntity(this.grid, this.config);
@@ -308,14 +323,18 @@ export class Level extends entity.CompositeEntity {
     if (this.options.disableGauge) return;
 
     this.gauge = new hud.Gauge(
-      this.options.gaugeRingCount,
+      this.options.gaugeRings.length,
       this.options.maxScore
     );
+
     this._activateChildEntity(this.gauge, this.config);
-    this.on("ringReached", (ring) => {
+
+    this.on("ringReached", (ring, index) => {
+      this.options.gaugeRings[index](this, ring, index);
       ring.tint = 0x6bffff;
-      this._activateChildEntity(anim.tweenShaking(ring, 1000, 6, 0));
+      this._activateChildEntity(anim.tweenShaking(ring, 2000, 10, 0));
     });
+
     // setup shockwave on max score is reached
     this.on("maxScoreReached", () => {
       this.gauge.bubbleRings({
@@ -346,7 +365,7 @@ export class Level extends entity.CompositeEntity {
 
     this.emit("setup");
 
-    if (DEBUG) {
+    if (crisprUtil.debug) {
       let lastDisablingAnimations = [...this.disablingAnimations];
       setInterval(() => {
         if (
@@ -371,7 +390,8 @@ export class Level extends entity.CompositeEntity {
   _update() {
     if (
       this.options.variant !== "continuous" ||
-      this.isDisablingAnimationInProgress
+      this.isDisablingAnimationInProgress ||
+      this.fallingStopped
     )
       return;
 
@@ -572,8 +592,6 @@ export class Level extends entity.CompositeEntity {
   }
 
   public onInfection(infectionCount = 1): void {
-    this.emit("infected");
-
     this.disablingAnimations.add("level.onInfection");
 
     if (this.grid.isGameOver()) {
@@ -587,8 +605,9 @@ export class Level extends entity.CompositeEntity {
       new entity.EntitySequence([
         infectionSequence,
         new entity.FunctionCallEntity(() => {
+          this.disablingAnimations.delete("level.onInfection");
+
           if (this.options.disableExtraSequence) {
-            this.disablingAnimations.delete("level.onInfection");
             return;
           }
 

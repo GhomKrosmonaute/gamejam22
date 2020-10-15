@@ -19,9 +19,14 @@ export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
   return opposedNeighborIndex as NeighborIndex;
 }
 
-export type GridShape = "mini" | "medium" | "full";
+export type GridPreset<T = true> = ((T | null)[] | null)[];
 
-const DEBUG = false;
+export type GridShape =
+  | "mini"
+  | "medium"
+  | "full"
+  | GridPreset<nucleotide.ColorName>
+  | ((x: number, y: number) => boolean);
 
 /** Represent the game nucleotides grid
  *
@@ -44,7 +49,8 @@ export class Grid extends entity.CompositeEntity {
     public rowCount: number,
     public scissorCount: number,
     public nucleotideRadius: number,
-    public shape: GridShape
+    public shape: GridShape,
+    public presetScissors?: GridPreset
   ) {
     super();
   }
@@ -62,7 +68,7 @@ export class Grid extends entity.CompositeEntity {
     this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointermove", this._onPointerMove);
 
-    if (DEBUG) {
+    if (crisprUtil.debug) {
       this.on("drag", (n: nucleotide.Nucleotide) => {
         console.log(this.getGridPositionOf(n));
       });
@@ -75,44 +81,80 @@ export class Grid extends entity.CompositeEntity {
     this.container.addChild(this.nucleotideContainer);
 
     this.allNucleotides.length = this.colCount * this.rowCount;
-    for (let x = 0; x < this.colCount; x++) {
-      for (let y = 0; y < this.rowCount; y++) {
-        if (x % 2 === 0 && y === this.rowCount - 1) continue;
-        if (
-          this.shape === "mini" &&
-          (x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0))
-        )
-          continue;
-        if (
-          this.shape === "medium" &&
-          (x < 1 ||
-            x > 5 ||
-            y < 1 ||
-            y > 5 ||
-            (x === 1 && y === 1) ||
-            (x === 5 && y === 1) ||
-            (x !== 3 && x > 0 && x < 6 && y === 5))
-        )
-          continue;
 
-        const n = new nucleotide.Nucleotide(
-          this.nucleotideRadius,
-          "grid",
-          this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y))
-        );
-        n.floating.active.x = true;
-        n.floating.active.y = true;
-        n.floating.speed.set(1.4, 2);
-        n.floating.amplitude.set(0.3, 0.3);
-        this.generateNucleotide(n);
-        this._activateChildEntity(
-          n,
-          entity.extendConfig({
-            container: this.nucleotideContainer,
-          })
-        );
-        this.allNucleotides[y * this.colCount + x] = n;
+    const addNucleotide = (
+      x: number,
+      y: number,
+      color?: nucleotide.ColorName
+    ) => {
+      const n = new nucleotide.Nucleotide(
+        this.nucleotideRadius,
+        "grid",
+        this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y)),
+        0,
+        color
+      );
+      n.floating.active.x = true;
+      n.floating.active.y = true;
+      n.floating.speed.set(1.4, 2);
+      n.floating.amplitude.set(0.3, 0.3);
+      n.type = "normal";
+      this._activateChildEntity(
+        n,
+        entity.extendConfig({
+          container: this.nucleotideContainer,
+        })
+      );
+      this.allNucleotides[y * this.colCount + x] = n;
+    };
+
+    if (Array.isArray(this.shape)) {
+      this.shape.forEach((row, y) => {
+        if (row)
+          row.forEach((col, x) => {
+            if (col) addNucleotide(x, y, col);
+          });
+      });
+    } else {
+      for (let x = 0; x < this.colCount; x++) {
+        for (let y = 0; y < this.rowCount; y++) {
+          if (x % 2 === 0 && y === this.rowCount - 1) continue;
+          if (
+            this.shape === "mini" &&
+            (x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0))
+          )
+            continue;
+          if (
+            this.shape === "medium" &&
+            (x < 1 ||
+              x > 5 ||
+              y < 1 ||
+              y > 5 ||
+              (x === 1 && y === 1) ||
+              (x === 5 && y === 1) ||
+              (x !== 3 && x > 0 && x < 6 && y === 5))
+          )
+            continue;
+
+          if (typeof this.shape === "function" && !this.shape(x, y)) continue;
+
+          addNucleotide(x, y);
+        }
       }
+    }
+
+    if (this.presetScissors) {
+      this.presetScissors.forEach((row, y) => {
+        if (row)
+          row.forEach((col, x) => {
+            if (col) {
+              const n = this.getNucleotideFromGridPosition(
+                new PIXI.Point(x, y)
+              );
+              n.type = "scissors";
+            }
+          });
+      });
     }
 
     this.addScissors(this.nucleotides);
@@ -146,7 +188,7 @@ export class Grid extends entity.CompositeEntity {
     const bonus = this.level.options.disableBonuses
       ? null
       : this.level.bonusesManager.getSelectedBonus();
-    if (!bonus) {
+    if (!bonus || bonus.name === "time") {
       hovered = this.getHovered();
       if (!hovered) return;
 
@@ -232,6 +274,13 @@ export class Grid extends entity.CompositeEntity {
       }
 
       current = crisprUtil.random(neighbors);
+    }
+
+    if (
+      this.level.options.scissorCount > 0 &&
+      !alreadyPassed.some((n) => n.type === "scissors")
+    ) {
+      return null;
     }
 
     return colorNames;
@@ -556,6 +605,7 @@ export class Grid extends entity.CompositeEntity {
       );
       sequence.push(new entity.WaitingEntity(100));
       this.level.wasInfected = true;
+      this.level.emit("infected");
     }
 
     sequence.push(
