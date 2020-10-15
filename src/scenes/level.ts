@@ -34,12 +34,13 @@ export interface LevelOptions {
   disableGauge: boolean;
   disableScore: boolean;
   retryOnFail: boolean;
+  displayTurnTitles: boolean;
   variant: LevelVariant;
   maxScore: number;
   dropSpeed: number;
   baseGain: number;
   baseScore: number;
-  gaugeRingCount: number;
+  gaugeRings: ((level: Level, ring: hud.Ring, index: number) => unknown)[];
   sequenceLength: number | null;
   colCount: number;
   rowCount: number;
@@ -60,12 +61,13 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableGauge: false,
   disableScore: false,
   retryOnFail: false,
+  displayTurnTitles: true,
   variant: "turnBased",
   dropSpeed: 0.001,
   maxScore: 1000,
   baseGain: 10,
   baseScore: 0,
-  gaugeRingCount: 5,
+  gaugeRings: [],
   sequenceLength: null,
   colCount: 7,
   rowCount: 7,
@@ -195,6 +197,14 @@ export class Level extends entity.CompositeEntity {
     this.score = this.options.baseScore;
   }
 
+  activate(entity: entity.Entity) {
+    if (!entity.isSetup) this._activateChildEntity(entity, this.config);
+  }
+
+  deactivate(entity: entity.Entity) {
+    if (entity.isSetup) this._deactivateChildEntity(entity);
+  }
+
   emit<K extends LevelEventName>(event: K, ...params: LevelEventParams<K>) {
     return super.emit(event, ...params);
   }
@@ -308,14 +318,18 @@ export class Level extends entity.CompositeEntity {
     if (this.options.disableGauge) return;
 
     this.gauge = new hud.Gauge(
-      this.options.gaugeRingCount,
+      this.options.gaugeRings.length,
       this.options.maxScore
     );
+
     this._activateChildEntity(this.gauge, this.config);
-    this.on("ringReached", (ring) => {
+
+    this.on("ringReached", (ring, index) => {
+      this.options.gaugeRings[index](this, ring, index);
       ring.tint = 0x6bffff;
-      this._activateChildEntity(anim.tweenShaking(ring, 1000, 6, 0));
+      this._activateChildEntity(anim.tweenShaking(ring, 2000, 10, 0));
     });
+
     // setup shockwave on max score is reached
     this.on("maxScoreReached", () => {
       this.gauge.bubbleRings({

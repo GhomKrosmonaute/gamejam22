@@ -466,18 +466,21 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
 export class TutorialPopup extends Popup {
   private text: PIXI.Text;
   private content: PIXI.Text;
+  private image?: PIXI.Sprite;
 
   constructor(
     public _options: {
       title: string;
       content: string;
-      exampleImage?: PIXI.Sprite;
+      exampleImage?: string;
+      popupOptions?: Partial<PopupOptions>;
     }
   ) {
     super({
       withBackground: true,
       closeOnBackgroundClick: true,
       adjustHeight: true,
+      ...(_options.popupOptions ?? {}),
     });
   }
 
@@ -495,11 +498,25 @@ export class TutorialPopup extends Popup {
       wordWrap: true,
     });
 
-    this.text.position.set(this.center.x, 150);
+    if (this._options.exampleImage) {
+      this.image = new PIXI.Sprite(
+        this._entityConfig.app.loader.resources[
+          this._options.exampleImage
+        ].texture
+      );
+    }
 
+    this.text.position.set(this.center.x, 150);
     this.content.position.set(this.center.x, 200);
 
     this.addRow(this.text, 300).addRow(this.content, 400);
+
+    if (this._options.exampleImage) {
+      this.image.anchor.set(0.5);
+      this.image.scale.set(1.3);
+      this.image.position.set(this.center.x, this.image.height / 2);
+      this.addRow(this.image, this.image.height);
+    }
   }
 }
 

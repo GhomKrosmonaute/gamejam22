@@ -17,6 +17,7 @@ export abstract class Bonus extends entity.CompositeEntity {
   public position: PIXI.Point;
 
   private _count = 0;
+  private _highlight = false;
 
   abstract name: string;
 
@@ -24,6 +25,15 @@ export abstract class Bonus extends entity.CompositeEntity {
     super.setup(frameInfo, entityConfig);
     this._activateChildEntity(this.shakes);
     this.shakes.setShake("root", 3);
+  }
+
+  get highlight(): boolean {
+    return this._highlight;
+  }
+
+  set highlight(value: boolean) {
+    this._highlight = value;
+    this.sprite.scale.set(value ? 0.7 : 0.5);
   }
 
   get level(): level.Level {
@@ -329,7 +339,7 @@ export class BonusesManager extends entity.CompositeEntity {
   _update() {
     const disable = this.level.isDisablingAnimationInProgress;
     for (const bonus of this.bonuses) {
-      const bonusDisable = disable || !bonus.count;
+      const bonusDisable = (disable || !bonus.count) && !bonus.highlight;
       bonus.sprite.buttonMode = !bonusDisable;
       bonus.sprite.tint = bonusDisable ? 0x9f9f9f : 0xffffff;
     }

@@ -1,20 +1,40 @@
+import * as PIXI from "pixi.js";
+
+import * as entity from "booyah/src/entity";
+
 import * as level from "./scenes/level";
 
 import * as popup from "./entities/popup";
 import * as bonuses from "./entities/bonus";
 
+import * as anim from "./animations";
+
 export const levels = {
   // first real level
   "Level 1": () =>
     new level.Level("Level 1", {
+      gaugeRings: [
+        (level, ring) =>
+          level.activate(
+            new entity.EntitySequence([
+              new entity.FunctionCallEntity(() => {
+                level.bonusesManager.add(bonuses.swapBonus);
+                bonuses.swapBonus.highlight = true;
+              }),
+              new popup.TutorialPopup({
+                title: "The Swap bonus",
+                content: "Can swap two nucleotides",
+                exampleImage: "images/bonus_swap.png",
+                popupOptions: { from: ring.position },
+              }),
+              new entity.FunctionCallEntity(() => {
+                bonuses.swapBonus.highlight = false;
+              }),
+            ])
+          ),
+      ],
       variant: "turnBased",
       maxScore: 200,
-      initialBonuses: [
-        {
-          bonus: bonuses.swapBonus,
-          quantity: 3,
-        },
-      ],
       hooks: [
         new level.Hook({
           event: "setup",
@@ -79,8 +99,10 @@ export const levels = {
                 event: "sequenceDown",
                 reset: {
                   gridShape: "medium",
-                  scissorCount: 4,
+                  scissorCount: 3,
                   sequenceLength: 6,
+                  displayTurnTitles: true,
+                  forceMatching: false,
                   disableButton: false,
                   disableExtraSequence: true,
                   hooks: [
