@@ -28,7 +28,14 @@ export class SequenceManager extends entity.CompositeEntity {
   _setup() {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
-    this.add();
+
+    if (this.level.options.sequences) {
+      for (const colors of this.level.options.sequences) {
+        this.set(colors);
+      }
+    } else {
+      this.add();
+    }
   }
 
   _teardown() {
@@ -85,10 +92,33 @@ export class SequenceManager extends entity.CompositeEntity {
       case "turnBased":
         return crisprUtil.random(4, 7);
       case "continuous":
-        return crisprUtil.random(3, 4);
+        return crisprUtil.random(3, 5);
       case "long":
         return 13;
     }
+  }
+
+  set(colors: nucleotide.ColorName[]) {
+    const {
+      width: nucleotideWidth,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      this.level.options.sequenceNucleotideRadius
+    );
+    const sequence = new Sequence(
+      colors,
+      new PIXI.Point(
+        crisprUtil.width / 2 - (colors.length * nucleotideWidth * 0.8) / 2,
+        this._getSequenceRangeY().top
+      )
+    );
+    this._activateChildEntity(
+      sequence,
+      entity.extendConfig({
+        container: this.container,
+      })
+    );
+    this.sequences.add(sequence);
+    this.adjustRelativePositionOfSequences();
   }
 
   add(length?: number) {
@@ -290,15 +320,17 @@ export class SequenceManager extends entity.CompositeEntity {
  * Represent a sequence dropped by virus
  */
 export class Sequence extends entity.CompositeEntity {
+  public readonly baseLength: number;
   public nucleotides: nucleotide.Nucleotide[] = [];
   public container = new PIXI.Container();
   public virus?: virus.Virus;
 
   constructor(
-    public readonly baseLength: number,
+    public readonly base: number | nucleotide.ColorName[],
     private readonly basePosition: PIXI.Point
   ) {
     super();
+    this.baseLength = typeof base === "number" ? base : base.length;
     this.container.position.copyFrom(basePosition);
   }
 
@@ -353,9 +385,11 @@ export class Sequence extends entity.CompositeEntity {
       this.level.options.sequenceNucleotideRadius
     );
 
-    let forcedSequence: nucleotide.ColorName[];
+    let forcedSequence: nucleotide.ColorName[] = [];
 
-    if (this.level.options.forceMatching) {
+    if (Array.isArray(this.base)) {
+      forcedSequence = this.base.slice(0);
+    } else if (this.level.options.forceMatching) {
       forcedSequence = this.level.grid.getRandomPath(this.baseLength);
       while (!forcedSequence) {
         forcedSequence = this.level.grid.getRandomPath(this.baseLength);
@@ -373,7 +407,7 @@ export class Sequence extends entity.CompositeEntity {
         "sequence",
         position,
         Math.random(),
-        this.level.options.forceMatching ? forcedSequence[i] : null
+        forcedSequence[i]
       );
 
       if (this.virus) {

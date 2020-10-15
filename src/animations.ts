@@ -456,4 +456,8 @@ export class ShakesManager extends entity.EntityBase {
       this.object.position.copyFrom(floatingPoint(this.floatingOptions));
     }
   }
+
+  protected _teardown() {
+    this.removeAllShakes();
+  }
 }

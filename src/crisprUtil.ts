@@ -4,6 +4,7 @@ import * as geom from "booyah/src/geom";
 
 export const width = 1080;
 export const height = 1920;
+export const debug = true;
 
 export class BetterPoint extends PIXI.Point {
   public readonly origin = new PIXI.Point();
@@ -147,14 +148,6 @@ export function makeText(text: string, options?: Partial<PIXI.TextStyle>) {
   );
   pixiText.anchor.set(0.5);
   return pixiText;
-}
-
-const _debugged: string[] = [];
-export function debug(name: string, ...any: any) {
-  if (!_debugged.includes(name)) {
-    _debugged.push(name);
-    console.log(name, ...any);
-  }
 }
 
 export type Axe = "x" | "y";

@@ -18,8 +18,6 @@ import * as path from "../entities/path";
 import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
-const DEBUG = true;
-
 export type LevelVariant = "turnBased" | "continuous" | "long";
 
 export interface LevelResults {
@@ -50,6 +48,8 @@ export interface LevelOptions {
   nucleotideRadius: number;
   sequenceNucleotideRadius: number;
   gridShape: grid.GridShape;
+  presetScissors: grid.GridPreset | null;
+  sequences: nucleotide.ColorName[][] | null;
   forceMatching: boolean;
   hooks: Hook[];
   initialBonuses: bonuses.InitialBonuses;
@@ -65,12 +65,14 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   retryOnFail: false,
   displayTurnTitles: true,
   variant: "turnBased",
+  presetScissors: null,
   dropSpeed: 0.001,
   maxScore: 1000,
   baseGain: 10,
   baseScore: 0,
   gaugeRings: [],
   sequenceLength: null,
+  sequences: null,
   colCount: 7,
   rowCount: 7,
   scissorCount: 6,
@@ -151,6 +153,7 @@ export class Hook<
 export interface LevelEvents {
   setup: [];
   infected: [];
+  closedPopup: [popup.Popup];
   pathUpdated: [];
   ringReached: [ring: hud.Ring, index: number];
   sequenceDown: [];
@@ -177,7 +180,7 @@ export class Level extends entity.CompositeEntity {
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
-  private goButton: hud.GoButton;
+  public goButton: hud.GoButton;
 
   // game
   public wasInfected = false;
@@ -284,7 +287,8 @@ export class Level extends entity.CompositeEntity {
       this.options.rowCount,
       this.options.scissorCount,
       this.options.nucleotideRadius,
-      this.options.gridShape
+      this.options.gridShape,
+      this.options.presetScissors
     );
     this._on(this.grid, "pointerup", this._attemptCrunch);
     this._activateChildEntity(this.grid, this.config);
@@ -361,7 +365,7 @@ export class Level extends entity.CompositeEntity {
 
     this.emit("setup");
 
-    if (DEBUG) {
+    if (crisprUtil.debug) {
       let lastDisablingAnimations = [...this.disablingAnimations];
       setInterval(() => {
         if (
@@ -588,8 +592,6 @@ export class Level extends entity.CompositeEntity {
   }
 
   public onInfection(infectionCount = 1): void {
-    this.emit("infected");
-
     this.disablingAnimations.add("level.onInfection");
 
     if (this.grid.isGameOver()) {

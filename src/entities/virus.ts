@@ -54,13 +54,14 @@ export class Virus extends entity.CompositeEntity {
         if (angle > this.angle) this._animation.sprite.scale.x *= -1;
       }),
       new tween.Tween({
-        duration: crisprUtil.proportion(
-          crisprUtil.dist1D(this.angle, angle),
-          leftEdge,
-          rightEdge,
-          0,
-          10000
-        ),
+        duration: 1000,
+        // duration: crisprUtil.proportion(
+        //   crisprUtil.dist1D(this.angle, angle),
+        //   leftEdge,
+        //   rightEdge,
+        //   0,
+        //   10000
+        // ),
         from: this.angle,
         to: angle,
         easing: easing.easeInOutQuad,
