@@ -83,6 +83,27 @@ export abstract class Bonus extends entity.CompositeEntity {
   }
 }
 
+export class TimeBonus extends Bonus {
+  name = "time";
+
+  protected _setup() {
+    if (this.level.sequenceManager.sequenceCount === 0) {
+      return this.abort();
+    }
+
+    this.level.fallingStopped = true;
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        new entity.WaitingEntity(5000),
+        new entity.FunctionCallEntity(() => {
+          this.level.fallingStopped = false;
+          this.end();
+        }),
+      ])
+    );
+  }
+}
+
 export class SwapBonus extends Bonus {
   name = "swap";
   dragged: nucleotide.Nucleotide | null = null;
@@ -263,6 +284,7 @@ export class SyringeBonus extends Bonus {
 export const syringeBonus = new SyringeBonus();
 export const healBonus = new HealBonus();
 export const swapBonus = new SwapBonus();
+export const timeBonus = new TimeBonus();
 
 export interface InitialBonus {
   bonus: Bonus;

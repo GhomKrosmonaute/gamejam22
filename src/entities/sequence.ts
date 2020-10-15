@@ -50,8 +50,8 @@ export class SequenceManager extends entity.CompositeEntity {
         range.bottom = crisprUtil.height * 0.42;
         break;
       case "continuous":
-        range.top = crisprUtil.height * 0.2;
-        range.bottom = crisprUtil.height * 0.38;
+        range.top = crisprUtil.height * 0.22;
+        range.bottom = crisprUtil.height * 0.46;
         break;
       case "long":
         range.top = crisprUtil.height * 0.3;
@@ -238,6 +238,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
   getSequenceYByIndex(index: number) {
     const range = this._getSequenceRangeY();
+    if (this.level.options.variant === "continuous") return range.top;
     if (this.sequences.size === 1) return range.middle;
     return crisprUtil.proportion(
       index,

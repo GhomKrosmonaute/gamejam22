@@ -169,6 +169,7 @@ export class Level extends entity.CompositeEntity {
    * **Flag accessor**: `<Level>.isDisablingAnimationInProgress`
    */
   public disablingAnimations: Set<string> = new Set();
+  public fallingStopped = false;
   public container = new PIXI.Container();
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
@@ -385,7 +386,8 @@ export class Level extends entity.CompositeEntity {
   _update() {
     if (
       this.options.variant !== "continuous" ||
-      this.isDisablingAnimationInProgress
+      this.isDisablingAnimationInProgress ||
+      this.fallingStopped
     )
       return;
 

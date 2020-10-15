@@ -13,16 +13,53 @@ export const levels = {
   "Level 2": () =>
     new level.Level("Level 2", {
       variant: "continuous",
-      maxScore: 200,
+      gridShape: "medium",
+      retryOnFail: true,
       forceMatching: true,
-      gaugeRings: [],
-      hooks: [],
+      maxScore: 400,
+      gaugeRings: [
+        (level) => level.bonusesManager.add(bonuses.swapBonus),
+        (level, ring) =>
+          level.activate(
+            new entity.EntitySequence([
+              new entity.FunctionCallEntity(() => {
+                level.bonusesManager.add(bonuses.timeBonus);
+                bonuses.timeBonus.highlight = true;
+              }),
+              new popup.TutorialPopup({
+                title: "The Time bonus",
+                content: "Can freeze the game for 5 seconds 🥶",
+                exampleImage: "images/bonus_time.png",
+                popupOptions: { from: ring.position },
+              }),
+              new entity.FunctionCallEntity(() => {
+                bonuses.timeBonus.highlight = false;
+              }),
+            ])
+          ),
+      ],
+      hooks: [
+        new level.Hook({
+          event: "setup",
+          once: true,
+          entity: new popup.TutorialPopup({
+            title: "Oh no!",
+            content:
+              "It's a time bomb, crunch the sequences before they hit the grid 😱\n\nReach 400 pts!",
+          }),
+        }),
+        new level.Hook({
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
+        }),
+      ],
     }),
 
   "Level 1": () =>
     new level.Level("Level 1", {
       variant: "turnBased",
       maxScore: 200,
+      retryOnFail: true,
       gaugeRings: [
         (level, ring) =>
           level.activate(
