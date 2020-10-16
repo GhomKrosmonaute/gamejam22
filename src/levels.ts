@@ -17,7 +17,7 @@ export const levels = {
       checks: {
         "Not infected": (level) => !level.wasInfected,
         "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
-        "One shot sequence": (level) => level.oneShotSequence,
+        "One shot sequence": (level) => level.oneShotLongSequence,
       },
       gaugeRings: [
         (level) => level.bonusesManager.add(bonuses.swapBonus),

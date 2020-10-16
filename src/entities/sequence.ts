@@ -489,7 +489,7 @@ export class Sequence extends entity.CompositeEntity {
     const shots = this.level.path.crunchCountBeforeSequenceDown;
 
     if (isLong && fully && shots === 1) {
-      this.level.oneShotSequence = true;
+      this.level.oneShotLongSequence = true;
     }
 
     this.level.path.crunchCountBeforeSequenceDown = 0;

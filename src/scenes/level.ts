@@ -190,7 +190,7 @@ export class Level extends entity.CompositeEntity {
   public failed = false;
   public sequenceWasCrunched = false;
   public scissorsWasIncludes = false;
-  public oneShotSequence = false;
+  public oneShotLongSequence = false;
   public crunchedSequenceCount = 0;
 
   constructor(
