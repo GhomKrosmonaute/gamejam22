@@ -392,6 +392,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
           items: new Array(3).fill(0),
           timeBetween: 200,
           delay: 500,
+          waitForAllSteps: true,
           onStep: (item, index) => {
             const star = new PIXI.Sprite(
               this._entityConfig.app.loader.resources["images/star.png"].texture
