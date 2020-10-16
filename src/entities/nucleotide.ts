@@ -97,6 +97,7 @@ export class Nucleotide extends entity.CompositeEntity {
     this._refreshScale();
 
     this.shakes = new anim.ShakesManager(this._container);
+    this.shakes.setFloat("setup", this.floating);
 
     this._entityConfig.container.addChild(this._container);
 

@@ -391,8 +391,6 @@ export class Sequence extends entity.CompositeEntity {
       this.level.options.sequenceNucleotideRadius
     );
 
-    const sequencePixelLength = this.baseLength * width * 0.8;
-
     let forcedSequence: nucleotide.ColorName[] = [];
 
     if (Array.isArray(this.base)) {
@@ -443,6 +441,9 @@ export class Sequence extends entity.CompositeEntity {
         );
       }
       n.floating.active.y = true;
+      n.floating.amplitude.y = 0.5;
+      n.floating.speed.y = 3;
+      n.floating.shift.y = i;
 
       this._activateChildEntity(
         n,
