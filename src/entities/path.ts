@@ -178,8 +178,6 @@ export class Path extends entity.CompositeEntity {
   }
 
   crunch(callback?: () => any) {
-    this.crunchCountBeforeSequenceDown++;
-
     this.level.disablingAnimations.add("path.crunch");
 
     if (this.correctlyContainsScissors()) {
@@ -193,11 +191,10 @@ export class Path extends entity.CompositeEntity {
         const score = item.infected ? 15 : 10;
         const fill = item.infected ? item.fullColorName : "#ffeccc";
         const stroke = item.infected ? "#ffc200" : "black";
-        const duration = item.infected ? 1000 : 500;
         this._activateChildEntity(
           anim.down(
             item.infected ? item.infectionSprite : item.sprite,
-            duration,
+            500,
             function () {
               this.once("stateChanged", resolve);
               this.state = "missing";
@@ -216,7 +213,7 @@ export class Path extends entity.CompositeEntity {
               dropShadow: true,
               dropShadowBlur: 10,
             }),
-            duration,
+            500,
             item.position.clone(),
             "up"
           )

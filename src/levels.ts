@@ -14,6 +14,7 @@ export const levels = {
     new level.Level("Level 3", {
       variant: "long",
       maxScore: 1000,
+      scissorCount: 0,
       checks: {
         "Not infected": (level) => !level.wasInfected,
         "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,

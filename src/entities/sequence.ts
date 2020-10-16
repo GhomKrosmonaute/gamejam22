@@ -168,6 +168,8 @@ export class SequenceManager extends entity.CompositeEntity {
     }
 
     if (removedSequences.length > 0) {
+      this.level.path.crunchCountBeforeSequenceDown++;
+
       for (const s of removedSequences) {
         this.emit("crunch", s);
         finish.push(
@@ -487,6 +489,8 @@ export class Sequence extends entity.CompositeEntity {
     const isLong = this.level.options.variant === "long";
     const fully = this.nucleotides.every((n) => n.state === "inactive");
     const shots = this.level.path.crunchCountBeforeSequenceDown;
+
+    console.log(isLong, fully, shots);
 
     if (isLong && fully && shots === 1) {
       this.level.oneShotLongSequence = true;

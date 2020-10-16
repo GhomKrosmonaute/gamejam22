@@ -15,21 +15,21 @@ export type Resolver = (...args: any[]) => any;
 
 // todo: to test when game loop is stopped
 export function sequenced<T>(options: {
-  onStep: (resolve: Resolver, obj: T, index: number, src: T[]) => any;
+  onStep: (resolve: Resolver, item: T, index: number, src: T[]) => any;
   sequence: T[];
   delay?: number;
   timeBetween: number;
   callback?: AnimationCallback;
 }) {
   const finish: Promise<void>[] = [];
-  options.sequence.forEach((obj, i, src) => {
+  options.sequence.forEach((item, i, src) => {
     finish.push(
       new Promise((resolve: Resolver) => {
         setTimeout(
           options.onStep,
           (options.delay ?? 0) + i * options.timeBetween,
           resolve,
-          obj,
+          item,
           i,
           src
         );
@@ -39,6 +39,38 @@ export function sequenced<T>(options: {
   Promise.all(finish).then(() => {
     options.callback?.();
   });
+}
+
+export function sequencedEntity<T>(options: {
+  onStep: (item: T, index: number, src: T[]) => any;
+  sequence: T[] | (() => T[]);
+  delay?: number;
+  timeBetween: number;
+  callback?: AnimationCallback;
+}): entity.EntitySequence {
+  const sequence =
+    typeof options.sequence === "function"
+      ? options.sequence()
+      : options.sequence;
+
+  const context: entity.Entity[] = sequence.map((item, index, src) => {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        options.onStep(item, index, src);
+      }),
+      new entity.WaitingEntity(options.timeBetween),
+    ]);
+  });
+
+  if (options.callback) {
+    context.push(new entity.FunctionCallEntity(options.callback));
+  }
+
+  if (options.delay) {
+    context.unshift(new entity.WaitingEntity(options.delay));
+  }
+
+  return new entity.EntitySequence(context);
 }
 
 export type Sprite =

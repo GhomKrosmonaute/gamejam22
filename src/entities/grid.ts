@@ -4,6 +4,7 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 
 import * as crisprUtil from "../crisprUtil";
+import * as anim from "../animations";
 
 import * as nucleotide from "./nucleotide";
 
@@ -226,8 +227,6 @@ export class Grid extends entity.CompositeEntity {
 
   /** Does nothing in "long" mode **/
   addScissors(among: nucleotide.Nucleotide[]) {
-    if (this.level.options.variant === "long") return;
-
     const safe = this.nucleotides;
     if (safe.length === 0) return;
 
@@ -586,35 +585,31 @@ export class Grid extends entity.CompositeEntity {
    */
   infect(count: number): entity.EntitySequence {
     // @ts-ignore
-    const infections: nucleotide.Nucleotide[] = _.chain(this.nucleotides)
+    const infected = _.chain(this.nucleotides)
       .filter((n) => n.state === "present" && n.type === "normal")
       .shuffle()
       .take(count)
       .value();
 
-    // Stagger infections after the other
-    const sequence: entity.Entity[] = [
+    return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimations.add("grid.infect");
+
+        if (infected.length > 0) {
+          this.level.wasInfected = true;
+          this.level.emit("infected");
+        }
       }),
-    ];
-    for (let i = 0; i < infections.length; i++) {
-      sequence.push(
-        new entity.FunctionCallEntity(() => {
-          infections[i].state = "infected";
-        })
-      );
-      sequence.push(new entity.WaitingEntity(100));
-      this.level.wasInfected = true;
-      this.level.emit("infected");
-    }
-
-    sequence.push(
-      new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.delete("grid.infect");
-      })
-    );
-
-    return new entity.EntitySequence(sequence);
+      anim.sequencedEntity({
+        sequence: infected,
+        timeBetween: 100,
+        onStep: (item) => {
+          item.state = "infected";
+        },
+        callback: () => {
+          this.level.disablingAnimations.delete("grid.infect");
+        },
+      }),
+    ]);
   }
 }
