@@ -188,6 +188,7 @@ export class Grid extends entity.CompositeEntity {
     const bonus = this.level.options.disableBonuses
       ? null
       : this.level.bonusesManager.getSelectedBonus();
+
     if (!bonus || bonus.name === "time") {
       hovered = this.getHovered();
       if (!hovered) return;

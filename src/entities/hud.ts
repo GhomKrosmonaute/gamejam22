@@ -279,7 +279,10 @@ export class GoButton extends entity.CompositeEntity {
         this._activateChildEntity(
           new entity.EntitySequence([
             new entity.FunctionCallEntity(() => {
-              this.level.grid.regenerate(5, (n) => n.state === "present");
+              this.level.grid.regenerate(
+                Math.ceil(this.level.grid.nucleotides.length / 2),
+                (n) => n.state === "present" && n.type !== "scissors"
+              );
             }),
             new entity.WaitingEntity(1200),
             new entity.FunctionCallEntity(() => {
