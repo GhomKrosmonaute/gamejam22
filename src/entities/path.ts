@@ -18,6 +18,7 @@ export class Path extends entity.CompositeEntity {
   public items: nucleotide.Nucleotide[] = [];
   public container = new PIXI.Container();
   public isValidSequence = false;
+  public crunchCountBeforeSequenceDown = 0;
 
   protected _setup() {
     this.container.position.copyFrom(this.level.grid);
@@ -177,10 +178,14 @@ export class Path extends entity.CompositeEntity {
   }
 
   crunch(callback?: () => any) {
+    this.crunchCountBeforeSequenceDown++;
+
     this.level.disablingAnimations.add("path.crunch");
+
     if (this.correctlyContainsScissors()) {
       this.level.scissorsWasIncludes = true;
     }
+
     anim.sequenced({
       sequence: this.items,
       timeBetween: 50,

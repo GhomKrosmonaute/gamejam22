@@ -260,7 +260,11 @@ export class GoButton extends entity.CompositeEntity {
   private _onGo(): void {
     if (this.level.isDisablingAnimationInProgress) return;
 
-    if (this.level.path.items.length > 0) return;
+    if (this.level.options.variant === "long") {
+      if (this.level.path.items.length > 0) {
+        return this.level.attemptCrunch();
+      }
+    } else if (this.level.path.items.length > 0) return;
 
     if (
       this.level.options.variant === "turnBased" ||

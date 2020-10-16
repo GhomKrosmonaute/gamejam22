@@ -485,8 +485,14 @@ export class Sequence extends entity.CompositeEntity {
     this.level.disablingAnimations.add("sequence.down");
 
     const isLong = this.level.options.variant === "long";
-
     const fully = this.nucleotides.every((n) => n.state === "inactive");
+    const shots = this.level.path.crunchCountBeforeSequenceDown;
+
+    if (isLong && fully && shots === 1) {
+      this.level.oneShotSequence = true;
+    }
+
+    this.level.path.crunchCountBeforeSequenceDown = 0;
 
     anim.sequenced({
       sequence: this.nucleotides,

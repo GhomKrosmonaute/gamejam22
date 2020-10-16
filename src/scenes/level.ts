@@ -62,7 +62,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableButton: false,
   disableGauge: false,
   disableScore: false,
-  retryOnFail: false,
+  retryOnFail: true,
   displayTurnTitles: true,
   variant: "turnBased",
   presetScissors: null,
@@ -190,6 +190,7 @@ export class Level extends entity.CompositeEntity {
   public failed = false;
   public sequenceWasCrunched = false;
   public scissorsWasIncludes = false;
+  public oneShotSequence = false;
   public crunchedSequenceCount = 0;
 
   constructor(
@@ -290,7 +291,11 @@ export class Level extends entity.CompositeEntity {
       this.options.gridShape,
       this.options.presetScissors
     );
-    this._on(this.grid, "pointerup", this._attemptCrunch);
+    this._on(this.grid, "pointerup", () => {
+      if (this.options.variant !== "long") {
+        this.attemptCrunch();
+      }
+    });
     this._activateChildEntity(this.grid, this.config);
   }
 
@@ -510,7 +515,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   // TODO: refactor this as a separate object, using the strategy pattern
-  private _attemptCrunch(): void {
+  public attemptCrunch(): void {
     if (
       this.path.items.length === 0 ||
       this.sequenceManager.matchesSequence(this.path) !== true
@@ -540,7 +545,7 @@ export class Level extends entity.CompositeEntity {
     });
 
     // Makes holes in the grid that corresponds to the used nucleotides
-    this.path.crunch(() => {});
+    this.path.crunch();
   }
 
   public setGoButtonText(text: string) {
@@ -551,7 +556,8 @@ export class Level extends entity.CompositeEntity {
     if (this.path.items.length > 0) {
       const match = this.sequenceManager.matchesSequence(this.path);
       if (match === true) {
-        this.setGoButtonText("MATCH");
+        if (this.options.variant === "long") this.setGoButtonText("CRUNCH");
+        else this.setGoButtonText("MATCH");
       } else {
         this.setGoButtonText(match);
       }
