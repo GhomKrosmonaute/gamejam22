@@ -13,13 +13,39 @@ export const levels = {
   "Level 3": () =>
     new level.Level("Level 3", {
       variant: "long",
+      maxScore: 1000,
+      scissorCount: 0,
+      checks: {
+        "Not infected": (level) => !level.wasInfected,
+        "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
+        "One shot sequence": (level) => level.oneShotLongSequence,
+      },
+      gaugeRings: [
+        (level) => level.bonusesManager.add(bonuses.swapBonus),
+        (level) => level.bonusesManager.add(bonuses.swapBonus),
+        (level) => level.bonusesManager.add(bonuses.swapBonus),
+      ],
+      hooks: [
+        new level.Hook({
+          event: "setup",
+          once: true,
+          entity: new popup.TutorialPopup({
+            title: "Zen mode",
+            content:
+              "On this variant, have fun making very long DNA sequences.\n\nReach 1000 pts!",
+          }),
+        }),
+        new level.Hook({
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
+        }),
+      ],
     }),
 
   "Level 2": () =>
     new level.Level("Level 2", {
       variant: "continuous",
       gridShape: "medium",
-      retryOnFail: true,
       forceMatching: true,
       maxScore: 400,
       gaugeRings: [

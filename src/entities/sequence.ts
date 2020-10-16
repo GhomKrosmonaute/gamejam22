@@ -84,6 +84,10 @@ export class SequenceManager extends entity.CompositeEntity {
     }
   }
 
+  get viruses(): virus.Virus[] {
+    return [...this.sequences].map((s) => s.virus).filter((v) => v.isSetup);
+  }
+
   private _pickSequenceLength(): number {
     if (this.level.options.sequenceLength !== null)
       return this.level.options.sequenceLength;
@@ -168,6 +172,8 @@ export class SequenceManager extends entity.CompositeEntity {
     }
 
     if (removedSequences.length > 0) {
+      this.level.path.crunchCountBeforeSequenceDown++;
+
       for (const s of removedSequences) {
         this.emit("crunch", s);
         finish.push(
@@ -397,10 +403,27 @@ export class Sequence extends entity.CompositeEntity {
     }
 
     for (let i = 0; i < this.baseLength; i++) {
-      const position = new PIXI.Point(
-        i * width * 0.8,
-        crisprUtil.approximate(0, height * 0.05)
-      );
+      const position = new PIXI.Point();
+
+      if (this.level.options.variant === "long") {
+        crisprUtil.positionAlongMembrane(
+          position,
+          crisprUtil.proportion(
+            i,
+            0,
+            this.baseLength - 1,
+            crisprUtil.proportion(this.baseLength, 0, 14, 0, virus.rightEdge),
+            crisprUtil.proportion(this.baseLength, 0, 14, 0, virus.leftEdge)
+          ),
+          1000,
+          1000
+        );
+
+        position.x -= crisprUtil.proportion(this.baseLength, 7, 14, 300, 50);
+      } else {
+        position.x = i * width * 0.8;
+        position.y = crisprUtil.approximate(0, height * 0.05);
+      }
 
       const n = new nucleotide.Nucleotide(
         this.level.options.sequenceNucleotideRadius,
@@ -418,6 +441,9 @@ export class Sequence extends entity.CompositeEntity {
         );
       }
       n.floating.active.y = true;
+      n.floating.amplitude.y = 0.5;
+      n.floating.speed.y = 3;
+      n.floating.shift.y = i;
 
       this._activateChildEntity(
         n,
@@ -432,27 +458,27 @@ export class Sequence extends entity.CompositeEntity {
     }
 
     if (this.virus) {
-      anim.sequenced({
-        sequence: this.nucleotides,
-        timeBetween: 250,
-        delay: 500,
-        onStep: (resolve, n, index) => {
-          const position = new PIXI.Point(
-            index * width * 0.8,
-            crisprUtil.approximate(0, height * 0.05)
-          );
-          this._activateChildEntity(
-            anim.move(
+      this._activateChildEntity(
+        anim.sequenced({
+          items: this.nucleotides,
+          waitForAllSteps: true,
+          timeBetween: 250,
+          delay: 500,
+          onStep: (n, index) => {
+            const position = new PIXI.Point(
+              index * width * 0.8,
+              crisprUtil.approximate(0, height * 0.05)
+            );
+            return anim.move(
               n.position,
               n.position.clone(),
               position,
               1000,
-              easing.easeOutCubic,
-              resolve
-            )
-          );
-        },
-      });
+              easing.easeOutCubic
+            );
+          },
+        })
+      );
     }
   }
 
@@ -485,103 +511,98 @@ export class Sequence extends entity.CompositeEntity {
     this.level.disablingAnimations.add("sequence.down");
 
     const isLong = this.level.options.variant === "long";
-
     const fully = this.nucleotides.every((n) => n.state === "inactive");
+    const shots = this.level.path.crunchCountBeforeSequenceDown;
 
-    anim.sequenced({
-      sequence: this.nucleotides,
-      timeBetween: isLong ? 80 : 200,
-      onStep: (resolve, n, i, all) => {
-        n.shakes.removeShake("highlight");
+    if (isLong && fully && shots === 1) {
+      this.level.oneShotLongSequence = true;
+    }
 
-        const baseShift = Math.round(Math.random() * 50) + 50;
-        const promises: Promise<void>[] = [];
+    this.level.path.crunchCountBeforeSequenceDown = 0;
 
-        let score = this.level.options.baseGain;
+    this._activateChildEntity(
+      anim.sequenced({
+        items: this.nucleotides,
+        timeBetween: isLong ? 80 : 200,
+        waitForAllSteps: true,
+        onStep: (n, i, all) => {
+          n.shakes.removeShake("highlight");
 
-        if (isLong) {
-          if (n.state !== "inactive") {
-            score *= -1;
-          } else if (fully) {
-            score *= 2;
+          const baseShift = Math.round(Math.random() * 50) + 50;
+          const context: entity.Entity[] = [];
+
+          let score = this.level.options.baseGain;
+
+          if (isLong) {
+            if (n.state !== "inactive") {
+              score *= -1;
+            } else if (fully) {
+              score *= 2;
+            }
           }
-        }
 
-        if (addScore) {
-          this.level.addScore(score);
+          if (addScore) {
+            this.level.addScore(score);
 
-          promises.push(
-            new Promise((_resolve) => {
-              this._activateChildEntity(
-                anim.textFade(
-                  this.container,
-                  crisprUtil.makeText(
-                    `${score >= 0 ? "+" : "-"} ${String(score).replace(
-                      "-",
-                      ""
-                    )}`,
-                    {
-                      fill: score < 0 ? "#d70000" : "#ffffff",
-                      fontSize: 70 + score,
-                      stroke: fully ? "#ffa200" : "#000000",
-                      strokeThickness: 4,
-                    }
-                  ),
-                  800,
-                  new PIXI.Point(
-                    n.position.x,
-                    n.position.y + baseShift * (score < 0 ? 1 : -1)
-                  ),
-                  score < 0 ? "down" : "up",
-                  _resolve
-                )
-              );
-            })
-          );
-        }
-
-        promises.push(
-          new Promise((_resolve) => {
-            this._activateChildEntity(
-              new entity.ParallelEntity([
-                new tween.Tween({
-                  from: n.position.x,
-                  to: n.position.x + (all.length / 2) * 25 - i * 25,
-                  duration: 1000,
-                  onUpdate: (value) => {
-                    n.position.x = value;
-                  },
-                }),
-                new entity.FunctionCallEntity(() => {
-                  n.sink(1000).then(_resolve);
-                }),
-              ])
+            context.push(
+              anim.textFade(
+                this.container,
+                crisprUtil.makeText(
+                  `${score >= 0 ? "+" : "-"} ${String(score).replace("-", "")}`,
+                  {
+                    fill: score < 0 ? "#d70000" : "#ffffff",
+                    fontSize: 70 + score,
+                    stroke: fully ? "#ffa200" : "#000000",
+                    strokeThickness: 4,
+                  }
+                ),
+                800,
+                new PIXI.Point(
+                  n.position.x,
+                  n.position.y + baseShift * (score < 0 ? 1 : -1)
+                ),
+                score < 0 ? "down" : "up"
+              )
             );
-          })
-        );
+          }
 
-        Promise.all(promises).then(resolve);
-      },
-      callback: () => {
-        const end = () => {
-          this.level.sequenceManager.sequences.delete(this);
-          this.level.disablingAnimations.delete("sequence.down");
-          this.level.emit("sequenceDown");
-          this._transition = entity.makeTransition();
-          callback?.();
-        };
-        if (this.virus && this.virus.isSetup) {
-          this._activateChildEntity(
-            new entity.EntitySequence([
-              this.virus.kill(),
-              new entity.FunctionCallEntity(() => end()),
+          context.push(
+            new entity.ParallelEntity([
+              new tween.Tween({
+                from: n.position.x,
+                to: n.position.x + (all.length / 2) * 25 - i * 25,
+                duration: 1000,
+                onUpdate: (value) => {
+                  n.position.x = value;
+                },
+              }),
+              anim.sink(n._container, 1000),
             ])
           );
-        } else {
-          end();
-        }
-      },
-    });
+
+          return new entity.ParallelEntity(context);
+        },
+        callback: () => {
+          const end = () => {
+            this.level.sequenceManager.sequences.delete(this);
+            this.level.disablingAnimations.delete("sequence.down");
+            this.level.emit("sequenceDown");
+            this._transition = entity.makeTransition();
+            callback?.();
+          };
+          if (this.virus && this.virus.isSetup) {
+            this._activateChildEntity(
+              new entity.EntitySequence([
+                this.virus.kill(),
+                new entity.FunctionCallEntity(() => end()),
+              ])
+            );
+          } else {
+            end();
+          }
+        },
+      })
+    );
   }
 
   validate(

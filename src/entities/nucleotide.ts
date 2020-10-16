@@ -97,6 +97,7 @@ export class Nucleotide extends entity.CompositeEntity {
     this._refreshScale();
 
     this.shakes = new anim.ShakesManager(this._container);
+    this.shakes.setFloat("setup", this.floating);
 
     this._entityConfig.container.addChild(this._container);
 
@@ -312,30 +313,25 @@ export class Nucleotide extends entity.CompositeEntity {
       );
 
       // Make infection "grow"
-      const radiusTween = new tween.Tween({
-        from: 0,
-        to: 1,
-        easing: easing.easeOutCubic,
-        onUpdate: (value) => mask.scale.set(value),
-      });
 
       this._activateChildEntity(
         new entity.EntitySequence([
-          // Briefly shake
-          new entity.FunctionCallEntity(() =>
-            this.shakes.setShake("infection", 6)
-          ),
-          new entity.WaitingEntity(100),
+          anim.tweenShaking(this._container, 150, 10, 3),
 
           new entity.FunctionCallEntity(() => {
-            this.shakes.removeShake("infection");
+            this.shakes.setShake("infection", 2);
 
             this._container.addChild(mask);
             this.infectionSprite.mask = mask;
             this.infectionSprite.visible = true;
           }),
 
-          radiusTween,
+          new tween.Tween({
+            from: 0,
+            to: 1,
+            easing: easing.easeOutCubic,
+            onUpdate: (value) => mask.scale.set(value),
+          }),
 
           // Remove mask and infection
           new entity.FunctionCallEntity(() => {

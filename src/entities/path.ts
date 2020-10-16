@@ -18,6 +18,7 @@ export class Path extends entity.CompositeEntity {
   public items: nucleotide.Nucleotide[] = [];
   public container = new PIXI.Container();
   public isValidSequence = false;
+  public crunchCountBeforeSequenceDown = 0;
 
   protected _setup() {
     this.container.position.copyFrom(this.level.grid);
@@ -178,52 +179,60 @@ export class Path extends entity.CompositeEntity {
 
   crunch(callback?: () => any) {
     this.level.disablingAnimations.add("path.crunch");
+
     if (this.correctlyContainsScissors()) {
       this.level.scissorsWasIncludes = true;
     }
-    anim.sequenced({
-      sequence: this.items,
-      timeBetween: 50,
-      onStep: (resolve, item, i) => {
-        const score = item.infected ? 15 : 10;
-        const fill = item.infected ? item.fullColorName : "#ffeccc";
-        const stroke = item.infected ? "#ffc200" : "black";
-        const duration = item.infected ? 1000 : 500;
-        this._activateChildEntity(
-          anim.down(
-            item.infected ? item.infectionSprite : item.sprite,
-            duration,
-            function () {
-              this.once("stateChanged", resolve);
-              this.state = "missing";
-            }.bind(item)
-          )
-        );
-        this._activateChildEntity(
-          anim.textFade(
-            this.level.grid.nucleotideContainer,
-            new PIXI.Text(`+ ${score}`, {
-              fill,
-              stroke,
-              strokeThickness: 10,
-              fontSize: 90 + score * 4,
-              fontFamily: "Cardenio Modern Bold",
-              dropShadow: true,
-              dropShadowBlur: 10,
-            }),
-            duration,
-            item.position.clone(),
-            "up"
-          )
-        );
-        this.level.addScore(score);
-      },
-      callback: () => {
-        this.level.disablingAnimations.delete("path.crunch");
-        this.emit("crunchAnimationFinished");
-        callback?.();
-      },
-    });
+
+    this._activateChildEntity(
+      anim.sequenced({
+        items: this.items,
+        timeBetween: 50,
+        waitForAllSteps: true,
+        callback: () => {
+          this.level.disablingAnimations.delete("path.crunch");
+          this.emit("crunchAnimationFinished");
+          callback?.();
+        },
+        onStep: (item, i, src, finish) => {
+          const score = item.infected ? 15 : 10;
+          const fill = item.infected ? item.fullColorName : "#ffeccc";
+          const stroke = item.infected ? "#ffc200" : "black";
+
+          this.level.addScore(score);
+
+          this._activateChildEntity(
+            anim.down(
+              item.infected ? item.infectionSprite : item.sprite,
+              500,
+              function () {
+                this.once("stateChanged", finish);
+                this.state = "missing";
+              }.bind(item)
+            )
+          );
+
+          this._activateChildEntity(
+            anim.textFade(
+              this.level.grid.nucleotideContainer,
+              new PIXI.Text(`+ ${score}`, {
+                fill,
+                stroke,
+                strokeThickness: 10,
+                fontSize: 90 + score * 4,
+                fontFamily: "Cardenio Modern Bold",
+                dropShadow: true,
+                dropShadowBlur: 10,
+              }),
+              500,
+              item.position.clone(),
+              "up"
+            )
+          );
+        },
+      })
+    );
+
     this.remove();
   }
 

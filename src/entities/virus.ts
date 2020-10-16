@@ -7,6 +7,8 @@ import * as easing from "booyah/src/easing";
 
 import * as crisprUtil from "../crisprUtil";
 
+import * as level from "../scenes/level";
+
 export type VirusType = "mini" | "medium" | "big";
 export type VirusAnimation = "sting" | "idle" | "walk";
 
@@ -28,6 +30,14 @@ export class Virus extends entity.CompositeEntity {
     super();
   }
 
+  get level(): level.Level {
+    return this._entityConfig.level;
+  }
+
+  get randomAngle(): number {
+    return Math.random() < 0.5 ? leftEdge : rightEdge;
+  }
+
   get angle(): number {
     return this._container.angle * -1;
   }
@@ -38,7 +48,13 @@ export class Virus extends entity.CompositeEntity {
 
   protected _setup() {
     // set starting angle
-    this.angle = Math.random() < 0.5 ? leftEdge : rightEdge;
+    do {
+      this.angle = this.randomAngle;
+    } while (
+      this.level.sequenceManager.viruses.some((v) => {
+        return v !== this && crisprUtil.dist1D(this.angle, v.angle) < 10;
+      })
+    );
 
     this._entityConfig.container.addChild(this._container);
   }
@@ -55,13 +71,6 @@ export class Virus extends entity.CompositeEntity {
       }),
       new tween.Tween({
         duration: 1000,
-        // duration: crisprUtil.proportion(
-        //   crisprUtil.dist1D(this.angle, angle),
-        //   leftEdge,
-        //   rightEdge,
-        //   0,
-        //   10000
-        // ),
         from: this.angle,
         to: angle,
         easing: easing.easeInOutQuad,

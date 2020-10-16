@@ -223,39 +223,41 @@ export class HealBonus extends Bonus {
 
       this.level.disablingAnimations.add(this.name);
 
-      anim.sequenced({
-        timeBetween: 200,
-        sequence: stages,
-        onStep: (resolve, stage, index) => {
-          for (const n of stage) {
-            n.shakes.setShake(this.name, 7 - index / 2);
-          }
-          resolve();
-        },
-        callback: () => {
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          anim.sequenced({
+            timeBetween: 200,
+            items: stages,
+            onStep: (stage, index) => {
+              for (const n of stage) {
+                n.shakes.setShake(this.name, 7 - index / 2);
+              }
+            },
+          }),
           anim.sequenced({
             delay: 400,
             timeBetween: 200,
-            sequence: stages,
-            onStep: (resolve, stage, index) => {
-              const finish: Promise<any>[] = [];
+            waitForAllSteps: true,
+            items: stages,
+            onStep: (stage, index, src, finish) => {
+              const promises: Promise<any>[] = [];
               for (const n of stage) {
-                finish.push(
+                promises.push(
                   n.bubble(300, (_n) => {
                     _n.state = "present";
                     _n.shakes.removeShake(this.name);
                   })
                 );
               }
-              Promise.all(finish).then(resolve);
+              Promise.all(promises).then(finish);
             },
             callback: () => {
               this.level.disablingAnimations.delete(this.name);
               this.end();
             },
-          });
-        },
-      });
+          }),
+        ])
+      );
     });
   }
 }
