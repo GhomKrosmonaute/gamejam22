@@ -184,48 +184,55 @@ export class Path extends entity.CompositeEntity {
       this.level.scissorsWasIncludes = true;
     }
 
-    anim.sequenced({
-      sequence: this.items,
-      timeBetween: 50,
-      onStep: (resolve, item, i) => {
-        const score = item.infected ? 15 : 10;
-        const fill = item.infected ? item.fullColorName : "#ffeccc";
-        const stroke = item.infected ? "#ffc200" : "black";
-        this._activateChildEntity(
-          anim.down(
-            item.infected ? item.infectionSprite : item.sprite,
-            500,
-            function () {
-              this.once("stateChanged", resolve);
-              this.state = "missing";
-            }.bind(item)
-          )
-        );
-        this._activateChildEntity(
-          anim.textFade(
-            this.level.grid.nucleotideContainer,
-            new PIXI.Text(`+ ${score}`, {
-              fill,
-              stroke,
-              strokeThickness: 10,
-              fontSize: 90 + score * 4,
-              fontFamily: "Cardenio Modern Bold",
-              dropShadow: true,
-              dropShadowBlur: 10,
-            }),
-            500,
-            item.position.clone(),
-            "up"
-          )
-        );
-        this.level.addScore(score);
-      },
-      callback: () => {
-        this.level.disablingAnimations.delete("path.crunch");
-        this.emit("crunchAnimationFinished");
-        callback?.();
-      },
-    });
+    this._activateChildEntity(
+      anim.sequenced({
+        items: this.items,
+        timeBetween: 50,
+        waitForAllSteps: true,
+        callback: () => {
+          this.level.disablingAnimations.delete("path.crunch");
+          this.emit("crunchAnimationFinished");
+          callback?.();
+        },
+        onStep: (item, i, src, finish) => {
+          const score = item.infected ? 15 : 10;
+          const fill = item.infected ? item.fullColorName : "#ffeccc";
+          const stroke = item.infected ? "#ffc200" : "black";
+
+          this.level.addScore(score);
+
+          this._activateChildEntity(
+            anim.down(
+              item.infected ? item.infectionSprite : item.sprite,
+              500,
+              function () {
+                this.once("stateChanged", finish);
+                this.state = "missing";
+              }.bind(item)
+            )
+          );
+
+          this._activateChildEntity(
+            anim.textFade(
+              this.level.grid.nucleotideContainer,
+              new PIXI.Text(`+ ${score}`, {
+                fill,
+                stroke,
+                strokeThickness: 10,
+                fontSize: 90 + score * 4,
+                fontFamily: "Cardenio Modern Bold",
+                dropShadow: true,
+                dropShadowBlur: 10,
+              }),
+              500,
+              item.position.clone(),
+              "up"
+            )
+          );
+        },
+      })
+    );
+
     this.remove();
   }
 

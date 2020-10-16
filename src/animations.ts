@@ -11,66 +11,76 @@ import * as crisprUtil from "./crisprUtil";
 const FLOATING_SPEED = 0.0005;
 const FLOATING_AMPLITUDE = 0.06;
 
-export type Resolver = (...args: any[]) => any;
-
-// todo: to test when game loop is stopped
+/**
+ * **waitForAllSteps**:
+ * - if you returns Entity, activate it (only if onStep.finish callback is not include).
+ * - includes onStep.finish callback if you want to define a step end without returns an entity.
+ *
+ * **callback**:
+ * - if waitForAllSteps flag is true, wait for all "finished" steps.
+ * - if waitForAllSteps flag is false, wait for all steps are started.
+ */
 export function sequenced<T>(options: {
-  onStep: (resolve: Resolver, item: T, index: number, src: T[]) => any;
-  sequence: T[];
+  onStep: (
+    item: T,
+    index: number,
+    src: T[],
+    finish: () => unknown
+  ) => void | entity.Entity;
+  items: T[];
   delay?: number;
   timeBetween: number;
-  callback?: AnimationCallback;
-}) {
-  const finish: Promise<void>[] = [];
-  options.sequence.forEach((item, i, src) => {
-    finish.push(
-      new Promise((resolve: Resolver) => {
-        setTimeout(
-          options.onStep,
-          (options.delay ?? 0) + i * options.timeBetween,
-          resolve,
-          item,
-          i,
-          src
-        );
-      })
-    );
-  });
-  Promise.all(finish).then(() => {
-    options.callback?.();
-  });
-}
-
-export function sequencedEntity<T>(options: {
-  onStep: (item: T, index: number, src: T[]) => any;
-  sequence: T[] | (() => T[]);
-  delay?: number;
-  timeBetween: number;
+  waitForAllSteps?: boolean;
   callback?: AnimationCallback;
 }): entity.EntitySequence {
-  const sequence =
-    typeof options.sequence === "function"
-      ? options.sequence()
-      : options.sequence;
+  const context: entity.Entity[] = options.items.map((item, index, src) => {
+    let stepEntity: entity.EntityResolvable;
 
-  const context: entity.Entity[] = sequence.map((item, index, src) => {
+    if (options.waitForAllSteps) {
+      if (options.onStep.length === 4) {
+        let promise: Promise<void>;
+
+        stepEntity = new entity.EntitySequence([
+          new entity.FunctionCallEntity(() => {
+            promise = new Promise((resolve) => {
+              options.onStep(item, index, src, resolve);
+            });
+          }),
+        ]);
+      } else {
+        stepEntity = () => {
+          const step = options.onStep(item, index, src, () => null);
+          if (step) return step;
+          return new entity.FunctionCallEntity(() => null);
+        };
+      }
+    } else {
+      stepEntity = new entity.FunctionCallEntity(() => {
+        options.onStep(item, index, src, () => null);
+      });
+    }
+
     return new entity.EntitySequence([
-      new entity.FunctionCallEntity(() => {
-        options.onStep(item, index, src);
-      }),
-      new entity.WaitingEntity(options.timeBetween),
+      new entity.WaitingEntity(options.timeBetween * index),
+      stepEntity,
     ]);
   });
 
-  if (options.callback) {
-    context.push(new entity.FunctionCallEntity(options.callback));
-  }
+  context.push(
+    new entity.WaitingEntity(options.timeBetween * options.items.length)
+  );
+
+  const sequence: entity.Entity[] = [new entity.ParallelEntity(context)];
 
   if (options.delay) {
-    context.unshift(new entity.WaitingEntity(options.delay));
+    sequence.unshift(new entity.WaitingEntity(options.delay));
   }
 
-  return new entity.EntitySequence(context);
+  if (options.callback) {
+    sequence.push(new entity.FunctionCallEntity(options.callback));
+  }
+
+  return new entity.EntitySequence(sequence);
 }
 
 export type Sprite =
@@ -162,7 +172,7 @@ export function sink(
   obj.filters = [new PIXI.filters.AlphaFilter(1)];
   return new entity.ParallelEntity([
     new tween.Tween({
-      from: 1,
+      from: obj.scale.x,
       to: 0.5,
       duration,
       easing: easing.easeInOutQuad,

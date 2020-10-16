@@ -83,22 +83,22 @@ export class Gauge extends entity.CompositeEntity {
     forEach?: (ring: Ring, index: number) => any;
     callback?: () => any;
   }) {
-    anim.sequenced({
-      delay: options.delay ?? 200,
-      timeBetween: options.timeBetween ?? 150,
-      sequence: this._rings.children as Ring[],
-      callback: () => options.callback?.(),
-      onStep: (resolve, ring, index) => {
-        this._activateChildEntity(
-          anim.bubble(ring, 1.2, 300, {
+    this._activateChildEntity(
+      anim.sequenced({
+        waitForAllSteps: true,
+        delay: options.delay ?? 200,
+        timeBetween: options.timeBetween ?? 150,
+        items: this._rings.children as Ring[],
+        callback: () => options.callback?.(),
+        onStep: (ring, index) => {
+          return anim.bubble(ring, 1.2, 300, {
             onTop: () => {
               options?.forEach?.(ring, index);
-              resolve();
             },
-          })
-        );
-      },
-    });
+          });
+        },
+      })
+    );
   }
 
   _setup() {
@@ -174,14 +174,14 @@ export class Gauge extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this._container);
 
-    anim.sequenced({
-      delay: 200,
-      timeBetween: 150,
-      sequence: this._rings.children as Ring[],
-      onStep: (resolve, ring) => {
-        this._activateChildEntity(anim.popup(ring, 200, resolve));
-      },
-    });
+    this._activateChildEntity(
+      anim.sequenced({
+        delay: 200,
+        timeBetween: 150,
+        items: this._rings.children as Ring[],
+        onStep: (ring) => anim.popup(ring, 200),
+      })
+    );
 
     this.setValue(0);
   }

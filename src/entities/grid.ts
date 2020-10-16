@@ -600,8 +600,8 @@ export class Grid extends entity.CompositeEntity {
           this.level.emit("infected");
         }
       }),
-      anim.sequencedEntity({
-        sequence: infected,
+      anim.sequenced({
+        items: infected,
         timeBetween: 100,
         onStep: (item) => {
           item.state = "infected";

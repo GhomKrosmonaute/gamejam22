@@ -385,44 +385,46 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
     {
       const stars = new PIXI.Container();
 
-      anim.sequenced({
-        sequence: new Array(3).fill(0),
-        timeBetween: 200,
-        delay: 500,
-        onStep: (resolve, _, index) => {
-          const star = new PIXI.Sprite(
-            this._entityConfig.app.loader.resources["images/star.png"].texture
-          );
-
-          star.scale.set(0);
-          star.anchor.set(0.5);
-
-          if (index >= results.starCount) {
-            star.tint = 0x666666;
-          }
-
-          switch (index) {
-            case 0:
-              star.position.x = this.center.x / 2 - 50;
-              star.angle = -10;
-              break;
-            case 1:
-              star.position.x = this.center.x;
-              star.position.y = -20;
-              break;
-            case 2:
-              star.position.x = this.center.x + this.center.x / 2 + 50;
-              star.angle = 10;
-              break;
-          }
-
-          stars.addChild(star);
-
-          this._activateChildEntity(anim.popup(star, 400, resolve));
-        },
-      });
-
       this.addRow(stars, 200);
+
+      this._activateChildEntity(
+        anim.sequenced({
+          items: new Array(3).fill(0),
+          timeBetween: 200,
+          delay: 500,
+          onStep: (item, index) => {
+            const star = new PIXI.Sprite(
+              this._entityConfig.app.loader.resources["images/star.png"].texture
+            );
+
+            star.scale.set(0);
+            star.anchor.set(0.5);
+
+            if (index >= results.starCount) {
+              star.tint = 0x666666;
+            }
+
+            switch (index) {
+              case 0:
+                star.position.x = this.center.x / 2 - 50;
+                star.angle = -10;
+                break;
+              case 1:
+                star.position.x = this.center.x;
+                star.position.y = -20;
+                break;
+              case 2:
+                star.position.x = this.center.x + this.center.x / 2 + 50;
+                star.angle = 10;
+                break;
+            }
+
+            stars.addChild(star);
+
+            return anim.popup(star, 400);
+          },
+        })
+      );
     }
 
     // add score
