@@ -173,7 +173,7 @@ export function sink(
   return new entity.ParallelEntity([
     new tween.Tween({
       from: obj.scale.x,
-      to: 0.5,
+      to: obj.scale.x * 0.5,
       duration,
       easing: easing.easeInOutQuad,
       onUpdate: (value) => obj.scale.set(value),

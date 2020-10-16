@@ -176,9 +176,10 @@ export class Gauge extends entity.CompositeEntity {
 
     this._activateChildEntity(
       anim.sequenced({
-        delay: 200,
+        delay: 500,
         timeBetween: 150,
         items: this._rings.children as Ring[],
+        waitForAllSteps: true,
         onStep: (ring) => anim.popup(ring, 200),
       })
     );

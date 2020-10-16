@@ -84,6 +84,10 @@ export class SequenceManager extends entity.CompositeEntity {
     }
   }
 
+  get viruses(): virus.Virus[] {
+    return [...this.sequences].map((s) => s.virus).filter((v) => v.isSetup);
+  }
+
   private _pickSequenceLength(): number {
     if (this.level.options.sequenceLength !== null)
       return this.level.options.sequenceLength;
@@ -387,6 +391,8 @@ export class Sequence extends entity.CompositeEntity {
       this.level.options.sequenceNucleotideRadius
     );
 
+    const sequencePixelLength = this.baseLength * width * 0.8;
+
     let forcedSequence: nucleotide.ColorName[] = [];
 
     if (Array.isArray(this.base)) {
@@ -399,10 +405,27 @@ export class Sequence extends entity.CompositeEntity {
     }
 
     for (let i = 0; i < this.baseLength; i++) {
-      const position = new PIXI.Point(
-        i * width * 0.8,
-        crisprUtil.approximate(0, height * 0.05)
-      );
+      const position = new PIXI.Point();
+
+      if (this.level.options.variant === "long") {
+        crisprUtil.positionAlongMembrane(
+          position,
+          crisprUtil.proportion(
+            i,
+            0,
+            this.baseLength - 1,
+            crisprUtil.proportion(this.baseLength, 0, 14, 0, virus.rightEdge),
+            crisprUtil.proportion(this.baseLength, 0, 14, 0, virus.leftEdge)
+          ),
+          1000,
+          1000
+        );
+
+        position.x -= crisprUtil.proportion(this.baseLength, 7, 14, 300, 50);
+      } else {
+        position.x = i * width * 0.8;
+        position.y = crisprUtil.approximate(0, height * 0.05);
+      }
 
       const n = new nucleotide.Nucleotide(
         this.level.options.sequenceNucleotideRadius,
