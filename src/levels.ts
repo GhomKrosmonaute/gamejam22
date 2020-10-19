@@ -72,7 +72,7 @@ export const levels = {
       ],
       hooks: [
         new level.Hook({
-          event: "setup",
+          event: "beforeSetup",
           once: true,
           entity: new popup.TutorialPopup({
             title: "Oh no!",
@@ -119,7 +119,7 @@ export const levels = {
       ],
       hooks: [
         new level.Hook({
-          event: "setup",
+          event: "beforeSetup",
           once: true,
           entity: new popup.TutorialPopup({
             title: "Enjoy!",
@@ -154,7 +154,7 @@ export const levels = {
       },
       hooks: [
         new level.Hook({
-          event: "setup",
+          event: "beforeSetup",
           once: true,
           entity: new popup.TutorialPopup({
             title: "Let's CRUNCH!",
@@ -169,7 +169,7 @@ export const levels = {
             sequenceLength: 4,
             hooks: [
               new level.Hook({
-                event: "setup",
+                event: "beforeSetup",
                 once: true,
                 entity: new popup.TutorialPopup({
                   title: "Scissors",
@@ -201,7 +201,7 @@ export const levels = {
                   disableExtraSequence: true,
                   hooks: [
                     new level.Hook({
-                      event: "setup",
+                      event: "beforeSetup",
                       once: true,
                       entity: new entity.EntitySequence([
                         new popup.TutorialPopup({
@@ -251,7 +251,7 @@ export const levels = {
                         maxScore: 200,
                         hooks: [
                           new level.Hook({
-                            event: "setup",
+                            event: "beforeSetup",
                             once: true,
                             entity: new popup.TutorialPopup({
                               title: "Let's survive!",

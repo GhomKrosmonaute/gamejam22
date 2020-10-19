@@ -150,12 +150,18 @@ export class Hook<
               ...newOptions,
             };
 
-            //keepPopups.forEach(p => popup.Popup.minimized.add(p))
+            if (crisprUtil.debug) {
+              console.log(
+                "Hook resetting on",
+                this.options.event,
+                this.level.options
+              );
+            }
 
             this.level.options.hooks.unshift(
               new Hook({
                 once: true,
-                event: "setup",
+                event: "beforeSetup",
                 entity: new entity.ParallelEntity(keepPopups),
               })
             );
@@ -172,6 +178,7 @@ export class Hook<
 }
 
 export interface LevelEvents {
+  beforeSetup: [];
   setup: [];
   infected: [];
   closedPopup: [popup.Popup];
@@ -379,11 +386,14 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
 
-    this._initHooks();
     this._initBackground();
+    this._initForeground();
+    this._initHooks();
+
+    this.emit("beforeSetup");
+
     this._initGrid();
     this._initPath();
-    this._initForeground();
     this._initHairs();
     this._initSequences();
     this._initBonuses();
@@ -553,12 +563,7 @@ export class Level extends entity.CompositeEntity {
 
     if (!sequenceCrunch) return;
 
-    const context: entity.Entity[] = [
-      sequenceCrunch,
-      new entity.FunctionCallEntity(() => {
-        this._activateChildEntity(this.path.crunch());
-      }),
-    ];
+    const context: entity.Entity[] = [this.path.crunch(), sequenceCrunch];
 
     if (this.options.variant === "turnBased") {
       context.push(
