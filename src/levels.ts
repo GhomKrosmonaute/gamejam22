@@ -252,7 +252,6 @@ export const levels = {
                         hooks: [
                           new level.Hook({
                             event: "beforeSetup",
-                            once: true,
                             entity: new popup.TutorialPopup({
                               title: "Let's survive!",
                               content: "Reach 200 pts.",

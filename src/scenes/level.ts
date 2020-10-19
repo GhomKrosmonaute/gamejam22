@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
@@ -40,7 +41,7 @@ export interface LevelOptions {
   dropSpeed: number;
   baseGain: number;
   baseScore: number;
-  gaugeRings: ((level: Level, ring: hud.Ring, index: number) => unknown)[];
+  gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
   sequenceLength: number | null;
   colCount: number;
   rowCount: number;
@@ -142,21 +143,11 @@ export class Hook<
               return false;
             });
 
-            this.level._teardown();
-
-            this.level.options = {
+            this.level.reset({
               ...this.level.options,
               hooks: [],
               ...newOptions,
-            };
-
-            if (crisprUtil.debug) {
-              console.log(
-                "Hook resetting on",
-                this.options.event,
-                this.level.options
-              );
-            }
+            });
 
             this.level.options.hooks.unshift(
               new Hook({
@@ -166,7 +157,13 @@ export class Hook<
               })
             );
 
-            this.level._setup();
+            if (crisprUtil.debug) {
+              console.log(
+                "Hook resetting on",
+                this.options.event,
+                this.level.options
+              );
+            }
           }
           if (this.options.entity) {
             this._activateChildEntity(this.options.entity, this.level.config);
@@ -184,7 +181,7 @@ export interface LevelEvents {
   closedPopup: [popup.Popup];
   minimizedPopup: [popup.Popup];
   pathUpdated: [];
-  ringReached: [ring: hud.Ring, index: number];
+  ringReached: [ring: hud.Ring];
   sequenceDown: [];
   scoreUpdated: [score: number];
   clickedBonus: [bonus: bonuses.Bonus];
@@ -195,6 +192,8 @@ export interface LevelEvents {
 }
 
 export class Level extends entity.CompositeEntity {
+  public options: LevelOptions;
+
   // system
   /**
    * Disable continuous events while `disablingAnimations` contains one or more elements. <br>
@@ -222,12 +221,9 @@ export class Level extends entity.CompositeEntity {
   public oneShotLongSequence = false;
   public crunchedSequenceCount = 0;
 
-  constructor(
-    public name: levels.LevelName,
-    public options: Partial<LevelOptions>
-  ) {
+  constructor(public name: levels.LevelName, options: Partial<LevelOptions>) {
     super();
-    this.options = util.fillInOptions(this.options, defaultLevelOptions);
+    this.options = util.fillInOptions(options, defaultLevelOptions);
     this.score = this.options.baseScore;
   }
 
@@ -346,12 +342,22 @@ export class Level extends entity.CompositeEntity {
     this._activateChildEntity(this.goButton, this.config);
   }
 
+  private _disableButton() {
+    this._deactivateChildEntity(this.goButton);
+    this.goButton = null;
+  }
+
   private _initBonuses() {
     if (this.options.disableBonuses) return;
     this.bonusesManager = new bonuses.BonusesManager(
       this.options.initialBonuses
     );
     this._activateChildEntity(this.bonusesManager, this.config);
+  }
+
+  private _disableBonuses() {
+    this._deactivateChildEntity(this.bonusesManager);
+    this.bonusesManager = null;
   }
 
   private _initGauge() {
@@ -363,22 +369,11 @@ export class Level extends entity.CompositeEntity {
     );
 
     this._activateChildEntity(this.gauge, this.config);
+  }
 
-    this.on("ringReached", (ring, index) => {
-      this.options.gaugeRings[index](this, ring, index);
-      ring.tint = 0x6bffff;
-      this._activateChildEntity(anim.tweenShaking(ring, 2000, 10, 0));
-    });
-
-    // setup shockwave on max score is reached
-    this.on("maxScoreReached", () => {
-      this.gauge.bubbleRings({
-        timeBetween: 100,
-        forEach: (ring: hud.Ring) => {
-          ring.tint = 0x007784;
-        },
-      });
-    });
+  private _disableGauge() {
+    this._deactivateChildEntity(this.gauge);
+    this.gauge = null;
   }
 
   _setup() {
@@ -443,11 +438,97 @@ export class Level extends entity.CompositeEntity {
   }
 
   _teardown() {
-    this._deactivateAllChildEntities();
     this.container.removeChildren();
     this._entityConfig.container.removeChildren();
     this.disablingAnimations.clear();
     this.removeAllListeners();
+  }
+
+  reset(
+    options: LevelOptions,
+    resetOptions?: {
+      resetScore?: boolean;
+    }
+  ) {
+    // assign flags
+    {
+      [
+        "disableExtraSequence",
+        "disableScore",
+        "retryOnFail",
+        "displayTurnTitles",
+        "variant",
+        "maxScore",
+        "dropSpeed",
+        "baseGain",
+        "baseScore",
+        "gaugeRings",
+        "sequenceLength",
+        "checks",
+        "scissorCount",
+        "nucleotideRadius",
+        "sequenceNucleotideRadius",
+        "forceMatching",
+      ].forEach((prop) => {
+        // @ts-ignore
+        this.options[prop] = Array.isArray(options[prop])
+          ? // @ts-ignore
+            options[prop].slice(0)
+          : // @ts-ignore
+            options[prop];
+      });
+    }
+
+    // manage components switches
+    {
+      const switchComponent = (name: string) => {
+        // @ts-ignore
+        if (this.options["disable" + name] !== options["disable" + name]) {
+          // @ts-ignore
+          this.options["disable" + name] = options["disable" + name];
+          // @ts-ignore
+          if (this.options["disable" + name]) {
+            // @ts-ignore
+            this["_disable" + name]();
+          } else {
+            // @ts-ignore
+            this["_init" + name]();
+          }
+        }
+      };
+      ["Bonuses", "Button", "Gauge"].forEach(switchComponent);
+    }
+
+    // reset options
+    if (resetOptions?.resetScore) {
+      this.score = this.options.baseScore;
+    }
+
+    // mock useless properties
+    {
+      const Ahahahaha = (uselessProp: any): any => null;
+      Ahahahaha(options.colCount);
+      Ahahahaha(options.rowCount);
+    }
+
+    // grid rebuild
+    {
+      if (this.options.gridShape !== options.gridShape) {
+        this.options.gridShape = _.clone(options.gridShape);
+      }
+
+      if (this.options.presetScissors !== options.presetScissors) {
+        this.options.presetScissors = _.clone(options.presetScissors);
+      }
+
+      this.grid.reset();
+    }
+    // TODO: HERE
+    /*
+      sequences: nucleotide.ColorName[][] | null;
+      hooks: Hook[];
+      initialBonuses: bonuses.InitialBonuses;
+    */
   }
 
   gameOver() {

@@ -13,7 +13,7 @@ import * as level from "../scenes/level";
  * Emits:
  * - reached()
  */
-export type Ring = PIXI.Sprite & { base?: PIXI.Point };
+export type Ring = PIXI.Sprite & { base?: PIXI.Point; index?: number };
 
 export class Gauge extends entity.CompositeEntity {
   private _container = new PIXI.Container();
@@ -144,6 +144,8 @@ export class Gauge extends entity.CompositeEntity {
         ].texture
       );
 
+      ring.index = i;
+
       const position = new crisprUtil.BetterPoint(
         crisprUtil.proportion(i, -1, this._ringCount, 0, 450, true),
         ring.height * 0.5
@@ -156,11 +158,10 @@ export class Gauge extends entity.CompositeEntity {
       ring.base.copyFrom(position);
 
       this._once(ring, "reached", () => {
-        this.level.emit(
-          "ringReached",
-          ring,
-          this._rings.children.indexOf(ring)
-        );
+        this.level.options.gaugeRings[ring.index](this.level, ring);
+        ring.tint = 0x6bffff;
+        this.level.emit("ringReached", ring);
+        this._activateChildEntity(anim.tweenShaking(ring, 2000, 10, 0));
       });
 
       this._rings.addChild(ring);
@@ -187,6 +188,16 @@ export class Gauge extends entity.CompositeEntity {
         onStep: (ring) => anim.popup(ring, 200),
       })
     );
+
+    // setup shockwave on max score is reached
+    this._on(this.level, "maxScoreReached", () => {
+      this.bubbleRings({
+        timeBetween: 100,
+        forEach: (ring: Ring) => {
+          ring.tint = 0x007784;
+        },
+      });
+    });
 
     this.setValue(0);
   }
