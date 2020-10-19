@@ -4,7 +4,7 @@ import * as geom from "booyah/src/geom";
 
 export const width = 1080;
 export const height = 1920;
-export const debug = false;
+export const debug = true;
 
 export class BetterPoint extends PIXI.Point {
   public readonly origin = new PIXI.Point();
@@ -18,8 +18,8 @@ export class BetterPoint extends PIXI.Point {
     return this.origin;
   }
 }
-
-export function dist(x1: PIXI.Point, y1: PIXI.Point): number;
+export function dist(a: number, b: number): number;
+export function dist(a: PIXI.Point, b: PIXI.Point): number;
 export function dist(x1: number, y1: number, x2: number, y2: number): number;
 export function dist(
   x1: number | PIXI.Point,
@@ -29,13 +29,12 @@ export function dist(
 ): number {
   if (x1 instanceof PIXI.Point && y1 instanceof PIXI.Point)
     return Math.hypot(y1.x - x1.x, y1.y - x1.y);
-  else if (typeof x1 === "number" && typeof y1 === "number")
-    return Math.hypot(x2 - x1, y2 - y1);
+  else if (typeof x1 === "number" && typeof y1 === "number") {
+    if (typeof x2 === "number" && typeof y2 === "number")
+      return Math.hypot(x2 - x1, y2 - y1);
+    return x1 < y1 ? y1 - x1 : x1 - y1;
+  }
   return NaN;
-}
-
-export function dist1D(a: number, b: number): number {
-  return a < b ? b - a : a - b;
 }
 
 export function middle(a: PIXI.Point, b: PIXI.Point): PIXI.Point {

@@ -177,22 +177,22 @@ export class Path extends entity.CompositeEntity {
     }
   }
 
-  crunch(callback?: () => any) {
-    this.level.disablingAnimations.add("path.crunch");
+  crunch() {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimations.add("path.crunch");
 
-    if (this.correctlyContainsScissors()) {
-      this.level.scissorsWasIncludes = true;
-    }
-
-    this._activateChildEntity(
+        if (this.correctlyContainsScissors()) {
+          this.level.scissorsWasIncludes = true;
+        }
+      }),
       anim.sequenced({
         items: this.items,
         timeBetween: 50,
         waitForAllSteps: true,
         callback: () => {
+          this.remove();
           this.level.disablingAnimations.delete("path.crunch");
-          this.emit("crunchAnimationFinished");
-          callback?.();
         },
         onStep: (item, i, src, finish) => {
           const score = item.infected ? 15 : 10;
@@ -230,10 +230,8 @@ export class Path extends entity.CompositeEntity {
             )
           );
         },
-      })
-    );
-
-    this.remove();
+      }),
+    ]);
   }
 
   toString(reverse = false) {

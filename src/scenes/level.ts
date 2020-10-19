@@ -134,11 +134,32 @@ export class Hook<
                 ? this.options.reset(this.level)
                 : this.options.reset;
 
+            const keepPopups = [...popup.Popup.minimized].filter((p) => {
+              if (p.options.keepOnReset) {
+                p.options.minimizeOnSetup = true;
+                return true;
+              }
+              return false;
+            });
+
             this.level._teardown();
+
             this.level.options = {
               ...this.level.options,
+              hooks: [],
               ...newOptions,
             };
+
+            //keepPopups.forEach(p => popup.Popup.minimized.add(p))
+
+            this.level.options.hooks.unshift(
+              new Hook({
+                once: true,
+                event: "setup",
+                entity: new entity.ParallelEntity(keepPopups),
+              })
+            );
+
             this.level._setup();
           }
           if (this.options.entity) {
@@ -154,6 +175,7 @@ export interface LevelEvents {
   setup: [];
   infected: [];
   closedPopup: [popup.Popup];
+  minimizedPopup: [popup.Popup];
   pathUpdated: [];
   ringReached: [ring: hud.Ring, index: number];
   sequenceDown: [];
@@ -293,7 +315,8 @@ export class Level extends entity.CompositeEntity {
     );
     this._on(this.grid, "pointerup", () => {
       if (this.options.variant !== "long") {
-        this.attemptCrunch();
+        const crunch = this.attemptCrunch();
+        if (crunch) this._activateChildEntity(crunch);
       }
     });
     this._activateChildEntity(this.grid, this.config);
@@ -352,6 +375,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   _setup() {
+    this.container.sortableChildren = true;
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
 
@@ -409,6 +433,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   _teardown() {
+    this._deactivateAllChildEntities();
     this.container.removeChildren();
     this._entityConfig.container.removeChildren();
     this.disablingAnimations.clear();
@@ -474,7 +499,7 @@ export class Level extends entity.CompositeEntity {
     return this.disablingAnimations.size > 0;
   }
 
-  public endTurn(): void {
+  public endTurn(): entity.EntitySequence {
     this.disablingAnimations.add("level.endTurn");
 
     if (this.grid.isGameOver()) {
@@ -495,7 +520,6 @@ export class Level extends entity.CompositeEntity {
     if (countSequences < this.sequenceManager.sequenceCountLimit) {
       actions.push(
         new entity.FunctionCallEntity(() => {
-          this.disablingAnimations.delete("level.endTurn");
           if (this.options.disableExtraSequence) {
             return;
           }
@@ -503,19 +527,19 @@ export class Level extends entity.CompositeEntity {
           this.sequenceManager.add();
         })
       );
-    } else {
-      this.disablingAnimations.delete("level.endTurn");
     }
 
-    if (actions.length > 0) {
-      this._activateChildEntity(new entity.EntitySequence(actions));
-    } else {
-      this.disablingAnimations.delete("level.endTurn");
-    }
+    actions.push(
+      new entity.FunctionCallEntity(() => {
+        this.disablingAnimations.delete("level.endTurn");
+      })
+    );
+
+    return new entity.EntitySequence(actions);
   }
 
   // TODO: refactor this as a separate object, using the strategy pattern
-  public attemptCrunch(): void {
+  public attemptCrunch(): entity.EntitySequence | void {
     if (
       this.path.items.length === 0 ||
       this.sequenceManager.matchesSequence(this.path) !== true
@@ -523,29 +547,37 @@ export class Level extends entity.CompositeEntity {
       return;
     }
 
-    this.sequenceManager.crunch(this.path, async () => {
-      if (this.options.variant === "turnBased") {
-        this.sequenceManager.adjustRelativePositionOfSequences();
-      }
+    this.disablingAnimations.add("level.attemptCrunch");
 
-      const first = [...this.sequenceManager.sequences][0];
+    const sequenceCrunch = this.sequenceManager.crunch(this.path);
 
-      if (
-        this.options.variant === "long" &&
-        first &&
-        first.maxActiveLength < 3
-      ) {
-        await new Promise((resolve) => {
-          first.down(true, resolve);
-        });
-      }
-      if (this.sequenceManager.sequenceCount === 0) {
-        this.regenerate();
-      }
-    });
+    if (!sequenceCrunch) return;
 
-    // Makes holes in the grid that corresponds to the used nucleotides
-    this.path.crunch();
+    const context: entity.Entity[] = [
+      new entity.ParallelEntity([sequenceCrunch, this.path.crunch()]),
+    ];
+
+    if (this.options.variant === "turnBased") {
+      context.push(this.sequenceManager.adjustRelativePositionOfSequences());
+    }
+
+    const first = [...this.sequenceManager.sequences][0];
+
+    if (this.options.variant === "long" && first && first.maxActiveLength < 3) {
+      context.push(first.down(true));
+    }
+
+    context.push(
+      new entity.FunctionCallEntity(() => {
+        if (this.sequenceManager.sequenceCount === 0) {
+          this._activateChildEntity(this.regenerate());
+        }
+
+        this.disablingAnimations.delete("level.attemptCrunch");
+      })
+    );
+
+    return new entity.EntitySequence(context);
   }
 
   public setGoButtonText(text: string) {
@@ -567,34 +599,24 @@ export class Level extends entity.CompositeEntity {
     this.sequenceManager.updateHighlighting(this.path);
   }
 
-  public regenerate(): void {
-    this.disablingAnimations.add("level.regenerate");
+  public regenerate(): entity.EntitySequence {
+    return new entity.EntitySequence([
+      new entity.FunctionalEntity({
+        requestTransition: () => !this.disablingAnimations.has("path.crunch"),
+      }),
+      new entity.FunctionCallEntity(() => {
+        this.disablingAnimations.add("level.regenerate");
+        this.grid.fillHoles();
+        this.refresh();
+      }),
+      new entity.WaitingEntity(1000),
+      this.endTurn(),
+      new entity.FunctionCallEntity(() => {
+        this.refresh();
 
-    // Switch to regenerate mode
-    this.refresh();
-
-    const regen = () => {
-      const newNucleotides = this.grid.fillHoles();
-
-      // Wait for a second, then continue
-      this._activateChildEntity(
-        new entity.EntitySequence([
-          new entity.WaitingEntity(1000),
-          new entity.FunctionCallEntity(() => {
-            this.endTurn();
-            this.refresh();
-
-            this.disablingAnimations.delete("level.regenerate");
-          }),
-        ])
-      );
-    };
-
-    if (this.disablingAnimations.has("path.crunch")) {
-      this._once(this.path, "crunchAnimationFinished", () => regen());
-    } else {
-      regen();
-    }
+        this.disablingAnimations.delete("level.regenerate");
+      }),
+    ]);
   }
 
   public onInfection(infectionCount = 1): void {

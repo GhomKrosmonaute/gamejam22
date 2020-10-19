@@ -52,7 +52,7 @@ export class Virus extends entity.CompositeEntity {
       this.angle = this.randomAngle;
     } while (
       this.level.sequenceManager.viruses.some((v) => {
-        return v !== this && crisprUtil.dist1D(this.angle, v.angle) < 10;
+        return v !== this && crisprUtil.dist(this.angle, v.angle) < 10;
       })
     );
 

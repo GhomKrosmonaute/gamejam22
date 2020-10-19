@@ -122,7 +122,7 @@ export class SequenceManager extends entity.CompositeEntity {
       })
     );
     this.sequences.add(sequence);
-    this.adjustRelativePositionOfSequences();
+    this._activateChildEntity(this.adjustRelativePositionOfSequences());
   }
 
   add(length?: number) {
@@ -146,56 +146,70 @@ export class SequenceManager extends entity.CompositeEntity {
       })
     );
     this.sequences.add(sequence);
-    this.adjustRelativePositionOfSequences();
+    this._activateChildEntity(this.adjustRelativePositionOfSequences());
   }
 
   /** remove all validated sequences */
-  crunch(_path: path.Path, callback?: () => any) {
-    const finish: Promise<void>[] = [];
-
+  crunch(_path: path.Path): entity.EntitySequence | void {
     if (this.matchesSequence(_path) !== true) return;
 
     const signature = _path.signature;
     const removedSequences: Sequence[] = [];
+    let partialCrunch = false;
+
     for (const s of this.sequences) {
       if (this._entityConfig.level.options.variant === "long") {
         if (s.validate(signature, "partial")) {
           s.deactivateSegment(_path.signature);
+
+          partialCrunch = true;
 
           if (s.isInactive()) {
             removedSequences.push(s);
           }
         }
       } else if (s.validate(signature)) {
+        partialCrunch = true;
+
         removedSequences.push(s);
       }
     }
 
-    if (removedSequences.length > 0) {
+    const context: entity.Entity[] = [];
+
+    if (removedSequences.length > 0 || partialCrunch) {
       this.level.path.crunchCountBeforeSequenceDown++;
 
-      for (const s of removedSequences) {
-        this.emit("crunch", s);
-        finish.push(
-          new Promise((resolve) => {
-            this.removeSequence(true, s, resolve);
-          })
+      if (crisprUtil.debug) {
+        console.log(
+          "UPDATED",
+          "crunchCountBeforeSequenceDown",
+          this.level.path.crunchCountBeforeSequenceDown
         );
       }
 
-      this.adjustRelativePositionOfSequences();
+      for (const s of removedSequences) {
+        context.push(
+          new entity.FunctionCallEntity(() => {
+            this.emit("crunch", s);
+          }),
+          this.removeSequence(true, s)
+        );
+      }
     }
 
     // if (crunched) path.items.forEach((n) => (n.state = "missing"));
 
-    Promise.all(finish).then(callback);
+    context.push(this.adjustRelativePositionOfSequences());
+
+    return new entity.EntitySequence(context);
   }
 
-  removeSequence(addScore: boolean, s: Sequence, callback?: () => any) {
-    s.down(addScore, () => {
-      this.adjustRelativePositionOfSequences();
-      if (callback) callback();
-    });
+  removeSequence(addScore: boolean, s: Sequence) {
+    return new entity.EntitySequence([
+      s.down(addScore),
+      this.adjustRelativePositionOfSequences(),
+    ]);
   }
 
   /**
@@ -218,7 +232,7 @@ export class SequenceManager extends entity.CompositeEntity {
     if (droppedSequences.length > 0) {
       droppedSequences.forEach((s, i) => {
         s.nucleotides.forEach((n) => (n.sprite.tint = 0x000000));
-        s.down(false);
+        this._activateChildEntity(s.down(false));
       });
     }
 
@@ -230,7 +244,7 @@ export class SequenceManager extends entity.CompositeEntity {
     const droppedSequences = _.last([...this.sequences], count);
 
     droppedSequences.forEach((s) => {
-      this.removeSequence(false, s);
+      this._activateChildEntity(this.removeSequence(false, s));
     });
 
     return droppedSequences;
@@ -240,15 +254,16 @@ export class SequenceManager extends entity.CompositeEntity {
    * In the case that sequences are layed out, distributes them evenly
    */
   adjustRelativePositionOfSequences() {
-    this.level.disablingAnimations.add(
-      "sequence.adjustRelativePositionOfSequences"
-    );
-
     if (this.adjustment && this.adjustment.isSetup) {
       this._deactivateChildEntity(this.adjustment);
     }
 
     this.adjustment = new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimations.add(
+          "sequence.adjustRelativePositionOfSequences"
+        );
+      }),
       new entity.ParallelEntity(
         [...this.sequences].map((s, i) => {
           return new tween.Tween({
@@ -269,7 +284,7 @@ export class SequenceManager extends entity.CompositeEntity {
       }),
     ]);
 
-    this._activateChildEntity(this.adjustment);
+    return this.adjustment;
   }
 
   getSequenceYByIndex(index: number) {
@@ -504,23 +519,41 @@ export class Sequence extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this.container);
   }
 
-  down(addScore: boolean, callback?: () => any) {
-    this.level.sequenceWasCrunched = true;
-    this.level.crunchedSequenceCount++;
+  down(addScore: boolean) {
+    let isLong: boolean, fully: boolean, shots: number;
 
-    this.level.disablingAnimations.add("sequence.down");
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimations.add("sequence.down");
+        this.level.sequenceWasCrunched = true;
+        this.level.crunchedSequenceCount++;
 
-    const isLong = this.level.options.variant === "long";
-    const fully = this.nucleotides.every((n) => n.state === "inactive");
-    const shots = this.level.path.crunchCountBeforeSequenceDown;
+        if (crisprUtil.debug) {
+          console.log(
+            "UPDATED",
+            "crunchedSequenceCount",
+            this.level.crunchedSequenceCount
+          );
+        }
 
-    if (isLong && fully && shots === 1) {
-      this.level.oneShotLongSequence = true;
-    }
+        isLong = this.level.options.variant === "long";
+        fully = this.nucleotides.every((n) => n.state === "inactive");
+        shots = this.level.path.crunchCountBeforeSequenceDown;
 
-    this.level.path.crunchCountBeforeSequenceDown = 0;
+        if (isLong && fully && shots === 1) {
+          this.level.oneShotLongSequence = true;
 
-    this._activateChildEntity(
+          if (crisprUtil.debug) {
+            console.log(
+              "UPDATED",
+              "oneShotLongSequence",
+              this.level.oneShotLongSequence
+            );
+          }
+        }
+
+        this.level.path.crunchCountBeforeSequenceDown = 0;
+      }),
       anim.sequenced({
         items: this.nucleotides,
         timeBetween: isLong ? 80 : 200,
@@ -588,7 +621,6 @@ export class Sequence extends entity.CompositeEntity {
             this.level.disablingAnimations.delete("sequence.down");
             this.level.emit("sequenceDown");
             this._transition = entity.makeTransition();
-            callback?.();
           };
           if (this.virus && this.virus.isSetup) {
             this._activateChildEntity(
@@ -601,8 +633,8 @@ export class Sequence extends entity.CompositeEntity {
             end();
           }
         },
-      })
-    );
+      }),
+    ]);
   }
 
   validate(
@@ -629,9 +661,12 @@ export class Sequence extends entity.CompositeEntity {
    */
   deactivateSegment(signature: string): boolean {
     const segment = this.getMatchingSegment(signature);
+
     if (!segment) return false;
 
     segment.forEach((n) => (n.state = "inactive"));
+
+    return true;
   }
 
   highlightSegment(signature: string = ""): void {

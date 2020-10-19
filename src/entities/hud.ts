@@ -232,7 +232,10 @@ export class GoButton extends entity.CompositeEntity {
     );
     this.sprite.interactive = true;
     this.sprite.buttonMode = true;
-    this._on(this.sprite, "pointerup", this._onGo);
+    this._on(this.sprite, "pointerup", () => {
+      const go = this._onGo();
+      if (go) this._activateChildEntity(go);
+    });
     this.container.addChild(this.sprite);
 
     this.text = crisprUtil.makeText("GO", {
@@ -258,46 +261,60 @@ export class GoButton extends entity.CompositeEntity {
     this.text.text = text;
   }
 
-  private _onGo(): void {
+  private _onGo(): entity.EntitySequence | void {
     if (this.level.isDisablingAnimationInProgress) return;
 
     if (this.level.options.variant === "long") {
       if (this.level.path.items.length > 0) {
         return this.level.attemptCrunch();
       }
-    } else if (this.level.path.items.length > 0) return;
+    } else if (this.level.path.items.length > 0) {
+      return;
+    }
+
+    const context: entity.Entity[] = [
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimations.add("goButton._onGo");
+      }),
+    ];
 
     if (
       this.level.options.variant === "turnBased" ||
       this.level.options.variant === "long"
     ) {
       if (this.level.grid.containsHoles()) {
-        this.level.regenerate();
+        context.push(this.level.regenerate());
       } else {
-        // TODO: add confirm dialog "Are you sure?"
-        this.level.disablingAnimations.add("goButton._onGo");
-
-        this._activateChildEntity(
-          new entity.EntitySequence([
-            new entity.FunctionCallEntity(() => {
-              this.level.grid.regenerate(
-                Math.ceil(this.level.grid.nucleotides.length / 2),
-                (n) => n.state === "present" && n.type !== "scissors"
-              );
-            }),
-            new entity.WaitingEntity(1200),
-            new entity.FunctionCallEntity(() => {
-              this.level.endTurn();
-              this.level.refresh();
-              this.level.disablingAnimations.delete("goButton._onGo");
-            }),
-          ])
+        context.push(
+          new entity.FunctionCallEntity(() => {
+            this.level.grid.regenerate(
+              Math.ceil(this.level.grid.nucleotides.length / 2),
+              (n) => n.state === "present" && n.type !== "scissors"
+            );
+          }),
+          new entity.WaitingEntity(1200),
+          this.level.endTurn(),
+          new entity.FunctionCallEntity(() => {
+            this.level.refresh();
+          })
         );
       }
     } else {
-      // As if the sequence dropped all the way down
-      this.level.sequenceManager.dropSequences();
-      this.level.onInfection();
+      context.push(
+        new entity.FunctionCallEntity(() => {
+          // As if the sequence dropped all the way down
+          this.level.sequenceManager.dropSequences();
+          this.level.onInfection();
+        })
+      );
     }
+
+    context.push(
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimations.delete("goButton._onGo");
+      })
+    );
+
+    return new entity.EntitySequence(context);
   }
 }

@@ -7,8 +7,6 @@ import * as level from "./scenes/level";
 import * as popup from "./entities/popup";
 import * as bonuses from "./entities/bonus";
 
-import * as anim from "./animations";
-
 export const levels = {
   "Level 3": () =>
     new level.Level("Level 3", {
@@ -59,9 +57,12 @@ export const levels = {
               }),
               new popup.TutorialPopup({
                 title: "The Time bonus",
-                content: "Can freeze the game for 5 seconds 🥶",
+                content: "Can freeze the game for 5 seconds!",
                 image: "images/bonus_time.png",
-                popupOptions: { from: ring.position },
+                popupOptions: {
+                  from: ring.position,
+                  logo: "🥶",
+                },
               }),
               new entity.FunctionCallEntity(() => {
                 bonuses.timeBonus.highlight = false;
@@ -76,7 +77,10 @@ export const levels = {
           entity: new popup.TutorialPopup({
             title: "Oh no!",
             content:
-              "It's a time bomb, crunch the sequences before they hit the grid 😱\n\nReach 400 pts!",
+              "It's a time bomb, crunch the sequences before they hit the grid!\n\nReach 400 pts!",
+            popupOptions: {
+              logo: "😱",
+            },
           }),
         }),
         new level.Hook({
@@ -103,7 +107,9 @@ export const levels = {
                 title: "The Swap bonus",
                 content: "Can swap two nucleotides",
                 image: "images/bonus_swap.png",
-                popupOptions: { from: ring.position },
+                popupOptions: {
+                  from: ring.position,
+                },
               }),
               new entity.FunctionCallEntity(() => {
                 bonuses.swapBonus.highlight = false;
@@ -170,6 +176,9 @@ export const levels = {
                   content:
                     "Crunch a sequence, but includes scissors now!\n\nDNA sequences must include at least a pair of scissors between two nucleotides",
                   image: "images/scissors.json",
+                  popupOptions: {
+                    logo: "✂️",
+                  },
                 }),
               }),
               new level.Hook({
@@ -222,7 +231,7 @@ export const levels = {
                       ]),
                     }),
                     new level.Hook({
-                      event: "closedPopup",
+                      event: "minimizedPopup",
                       filter: (popup) =>
                         popup.body.children.some((child) => {
                           return (
