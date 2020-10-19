@@ -554,11 +554,20 @@ export class Level extends entity.CompositeEntity {
     if (!sequenceCrunch) return;
 
     const context: entity.Entity[] = [
-      new entity.ParallelEntity([sequenceCrunch, this.path.crunch()]),
+      sequenceCrunch,
+      new entity.FunctionCallEntity(() => {
+        this._activateChildEntity(this.path.crunch());
+      }),
     ];
 
     if (this.options.variant === "turnBased") {
-      context.push(this.sequenceManager.adjustRelativePositionOfSequences());
+      context.push(
+        new entity.FunctionCallEntity(() => {
+          this._activateChildEntity(
+            this.sequenceManager.adjustRelativePositionOfSequences()
+          );
+        })
+      );
     }
 
     const first = [...this.sequenceManager.sequences][0];

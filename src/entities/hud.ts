@@ -111,8 +111,12 @@ export class Gauge extends entity.CompositeEntity {
     this._container.interactive = true;
     this._container.buttonMode = true;
     this._on(this._container, "pointerup", () => {
-      if (this._statePopup.isSetup) return;
-      this._activateChildEntity(this._statePopup, entity.extendConfig({}));
+      if (
+        !this._statePopup.isSetup &&
+        !this.level.isDisablingAnimationInProgress
+      ) {
+        this._activateChildEntity(this._statePopup, entity.extendConfig({}));
+      }
     });
 
     // assign sprites

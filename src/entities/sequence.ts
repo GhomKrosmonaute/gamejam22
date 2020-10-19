@@ -200,13 +200,17 @@ export class SequenceManager extends entity.CompositeEntity {
 
     // if (crunched) path.items.forEach((n) => (n.state = "missing"));
 
-    context.push(this.adjustRelativePositionOfSequences());
+    context.push(
+      new entity.FunctionCallEntity(() => {
+        this._activateChildEntity(this.adjustRelativePositionOfSequences());
+      })
+    );
 
     return new entity.EntitySequence(context);
   }
 
-  removeSequence(addScore: boolean, s: Sequence) {
-    return new entity.EntitySequence([
+  removeSequence(addScore: boolean, s: Sequence): entity.ParallelEntity {
+    return new entity.ParallelEntity([
       s.down(addScore),
       this.adjustRelativePositionOfSequences(),
     ]);
