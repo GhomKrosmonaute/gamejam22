@@ -25,6 +25,7 @@ export const levels = {
       ],
       hooks: [
         new level.Hook({
+          id: "intro",
           event: "setup",
           once: true,
           entity: new popup.TutorialPopup({
@@ -34,6 +35,7 @@ export const levels = {
           }),
         }),
         new level.Hook({
+          id: "outro",
           event: "maxScoreReached",
           entity: new popup.TerminatedLevelPopup(),
         }),
@@ -72,7 +74,8 @@ export const levels = {
       ],
       hooks: [
         new level.Hook({
-          event: "beforeSetup",
+          id: "intro",
+          event: "init",
           once: true,
           entity: new popup.TutorialPopup({
             title: "Oh no!",
@@ -84,6 +87,7 @@ export const levels = {
           }),
         }),
         new level.Hook({
+          id: "outro",
           event: "maxScoreReached",
           entity: new popup.TerminatedLevelPopup(),
         }),
@@ -119,7 +123,8 @@ export const levels = {
       ],
       hooks: [
         new level.Hook({
-          event: "beforeSetup",
+          id: "intro",
+          event: "init",
           once: true,
           entity: new popup.TutorialPopup({
             title: "Enjoy!",
@@ -128,6 +133,7 @@ export const levels = {
           }),
         }),
         new level.Hook({
+          id: "outro",
           event: "maxScoreReached",
           entity: new popup.TerminatedLevelPopup(),
         }),
@@ -154,22 +160,25 @@ export const levels = {
       },
       hooks: [
         new level.Hook({
-          event: "beforeSetup",
+          id: "intro",
+          event: "init",
           once: true,
           entity: new popup.TutorialPopup({
             title: "Let's CRUNCH!",
             content:
-              "Try to crunch your first DNA sequence! Simply reproduce on the grid the sequence which floats above.",
+              "Try to crunch your first DNA sequence!\n\nSimply reproduce on the grid the sequence which floats above.",
           }),
         }),
         new level.Hook({
+          id: "step 1 done, reset",
           event: "sequenceDown",
           reset: {
             scissorCount: 1,
             sequenceLength: 4,
             hooks: [
               new level.Hook({
-                event: "beforeSetup",
+                id: "intro scissors",
+                event: "init",
                 once: true,
                 entity: new popup.TutorialPopup({
                   title: "Scissors",
@@ -182,8 +191,9 @@ export const levels = {
                 }),
               }),
               new level.Hook({
+                id: "step 1 done, reset",
                 event: "sequenceDown",
-                reset: (context) => ({
+                reset: {
                   gridShape: [
                     null,
                     [null, null, "y", "y", "b"],
@@ -201,7 +211,8 @@ export const levels = {
                   disableExtraSequence: true,
                   hooks: [
                     new level.Hook({
-                      event: "beforeSetup",
+                      id: "intro skip button",
+                      event: "init",
                       once: true,
                       entity: new entity.EntitySequence([
                         new popup.TutorialPopup({
@@ -209,12 +220,10 @@ export const levels = {
                           content:
                             "If you no longer have a solution, click on the Skip button ... But beware of infection!",
                         }),
-                        new entity.FunctionCallEntity(() => {
-                          context.goButton.shaker.setShake("tutorial", 10);
-                        }),
                       ]),
                     }),
                     new level.Hook({
+                      id: "intro infection",
                       event: "infected",
                       once: true,
                       entity: new entity.EntitySequence([
@@ -231,6 +240,7 @@ export const levels = {
                       ]),
                     }),
                     new level.Hook({
+                      id: "step 3 and 4 done, reset",
                       event: "minimizedPopup",
                       filter: (popup) =>
                         popup.body.children.some((child) => {
@@ -251,13 +261,15 @@ export const levels = {
                         maxScore: 200,
                         hooks: [
                           new level.Hook({
-                            event: "beforeSetup",
+                            id: "intro survival",
+                            event: "init",
                             entity: new popup.TutorialPopup({
                               title: "Let's survive!",
                               content: "Reach 200 pts.",
                             }),
                           }),
                           new level.Hook({
+                            id: "outro",
                             event: "maxScoreReached",
                             entity: new popup.TerminatedLevelPopup(),
                           }),
@@ -265,7 +277,7 @@ export const levels = {
                       },
                     }),
                   ],
-                }),
+                },
               }),
             ],
           },

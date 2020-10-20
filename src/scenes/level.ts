@@ -1,11 +1,9 @@
 import * as PIXI from "pixi.js";
-import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 
 import * as crisprUtil from "../crisprUtil";
-import * as anim from "../animations";
 import * as levels from "../levels";
 
 import * as minimap from "./minimap";
@@ -105,6 +103,7 @@ export type LevelEventParams<
 > = LevelEvents[EventName];
 
 export interface HookOptions<Entity, EventName extends LevelEventName> {
+  id?: string;
   event: EventName;
   /** Filter function, trigger hook if it returns `true` */
   filter?: (...params: LevelEventParams<EventName>) => boolean | void;
@@ -118,8 +117,6 @@ export class Hook<
   Entity extends entity.Entity = entity.Entity,
   EventName extends LevelEventName = LevelEventName
 > extends entity.CompositeEntity {
-  public emitter: PIXI.utils.EventEmitter;
-
   constructor(private options: HookOptions<Entity, EventName>) {
     super();
   }
@@ -130,26 +127,29 @@ export class Hook<
 
   protected _setup() {
     this[this.options.once ? "_once" : "_on"](
-      this.emitter,
+      this.level,
       this.options.event,
       (...params) => {
         if (
           !this.options.filter ||
-          this.options.filter.bind(this.emitter)(...params)
+          this.options.filter.bind(this.level)(...params)
         ) {
           if (this.options.reset) {
+            // get new options
             const newOptions =
               typeof this.options.reset === "function"
                 ? this.options.reset(this.level)
                 : this.options.reset;
 
-            const keepPopups = [...popup.Popup.minimized].filter((p) => {
-              if (p.options.keepOnReset) {
-                p.options.minimizeOnSetup = true;
-                return true;
-              }
-              return false;
-            });
+            if (crisprUtil.debug) {
+              console.log(
+                "--> HOOK activated options.reset:",
+                this.options.id,
+                "on",
+                this.options.event,
+                newOptions
+              );
+            }
 
             this.level.reset({
               ...this.level.options,
@@ -157,24 +157,24 @@ export class Hook<
               ...newOptions,
             });
 
-            this.level.options.hooks.unshift(
-              new Hook({
-                once: true,
-                event: "beforeSetup",
-                entity: new entity.ParallelEntity(keepPopups),
-              })
-            );
-
             if (crisprUtil.debug) {
               console.log(
-                "Hook resetting on",
-                this.options.event,
-                this.level.options
+                "--> HOOK applied options.reset:",
+                this.options.id,
+                "on",
+                this.options.event
               );
             }
-          }
-          if (this.options.entity) {
+          } else if (this.options.entity) {
             this._activateChildEntity(this.options.entity, this.level.config);
+            if (crisprUtil.debug) {
+              console.log(
+                "--> HOOK activated options.entity:",
+                this.options.id,
+                "on",
+                this.options.event
+              );
+            }
           }
         }
       }
@@ -183,7 +183,7 @@ export class Hook<
 }
 
 export interface LevelEvents {
-  beforeSetup: [];
+  init: [];
   setup: [];
   infected: [];
   closedPopup: [popup.Popup];
@@ -277,9 +277,7 @@ export class Level extends entity.CompositeEntity {
 
   private _initHooks() {
     this.options.hooks.forEach((hook) => {
-      if (hook.isSetup) return;
-      hook.emitter = this;
-      this._activateChildEntity(hook);
+      this._activateChildEntity(hook, this.config);
     });
   }
 
@@ -377,11 +375,17 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
 
+    this._on(this, "deactivatedChildEntity", (e: entity.Entity) => {
+      if (e instanceof Hook) {
+        this.options.hooks = this.options.hooks.filter((h) => h !== e);
+      }
+    });
+
     this._initBackground();
     this._initForeground();
     this._initHooks();
 
-    this.emit("beforeSetup");
+    this.emit("init");
 
     this._initGrid();
     this._initPath();
@@ -420,6 +424,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   reset(options: LevelOptions) {
+    this._entityConfig.level = this;
+
     // assign flags
     {
       [
@@ -470,6 +476,12 @@ export class Level extends entity.CompositeEntity {
       this.score = this.options.baseScore;
     }
 
+    // Bonus manager
+    if (options.resetBonuses && !options.disableBonuses) {
+      this.options.initialBonuses = options.initialBonuses;
+      this.bonusesManager.reset();
+    }
+
     // grid rebuild
     if (options.resetGrid) {
       this.options.gridShape = options.gridShape;
@@ -485,23 +497,41 @@ export class Level extends entity.CompositeEntity {
 
     // Hooks
     {
-      // this.options.hooks.forEach((hook) => {
-      //   this._deactivateChildEntity(hook);
-      // });
+      this.options.hooks.forEach((hook) => {
+        this._deactivateChildEntity(hook);
+      });
 
-      this.options.hooks = options.hooks;
+      // place minimizable popups in hook and hook in level hooks
+      {
+        const popups = new entity.EntitySequence(
+          [...popup.Popup.minimized].filter((p) => {
+            if (p.options.keepOnReset) {
+              p.options.minimizeOnSetup = true;
+              return true;
+            }
+            return false;
+          })
+        );
+
+        const temporaryHook = new Hook({
+          id: "adding kept popups",
+          once: true,
+          event: "init",
+          entity: popups,
+        });
+
+        this.options.hooks = [temporaryHook, ...options.hooks.slice(0)];
+      }
 
       this._initHooks();
     }
 
-    // Bonus manager
-    if (options.resetBonuses && !options.disableBonuses) {
-      this.options.initialBonuses = options.initialBonuses;
-      this.bonusesManager.reset();
-    }
+    this.refresh();
+
+    this.emit("init");
 
     if (crisprUtil.debug) {
-      console.log("DONE", "level.reset()");
+      console.log("--> DONE", "level.reset()");
     }
   }
 
@@ -511,12 +541,12 @@ export class Level extends entity.CompositeEntity {
     if (crisprUtil.debug) {
       const newLength = this.disablingAnimations.size;
       if (oldLength !== newLength) {
-        console.log("disabling animations:", newLength, [
+        console.log("updated disabling animations:", newLength, [
           ...this.disablingAnimations,
         ]);
       } else {
         console.warn(
-          `useless ${state ? "start" : "end"} of disablingAnimation:`,
+          `Warning: useless ${state ? "start" : "end"} of disablingAnimation:`,
           name
         );
       }

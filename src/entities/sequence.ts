@@ -123,7 +123,7 @@ export class SequenceManager extends entity.CompositeEntity {
     this.generateFirstSequences();
 
     if (crisprUtil.debug) {
-      console.log("DONE", "sequenceManager.reset()");
+      console.log("--> DONE", "sequenceManager.reset()");
     }
   }
 
@@ -249,7 +249,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
       if (crisprUtil.debug) {
         console.log(
-          "UPDATED",
+          "updated",
           "crunchCountBeforeSequenceDown",
           this.level.path.crunchCountBeforeSequenceDown
         );
@@ -402,15 +402,19 @@ export class Sequence extends entity.CompositeEntity {
 
     this._activateChildEntity(this.virus, this.level.config);
 
+    const requestTransition = () =>
+      this.virus.isSetup &&
+      ![...this.level.disablingAnimations].some((name) =>
+        name.startsWith("popup")
+      );
+
     return new entity.EntitySequence([
-      new entity.FunctionalEntity({
-        requestTransition: () =>
-          this.virus.isSetup && !this.level.disablingAnimations.has("popup"),
-      }),
+      new entity.FunctionalEntity({ requestTransition }),
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("sequence._initVirus", true);
       }),
       this.virus.come(),
+      new entity.FunctionalEntity({ requestTransition }),
       new entity.FunctionCallEntity(() => this._initNucleotides()),
       this.virus.stingIn(),
       new entity.WaitingEntity(1000),
@@ -553,7 +557,7 @@ export class Sequence extends entity.CompositeEntity {
 
         if (crisprUtil.debug) {
           console.log(
-            "UPDATED",
+            "updated",
             "crunchedSequenceCount",
             this.level.crunchedSequenceCount
           );
@@ -568,7 +572,7 @@ export class Sequence extends entity.CompositeEntity {
 
           if (crisprUtil.debug) {
             console.log(
-              "UPDATED",
+              "updated",
               "oneShotLongSequence",
               this.level.oneShotLongSequence
             );

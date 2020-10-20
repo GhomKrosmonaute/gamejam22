@@ -390,7 +390,7 @@ export class BonusesManager extends entity.CompositeEntity {
   reset() {
     this.bonuses.forEach(this.remove.bind(this));
     if (crisprUtil.debug) {
-      console.log("DONE", "bonusManager.reset()");
+      console.log("--> DONE", "bonusManager.reset()");
     }
   }
 

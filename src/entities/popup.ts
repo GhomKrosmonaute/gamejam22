@@ -103,6 +103,7 @@ export abstract class Popup extends entity.CompositeEntity {
     this._container.addChild(this.body);
 
     this.shaker = new anim.ShakesManager(this.body);
+    this._activateChildEntity(this.shaker);
 
     this._width = this.options.width;
     this._height = this.options.adjustHeight ? 0 : this.options.height;
@@ -113,9 +114,7 @@ export abstract class Popup extends entity.CompositeEntity {
       Popup.minimized.add(this);
     }
 
-    if (!this.options.minimizeOnSetup) {
-      this.level.disablingAnimation("popup", true);
-    }
+    this.level.disablingAnimation(this.id, true);
 
     this._activateChildEntity(
       new entity.EntitySequence([
@@ -183,8 +182,6 @@ export abstract class Popup extends entity.CompositeEntity {
 
           this._entityConfig.container.addChild(this._container);
 
-          this._activateChildEntity(this.shaker);
-
           this.onSetup();
 
           if (this.options.minimizeOnSetup) {
@@ -214,9 +211,8 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   _teardown() {
+    this.level.disablingAnimation(this.id, false);
     Popup.minimized.delete(this);
-    this.level.disablingAnimation("popup", false);
-    this.shaker.removeAllShakes();
     this.body.removeChildren();
     this._container.removeChildren();
     this._entityConfig.container.removeChild(this._container);
@@ -227,6 +223,12 @@ export abstract class Popup extends entity.CompositeEntity {
     this.minimized = null;
     this._height = 0;
     this._width = 0;
+  }
+
+  get id(): string {
+    return Popup.minimized.has(this)
+      ? "popup_" + [...Popup.minimized].indexOf(this)
+      : "popup";
   }
 
   get level(): level.Level {
@@ -311,7 +313,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
     this.minimized = !this.minimized;
 
-    this.level.disablingAnimations[this.minimized ? "delete" : "add"]("popup");
+    this.level.disablingAnimation(this.id, !this.minimized);
 
     const minimizedY = 170 * [...Popup.minimized].indexOf(this);
 
@@ -473,7 +475,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
 export class FloatingPopup extends Popup {
   onSetup() {
-    this.level.disablingAnimation("popup", false);
+    this.level.disablingAnimation(this.id, false);
   }
 }
 

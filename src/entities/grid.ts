@@ -198,7 +198,7 @@ export class Grid extends entity.CompositeEntity {
     this.generateShape();
 
     if (crisprUtil.debug) {
-      console.log("DONE", "grid.reset()");
+      console.log("--> DONE", "grid.reset()");
     }
   }
 
