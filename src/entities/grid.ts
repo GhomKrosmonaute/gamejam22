@@ -196,6 +196,10 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides = [];
 
     this.generateShape();
+
+    if (crisprUtil.debug) {
+      console.log("DONE", "grid.reset()");
+    }
   }
 
   private _onPointerDown(e: PIXI.InteractionEvent) {

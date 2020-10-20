@@ -53,6 +53,12 @@ export interface LevelOptions {
   hooks: Hook[];
   initialBonuses: bonuses.InitialBonuses;
   checks: { [text: string]: (level: Level) => boolean };
+
+  // reset options
+  resetScore: boolean;
+  resetGrid: boolean;
+  resetSequences: boolean;
+  resetBonuses: boolean;
 }
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
@@ -85,6 +91,12 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
     "Not infected": (level) => !level.wasInfected,
     "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
   },
+
+  // reset options
+  resetScore: true,
+  resetGrid: true,
+  resetSequences: true,
+  resetBonuses: true,
 };
 
 export type LevelEventName = keyof LevelEvents;
@@ -265,6 +277,7 @@ export class Level extends entity.CompositeEntity {
 
   private _initHooks() {
     this.options.hooks.forEach((hook) => {
+      if (hook.isSetup) return;
       hook.emitter = this;
       this._activateChildEntity(hook);
     });
@@ -406,12 +419,7 @@ export class Level extends entity.CompositeEntity {
     this.removeAllListeners();
   }
 
-  reset(
-    options: LevelOptions,
-    resetOptions?: {
-      resetScore?: boolean;
-    }
-  ) {
+  reset(options: LevelOptions) {
     // assign flags
     {
       [
@@ -433,11 +441,7 @@ export class Level extends entity.CompositeEntity {
         "forceMatching",
       ].forEach((prop) => {
         // @ts-ignore
-        this.options[prop] = Array.isArray(options[prop])
-          ? // @ts-ignore
-            options[prop].slice(0)
-          : // @ts-ignore
-            options[prop];
+        this.options[prop] = options[prop];
       });
     }
 
@@ -462,56 +466,42 @@ export class Level extends entity.CompositeEntity {
     }
 
     // reset options
-    if (resetOptions?.resetScore) {
+    if (options.resetScore) {
       this.score = this.options.baseScore;
     }
 
     // grid rebuild
-    {
-      let rebuild = false;
-
-      // todo: make better equal test
-      if (this.options.gridShape !== options.gridShape) {
-        this.options.gridShape = options.gridShape;
-        rebuild = true;
-      }
-
-      // todo: make better equal test
-      if (this.options.presetScissors !== options.presetScissors) {
-        this.options.presetScissors = options.presetScissors;
-        rebuild = true;
-      }
-
-      if (rebuild) this.grid.reset();
+    if (options.resetGrid) {
+      this.options.gridShape = options.gridShape;
+      this.options.presetScissors = options.presetScissors;
+      this.grid.reset();
     }
 
+    // Sequence manager
+    if (options.resetSequences) {
+      this.options.sequences = options.sequences;
+      this.sequenceManager.reset();
+    }
+
+    // Hooks
     {
-      if (
-        JSON.stringify(this.options.sequences) !==
-        JSON.stringify(options.sequences)
-      ) {
-        this.options.sequences = options.sequences;
+      // this.options.hooks.forEach((hook) => {
+      //   this._deactivateChildEntity(hook);
+      // });
 
-        this.sequenceManager.reset();
-      }
+      this.options.hooks = options.hooks;
 
-      // todo: make better equal test
-      if (this.options.hooks !== options.hooks) {
-        this.options.hooks.forEach((hook) => {
-          this._deactivateChildEntity(hook);
-        });
+      this._initHooks();
+    }
 
-        this.options.hooks = options.hooks;
+    // Bonus manager
+    if (options.resetBonuses && !options.disableBonuses) {
+      this.options.initialBonuses = options.initialBonuses;
+      this.bonusesManager.reset();
+    }
 
-        this._initHooks();
-      }
-
-      // todo: make better equal test
-      if (this.options.initialBonuses !== options.initialBonuses) {
-        this.options.initialBonuses = options.initialBonuses;
-
-        this.bonusesManager.reset();
-      }
+    if (crisprUtil.debug) {
+      console.log("DONE", "level.reset()");
     }
   }
 
@@ -651,9 +641,7 @@ export class Level extends entity.CompositeEntity {
     if (this.options.variant === "turnBased") {
       context.push(
         new entity.FunctionCallEntity(() => {
-          this._activateChildEntity(
-            this.sequenceManager.adjustRelativePositionOfSequences()
-          );
+          this.sequenceManager.adjustment.adjust();
         })
       );
     }

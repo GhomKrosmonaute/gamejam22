@@ -9,6 +9,7 @@ import * as nucleotide from "./nucleotide";
 import * as sequence from "./sequence";
 import * as anim from "../animations";
 import * as crispUtil from "../crisprUtil";
+import * as crisprUtil from "../crisprUtil";
 
 export abstract class Bonus extends entity.CompositeEntity {
   public isUpdateDisabled = false;
@@ -370,9 +371,7 @@ export class BonusesManager extends entity.CompositeEntity {
       }
     });
 
-    this.initialBonuses.forEach(({ bonus, quantity }) => {
-      this.add(bonus, quantity ?? 1);
-    });
+    this.generateFirstBonuses();
   }
 
   _update() {
@@ -388,9 +387,18 @@ export class BonusesManager extends entity.CompositeEntity {
     this.container = null;
   }
 
-  reset() {}
+  reset() {
+    this.bonuses.forEach(this.remove.bind(this));
+    if (crisprUtil.debug) {
+      console.log("DONE", "bonusManager.reset()");
+    }
+  }
 
-  generateFirstBonuses() {}
+  generateFirstBonuses() {
+    this.initialBonuses.forEach(({ bonus, quantity }) => {
+      this.add(bonus, quantity ?? 1);
+    });
+  }
 
   remove(bonus: Bonus): this {
     if (!this.bonuses.has(bonus)) {
