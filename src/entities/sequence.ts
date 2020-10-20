@@ -29,6 +29,22 @@ export class SequenceManager extends entity.CompositeEntity {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
 
+    this.generateFirstSequences();
+  }
+
+  _teardown() {
+    this.sequences.clear();
+    this.container.removeChildren();
+    this._entityConfig.container.removeChild(this.container);
+  }
+
+  reset() {
+    this._deactivateAllChildEntities();
+    this.sequences.clear();
+    this.generateFirstSequences();
+  }
+
+  generateFirstSequences() {
     if (this.level.options.sequences) {
       for (const colors of this.level.options.sequences) {
         this.set(colors);
@@ -36,12 +52,6 @@ export class SequenceManager extends entity.CompositeEntity {
     } else {
       this.add();
     }
-  }
-
-  _teardown() {
-    this.sequences.clear();
-    this.container.removeChildren();
-    this._entityConfig.container.removeChild(this.container);
   }
 
   private _getSequenceRangeY(): crisprUtil.Range {

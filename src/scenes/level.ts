@@ -468,41 +468,68 @@ export class Level extends entity.CompositeEntity {
 
     // grid rebuild
     {
+      let rebuild = false;
+
+      // todo: make better equal test
       if (this.options.gridShape !== options.gridShape) {
         this.options.gridShape = options.gridShape;
+        rebuild = true;
       }
 
+      // todo: make better equal test
       if (this.options.presetScissors !== options.presetScissors) {
         this.options.presetScissors = options.presetScissors;
+        rebuild = true;
       }
 
-      this.grid.reset();
+      if (rebuild) this.grid.reset();
     }
 
     {
-      if (this.options.sequences) {
+      if (
+        JSON.stringify(this.options.sequences) !==
+        JSON.stringify(options.sequences)
+      ) {
+        this.options.sequences = options.sequences;
+
+        this.sequenceManager.reset();
+      }
+
+      // todo: make better equal test
+      if (this.options.hooks !== options.hooks) {
+        this.options.hooks.forEach((hook) => {
+          this._deactivateChildEntity(hook);
+        });
+
+        this.options.hooks = options.hooks;
+
+        this._initHooks();
+      }
+
+      // todo: make better equal test
+      if (this.options.initialBonuses !== options.initialBonuses) {
+        this.options.initialBonuses = options.initialBonuses;
+
+        this.bonusesManager.reset();
       }
     }
-    /*
-      sequences: nucleotide.ColorName[][] | null;
-      hooks: Hook[];
-      initialBonuses: bonuses.InitialBonuses;
-    */
   }
 
   disablingAnimation(name: string, state: boolean) {
     const oldLength = this.disablingAnimations.size;
     this.disablingAnimations[state ? "add" : "delete"](name);
-    const newLength = this.disablingAnimations.size;
-    if (crisprUtil.debug && oldLength !== newLength) {
-      console.log("disabling animations:", newLength, [
-        ...this.disablingAnimations,
-      ]);
-    } else {
-      console.warn(
-        `useless ${state ? "start" : "end"} of disablingAnimation:`,
-        name
-      );
+    if (crisprUtil.debug) {
+      const newLength = this.disablingAnimations.size;
+      if (oldLength !== newLength) {
+        console.log("disabling animations:", newLength, [
+          ...this.disablingAnimations,
+        ]);
+      } else {
+        console.warn(
+          `useless ${state ? "start" : "end"} of disablingAnimation:`,
+          name
+        );
+      }
     }
   }
 

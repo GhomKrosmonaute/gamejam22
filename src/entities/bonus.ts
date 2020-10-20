@@ -16,7 +16,7 @@ export abstract class Bonus extends entity.CompositeEntity {
   public shakes: anim.ShakesManager;
   public position: PIXI.Point;
 
-  private _count = 0;
+  public _count = 0;
   private _highlight = false;
 
   abstract name: string;
@@ -80,6 +80,16 @@ export abstract class Bonus extends entity.CompositeEntity {
         this.end(true);
       })
     );
+  }
+
+  initListener() {
+    this._on(this.sprite, "pointerup", () => {
+      this.level.bonusesManager.selection(this);
+    });
+  }
+
+  shutdownListener() {
+    this._off(this.sprite);
   }
 }
 
@@ -302,8 +312,8 @@ export type InitialBonuses = InitialBonus[];
 
 export class BonusesManager extends entity.CompositeEntity {
   public container: PIXI.Container;
-  public bonuses: Bonus[] = [];
-  public selected: string;
+  public bonuses = new Set<Bonus>();
+  public selected: Bonus;
   public shakeAmount = 3;
   public wasBonusUsed = false;
   private bonusBackground: PIXI.Sprite;
@@ -378,16 +388,29 @@ export class BonusesManager extends entity.CompositeEntity {
     this.container = null;
   }
 
-  getSelectedBonus(): Bonus | null {
-    return this.bonuses.find((b) => b.name === this.selected);
+  reset() {}
+
+  generateFirstBonuses() {}
+
+  remove(bonus: Bonus): this {
+    if (!this.bonuses.has(bonus)) {
+      return;
+    }
+    this.container.removeChild(bonus.sprite);
+    bonus.shutdownListener();
+    bonus.sprite = null;
+    bonus.shakes = null;
+    bonus._count = 0;
+    this.bonuses.delete(bonus);
+    return this;
   }
 
   add(bonus: Bonus, count = 1): this {
-    if (this.bonuses.includes(bonus)) {
+    if (this.bonuses.has(bonus)) {
       bonus.count += count;
       return;
     }
-    const position = new PIXI.Point(100 + this.bonuses.length * 190, 100);
+    const position = new PIXI.Point(100 + this.bonuses.size * 190, 100);
     const sprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         `images/bonus_${bonus.name}.png`
@@ -408,9 +431,9 @@ export class BonusesManager extends entity.CompositeEntity {
 
     bonus.count = count;
 
-    this._on(bonus.sprite, "pointerup", () => this.selection(bonus));
+    bonus.initListener();
 
-    this.bonuses.push(bonus);
+    this.bonuses.add(bonus);
 
     return this;
   }
@@ -421,7 +444,7 @@ export class BonusesManager extends entity.CompositeEntity {
       return bonus.abort();
     }
 
-    const old = this.getSelectedBonus();
+    const old = this.selected;
     if (old === bonus) {
       this.selected = null;
       return bonus.abort();
@@ -429,7 +452,7 @@ export class BonusesManager extends entity.CompositeEntity {
 
     if (bonus.count <= 0 || this.level.isDisablingAnimationInProgress) return;
 
-    this.selected = bonus.name;
+    this.selected = bonus;
 
     this._activateChildEntity(
       bonus,

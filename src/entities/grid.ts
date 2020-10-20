@@ -87,78 +87,7 @@ export class Grid extends entity.CompositeEntity {
     this.nucleotideContainer.position.set(this.x, this.y);
     this.container.addChild(this.nucleotideContainer);
 
-    this.allNucleotides.length = colCount * rowCount;
-
-    const addNucleotide = (
-      x: number,
-      y: number,
-      color?: nucleotide.ColorName
-    ) => {
-      const n = new nucleotide.Nucleotide(
-        this.level.options.nucleotideRadius,
-        "grid",
-        this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y)),
-        0,
-        color
-      );
-      n.floating.active.x = true;
-      n.floating.active.y = true;
-      n.floating.speed.set(1.4, 2);
-      n.floating.amplitude.set(0.3, 0.3);
-      n.type = "normal";
-      this._activateChildEntity(
-        n,
-        entity.extendConfig({
-          container: this.nucleotideContainer,
-        })
-      );
-      this.allNucleotides[y * colCount + x] = n;
-    };
-
-    const shape = this.level.options.gridShape;
-    if (Array.isArray(shape)) {
-      shape.forEach((row, y) => {
-        if (row)
-          row.forEach((col, x) => {
-            if (col) addNucleotide(x, y, col);
-          });
-      });
-    } else {
-      for (let x = 0; x < colCount; x++) {
-        for (let y = 0; y < rowCount; y++) {
-          if (x % 2 === 0 && y === rowCount - 1) continue;
-
-          // shapes
-          if (shape !== "full") {
-            if (typeof shape === "string") {
-              if (gridShapes[shape](x, y)) continue;
-            } else if (typeof shape === "function") {
-              if (shape(x, y)) continue;
-            }
-          }
-
-          addNucleotide(x, y);
-        }
-      }
-    }
-
-    if (this.level.options.presetScissors) {
-      this.level.options.presetScissors.forEach((row, y) => {
-        if (row)
-          row.forEach((col, x) => {
-            if (col) {
-              const n = this.getNucleotideFromGridPosition(
-                new PIXI.Point(x, y)
-              );
-              n.type = "scissors";
-            }
-          });
-      });
-    }
-
-    this.addScissors(this.nucleotides);
-
-    this.nucleotides.forEach((n) => (n.state = "present"));
+    this.generateShape();
 
     this._on(this, "pointerup", () => {
       if (this.level.options.variant !== "long") {
@@ -185,8 +114,88 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides = [];
   }
 
+  addNucleotide(x: number, y: number, color?: nucleotide.ColorName) {
+    const n = new nucleotide.Nucleotide(
+      this.level.options.nucleotideRadius,
+      "grid",
+      this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y)),
+      0,
+      color
+    );
+    n.floating.active.x = true;
+    n.floating.active.y = true;
+    n.floating.speed.set(1.4, 2);
+    n.floating.amplitude.set(0.3, 0.3);
+    n.type = "normal";
+    this._activateChildEntity(
+      n,
+      entity.extendConfig({
+        container: this.nucleotideContainer,
+      })
+    );
+    this.allNucleotides[y * colCount + x] = n;
+  }
+
+  generateShape() {
+    this.allNucleotides.length = colCount * rowCount;
+
+    // colors and shape
+    const shape = this.level.options.gridShape;
+    if (Array.isArray(shape)) {
+      // preset grid colors and shape
+      shape.forEach((row, y) => {
+        if (row)
+          row.forEach((col, x) => {
+            if (col) this.addNucleotide(x, y, col);
+          });
+      });
+    } else {
+      // preset shape
+      for (let x = 0; x < colCount; x++) {
+        for (let y = 0; y < rowCount; y++) {
+          if (x % 2 === 0 && y === rowCount - 1) continue;
+
+          if (shape !== "full") {
+            if (typeof shape === "string") {
+              if (gridShapes[shape](x, y)) continue;
+            } else if (typeof shape === "function") {
+              if (shape(x, y)) continue;
+            }
+          }
+
+          this.addNucleotide(x, y);
+        }
+      }
+    }
+
+    // preset scissors
+    if (this.level.options.presetScissors) {
+      this.level.options.presetScissors.forEach((row, y) => {
+        if (row)
+          row.forEach((col, x) => {
+            if (col) {
+              const n = this.getNucleotideFromGridPosition(
+                new PIXI.Point(x, y)
+              );
+              n.type = "scissors";
+            }
+          });
+      });
+    }
+
+    // finalize
+    this.addScissors(this.nucleotides);
+    this.nucleotides.forEach((n) => (n.state = "present"));
+  }
+
   reset() {
-    throw new Error("not implemented");
+    this.nucleotides.forEach((n) => {
+      this._deactivateChildEntity(n);
+    });
+
+    this.allNucleotides = [];
+
+    this.generateShape();
   }
 
   private _onPointerDown(e: PIXI.InteractionEvent) {
@@ -197,7 +206,7 @@ export class Grid extends entity.CompositeEntity {
 
     const bonus = this.level.options.disableBonuses
       ? null
-      : this.level.bonusesManager.getSelectedBonus();
+      : this.level.bonusesManager.selected;
 
     if (!bonus || bonus.name === "time") {
       hovered = this.getHovered();
