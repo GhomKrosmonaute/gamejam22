@@ -180,7 +180,7 @@ export class Path extends entity.CompositeEntity {
   crunch() {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.add("path.crunch");
+        this.level.disablingAnimation("path.crunch", true);
 
         if (this.correctlyContainsScissors()) {
           this.level.scissorsWasIncludes = true;
@@ -192,7 +192,7 @@ export class Path extends entity.CompositeEntity {
         waitForAllSteps: true,
         callback: () => {
           this.remove();
-          this.level.disablingAnimations.delete("path.crunch");
+          this.level.disablingAnimation("path.crunch", false);
         },
         onStep: (item, i, src, finish) => {
           const score = item.infected ? 15 : 10;

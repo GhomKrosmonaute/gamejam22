@@ -264,8 +264,9 @@ export class SequenceManager extends entity.CompositeEntity {
 
     this.adjustment = new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.add(
-          "sequence.adjustRelativePositionOfSequences"
+        this.level.disablingAnimation(
+          "sequence.adjustRelativePositionOfSequences",
+          true
         );
       }),
       new entity.ParallelEntity(
@@ -282,8 +283,9 @@ export class SequenceManager extends entity.CompositeEntity {
         })
       ),
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.delete(
-          "sequence.adjustRelativePositionOfSequences"
+        this.level.disablingAnimation(
+          "sequence.adjustRelativePositionOfSequences",
+          false
         );
       }),
     ]);
@@ -388,7 +390,7 @@ export class Sequence extends entity.CompositeEntity {
           this.virus.isSetup && !this.level.disablingAnimations.has("popup"),
       }),
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.add("sequence._initVirus");
+        this.level.disablingAnimation("sequence._initVirus", true);
       }),
       this.virus.come(),
       new entity.FunctionCallEntity(() => this._initNucleotides()),
@@ -396,7 +398,7 @@ export class Sequence extends entity.CompositeEntity {
       new entity.WaitingEntity(1000),
       this.virus.stingOut(),
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.delete("sequence._initVirus");
+        this.level.disablingAnimation("sequence._initVirus", false);
       }),
       // todo: wait the crunch, then leave (if virus is not killed before)
     ]);
@@ -528,7 +530,7 @@ export class Sequence extends entity.CompositeEntity {
 
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.add("sequence.down");
+        this.level.disablingAnimation("sequence.down", true);
         this.level.sequenceWasCrunched = true;
         this.level.crunchedSequenceCount++;
 
@@ -622,7 +624,7 @@ export class Sequence extends entity.CompositeEntity {
         callback: () => {
           const end = () => {
             this.level.sequenceManager.sequences.delete(this);
-            this.level.disablingAnimations.delete("sequence.down");
+            this.level.disablingAnimation("sequence.down", false);
             this.level.emit("sequenceDown");
             this._transition = entity.makeTransition();
           };

@@ -125,7 +125,7 @@ export class SwapBonus extends Bonus {
 
     this.isUpdateDisabled = true;
     this.level.grid.swap(a, b, false);
-    this.level.disablingAnimations.add(this.name);
+    this.level.disablingAnimation(this.name, true);
     this._activateChildEntity(
       anim.swap(
         a,
@@ -142,7 +142,7 @@ export class SwapBonus extends Bonus {
         () => {
           b.bubble(150).catch();
           a.bubble(150)
-            .then(() => this.level.disablingAnimations.delete(this.name))
+            .then(() => this.level.disablingAnimation(this.name, false))
             .catch();
           this.end();
         }
@@ -221,7 +221,7 @@ export class HealBonus extends Bonus {
     this._once(this.level.grid, "drag", (target: nucleotide.Nucleotide) => {
       const stages = [[target], ...this.level.grid.getStarStages(target)];
 
-      this.level.disablingAnimations.add(this.name);
+      this.level.disablingAnimation(this.name, true);
 
       this._activateChildEntity(
         new entity.EntitySequence([
@@ -252,7 +252,7 @@ export class HealBonus extends Bonus {
               Promise.all(promises).then(finish);
             },
             callback: () => {
-              this.level.disablingAnimations.delete(this.name);
+              this.level.disablingAnimation(this.name, false);
               this.end();
             },
           }),
@@ -269,13 +269,13 @@ export class SyringeBonus extends Bonus {
     this.level.sequenceManager.container.buttonMode = true;
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
-      this.level.disablingAnimations.add(this.name);
+      this.level.disablingAnimation(this.name, true);
       this._activateChildEntity(
         new entity.EntitySequence([
           this.level.sequenceManager.removeSequence(true, s),
           new entity.FunctionCallEntity(() => {
             this.level.sequenceManager.add();
-            this.level.disablingAnimations.delete(this.name);
+            this.level.disablingAnimation(this.name, false);
             this.end();
           }),
         ])

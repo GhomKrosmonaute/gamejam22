@@ -289,7 +289,7 @@ export class GoButton extends entity.CompositeEntity {
 
     const context: entity.Entity[] = [
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.add("goButton._onGo");
+        this.level.disablingAnimation("goButton._onGo", true);
       }),
     ];
 
@@ -326,7 +326,7 @@ export class GoButton extends entity.CompositeEntity {
 
     context.push(
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.delete("goButton._onGo");
+        this.level.disablingAnimation("goButton._onGo", false);
       })
     );
 

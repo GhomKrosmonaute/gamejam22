@@ -43,8 +43,6 @@ export interface LevelOptions {
   baseScore: number;
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
   sequenceLength: number | null;
-  colCount: number;
-  rowCount: number;
   scissorCount: number;
   nucleotideRadius: number;
   sequenceNucleotideRadius: number;
@@ -74,8 +72,6 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   gaugeRings: [],
   sequenceLength: null,
   sequences: null,
-  colCount: 7,
-  rowCount: 7,
   scissorCount: 6,
   nucleotideRadius: crisprUtil.width / 13.44,
   sequenceNucleotideRadius: crisprUtil.width * 0.04,
@@ -308,20 +304,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initGrid() {
-    this.grid = new grid.Grid(
-      this.options.colCount,
-      this.options.rowCount,
-      this.options.scissorCount,
-      this.options.nucleotideRadius,
-      this.options.gridShape,
-      this.options.presetScissors
-    );
-    this._on(this.grid, "pointerup", () => {
-      if (this.options.variant !== "long") {
-        const crunch = this.attemptCrunch();
-        if (crunch) this._activateChildEntity(crunch);
-      }
-    });
+    this.grid = new grid.Grid();
     this._activateChildEntity(this.grid, this.config);
   }
 
@@ -398,27 +381,6 @@ export class Level extends entity.CompositeEntity {
     this.refresh();
 
     this.emit("setup");
-
-    if (crisprUtil.debug) {
-      let lastDisablingAnimations = [...this.disablingAnimations];
-      setInterval(() => {
-        if (
-          lastDisablingAnimations.some(
-            (flag) => !this.disablingAnimations.has(flag)
-          ) ||
-          [...this.disablingAnimations].some(
-            (flag) => !lastDisablingAnimations.includes(flag)
-          )
-        ) {
-          lastDisablingAnimations = [...this.disablingAnimations];
-          console.log(
-            "disabling animations:",
-            lastDisablingAnimations.length,
-            ...lastDisablingAnimations
-          );
-        }
-      }, 1);
-    }
   }
 
   _update() {
@@ -504,26 +466,23 @@ export class Level extends entity.CompositeEntity {
       this.score = this.options.baseScore;
     }
 
-    // mock useless properties
-    {
-      const Ahahahaha = (uselessProp: any): any => null;
-      Ahahahaha(options.colCount);
-      Ahahahaha(options.rowCount);
-    }
-
     // grid rebuild
     {
       if (this.options.gridShape !== options.gridShape) {
-        this.options.gridShape = _.clone(options.gridShape);
+        this.options.gridShape = options.gridShape;
       }
 
       if (this.options.presetScissors !== options.presetScissors) {
-        this.options.presetScissors = _.clone(options.presetScissors);
+        this.options.presetScissors = options.presetScissors;
       }
 
       this.grid.reset();
     }
-    // TODO: HERE
+
+    {
+      if (this.options.sequences) {
+      }
+    }
     /*
       sequences: nucleotide.ColorName[][] | null;
       hooks: Hook[];
@@ -531,17 +490,33 @@ export class Level extends entity.CompositeEntity {
     */
   }
 
+  disablingAnimation(name: string, state: boolean) {
+    const oldLength = this.disablingAnimations.size;
+    this.disablingAnimations[state ? "add" : "delete"](name);
+    const newLength = this.disablingAnimations.size;
+    if (crisprUtil.debug && oldLength !== newLength) {
+      console.log("disabling animations:", newLength, [
+        ...this.disablingAnimations,
+      ]);
+    } else {
+      console.warn(
+        `useless ${state ? "start" : "end"} of disablingAnimation:`,
+        name
+      );
+    }
+  }
+
   gameOver() {
     this.failed = true;
     if (this.options.retryOnFail) {
       this._activateChildEntity(new popup.FailedLevelPopup(), this.config);
     } else {
-      this.minimap.setResult(this.name, this.getResults());
+      this.minimap.saveResults(this);
       this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
     }
   }
 
-  getResults(): LevelResults {
+  checkAndReturnsResults(): LevelResults {
     const checks: { [text: string]: boolean } = {};
     let checkCount = 0;
     let checkedCount = 0;
@@ -566,7 +541,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   exit() {
-    this.minimap.setResult(this.name, this.getResults());
+    this.minimap.saveResults(this);
     this._transition = entity.makeTransition();
   }
 
@@ -591,10 +566,10 @@ export class Level extends entity.CompositeEntity {
   }
 
   public endTurn(): entity.EntitySequence {
-    this.disablingAnimations.add("level.endTurn");
+    this.disablingAnimation("level.endTurn", true);
 
     if (this.grid.isGameOver()) {
-      this.disablingAnimations.delete("level.endTurn");
+      this.disablingAnimation("level.endTurn", false);
       this.gameOver();
       return;
     }
@@ -622,7 +597,7 @@ export class Level extends entity.CompositeEntity {
 
     actions.push(
       new entity.FunctionCallEntity(() => {
-        this.disablingAnimations.delete("level.endTurn");
+        this.disablingAnimation("level.endTurn", false);
       })
     );
 
@@ -638,7 +613,7 @@ export class Level extends entity.CompositeEntity {
       return;
     }
 
-    this.disablingAnimations.add("level.attemptCrunch");
+    this.disablingAnimation("level.attemptCrunch", true);
 
     const sequenceCrunch = this.sequenceManager.crunch(this.path);
 
@@ -668,7 +643,7 @@ export class Level extends entity.CompositeEntity {
           this._activateChildEntity(this.regenerate());
         }
 
-        this.disablingAnimations.delete("level.attemptCrunch");
+        this.disablingAnimation("level.attemptCrunch", false);
       })
     );
 
@@ -700,7 +675,7 @@ export class Level extends entity.CompositeEntity {
         requestTransition: () => !this.disablingAnimations.has("path.crunch"),
       }),
       new entity.FunctionCallEntity(() => {
-        this.disablingAnimations.add("level.regenerate");
+        this.disablingAnimation("level.regenerate", true);
         this.grid.fillHoles();
         this.refresh();
       }),
@@ -709,13 +684,13 @@ export class Level extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.refresh();
 
-        this.disablingAnimations.delete("level.regenerate");
+        this.disablingAnimation("level.regenerate", false);
       }),
     ]);
   }
 
   public onInfection(infectionCount = 1): void {
-    this.disablingAnimations.add("level.onInfection");
+    this.disablingAnimation("level.onInfection", true);
 
     if (this.grid.isGameOver()) {
       this.gameOver();
@@ -728,7 +703,7 @@ export class Level extends entity.CompositeEntity {
       new entity.EntitySequence([
         infectionSequence,
         new entity.FunctionCallEntity(() => {
-          this.disablingAnimations.delete("level.onInfection");
+          this.disablingAnimation("level.onInfection", false);
 
           if (this.options.disableExtraSequence) {
             return;

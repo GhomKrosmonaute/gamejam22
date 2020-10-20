@@ -114,7 +114,7 @@ export abstract class Popup extends entity.CompositeEntity {
     }
 
     if (!this.options.minimizeOnSetup) {
-      this.level.disablingAnimations.add("popup");
+      this.level.disablingAnimation("popup", true);
     }
 
     this._activateChildEntity(
@@ -215,7 +215,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
   _teardown() {
     Popup.minimized.delete(this);
-    this.level.disablingAnimations.delete("popup");
+    this.level.disablingAnimation("popup", false);
     this.shaker.removeAllShakes();
     this.body.removeChildren();
     this._container.removeChildren();
@@ -473,13 +473,13 @@ export abstract class Popup extends entity.CompositeEntity {
 
 export class FloatingPopup extends Popup {
   onSetup() {
-    this.level.disablingAnimations.delete("popup");
+    this.level.disablingAnimation("popup", false);
   }
 }
 
 export abstract class ChecksPopup extends Popup {
   protected addCheckRows(): this {
-    const results = this.level.getResults();
+    const results = this.level.checkAndReturnsResults();
 
     for (const text in results.checks) {
       const check = results.checks[text];
@@ -546,7 +546,7 @@ export class FailedLevelPopup extends EndOfLevelPopup {
 
 export class TerminatedLevelPopup extends EndOfLevelPopup {
   onSetup() {
-    const results = this.level.getResults();
+    const results = this.level.checkAndReturnsResults();
 
     // add star-based children
     {

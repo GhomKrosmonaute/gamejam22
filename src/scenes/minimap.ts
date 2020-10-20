@@ -195,12 +195,13 @@ export class Minimap extends entity.CompositeEntity {
     this._transition = entity.makeTransition(levelName);
   }
 
-  public setResult(levelName: levels.LevelName, results: level.LevelResults) {
+  public saveResults(l: level.Level) {
+    const results = l.checkAndReturnsResults();
     let oldResults: level.LevelResults;
-    const data = localStorage.getItem(levelName);
+    const data = localStorage.getItem(l.name);
     if (data) oldResults = JSON.parse(data);
     if (!oldResults || oldResults.checkedCount < results.checkedCount) {
-      localStorage.setItem(levelName, JSON.stringify(results));
+      localStorage.setItem(l.name, JSON.stringify(results));
     }
   }
 }
