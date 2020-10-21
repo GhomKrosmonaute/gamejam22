@@ -23,6 +23,8 @@ export function makeCross(radius: number): PIXI.Graphics {
 }
 
 export interface PopupOptions {
+  id: string;
+  coolDown: number;
   logo: string;
   logoSize: number;
   from: PIXI.Point;
@@ -41,6 +43,8 @@ export interface PopupOptions {
 }
 
 export const defaultPopupOptions: PopupOptions = {
+  id: null,
+  coolDown: null,
   logo: "",
   logoSize: 150,
   from: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
@@ -70,12 +74,12 @@ export abstract class Popup extends entity.CompositeEntity {
 
   public _container: PIXI.Container;
 
+  private _setupAt: number;
   private _width: number;
   private _height: number;
 
   private _artificialHeight: number;
 
-  public shaker: anim.ShakesManager;
   public cross?: PIXI.Graphics;
   public body: PIXI.Container;
   public background?: PIXI.Graphics;
@@ -91,6 +95,7 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   _setup() {
+    this._setupAt = Date.now();
     this.minimized = false;
     this._artificialHeight = 0;
 
@@ -101,9 +106,6 @@ export abstract class Popup extends entity.CompositeEntity {
     this.body = new PIXI.Container();
 
     this._container.addChild(this.body);
-
-    this.shaker = new anim.ShakesManager(this.body);
-    this._activateChildEntity(this.shaker);
 
     this._width = this.options.width;
     this._height = this.options.adjustHeight ? 0 : this.options.height;
@@ -167,8 +169,17 @@ export abstract class Popup extends entity.CompositeEntity {
           // closure cross
           if (this.options.withClosureCross) {
             this.cross = makeCross(50);
+            this.cross.visible = false;
             this.cross.position.set(this.width - 150, 75);
             this.button(this.cross, this.defaultClosure);
+            this._activateChildEntity(
+              new entity.EntitySequence([
+                new entity.WaitingEntity(this.options.coolDown ?? 0),
+                new entity.FunctionCallEntity(() => {
+                  this.cross.visible = true;
+                }),
+              ])
+            );
           }
 
           // unicode logo
@@ -212,7 +223,6 @@ export abstract class Popup extends entity.CompositeEntity {
 
   _teardown() {
     this.level.disablingAnimation(this.id, false);
-    Popup.minimized.delete(this);
     this.body.removeChildren();
     this._container.removeChildren();
     this._entityConfig.container.removeChild(this._container);
@@ -226,9 +236,12 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   get id(): string {
-    return Popup.minimized.has(this)
-      ? "popup_" + [...Popup.minimized].indexOf(this)
-      : "popup";
+    return (
+      this.options.id ||
+      (Popup.minimized.has(this)
+        ? "popup_" + [...Popup.minimized].indexOf(this)
+        : "popup")
+    );
   }
 
   get level(): level.Level {
@@ -282,6 +295,11 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   defaultClosure = () => {
+    if (
+      this.options.coolDown &&
+      Date.now() < this._setupAt + this.options.coolDown
+    )
+      return;
     if (this.options.minimizeOnClose) this.minimize();
     else this.close();
   };
@@ -695,6 +713,7 @@ export class TutorialPopup extends Popup {
       title: string;
       content: string;
       image?: string;
+      imageHeight?: number;
       popupOptions?: Partial<PopupOptions>;
     }
   ) {
@@ -744,11 +763,21 @@ export class TutorialPopup extends Popup {
     if (this._options.image) {
       const sprite =
         this.image instanceof PIXI.Sprite ? this.image : this.image.sprite;
+
       sprite.anchor.set(0.5);
-      const ratioWH = sprite.height / sprite.width;
-      sprite.width = this.width / 3;
-      sprite.height = sprite.width * ratioWH;
+
+      if (this._options.imageHeight) {
+        const ratio = sprite.width / sprite.height;
+        sprite.height = this._options.imageHeight;
+        sprite.width = sprite.height * ratio;
+      } else {
+        const ratio = sprite.height / sprite.width;
+        sprite.width = this.width / 3;
+        sprite.height = sprite.width * ratio;
+      }
+
       sprite.position.set(this.center.x, sprite.height / 2 + 50);
+
       this.addRow(sprite, sprite.height + 100);
     }
   }

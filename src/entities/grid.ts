@@ -62,6 +62,12 @@ export class Grid extends entity.CompositeEntity {
   public cursor = new PIXI.Point();
   public lastHovered: nucleotide.Nucleotide | null;
 
+  constructor() {
+    super();
+    // @ts-ignore
+    window.grid = this;
+  }
+
   get level(): level.Level {
     return this._entityConfig.level;
   }
@@ -112,6 +118,24 @@ export class Grid extends entity.CompositeEntity {
     this.container = null;
 
     this.allNucleotides = [];
+  }
+
+  get shape(): (nucleotide.ColorName | "s")[][] {
+    const shape: (nucleotide.ColorName | "s")[][] = [];
+    for (let y = 0; y < colCount; y++) {
+      shape.push([]);
+      for (let x = 0; x < rowCount; x++) {
+        const n = this.getNucleotideFromGridPosition(new PIXI.Point(x, y));
+        if (n) {
+          if (n.type === "normal") {
+            shape[y][x] = n.colorName;
+          } else {
+            shape[y][x] = "s";
+          }
+        }
+      }
+    }
+    return shape;
   }
 
   addNucleotide(x: number, y: number, color?: nucleotide.ColorName) {

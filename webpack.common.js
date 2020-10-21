@@ -90,6 +90,7 @@ module.exports = {
     //copy html to dist and insert the js reference.
     new HtmlPlugin({
       file: path.join(__dirname, "dist", "index.html"),
+      favicon: "./images/cellule.png",
       template: "./index.html",
       templateParameters: {
         date: new Date(),

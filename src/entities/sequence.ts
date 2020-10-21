@@ -421,6 +421,7 @@ export class Sequence extends entity.CompositeEntity {
       this.virus.stingOut(),
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("sequence._initVirus", false);
+        this.level.emit("injectedSequence", this);
       }),
       // todo: wait the crunch, then leave (if virus is not killed before)
     ]);

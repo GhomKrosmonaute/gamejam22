@@ -27,6 +27,7 @@ export interface LevelResults {
 }
 
 export interface LevelOptions {
+  disablingAnimations: string[];
   disableExtraSequence: boolean;
   disableBonuses: boolean;
   disableButton: boolean;
@@ -60,6 +61,7 @@ export interface LevelOptions {
 }
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
+  disablingAnimations: [],
   disableExtraSequence: false,
   disableBonuses: false,
   disableButton: false,
@@ -103,7 +105,7 @@ export type LevelEventParams<
 > = LevelEvents[EventName];
 
 export interface HookOptions<Entity, EventName extends LevelEventName> {
-  id?: string;
+  id: string;
   event: EventName;
   /** Filter function, trigger hook if it returns `true` */
   filter?: (...params: LevelEventParams<EventName>) => boolean | void;
@@ -117,7 +119,7 @@ export class Hook<
   Entity extends entity.Entity = entity.Entity,
   EventName extends LevelEventName = LevelEventName
 > extends entity.CompositeEntity {
-  constructor(private options: HookOptions<Entity, EventName>) {
+  constructor(public readonly options: HookOptions<Entity, EventName>) {
     super();
   }
 
@@ -129,56 +131,61 @@ export class Hook<
     this[this.options.once ? "_once" : "_on"](
       this.level,
       this.options.event,
-      (...params) => {
-        if (
-          !this.options.filter ||
-          this.options.filter.bind(this.level)(...params)
-        ) {
-          if (this.options.reset) {
-            // get new options
-            const newOptions =
-              typeof this.options.reset === "function"
-                ? this.options.reset(this.level)
-                : this.options.reset;
+      this.listener.bind(this)
+    );
+    if (crisprUtil.debug) {
+      console.log("hook setup:", this.options.id);
+    }
+  }
 
-            if (crisprUtil.debug) {
-              console.log(
-                "--> HOOK activated options.reset:",
-                this.options.id,
-                "on",
-                this.options.event,
-                newOptions
-              );
-            }
+  protected _teardown() {
+    if (crisprUtil.debug) {
+      console.log("hook teardown:", this.options.id);
+    }
+  }
 
-            this.level.reset({
-              ...this.level.options,
-              hooks: [],
-              ...newOptions,
-            });
+  private listener(...params: any[]) {
+    if (!this.isSetup) {
+      console.error("Error: hook listener must be deleted!");
+      return;
+    }
 
-            if (crisprUtil.debug) {
-              console.log(
-                "--> HOOK applied options.reset:",
-                this.options.id,
-                "on",
-                this.options.event
-              );
-            }
-          } else if (this.options.entity) {
-            this._activateChildEntity(this.options.entity, this.level.config);
-            if (crisprUtil.debug) {
-              console.log(
-                "--> HOOK activated options.entity:",
-                this.options.id,
-                "on",
-                this.options.event
-              );
-            }
-          }
+    if (
+      !this.options.filter ||
+      this.options.filter.bind(this.level)(...params)
+    ) {
+      this.level.triggeredHooks.add(this.options.id);
+
+      if (this.options.reset) {
+        if (crisprUtil.debug) {
+          console.log("hook reset:", this.options.id);
+        }
+        // get new options
+        const newOptions =
+          typeof this.options.reset === "function"
+            ? this.options.reset(this.level)
+            : this.options.reset;
+
+        this.level.reset({
+          ...this.level.options,
+          hooks: [],
+          ...newOptions,
+        });
+      } else if (this.options.entity) {
+        if (crisprUtil.debug) {
+          console.log("hook activate:", this.options.id, this.options.entity);
+        }
+        if (this.options.entity instanceof popup.Popup) {
+          this.level.activate(this.options.entity);
+        } else {
+          this._activateChildEntity(this.options.entity);
+        }
+      } else {
+        if (crisprUtil.debug) {
+          console.error("hook called but not triggered:", this.options.id);
         }
       }
-    );
+    }
   }
 }
 
@@ -194,6 +201,7 @@ export interface LevelEvents {
   scoreUpdated: [score: number];
   clickedBonus: [bonus: bonuses.Bonus];
   maxScoreReached: [];
+  injectedSequence: [sequence.Sequence];
   clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
   activatedChildEntity: [entity: entity.Entity];
   deactivatedChildEntity: [entity: entity.Entity];
@@ -208,6 +216,7 @@ export class Level extends entity.CompositeEntity {
    * **Flag accessor**: `<Level>.isDisablingAnimationInProgress`
    */
   public disablingAnimations: Set<string> = new Set();
+  public triggeredHooks: Set<string> = new Set();
   public fallingStopped = false;
   public container = new PIXI.Container();
   public sequenceManager: sequence.SequenceManager;
@@ -276,6 +285,11 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initHooks() {
+    if (crisprUtil.debug)
+      console.log(
+        "hooks to init",
+        this.options.hooks.map((h) => h.options.id)
+      );
     this.options.hooks.forEach((hook) => {
       this._activateChildEntity(hook, this.config);
     });
@@ -370,6 +384,12 @@ export class Level extends entity.CompositeEntity {
     this.gauge = null;
   }
 
+  private _initDisablingAnimations() {
+    this.options.disablingAnimations.forEach((id) => {
+      this.disablingAnimation(id, true);
+    });
+  }
+
   _setup() {
     this.container.sortableChildren = true;
     this._entityConfig.level = this;
@@ -381,6 +401,7 @@ export class Level extends entity.CompositeEntity {
       }
     });
 
+    this._initDisablingAnimations();
     this._initBackground();
     this._initForeground();
     this._initHooks();
@@ -445,11 +466,14 @@ export class Level extends entity.CompositeEntity {
         "nucleotideRadius",
         "sequenceNucleotideRadius",
         "forceMatching",
+        "disablingAnimations",
       ].forEach((prop) => {
         // @ts-ignore
         this.options[prop] = options[prop];
       });
     }
+
+    this._initDisablingAnimations();
 
     // manage components switches
     {
@@ -497,31 +521,39 @@ export class Level extends entity.CompositeEntity {
 
     // Hooks
     {
+      if (crisprUtil.debug) {
+        console.log(
+          "hooks to deactivate",
+          this.options.hooks.map((h) => h.options.id)
+        );
+      }
       this.options.hooks.forEach((hook) => {
         this._deactivateChildEntity(hook);
       });
 
       // place minimizable popups in hook and hook in level hooks
-      {
-        const popups = new entity.EntitySequence(
-          [...popup.Popup.minimized].filter((p) => {
-            if (p.options.keepOnReset) {
-              p.options.minimizeOnSetup = true;
-              return true;
-            }
-            return false;
-          })
-        );
+      // {
+      //   const popups = new entity.EntitySequence(
+      //     [...popup.Popup.minimized].filter((p) => {
+      //       if (p.options.keepOnReset) {
+      //         p.options.minimizeOnSetup = true;
+      //         return true;
+      //       }
+      //       return false;
+      //     })
+      //   );
+      //
+      //   const temporaryHook = new Hook({
+      //     id: "adding kept popups",
+      //     once: true,
+      //     event: "init",
+      //     entity: popups,
+      //   });
+      //
+      //   this.options.hooks = [temporaryHook, ...options.hooks.slice(0)];
+      // }
 
-        const temporaryHook = new Hook({
-          id: "adding kept popups",
-          once: true,
-          event: "init",
-          entity: popups,
-        });
-
-        this.options.hooks = [temporaryHook, ...options.hooks.slice(0)];
-      }
+      this.options.hooks = options.hooks.slice(0);
 
       this._initHooks();
     }
