@@ -186,7 +186,7 @@ export const levels = {
             content:
               "As the CRISPR Designer, it’s your job to create a matching CRISPR sequence.",
             popupOptions: {
-              id: "step 1.2",
+              id: "popup step 1.2",
               minimizeOnClose: false,
               coolDown: 2000,
             },
@@ -195,7 +195,7 @@ export const levels = {
         new level.Hook({
           id: "step 1 => step 2",
           event: "closedPopup",
-          filter: (p) => p.id === "step 1.2",
+          filter: (p) => p.id === "popup step 1.2",
           reset: (context) => ({
             resetGrid: true,
             resetSequences: false,
@@ -221,7 +221,7 @@ export const levels = {
                         content:
                           "Go ahead and draw on the grid to match the virus DNA",
                         popupOptions: {
-                          id: "step 2",
+                          id: "popup step 2",
                           minimizeOnClose: false,
                           coolDown: 2000,
                         },
@@ -233,7 +233,7 @@ export const levels = {
               new level.Hook({
                 id: "step 2.1",
                 event: "closedPopup",
-                filter: (p) => p.id === "step 2",
+                filter: (p) => p.id === "popup step 2",
                 entity: new entity.FunctionCallEntity(() => {
                   context.disablingAnimation("tutorial", false);
                 }),
@@ -292,7 +292,7 @@ export const levels = {
                             entity: new popup.TutorialPopup({
                               title: "Skip button",
                               content:
-                                "If you no longer have a solution, click on the Skip button ... But beware of infection!",
+                                "Sometimes you’ll get stuck, and you can’t make a matching sequence.\n\nIn that case, press the skip button.",
                               popupOptions: {
                                 coolDown: 2000,
                               },
@@ -310,10 +310,10 @@ export const levels = {
                                   new popup.TutorialPopup({
                                     title: "Infection",
                                     content:
-                                      "For each skipped turn, certain nucleotides are infected.\n\nIf you pass your turn when all the nucleotides are already infected, you fail the game.",
+                                      "When you skip, parts of your grid will get infected.\n\nIf the entire grid gets infected, it’s game over.\n\nBut you can “clean up” the infection by using the infected DNA in a sequence.",
                                     image: "images/infection_red.png",
                                     popupOptions: {
-                                      id: "step 4.1",
+                                      id: "popup step 4.1",
                                       logo: "🦠",
                                       coolDown: 2000,
                                     },
@@ -325,7 +325,7 @@ export const levels = {
                           new level.Hook({
                             id: "step 4 => step 5",
                             event: "minimizedPopup",
-                            filter: (p) => p.id === "step 4.1",
+                            filter: (p) => p.id === "popup step 4.1",
                             reset: {
                               gridShape: "medium",
                               resetGrid: true,
@@ -347,8 +347,9 @@ export const levels = {
                                     new entity.FunctionCallEntity(() => {
                                       context.activate(
                                         new popup.TutorialPopup({
-                                          title: "Survive!",
-                                          content: "Reach 200 pts.",
+                                          title: "Nice work!",
+                                          content:
+                                            "You get points for each sequence you match. The longer the sequence, the more points.\n\nNow try to make 200 points.",
                                           popupOptions: {
                                             minimizeOnClose: false,
                                             coolDown: 1000,

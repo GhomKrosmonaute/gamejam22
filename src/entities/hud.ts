@@ -284,6 +284,7 @@ export class GoButton extends entity.CompositeEntity {
         return this.level.attemptCrunch();
       }
     } else if (this.level.path.items.length > 0) {
+      this._activateChildEntity(anim.tweenShaking(this.sprite, 300, 6));
       return;
     }
 

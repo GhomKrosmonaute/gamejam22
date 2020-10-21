@@ -181,7 +181,9 @@ export abstract class Popup extends entity.CompositeEntity {
                   interpolate: tween.interpolation.point,
                 }),
                 new entity.EntitySequence([
-                  new entity.WaitingEntity(this.options.coolDown ?? 0),
+                  new entity.WaitingEntity(
+                    crisprUtil.debug ? 0 : this.options.coolDown ?? 0
+                  ),
                   new entity.FunctionCallEntity(() => {
                     // use transparent background as closure button
                     if (this.options.closeOnBackgroundClick) {
@@ -306,6 +308,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
   defaultClosure = () => {
     if (
+      !crisprUtil.debug &&
       this.options.coolDown &&
       Date.now() < this._setupAt + this.options.coolDown
     )

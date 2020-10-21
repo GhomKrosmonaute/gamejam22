@@ -617,6 +617,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   addScore(score: number) {
+    if (this.options.disableScore) return;
     if (this.score === this.options.maxScore) {
       return;
     } else if (this.score + score >= this.options.maxScore) {
@@ -654,17 +655,19 @@ export class Level extends entity.CompositeEntity {
       actions.push(infectionSequence);
     }
 
-    if (countSequences < this.sequenceManager.sequenceCountLimit) {
-      actions.push(
-        new entity.FunctionCallEntity(() => {
-          if (this.options.disableExtraSequence) {
-            return;
-          }
+    actions.push(
+      new entity.FunctionCallEntity(() => {
+        this.sequenceManager.add();
+      })
+    );
 
-          this.sequenceManager.add();
-        })
-      );
-    }
+    // if (countSequences < this.sequenceManager.sequenceCountLimit) {
+    //   actions.push(
+    //     new entity.FunctionCallEntity(() => {
+    //       this.sequenceManager.add();
+    //     })
+    //   );
+    // }
 
     actions.push(
       new entity.FunctionCallEntity(() => {
@@ -703,7 +706,7 @@ export class Level extends entity.CompositeEntity {
     const first = [...this.sequenceManager.sequences][0];
 
     if (this.options.variant === "long" && first && first.maxActiveLength < 3) {
-      context.push(first.down(true));
+      context.push(first.down(!this.options.disableScore));
     }
 
     context.push(

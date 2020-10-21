@@ -260,7 +260,7 @@ export class SequenceManager extends entity.CompositeEntity {
           new entity.FunctionCallEntity(() => {
             this.emit("crunch", s);
           }),
-          this.removeSequence(true, s)
+          this.removeSequence(!this.level.options.disableScore, s)
         );
       }
     }

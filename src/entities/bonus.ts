@@ -283,7 +283,10 @@ export class SyringeBonus extends Bonus {
       this.level.disablingAnimation(this.name, true);
       this._activateChildEntity(
         new entity.EntitySequence([
-          this.level.sequenceManager.removeSequence(true, s),
+          this.level.sequenceManager.removeSequence(
+            !this.level.options.disableScore,
+            s
+          ),
           new entity.FunctionCallEntity(() => {
             this.level.sequenceManager.add();
             this.level.disablingAnimation(this.name, false);

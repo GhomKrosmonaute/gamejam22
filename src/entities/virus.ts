@@ -106,6 +106,11 @@ export class Virus extends entity.CompositeEntity {
         // todo: use death animation
       }),
       this.leave(),
+      new entity.FunctionCallEntity(() => {
+        if (this.level.sequenceManager.sequenceCount === 0) {
+          this.level.sequenceManager.add();
+        }
+      }),
     ]);
   }
 

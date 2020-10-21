@@ -212,23 +212,25 @@ export class Path extends entity.CompositeEntity {
             )
           );
 
-          this._activateChildEntity(
-            anim.textFade(
-              this.level.grid.nucleotideContainer,
-              new PIXI.Text(`+ ${score}`, {
-                fill,
-                stroke,
-                strokeThickness: 10,
-                fontSize: 90 + score * 4,
-                fontFamily: "Cardenio Modern Bold",
-                dropShadow: true,
-                dropShadowBlur: 10,
-              }),
-              500,
-              item.position.clone(),
-              "up"
-            )
-          );
+          if (!this.level.options.disableScore) {
+            this._activateChildEntity(
+              anim.textFade(
+                this.level.grid.nucleotideContainer,
+                new PIXI.Text(`+ ${score}`, {
+                  fill,
+                  stroke,
+                  strokeThickness: 10,
+                  fontSize: 90 + score * 4,
+                  fontFamily: "Cardenio Modern Bold",
+                  dropShadow: true,
+                  dropShadowBlur: 10,
+                }),
+                500,
+                item.position.clone(),
+                "up"
+              )
+            );
+          }
         },
       }),
     ]);
