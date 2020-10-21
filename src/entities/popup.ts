@@ -28,7 +28,6 @@ export interface PopupOptions {
   logo: string;
   logoSize: number;
   from: PIXI.Point;
-  keepOnReset: boolean;
   minimizeOnSetup: boolean;
   minimizeOnClose: boolean;
   withBackground: boolean;
@@ -48,7 +47,6 @@ export const defaultPopupOptions: PopupOptions = {
   logo: "",
   logoSize: 150,
   from: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
-  keepOnReset: false,
   minimizeOnSetup: false,
   minimizeOnClose: false,
   withBackground: false,
@@ -129,29 +127,6 @@ export abstract class Popup extends entity.CompositeEntity {
           },
         }),
         new entity.FunctionCallEntity(() => {
-          // use transparent background as closure button
-          if (this.options.closeOnBackgroundClick) {
-            this.background = new PIXI.Graphics();
-            this.background
-              .beginFill(0x000000, 0.00001)
-              .drawRect(
-                crisprUtil.width * -0.5,
-                crisprUtil.height * -0.5,
-                crisprUtil.width,
-                crisprUtil.height
-              )
-              .endFill();
-
-            this.button(this.background, this.defaultClosure);
-
-            this._container.addChildAt(this.background, 0);
-          }
-
-          // close on body click
-          if (this.options.closeOnBodyClick) {
-            this.button(this.body, this.defaultClosure);
-          }
-
           // background of body
           if (this.options.withBackground) {
             this.bodyBackground = new PIXI.Sprite(
@@ -172,14 +147,6 @@ export abstract class Popup extends entity.CompositeEntity {
             this.cross.visible = false;
             this.cross.position.set(this.width - 150, 75);
             this.button(this.cross, this.defaultClosure);
-            this._activateChildEntity(
-              new entity.EntitySequence([
-                new entity.WaitingEntity(this.options.coolDown ?? 0),
-                new entity.FunctionCallEntity(() => {
-                  this.cross.visible = true;
-                }),
-              ])
-            );
           }
 
           // unicode logo
@@ -213,6 +180,49 @@ export abstract class Popup extends entity.CompositeEntity {
                   easing: easing.easeOutBack,
                   interpolate: tween.interpolation.point,
                 }),
+                new entity.EntitySequence([
+                  new entity.WaitingEntity(this.options.coolDown ?? 0),
+                  new entity.FunctionCallEntity(() => {
+                    // use transparent background as closure button
+                    if (this.options.closeOnBackgroundClick) {
+                      this.background = new PIXI.Graphics();
+                      this.background
+                        .beginFill(0x000000, 0.00001)
+                        .drawRect(
+                          crisprUtil.width * -0.5,
+                          crisprUtil.height * -0.5,
+                          crisprUtil.width,
+                          crisprUtil.height
+                        )
+                        .endFill();
+
+                      this.button(this.background, this.defaultClosure);
+
+                      this._container.addChildAt(this.background, 0);
+                    }
+
+                    // close on body click
+                    if (this.options.closeOnBodyClick) {
+                      this.button(this.body, this.defaultClosure);
+                    }
+
+                    if (this.options.withClosureCross) {
+                      this.cross.scale.set(0);
+                      this.cross.visible = true;
+                      this._activateChildEntity(
+                        new tween.Tween({
+                          from: 0,
+                          to: 1,
+                          duration: 300,
+                          easing: easing.easeOutBack,
+                          onUpdate: (value) => {
+                            this.cross.scale.set(value);
+                          },
+                        })
+                      );
+                    }
+                  }),
+                ]),
               ])
             );
           }
@@ -722,7 +732,6 @@ export class TutorialPopup extends Popup {
       withBackground: true,
       closeOnBackgroundClick: true,
       adjustHeight: true,
-      keepOnReset: true,
       logo: "🧬",
       ...(_options.popupOptions ?? {}),
     });

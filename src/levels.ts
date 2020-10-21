@@ -156,8 +156,9 @@ export const levels = {
       checks: {
         "Crunch a sequence": (level) => level.sequenceWasCrunched,
         "Includes scissors": (level) =>
-          level.triggeredHooks.has("step 2 done, reset"),
-        "Surviving infection": (level) => !level.failed,
+          level.triggeredHooks.has("step 3 => step 4"),
+        "Surviving infection": (level) =>
+          level.triggeredHooks.has("end") && !level.failed,
       },
       hooks: [
         new level.Hook({
@@ -236,6 +237,146 @@ export const levels = {
                 entity: new entity.FunctionCallEntity(() => {
                   context.disablingAnimation("tutorial", false);
                 }),
+              }),
+              new level.Hook({
+                id: "step 2 => step 3",
+                event: "sequenceDown",
+                reset: {
+                  gridShape: "mini",
+                  resetGrid: true,
+                  resetSequences: true,
+                  forceMatching: true,
+                  scissorCount: 1,
+                  sequenceLength: 4,
+                  hooks: [
+                    new level.Hook({
+                      id: "step 3",
+                      event: "init",
+                      once: true,
+                      entity: new popup.TutorialPopup({
+                        title: "Scissors",
+                        content:
+                          "To destroy the virus DNA, you’ll need to include the CRISPR scissors in your sequence.\n\n" +
+                          "The scissors have to be somewhere in the middle of the sequence,  not at the beginning or end.",
+                        image: "images/scissors.json",
+                        popupOptions: {
+                          logo: "✂️",
+                          coolDown: 2000,
+                        },
+                      }),
+                    }),
+                    new level.Hook({
+                      id: "step 3 => step 4",
+                      event: "sequenceDown",
+                      reset: (context) => ({
+                        resetGrid: true,
+                        resetSequences: true,
+                        gridShape: [
+                          null,
+                          [null, null, "y", "y", "b"],
+                          [null, "b", "y", "b", "y", "b"],
+                          [null, "b", "y", "y", "b", "b"],
+                          [null, "y", "b", "b", "y", "b"],
+                          [null, null, null, "y"],
+                        ],
+                        sequences: [["g", "r", "g", "r", "r"]],
+                        scissorCount: 3,
+                        sequenceLength: 6,
+                        disableButton: false,
+                        disableExtraSequence: true,
+                        hooks: [
+                          new level.Hook({
+                            id: "step 4",
+                            event: "init",
+                            once: true,
+                            entity: new popup.TutorialPopup({
+                              title: "Skip button",
+                              content:
+                                "If you no longer have a solution, click on the Skip button ... But beware of infection!",
+                              popupOptions: {
+                                coolDown: 2000,
+                              },
+                            }),
+                          }),
+                          new level.Hook({
+                            id: "step 4.1",
+                            event: "infected",
+                            once: true,
+                            entity: new entity.EntitySequence([
+                              new entity.WaitingEntity(1500),
+                              new entity.FunctionCallEntity(() => {
+                                context.disablingAnimation("tutorial", true);
+                                context.activate(
+                                  new popup.TutorialPopup({
+                                    title: "Infection",
+                                    content:
+                                      "For each skipped turn, certain nucleotides are infected.\n\nIf you pass your turn when all the nucleotides are already infected, you fail the game.",
+                                    image: "images/infection_red.png",
+                                    popupOptions: {
+                                      id: "step 4.1",
+                                      logo: "🦠",
+                                      coolDown: 2000,
+                                    },
+                                  })
+                                );
+                              }),
+                            ]),
+                          }),
+                          new level.Hook({
+                            id: "step 4 => step 5",
+                            event: "minimizedPopup",
+                            filter: (p) => p.id === "step 4.1",
+                            reset: {
+                              gridShape: "medium",
+                              resetGrid: true,
+                              resetScore: true,
+                              resetSequences: true,
+                              disableExtraSequence: false,
+                              sequenceLength: 5,
+                              scissorCount: 4,
+                              disableScore: false,
+                              disableGauge: false,
+                              maxScore: 200,
+                              hooks: [
+                                new level.Hook({
+                                  id: "step 5",
+                                  once: true,
+                                  event: "init",
+                                  entity: new entity.EntitySequence([
+                                    new entity.WaitingEntity(1500),
+                                    new entity.FunctionCallEntity(() => {
+                                      context.activate(
+                                        new popup.TutorialPopup({
+                                          title: "Survive!",
+                                          content: "Reach 200 pts.",
+                                          popupOptions: {
+                                            minimizeOnClose: false,
+                                            coolDown: 1000,
+                                            onClose: () => {
+                                              context.disablingAnimation(
+                                                "tutorial",
+                                                false
+                                              );
+                                            },
+                                          },
+                                        })
+                                      );
+                                    }),
+                                  ]),
+                                }),
+                                new level.Hook({
+                                  id: "end",
+                                  event: "maxScoreReached",
+                                  entity: new popup.TerminatedLevelPopup(),
+                                }),
+                              ],
+                            },
+                          }),
+                        ],
+                      }),
+                    }),
+                  ],
+                },
               }),
             ],
           }),

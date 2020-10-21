@@ -160,15 +160,29 @@ export class Hook<
         if (crisprUtil.debug) {
           console.log("hook reset:", this.options.id);
         }
+
         // get new options
         const newOptions =
           typeof this.options.reset === "function"
             ? this.options.reset(this.level)
             : this.options.reset;
 
+        // set auto-reset option
+        const resetOptions: Partial<LevelOptions> = {
+          hooks: [],
+          sequences: null,
+          disablingAnimations: [],
+          resetGrid: false,
+          resetScore: false,
+          resetBonuses: false,
+          resetSequences: false,
+          forceMatching: false,
+        };
+
+        // apply changes
         this.level.reset({
           ...this.level.options,
-          hooks: [],
+          ...resetOptions,
           ...newOptions,
         });
       } else if (this.options.entity) {
@@ -530,28 +544,6 @@ export class Level extends entity.CompositeEntity {
       this.options.hooks.forEach((hook) => {
         this._deactivateChildEntity(hook);
       });
-
-      // place minimizable popups in hook and hook in level hooks
-      // {
-      //   const popups = new entity.EntitySequence(
-      //     [...popup.Popup.minimized].filter((p) => {
-      //       if (p.options.keepOnReset) {
-      //         p.options.minimizeOnSetup = true;
-      //         return true;
-      //       }
-      //       return false;
-      //     })
-      //   );
-      //
-      //   const temporaryHook = new Hook({
-      //     id: "adding kept popups",
-      //     once: true,
-      //     event: "init",
-      //     entity: popups,
-      //   });
-      //
-      //   this.options.hooks = [temporaryHook, ...options.hooks.slice(0)];
-      // }
 
       this.options.hooks = options.hooks.slice(0);
 
