@@ -53,7 +53,7 @@ export const gridShapes: { [k: string]: GridArrowShape } = {
  *
  */
 export class Grid extends entity.CompositeEntity {
-  public container: PIXI.Container;
+  public container: PIXI.Graphics;
   public allNucleotides: nucleotide.Nucleotide[] = [];
   public nucleotideContainer: PIXI.Container;
   public x = crisprUtil.width * 0.09;
@@ -73,7 +73,11 @@ export class Grid extends entity.CompositeEntity {
   }
 
   _setup() {
-    this.container = new PIXI.Container();
+    this.container = new PIXI.Graphics();
+    this.container
+      .beginFill(0x000000, 0.001)
+      .drawRect(0, 0, crisprUtil.width, crisprUtil.height)
+      .endFill();
     this.container.interactive = true;
 
     // Keep track of last pointer position

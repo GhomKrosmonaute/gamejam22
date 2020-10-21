@@ -618,6 +618,7 @@ export class Level extends entity.CompositeEntity {
 
   addScore(score: number) {
     if (this.options.disableScore) return;
+
     if (this.score === this.options.maxScore) {
       return;
     } else if (this.score + score >= this.options.maxScore) {
@@ -626,6 +627,7 @@ export class Level extends entity.CompositeEntity {
     } else {
       this.score += score;
     }
+
     this.emit("scoreUpdated", score);
 
     if (!this.options.disableGauge) {
@@ -776,12 +778,6 @@ export class Level extends entity.CompositeEntity {
         infectionSequence,
         new entity.FunctionCallEntity(() => {
           this.disablingAnimation("level.onInfection", false);
-
-          if (this.options.disableExtraSequence) {
-            return;
-          }
-
-          this.sequenceManager.add();
         }),
       ])
     );
