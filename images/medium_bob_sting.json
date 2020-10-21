@@ -1,0 +1,695 @@
+{"frames": {
+
+"Bob_sting_01.png":
+{
+	"frame": {"x":1830,"y":182,"w":179,"h":177},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":29,"w":179,"h":177},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_02.png":
+{
+	"frame": {"x":1830,"y":182,"w":179,"h":177},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":29,"w":179,"h":177},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_03.png":
+{
+	"frame": {"x":1830,"y":182,"w":179,"h":177},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":29,"w":179,"h":177},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_04.png":
+{
+	"frame": {"x":1830,"y":182,"w":179,"h":177},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":29,"w":179,"h":177},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_05.png":
+{
+	"frame": {"x":1830,"y":182,"w":179,"h":177},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":29,"w":179,"h":177},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_06.png":
+{
+	"frame": {"x":1830,"y":182,"w":179,"h":177},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":29,"w":179,"h":177},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_07.png":
+{
+	"frame": {"x":737,"y":183,"w":179,"h":174},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":32,"w":179,"h":174},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_08.png":
+{
+	"frame": {"x":737,"y":183,"w":179,"h":174},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":32,"w":179,"h":174},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_09.png":
+{
+	"frame": {"x":918,"y":183,"w":179,"h":173},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":33,"w":179,"h":173},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_10.png":
+{
+	"frame": {"x":918,"y":183,"w":179,"h":173},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":33,"w":179,"h":173},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_11.png":
+{
+	"frame": {"x":918,"y":183,"w":179,"h":173},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":33,"w":179,"h":173},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_12.png":
+{
+	"frame": {"x":918,"y":183,"w":179,"h":173},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":33,"w":179,"h":173},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_13.png":
+{
+	"frame": {"x":918,"y":183,"w":179,"h":173},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":33,"w":179,"h":173},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_14.png":
+{
+	"frame": {"x":1244,"y":1,"w":180,"h":201},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":5,"w":180,"h":201},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_15.png":
+{
+	"frame": {"x":1244,"y":1,"w":180,"h":201},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":5,"w":180,"h":201},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_16.png":
+{
+	"frame": {"x":833,"y":1,"w":180,"h":205},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":1,"w":180,"h":205},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_17.png":
+{
+	"frame": {"x":833,"y":1,"w":180,"h":205},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":1,"w":180,"h":205},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_18.png":
+{
+	"frame": {"x":1,"y":1,"w":180,"h":206},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":0,"w":180,"h":206},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_19.png":
+{
+	"frame": {"x":1,"y":1,"w":180,"h":206},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":0,"w":180,"h":206},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_20.png":
+{
+	"frame": {"x":209,"y":1,"w":180,"h":206},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":0,"w":180,"h":206},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_21.png":
+{
+	"frame": {"x":209,"y":1,"w":180,"h":206},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":0,"w":180,"h":206},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_22.png":
+{
+	"frame": {"x":417,"y":1,"w":180,"h":206},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":0,"w":180,"h":206},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_23.png":
+{
+	"frame": {"x":417,"y":1,"w":180,"h":206},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":0,"w":180,"h":206},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_24.png":
+{
+	"frame": {"x":417,"y":1,"w":180,"h":206},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":0,"w":180,"h":206},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_25.png":
+{
+	"frame": {"x":417,"y":1,"w":180,"h":206},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":0,"w":180,"h":206},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_26.png":
+{
+	"frame": {"x":625,"y":1,"w":180,"h":206},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":0,"w":180,"h":206},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_27.png":
+{
+	"frame": {"x":625,"y":1,"w":180,"h":206},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":0,"w":180,"h":206},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_28.png":
+{
+	"frame": {"x":1628,"y":199,"w":178,"h":168},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":38,"w":178,"h":168},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_29.png":
+{
+	"frame": {"x":1628,"y":199,"w":178,"h":168},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":38,"w":178,"h":168},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_30.png":
+{
+	"frame": {"x":1,"y":364,"w":178,"h":140},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":70,"w":178,"h":140},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_31.png":
+{
+	"frame": {"x":1,"y":364,"w":178,"h":140},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":70,"w":178,"h":140},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_32.png":
+{
+	"frame": {"x":181,"y":364,"w":178,"h":139},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":72,"w":178,"h":139},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_33.png":
+{
+	"frame": {"x":181,"y":364,"w":178,"h":139},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":72,"w":178,"h":139},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_34.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_35.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_36.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_37.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_38.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_39.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_40.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_41.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_42.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_43.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_44.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_45.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_46.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_47.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_48.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_49.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_50.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_51.png":
+{
+	"frame": {"x":1798,"y":363,"w":178,"h":143},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":65,"w":178,"h":143},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_52.png":
+{
+	"frame": {"x":556,"y":362,"w":178,"h":146},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":62,"w":178,"h":146},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_53.png":
+{
+	"frame": {"x":556,"y":362,"w":178,"h":146},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":62,"w":178,"h":146},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_54.png":
+{
+	"frame": {"x":737,"y":359,"w":178,"h":147},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":61,"w":178,"h":147},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_55.png":
+{
+	"frame": {"x":737,"y":359,"w":178,"h":147},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":61,"w":178,"h":147},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_56.png":
+{
+	"frame": {"x":918,"y":358,"w":178,"h":148},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":60,"w":178,"h":148},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_57.png":
+{
+	"frame": {"x":918,"y":358,"w":178,"h":148},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":60,"w":178,"h":148},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_58.png":
+{
+	"frame": {"x":1280,"y":355,"w":178,"h":149},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":59,"w":178,"h":149},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_59.png":
+{
+	"frame": {"x":1280,"y":355,"w":178,"h":149},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":59,"w":178,"h":149},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_60.png":
+{
+	"frame": {"x":1099,"y":356,"w":178,"h":149},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":59,"w":178,"h":149},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_61.png":
+{
+	"frame": {"x":1099,"y":356,"w":178,"h":149},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":59,"w":178,"h":149},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_62.png":
+{
+	"frame": {"x":1,"y":183,"w":179,"h":189},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":17,"w":179,"h":189},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_63.png":
+{
+	"frame": {"x":1,"y":183,"w":179,"h":189},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":17,"w":179,"h":189},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_64.png":
+{
+	"frame": {"x":1447,"y":1,"w":180,"h":199},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":7,"w":180,"h":199},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_65.png":
+{
+	"frame": {"x":1447,"y":1,"w":180,"h":199},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":7,"w":180,"h":199},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_66.png":
+{
+	"frame": {"x":1040,"y":1,"w":180,"h":202},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":4,"w":180,"h":202},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_67.png":
+{
+	"frame": {"x":1040,"y":1,"w":180,"h":202},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":4,"w":180,"h":202},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_68.png":
+{
+	"frame": {"x":1648,"y":1,"w":180,"h":196},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":10,"w":180,"h":196},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_69.png":
+{
+	"frame": {"x":1648,"y":1,"w":180,"h":196},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":10,"w":180,"h":196},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_70.png":
+{
+	"frame": {"x":1099,"y":183,"w":179,"h":171},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":35,"w":179,"h":171},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_71.png":
+{
+	"frame": {"x":1099,"y":183,"w":179,"h":171},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":35,"w":179,"h":171},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_72.png":
+{
+	"frame": {"x":1461,"y":183,"w":179,"h":165},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":41,"w":179,"h":165},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_73.png":
+{
+	"frame": {"x":1461,"y":183,"w":179,"h":165},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":41,"w":179,"h":165},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_74.png":
+{
+	"frame": {"x":1280,"y":183,"w":179,"h":170},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":36,"w":179,"h":170},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_75.png":
+{
+	"frame": {"x":1280,"y":183,"w":179,"h":170},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":36,"w":179,"h":170},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_76.png":
+{
+	"frame": {"x":1830,"y":1,"w":179,"h":178},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":28,"w":179,"h":178},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_77.png":
+{
+	"frame": {"x":1830,"y":1,"w":179,"h":178},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":28,"w":179,"h":178},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_78.png":
+{
+	"frame": {"x":192,"y":183,"w":180,"h":179},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":27,"w":180,"h":179},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_79.png":
+{
+	"frame": {"x":192,"y":183,"w":180,"h":179},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":27,"w":180,"h":179},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_80.png":
+{
+	"frame": {"x":374,"y":183,"w":180,"h":179},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":27,"w":180,"h":179},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_81.png":
+{
+	"frame": {"x":374,"y":183,"w":180,"h":179},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":109,"y":27,"w":180,"h":179},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_82.png":
+{
+	"frame": {"x":556,"y":183,"w":179,"h":177},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":29,"w":179,"h":177},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_83.png":
+{
+	"frame": {"x":556,"y":183,"w":179,"h":177},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":29,"w":179,"h":177},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_84.png":
+{
+	"frame": {"x":1830,"y":182,"w":179,"h":177},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":29,"w":179,"h":177},
+	"sourceSize": {"w":384,"h":216}
+},
+"Bob_sting_85.png":
+{
+	"frame": {"x":1830,"y":182,"w":179,"h":177},
+	"rotated": true,
+	"trimmed": true,
+	"spriteSourceSize": {"x":110,"y":29,"w":179,"h":177},
+	"sourceSize": {"w":384,"h":216}
+}},
+"animations": {
+	"Bob_sting": ["Bob_sting_01.png","Bob_sting_02.png","Bob_sting_03.png","Bob_sting_04.png","Bob_sting_05.png","Bob_sting_06.png","Bob_sting_07.png","Bob_sting_08.png","Bob_sting_09.png","Bob_sting_10.png","Bob_sting_11.png","Bob_sting_12.png","Bob_sting_13.png","Bob_sting_14.png","Bob_sting_15.png","Bob_sting_16.png","Bob_sting_17.png","Bob_sting_18.png","Bob_sting_19.png","Bob_sting_20.png","Bob_sting_21.png","Bob_sting_22.png","Bob_sting_23.png","Bob_sting_24.png","Bob_sting_25.png","Bob_sting_26.png","Bob_sting_27.png","Bob_sting_28.png","Bob_sting_29.png","Bob_sting_30.png","Bob_sting_31.png","Bob_sting_32.png","Bob_sting_33.png","Bob_sting_34.png","Bob_sting_35.png","Bob_sting_36.png","Bob_sting_37.png","Bob_sting_38.png","Bob_sting_39.png","Bob_sting_40.png","Bob_sting_41.png","Bob_sting_42.png","Bob_sting_43.png","Bob_sting_44.png","Bob_sting_45.png","Bob_sting_46.png","Bob_sting_47.png","Bob_sting_48.png","Bob_sting_49.png","Bob_sting_50.png","Bob_sting_51.png","Bob_sting_52.png","Bob_sting_53.png","Bob_sting_54.png","Bob_sting_55.png","Bob_sting_56.png","Bob_sting_57.png","Bob_sting_58.png","Bob_sting_59.png","Bob_sting_60.png","Bob_sting_61.png","Bob_sting_62.png","Bob_sting_63.png","Bob_sting_64.png","Bob_sting_65.png","Bob_sting_66.png","Bob_sting_67.png","Bob_sting_68.png","Bob_sting_69.png","Bob_sting_70.png","Bob_sting_71.png","Bob_sting_72.png","Bob_sting_73.png","Bob_sting_74.png","Bob_sting_75.png","Bob_sting_76.png","Bob_sting_77.png","Bob_sting_78.png","Bob_sting_79.png","Bob_sting_80.png","Bob_sting_81.png","Bob_sting_82.png","Bob_sting_83.png","Bob_sting_84.png","Bob_sting_85.png"]
+},
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "medium_bob_sting.png",
+	"format": "RGBA8888",
+	"size": {"w":2009,"h":509},
+	"scale": "0.2",
+	"smartupdate": "$TexturePacker:SmartUpdate:afde708752ed4c9505c4c0a11b2b4f09:5383a9e15f21f55b336279fd77edbb57:e69cf31b82a06d7b4155c8b6a5ddeb9a$"
+}
+}

@@ -51,10 +51,19 @@ const graphicalAssets = [
   "images/nucleotide_yellow.json",
   "images/scissors.json",
   "images/hair.json",
+  "images/path_arrow.json",
+  // Mini Nob
   "images/mini_bob_idle.json",
   "images/mini_bob_sting.json",
   "images/mini_bob_walk.json",
-  "images/path_arrow.json",
+  // Medium Bob
+  "images/medium_bob_idle.json",
+  "images/medium_bob_sting.json",
+  "images/medium_bob_walk.json",
+  // Big Bob
+  "images/big_bob_idle.json",
+  "images/big_bob_sting.json",
+  "images/big_bob_walk.json",
 ];
 
 const fontAssets = ["Cardenio Modern Bold", "Cardenio Modern Regular"];
