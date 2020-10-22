@@ -24,16 +24,16 @@ export function makeCross(radius: number): PIXI.Graphics {
 
 export interface PopupOptions {
   id: string;
-  coolDown: number;
   logo: string;
   logoSize: number;
+  coolDown: number;
   from: PIXI.Point;
   minimizeOnSetup: boolean;
   minimizeOnClose: boolean;
   withBackground: boolean;
   withClosureCross: boolean;
-  closeOnBackgroundClick: boolean;
   closeOnBodyClick: boolean;
+  closeOnBackgroundClick: boolean;
   adjustHeight: boolean;
   height: number;
   width: number;

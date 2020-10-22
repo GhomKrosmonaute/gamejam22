@@ -22,6 +22,10 @@ export abstract class Bonus extends entity.CompositeEntity {
 
   abstract name: string;
 
+  constructor(private bonusesManager: BonusesManager) {
+    super();
+  }
+
   setup(frameInfo: entity.FrameInfo, entityConfig: entity.EntityConfig) {
     super.setup(frameInfo, entityConfig);
     this._activateChildEntity(this.shakes);
@@ -85,7 +89,7 @@ export abstract class Bonus extends entity.CompositeEntity {
 
   initListener() {
     this._on(this.sprite, "pointerup", () => {
-      this.level.bonusesManager.selection(this);
+      this.bonusesManager.selection(this);
     });
   }
 
@@ -302,11 +306,6 @@ export class SyringeBonus extends Bonus {
   }
 }
 
-export const syringeBonus = new SyringeBonus();
-export const healBonus = new HealBonus();
-export const swapBonus = new SwapBonus();
-export const timeBonus = new TimeBonus();
-
 export interface InitialBonus {
   bonus: Bonus;
   quantity?: number;
@@ -450,6 +449,8 @@ export class BonusesManager extends entity.CompositeEntity {
   }
 
   selection(bonus: Bonus) {
+    console.log("coucou");
+
     if (bonus.isSetup) {
       this.selected = null;
       return bonus.abort();

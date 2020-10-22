@@ -21,9 +21,9 @@ export const levels = {
         "One shot sequence": (level) => level.oneShotLongSequence,
       },
       gaugeRings: [
-        (level) => level.bonusesManager.add(bonuses.swapBonus),
-        (level) => level.bonusesManager.add(bonuses.swapBonus),
-        (level) => level.bonusesManager.add(bonuses.swapBonus),
+        (context) => context.bonusesManager.add(context.swapBonus),
+        (context) => context.bonusesManager.add(context.swapBonus),
+        (context) => context.bonusesManager.add(context.swapBonus),
       ],
       hooks: [
         new level.Hook({
@@ -45,36 +45,42 @@ export const levels = {
     }),
 
   "Level 2": () =>
-    new level.Level("Level 2", {
+    new level.Level("Level 2", (context) => ({
       variant: "continuous",
       gridShape: "medium",
       forceMatching: true,
       maxScore: 400,
       gaugeRings: [
-        (level) => level.bonusesManager.add(bonuses.swapBonus),
-        (level, ring) =>
-          level.activate(
+        (context) => context.bonusesManager.add(context.swapBonus),
+        (context, ring) =>
+          context.activate(
             new entity.EntitySequence([
               new entity.FunctionCallEntity(() => {
-                level.bonusesManager.add(bonuses.timeBonus);
-                bonuses.timeBonus.highlight = true;
+                context.bonusesManager.add(context.timeBonus);
+                context.timeBonus.highlight = true;
               }),
               new popup.TutorialPopup({
                 title: "The Time bonus",
                 content: "Can freeze the game for 5 seconds!",
                 image: "images/bonus_time.png",
                 popupOptions: {
+                  id: "popup ring 1",
                   from: ring.position,
                   logo: "🥶",
                 },
-              }),
-              new entity.FunctionCallEntity(() => {
-                bonuses.timeBonus.highlight = false;
               }),
             ])
           ),
       ],
       hooks: [
+        new level.Hook({
+          id: "minimized popup ring 1",
+          event: "minimizedPopup",
+          filter: (p) => p.id === "popup ring 1",
+          entity: new entity.FunctionCallEntity(() => {
+            context.timeBonus.highlight = false;
+          }),
+        }),
         new level.Hook({
           id: "intro",
           event: "init",
@@ -94,44 +100,52 @@ export const levels = {
           entity: new popup.TerminatedLevelPopup(),
         }),
       ],
-    }),
+    })),
 
   "Level 1": () =>
-    new level.Level("Level 1", {
+    new level.Level("Level 1", (context) => ({
       variant: "turnBased",
       maxScore: 300,
-      retryOnFail: true,
+      minStarNeeded: 1,
       gaugeRings: [
-        (level, ring) =>
-          level.activate(
+        (context, ring) =>
+          context.activate(
             new entity.EntitySequence([
               new entity.FunctionCallEntity(() => {
-                level.bonusesManager.add(bonuses.swapBonus);
-                bonuses.swapBonus.highlight = true;
+                context.bonusesManager.add(context.swapBonus);
+                context.swapBonus.highlight = true;
               }),
               new popup.TutorialPopup({
                 title: "The Swap bonus",
                 content: "Can swap two nucleotides",
                 image: "images/bonus_swap.png",
                 popupOptions: {
+                  id: "popup ring 1",
                   from: ring.position,
                 },
-              }),
-              new entity.FunctionCallEntity(() => {
-                bonuses.swapBonus.highlight = false;
               }),
             ])
           ),
       ],
       hooks: [
         new level.Hook({
+          id: "minimized popup ring 1",
+          event: "minimizedPopup",
+          filter: (p) => p.id === "popup ring 1",
+          entity: new entity.FunctionCallEntity(() => {
+            context.swapBonus.highlight = false;
+          }),
+        }),
+        new level.Hook({
           id: "intro",
           event: "init",
           once: true,
           entity: new popup.TutorialPopup({
             title: "Enjoy!",
-            content:
-              "Let's try the normal turn-by-turn variant.\n\nReach 300 pts!",
+            content: "Let's try the turn-by-turn variant.\n\nReach 300 pts!",
+            popupOptions: {
+              minimizeOnClose: false,
+            },
           }),
         }),
         new level.Hook({
@@ -140,7 +154,7 @@ export const levels = {
           entity: new popup.TerminatedLevelPopup(),
         }),
       ],
-    }),
+    })),
 
   Tutorial: () =>
     new level.Level("Tutorial", {

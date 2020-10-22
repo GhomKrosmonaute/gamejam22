@@ -191,7 +191,7 @@ export class Minimap extends entity.CompositeEntity {
     this.links = null;
   }
 
-  private setLevel(levelName: levels.LevelName) {
+  public setLevel(levelName: levels.LevelName) {
     this._transition = entity.makeTransition(levelName);
   }
 

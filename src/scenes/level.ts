@@ -17,6 +17,12 @@ import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
+import {
+  HealBonus,
+  SwapBonus,
+  SyringeBonus,
+  TimeBonus,
+} from "../entities/bonus";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
 
@@ -25,6 +31,7 @@ export interface LevelResults {
   checkCount: number;
   checkedCount: number;
   starCount: number;
+  failed: boolean;
 }
 
 export interface LevelOptions {
@@ -41,6 +48,7 @@ export interface LevelOptions {
   dropSpeed: number;
   baseGain: number;
   baseScore: number;
+  minStarNeeded: number;
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
   sequenceLength: number | null;
   scissorCount: number;
@@ -76,6 +84,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   maxScore: 1000,
   baseGain: 10,
   baseScore: 0,
+  minStarNeeded: 0,
   gaugeRings: [],
   sequenceLength: null,
   sequences: null,
@@ -87,10 +96,10 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   hooks: [],
   initialBonuses: [],
   checks: {
-    "No virus has escaped": (level) => !level.someVirusHasEscaped,
-    "Max score reached": (level) => level.score >= level.options.maxScore,
+    //"No virus has escaped": (level) => !level.someVirusHasEscaped,
     "Not infected": (level) => !level.wasInfected,
     "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
+    "Max score reached": (level) => level.score >= level.options.maxScore,
   },
 
   // reset options
@@ -255,8 +264,23 @@ export class Level extends entity.CompositeEntity {
   public crunchedSequenceCount = 0;
   public isInit = false;
 
-  constructor(public name: levels.LevelName, options: Partial<LevelOptions>) {
+  // bonuses
+  public syringeBonus: bonuses.Bonus;
+  public healBonus: bonuses.Bonus;
+  public swapBonus: bonuses.Bonus;
+  public timeBonus: bonuses.Bonus;
+
+  constructor(
+    public name: levels.LevelName,
+    optionsResolvable:
+      | ((context: Level) => Partial<LevelOptions>)
+      | Partial<LevelOptions>
+  ) {
     super();
+    const options =
+      typeof optionsResolvable === "function"
+        ? optionsResolvable(this)
+        : optionsResolvable;
     this.options = util.fillInOptions(options, defaultLevelOptions);
     this.score = this.options.baseScore;
   }
@@ -377,6 +401,12 @@ export class Level extends entity.CompositeEntity {
     this.bonusesManager = new bonuses.BonusesManager(
       this.options.initialBonuses
     );
+
+    this.syringeBonus = new SyringeBonus(this.bonusesManager);
+    this.healBonus = new HealBonus(this.bonusesManager);
+    this.swapBonus = new SwapBonus(this.bonusesManager);
+    this.timeBonus = new TimeBonus(this.bonusesManager);
+
     this._activateChildEntity(this.bonusesManager, this.config);
   }
 
@@ -447,19 +477,15 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update() {
-    if (
-      this.options.variant !== "continuous" ||
-      this.isDisablingAnimationInProgress ||
-      this.fallingStopped
-    )
+    if (this.options.variant !== "continuous") return;
+    if (this.fallingStopped) return;
+    if ([...this.disablingAnimations].some((name) => !name.startsWith("popup")))
       return;
 
-    const droppedSequences = this.sequenceManager.advanceSequences(
-      this.options.dropSpeed
-    );
-
     // if falling sequence is down, infect
-    if (droppedSequences.length > 0) {
+    if (
+      this.sequenceManager.advanceSequences(this.options.dropSpeed).length > 0
+    ) {
       this._activateChildEntity(this.infect());
     }
   }
@@ -618,11 +644,14 @@ export class Level extends entity.CompositeEntity {
 
     const starCount = Math.floor((checkedCount / checkCount + 0.1) * 3);
 
+    const failed = starCount < this.options.minStarNeeded || this.failed;
+
     return {
       checks,
       checkCount,
       checkedCount,
       starCount,
+      failed,
     };
   }
 
