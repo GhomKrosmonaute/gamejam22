@@ -7,8 +7,8 @@ export const width = 1080;
 export const height = 1920;
 
 const debugParam = new URL(window.location.href).searchParams.get("debug");
-export const debug = debugParam.trim()
-  ? !/^(?:false|0)$/i.test(debugParam)
+export const debug = debugParam
+  ? !/^(?:false|0|null)$/i.test(debugParam)
   : false;
 
 export class BetterPoint extends PIXI.Point {
