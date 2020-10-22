@@ -95,7 +95,7 @@ export class Virus extends entity.CompositeEntity {
     return new entity.EntitySequence([
       this.moveTo(this.angle < 0 ? rightEdge : leftEdge),
       new entity.FunctionCallEntity(() => {
-        this.level.emit("virusLeaves", this);
+        this.level.emitLevelEvent("virusLeaves", this);
         this._transition = entity.makeTransition();
       }),
     ]);

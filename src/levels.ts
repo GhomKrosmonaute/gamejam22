@@ -8,17 +8,15 @@ export const levels = {
       variant: "long",
       maxScore: 1000,
       forceMatching: true,
+      disableBonuses: true,
+      sequenceLength: 3,
       scissorCount: 0,
       checks: {
         "Not infected": (level) => !level.wasInfected,
         "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
         "One shot sequence": (level) => level.oneShotLongSequence,
       },
-      gaugeRings: [
-        (context) => context.bonusesManager.add(context.swapBonus),
-        (context) => context.bonusesManager.add(context.swapBonus),
-        (context) => context.bonusesManager.add(context.swapBonus),
-      ],
+      gaugeRings: [(context) => null, (context) => null, (context) => null],
       hooks: [
         new level.Hook({
           id: "intro",

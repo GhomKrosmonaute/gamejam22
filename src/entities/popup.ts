@@ -323,7 +323,7 @@ export abstract class Popup extends entity.CompositeEntity {
         anim.sink(this._container, 150, () => {
           this.options.onClose(this);
           this.emit("closed");
-          this.level.emit("closedPopup", this);
+          this.level.emitLevelEvent("closedPopup", this);
           this._transition = entity.makeTransition();
         }),
         new tween.Tween({
@@ -390,7 +390,7 @@ export abstract class Popup extends entity.CompositeEntity {
             easing: easing.easeOutBack,
             onTeardown: () => {
               this.emit("minimized");
-              this.level.emit("minimizedPopup", this);
+              this.level.emitLevelEvent("minimizedPopup", this);
             },
           })
         );
@@ -426,7 +426,7 @@ export abstract class Popup extends entity.CompositeEntity {
         }
 
         this.emit("minimized");
-        this.level.emit("minimizedPopup", this);
+        this.level.emitLevelEvent("minimizedPopup", this);
       }
     } else {
       this._container.zIndex = 10;

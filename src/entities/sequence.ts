@@ -271,7 +271,7 @@ export class SequenceManager extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.adjustment.adjust();
         if (partialCrunch) {
-          this.level.emit("partialCrunched");
+          this.level.emitLevelEvent("partialCrunched");
         }
       })
     );
@@ -428,7 +428,7 @@ export class Sequence extends entity.CompositeEntity {
       this.virus.stingOut(),
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("sequence._initVirus", false);
-        this.level.emit("injectedSequence", this);
+        this.level.emitLevelEvent("injectedSequence", this);
       }),
       // todo: wait the crunch, then leave (if virus is not killed before)
     ]);
@@ -653,15 +653,16 @@ export class Sequence extends entity.CompositeEntity {
         callback: () => {
           const end = () => {
             this.level.disablingAnimation("sequence.down", false);
-            this.level.emit("sequenceDown");
+            this.level.emitLevelEvent("sequenceDown");
             this.level.sequenceManager.adjustment.adjust();
             this._transition = entity.makeTransition();
           };
+
           if (this.virus && this.virus.isSetup) {
             this._activateChildEntity(
               new entity.EntitySequence([
                 this.virus.kill(),
-                new entity.FunctionCallEntity(() => end()),
+                new entity.FunctionCallEntity(end),
               ])
             );
           } else {

@@ -116,6 +116,27 @@ export type LevelEventParams<
   EventName extends LevelEventName
 > = LevelEvents[EventName];
 
+export interface LevelEvents {
+  init: [];
+  setup: [];
+  infected: [];
+  virusLeaves: [virus.Virus];
+  closedPopup: [popup.Popup];
+  minimizedPopup: [popup.Popup];
+  pathCrunched: [];
+  partialCrunched: [];
+  pathUpdated: [];
+  ringReached: [ring: hud.Ring];
+  sequenceDown: [];
+  scoreUpdated: [score: number];
+  clickedBonus: [bonus: bonuses.Bonus];
+  maxScoreReached: [];
+  injectedSequence: [sequence.Sequence];
+  clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
+  activatedChildEntity: [entity: entity.Entity];
+  deactivatedChildEntity: [entity: entity.Entity];
+}
+
 export interface HookOptions<Entity, EventName extends LevelEventName> {
   id: string;
   event: EventName;
@@ -215,27 +236,6 @@ export class Hook<
   }
 }
 
-export interface LevelEvents {
-  init: [];
-  setup: [];
-  infected: [];
-  virusLeaves: [virus.Virus];
-  closedPopup: [popup.Popup];
-  minimizedPopup: [popup.Popup];
-  pathCrunched: [];
-  partialCrunched: [];
-  pathUpdated: [];
-  ringReached: [ring: hud.Ring];
-  sequenceDown: [];
-  scoreUpdated: [score: number];
-  clickedBonus: [bonus: bonuses.Bonus];
-  maxScoreReached: [];
-  injectedSequence: [sequence.Sequence];
-  clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
-  activatedChildEntity: [entity: entity.Entity];
-  deactivatedChildEntity: [entity: entity.Entity];
-}
-
 export class Level extends entity.CompositeEntity {
   public options: LevelOptions;
 
@@ -298,22 +298,25 @@ export class Level extends entity.CompositeEntity {
     if (entity.isSetup) this._deactivateChildEntity(entity);
   }
 
-  emit<K extends LevelEventName>(event: K, ...params: LevelEventParams<K>) {
+  emitLevelEvent<K extends LevelEventName>(
+    event: K,
+    ...params: LevelEventParams<K>
+  ) {
     return super.emit(event, ...params);
   }
 
-  on<K extends LevelEventName>(
+  onLevelEvent<K extends LevelEventName>(
     event: K,
     callback: (...params: LevelEventParams<K>) => any
-  ): this {
-    return super.on(event, callback);
+  ) {
+    this._on(this, event, callback);
   }
 
-  once<K extends LevelEventName>(
+  onceLevelEvent<K extends LevelEventName>(
     event: K,
     callback: (...params: LevelEventParams<K>) => any
-  ): this {
-    return super.once(event, callback);
+  ) {
+    this._once(this, event, callback);
   }
 
   get minimap(): minimap.Minimap {
@@ -370,7 +373,7 @@ export class Level extends entity.CompositeEntity {
 
   private _initPath() {
     this.path = new path.Path();
-    this.on("pathUpdated", this.refresh);
+    this.onLevelEvent("pathUpdated", this.refresh);
     this._activateChildEntity(this.path, this.config);
   }
 
@@ -448,17 +451,17 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
 
-    this.on("deactivatedChildEntity", (e) => {
+    this.onLevelEvent("deactivatedChildEntity", (e) => {
       if (e instanceof Hook) {
         this.options.hooks = this.options.hooks.filter((h) => h !== e);
       }
     });
 
-    this.on("pathCrunched", () => {
+    this.onLevelEvent("pathCrunched", () => {
       this._activateChildEntity(this.fillHoles());
     });
 
-    this.on("sequenceDown", () => {
+    this.onLevelEvent("sequenceDown", () => {
       if (
         this.options.variant === "continuous" ||
         this.options.variant === "long"
@@ -477,7 +480,7 @@ export class Level extends entity.CompositeEntity {
     this._initForeground();
     this._initHooks();
 
-    this.emit("init");
+    this.emitLevelEvent("init");
     this.isInit = true;
 
     this._initGrid();
@@ -490,7 +493,7 @@ export class Level extends entity.CompositeEntity {
 
     this.refresh();
 
-    this.emit("setup");
+    this.emitLevelEvent("setup");
   }
 
   _update() {
@@ -609,7 +612,7 @@ export class Level extends entity.CompositeEntity {
 
     this.refresh();
 
-    this.emit("init");
+    this.emitLevelEvent("init");
     this.isInit = true;
 
     if (crisprUtil.debug) {
@@ -727,13 +730,13 @@ export class Level extends entity.CompositeEntity {
     if (this.options.disableScore) return;
 
     if (score >= this.options.maxScore) {
-      this.emit("maxScoreReached");
+      this.emitLevelEvent("maxScoreReached");
       this.score = this.options.maxScore;
     } else {
       this.score = score;
     }
 
-    this.emit("scoreUpdated", this.score);
+    this.emitLevelEvent("scoreUpdated", this.score);
   }
 
   addScore(score: number) {
@@ -742,13 +745,13 @@ export class Level extends entity.CompositeEntity {
     if (this.score === this.options.maxScore) {
       return;
     } else if (this.score + score >= this.options.maxScore) {
-      this.emit("maxScoreReached");
+      this.emitLevelEvent("maxScoreReached");
       this.score = this.options.maxScore;
     } else {
       this.score += score;
     }
 
-    this.emit("scoreUpdated", this.score);
+    this.emitLevelEvent("scoreUpdated", this.score);
   }
 
   get isDisablingAnimationInProgress(): boolean {
@@ -809,7 +812,7 @@ export class Level extends entity.CompositeEntity {
 
     context.push(
       new entity.FunctionCallEntity(() => {
-        this.emit("pathCrunched");
+        this.emitLevelEvent("pathCrunched");
         this.disablingAnimation("level.attemptCrunch", false);
       })
     );

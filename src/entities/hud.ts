@@ -171,7 +171,7 @@ export class Gauge extends entity.CompositeEntity {
       this._once(ring, "reached", () => {
         this.level.options.gaugeRings[ring.index](this.level, ring);
         ring.tint = 0x6bffff;
-        this.level.emit("ringReached", ring);
+        this.level.emitLevelEvent("ringReached", ring);
         this._activateChildEntity(anim.tweenShaking(ring, 2000, 10, 0));
       });
 
@@ -210,7 +210,7 @@ export class Gauge extends entity.CompositeEntity {
       });
     });
 
-    this.level.on("scoreUpdated", this.setValue.bind(this));
+    this.level.onLevelEvent("scoreUpdated", this.setValue.bind(this));
 
     this.setValue(0);
   }

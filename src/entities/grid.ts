@@ -653,7 +653,7 @@ export class Grid extends entity.CompositeEntity {
 
         if (infected.length > 0) {
           this.level.wasInfected = true;
-          this.level.emit("infected");
+          this.level.emitLevelEvent("infected");
         }
       }),
       anim.sequenced({
