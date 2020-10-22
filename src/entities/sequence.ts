@@ -313,15 +313,17 @@ export class SequenceManager extends entity.CompositeEntity {
     return droppedSequences;
   }
 
-  /** Drops the last @count sequences and returns them */
-  dropSequences(count = 1): Sequence[] {
-    const droppedSequences = _.last([...this.sequences], count);
+  /** Drops @count of sequences or all sequences */
+  dropSequences(count?: number): entity.Entity {
+    const droppedSequences = count
+      ? _.last([...this.sequences], count)
+      : [...this.sequences];
 
-    droppedSequences.forEach((s) => {
-      this._activateChildEntity(this.removeSequence(false, s));
-    });
-
-    return droppedSequences;
+    return new entity.ParallelEntity(
+      droppedSequences.map((s) => {
+        return this.removeSequence(false, s);
+      })
+    );
   }
 
   matchesSequence(_path: path.Path): string | true {
@@ -404,6 +406,8 @@ export class Sequence extends entity.CompositeEntity {
 
     const requestTransition = () =>
       this.virus.isSetup &&
+      this.level.isInit &&
+      !this.level.disablingAnimations.has("preventVirus") &&
       ![...this.level.disablingAnimations].some((name) =>
         name.startsWith("popup")
       );

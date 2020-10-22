@@ -276,16 +276,17 @@ export class GoButton extends entity.CompositeEntity {
     this.text.text = text;
   }
 
-  private _onGo(): entity.EntitySequence | void {
-    if (this.level.isDisablingAnimationInProgress) return;
+  private _onGo(): entity.Entity {
+    if (this.level.isDisablingAnimationInProgress) {
+      return anim.tweenShaking(this.sprite, 300, 6);
+    }
 
     if (this.level.options.variant === "long") {
       if (this.level.path.items.length > 0) {
         return this.level.attemptCrunch();
       }
     } else if (this.level.path.items.length > 0) {
-      this._activateChildEntity(anim.tweenShaking(this.sprite, 300, 6));
-      return;
+      return anim.tweenShaking(this.sprite, 300, 6);
     }
 
     const context: entity.Entity[] = [
@@ -298,8 +299,12 @@ export class GoButton extends entity.CompositeEntity {
       this.level.options.variant === "turnBased" ||
       this.level.options.variant === "long"
     ) {
+      // pass turn in turnBased mode and long mode
+      // ? has holes
+      //    : => fill holes
+      //    ! => regenerate some nucleotides
       if (this.level.grid.containsHoles()) {
-        context.push(this.level.regenerate());
+        context.push(this.level.fillHoles());
       } else {
         context.push(
           new entity.FunctionCallEntity(() => {
@@ -308,26 +313,31 @@ export class GoButton extends entity.CompositeEntity {
               (n) => n.state === "present" && n.type !== "scissors"
             );
           }),
+
+          // todo: replace waiting entity by this.level.grid.regenerate():SeqenceEntity
           new entity.WaitingEntity(1200),
-          this.level.endTurn(),
+
+          this.level.sequenceManager.dropSequences(1),
+          this.level.infect(),
           new entity.FunctionCallEntity(() => {
             this.level.refresh();
           })
         );
       }
     } else {
+      // mode continuous => pass the turn
+      // => down all sequences
+      // => infect
       context.push(
-        new entity.FunctionCallEntity(() => {
-          // As if the sequence dropped all the way down
-          this.level.sequenceManager.dropSequences();
-          this.level.onInfection();
-        })
+        this.level.sequenceManager.dropSequences(),
+        this.level.infect()
       );
     }
 
     context.push(
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("goButton._onGo", false);
+        this.level.checkGameOverByInfection();
       })
     );
 

@@ -95,6 +95,7 @@ export class Virus extends entity.CompositeEntity {
     return new entity.EntitySequence([
       this.moveTo(this.angle < 0 ? rightEdge : leftEdge),
       new entity.FunctionCallEntity(() => {
+        this.level.emit("virusLeaves", this);
         this._transition = entity.makeTransition();
       }),
     ]);
@@ -106,11 +107,6 @@ export class Virus extends entity.CompositeEntity {
         // todo: use death animation
       }),
       this.leave(),
-      new entity.FunctionCallEntity(() => {
-        if (this.level.sequenceManager.sequenceCount === 0) {
-          this.level.sequenceManager.add();
-        }
-      }),
     ]);
   }
 

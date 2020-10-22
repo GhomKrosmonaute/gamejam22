@@ -49,6 +49,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public isHearthBeatActive = false;
   public shakes: anim.ShakesManager;
   public position: PIXI.Point;
+  public id = Math.random();
 
   private _state: NucleotideState;
   private _isHighlighted: boolean;
@@ -94,7 +95,6 @@ export class Nucleotide extends entity.CompositeEntity {
     this._container.position.copyFrom(this.position);
 
     this._container.scale.set(0);
-    this._refreshScale();
 
     this.shakes = new anim.ShakesManager(this._container);
     this.shakes.setFloat("setup", this.floating);
@@ -113,6 +113,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
     this._activateChildEntity(this.shakes);
     this._activateChildEntity(this._pathArrowEntity);
+    this._activateChildEntity(this._refreshScale());
   }
 
   _update() {
@@ -150,7 +151,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this.shakes.setShake("highlight", 2);
 
       if (this.parent === "grid") {
-        this._container.scale.set(0.9);
+        this.sprite.scale.set(0.9);
       } else {
         this.sprite.scale.set(1.1);
       }
@@ -169,8 +170,6 @@ export class Nucleotide extends entity.CompositeEntity {
       this.shakes.removeShake("highlight");
 
       if (this.parent === "grid") {
-        this._container.scale.set(1);
-      } else {
         this.sprite.scale.set(1);
       }
 
@@ -243,6 +242,7 @@ export class Nucleotide extends entity.CompositeEntity {
     return new PIXI.Point(this.width * (3 / 4), this.height);
   }
 
+  // todo convert state accessors into a changeState function that returns an EntitySequence
   get state(): NucleotideState {
     return this._state;
   }
@@ -363,7 +363,8 @@ export class Nucleotide extends entity.CompositeEntity {
         })
       );
       this._container.setChildIndex(this.sprite, 0);
-      this._refreshScale();
+
+      this._activateChildEntity(this._refreshScale());
 
       this.emit("stateChanged", newState);
 
@@ -394,7 +395,8 @@ export class Nucleotide extends entity.CompositeEntity {
         })
       );
       this._container.setChildIndex(this.sprite, 0);
-      this._refreshScale();
+
+      this._activateChildEntity(this._refreshScale());
 
       this.emit("stateChanged", newState);
     }
@@ -464,26 +466,40 @@ export class Nucleotide extends entity.CompositeEntity {
   set radius(radius: number) {
     this._radius = radius;
 
-    this._refreshScale();
+    this._activateChildEntity(this._refreshScale());
   }
 
-  private _refreshScale(): void {
+  private _refreshScale(): entity.Entity {
+    const disablingAnimation = "nucleotide._refreshScale" + this.id;
+
+    if (this.level.disablingAnimations.has(disablingAnimation)) {
+      return new entity.NullEntity();
+    }
+
     // Native sprite size is 136 x 129 px
     const scale = (0.85 * this.width) / 136;
 
     if (this.parent === "sequence") {
-      setTimeout(() => {
-        this._activateChildEntity(
-          new tween.Tween({
-            from: this._container.scale.x,
-            to: scale,
-            duration: 100,
-            onUpdate: (value) => this._container.scale.set(value),
-          })
-        );
-      }, 1200);
+      return new entity.EntitySequence([
+        new entity.FunctionCallEntity(() => {
+          this.level.disablingAnimation(disablingAnimation, true);
+        }),
+        new entity.WaitingEntity(400),
+        new tween.Tween({
+          from: this._container.scale.x,
+          to: scale,
+          duration: 1000,
+          easing: easing.easeInOutQuad,
+          onUpdate: (value) => this._container.scale.set(value),
+          onTeardown: () => {
+            this.level.disablingAnimation(disablingAnimation, false);
+          },
+        }),
+      ]);
     } else {
-      this._container.scale.set(scale);
+      return new entity.FunctionCallEntity(() => {
+        this._container.scale.set(scale);
+      });
     }
   }
 }

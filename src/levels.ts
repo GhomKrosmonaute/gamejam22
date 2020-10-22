@@ -154,11 +154,10 @@ export const levels = {
       disableScore: true,
       disablingAnimations: ["tutorial"],
       checks: {
-        "Crunch a sequence": (level) => level.sequenceWasCrunched,
-        "Includes scissors": (level) =>
-          level.triggeredHooks.has("step 3 => step 4"),
-        "Surviving infection": (level) =>
-          level.triggeredHooks.has("end") && !level.failed,
+        "Crunch a sequence": (context) => context.sequenceWasCrunched,
+        "Includes scissors": (context) =>
+          context.triggeredHooks.has("step 3 => step 4"),
+        "Reach 200 pts": (context) => context.score >= 200,
       },
       hooks: [
         new level.Hook({
@@ -283,7 +282,6 @@ export const levels = {
                         scissorCount: 3,
                         sequenceLength: 6,
                         disableButton: false,
-                        disableExtraSequence: true,
                         hooks: [
                           new level.Hook({
                             id: "step 4",
@@ -303,9 +301,14 @@ export const levels = {
                             event: "infected",
                             once: true,
                             entity: new entity.EntitySequence([
+                              new entity.FunctionCallEntity(() => {
+                                context.disablingAnimation(
+                                  "preventVirus",
+                                  true
+                                );
+                              }),
                               new entity.WaitingEntity(1500),
                               new entity.FunctionCallEntity(() => {
-                                context.disablingAnimation("tutorial", true);
                                 context.activate(
                                   new popup.TutorialPopup({
                                     title: "Infection",
@@ -319,6 +322,7 @@ export const levels = {
                                     },
                                   })
                                 );
+                                context.disablingAnimation("tutorial", true);
                               }),
                             ]),
                           }),
@@ -331,11 +335,11 @@ export const levels = {
                               resetGrid: true,
                               resetScore: true,
                               resetSequences: true,
-                              disableExtraSequence: false,
                               sequenceLength: 5,
-                              scissorCount: 4,
+                              scissorCount: 3,
                               disableScore: false,
                               disableGauge: false,
+                              forceMatching: true,
                               maxScore: 200,
                               hooks: [
                                 new level.Hook({
@@ -345,6 +349,10 @@ export const levels = {
                                   entity: new entity.EntitySequence([
                                     new entity.WaitingEntity(1500),
                                     new entity.FunctionCallEntity(() => {
+                                      context.disablingAnimation(
+                                        "preventVirus",
+                                        false
+                                      );
                                       context.activate(
                                         new popup.TutorialPopup({
                                           title: "Nice work!",

@@ -12,6 +12,7 @@ import * as nucleotide from "../entities/nucleotide";
 import * as sequence from "../entities/sequence";
 import * as bonuses from "../entities/bonus";
 import * as popup from "../entities/popup";
+import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
@@ -207,6 +208,7 @@ export interface LevelEvents {
   init: [];
   setup: [];
   infected: [];
+  virusLeaves: [virus.Virus];
   closedPopup: [popup.Popup];
   minimizedPopup: [popup.Popup];
   pathUpdated: [];
@@ -251,6 +253,7 @@ export class Level extends entity.CompositeEntity {
   public scissorsWasIncludes = false;
   public oneShotLongSequence = false;
   public crunchedSequenceCount = 0;
+  public isInit = false;
 
   constructor(public name: levels.LevelName, options: Partial<LevelOptions>) {
     super();
@@ -405,13 +408,20 @@ export class Level extends entity.CompositeEntity {
   }
 
   _setup() {
+    this.isInit = false;
     this.container.sortableChildren = true;
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
 
-    this._on(this, "deactivatedChildEntity", (e: entity.Entity) => {
+    this.on("deactivatedChildEntity", (e) => {
       if (e instanceof Hook) {
         this.options.hooks = this.options.hooks.filter((h) => h !== e);
+      }
+    });
+
+    this.on("virusLeaves", () => {
+      if (this.sequenceManager.sequenceCount === 1) {
+        this.sequenceManager.add();
       }
     });
 
@@ -421,6 +431,7 @@ export class Level extends entity.CompositeEntity {
     this._initHooks();
 
     this.emit("init");
+    this.isInit = true;
 
     this._initGrid();
     this._initPath();
@@ -446,8 +457,10 @@ export class Level extends entity.CompositeEntity {
     const droppedSequences = this.sequenceManager.advanceSequences(
       this.options.dropSpeed
     );
+
+    // if falling sequence is down, infect
     if (droppedSequences.length > 0) {
-      this.onInfection(droppedSequences.length);
+      this._activateChildEntity(this.infect());
     }
   }
 
@@ -459,6 +472,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   reset(options: LevelOptions) {
+    this.isInit = false;
     this._entityConfig.level = this;
 
     // assign flags
@@ -553,6 +567,7 @@ export class Level extends entity.CompositeEntity {
     this.refresh();
 
     this.emit("init");
+    this.isInit = true;
 
     if (crisprUtil.debug) {
       console.log("--> DONE", "level.reset()");
@@ -577,7 +592,7 @@ export class Level extends entity.CompositeEntity {
     }
   }
 
-  gameOver() {
+  gameOverByFail() {
     this.failed = true;
     if (this.options.retryOnFail) {
       this._activateChildEntity(new popup.FailedLevelPopup(), this.config);
@@ -639,61 +654,28 @@ export class Level extends entity.CompositeEntity {
     return this.disablingAnimations.size > 0;
   }
 
-  public endTurn(): entity.EntitySequence {
-    this.disablingAnimation("level.endTurn", true);
-
-    if (this.grid.isGameOver()) {
-      this.disablingAnimation("level.endTurn", false);
-      this.gameOver();
-      return;
+  public checkGameOverByInfection(): boolean {
+    if (this.grid.isFullyInfected()) {
+      this.gameOverByFail();
+      return true;
     }
-
-    // Create a list of "actions" that will take place at the end of calling this function
-    let actions: entity.Entity[] = [];
-
-    const countSequences = this.sequenceManager.sequenceCount;
-    if (countSequences > 0) {
-      const infectionSequence = this.grid.infect(countSequences * 5);
-      actions.push(infectionSequence);
-    }
-
-    actions.push(
-      new entity.FunctionCallEntity(() => {
-        this.sequenceManager.add();
-      })
-    );
-
-    // if (countSequences < this.sequenceManager.sequenceCountLimit) {
-    //   actions.push(
-    //     new entity.FunctionCallEntity(() => {
-    //       this.sequenceManager.add();
-    //     })
-    //   );
-    // }
-
-    actions.push(
-      new entity.FunctionCallEntity(() => {
-        this.disablingAnimation("level.endTurn", false);
-      })
-    );
-
-    return new entity.EntitySequence(actions);
+    return false;
   }
 
   // TODO: refactor this as a separate object, using the strategy pattern
-  public attemptCrunch(): entity.EntitySequence | void {
+  public attemptCrunch(): entity.Entity {
     if (
       this.path.items.length === 0 ||
       this.sequenceManager.matchesSequence(this.path) !== true
     ) {
-      return;
+      return new entity.NullEntity();
     }
 
     this.disablingAnimation("level.attemptCrunch", true);
 
     const sequenceCrunch = this.sequenceManager.crunch(this.path);
 
-    if (!sequenceCrunch) return;
+    if (!sequenceCrunch) return new entity.NullEntity();
 
     const context: entity.Entity[] = [this.path.crunch(), sequenceCrunch];
 
@@ -711,12 +693,12 @@ export class Level extends entity.CompositeEntity {
       context.push(first.down(!this.options.disableScore));
     }
 
+    if (this.sequenceManager.sequenceCount === 0) {
+      context.push(this.fillHoles());
+    }
+
     context.push(
       new entity.FunctionCallEntity(() => {
-        if (this.sequenceManager.sequenceCount === 0) {
-          this._activateChildEntity(this.regenerate());
-        }
-
         this.disablingAnimation("level.attemptCrunch", false);
       })
     );
@@ -743,7 +725,7 @@ export class Level extends entity.CompositeEntity {
     this.sequenceManager.updateHighlighting(this.path);
   }
 
-  public regenerate(): entity.EntitySequence {
+  public fillHoles(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionalEntity({
         requestTransition: () => !this.disablingAnimations.has("path.crunch"),
@@ -751,35 +733,25 @@ export class Level extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.regenerate", true);
         this.grid.fillHoles();
-        this.refresh();
       }),
+      // todo: replace waiting entity by this.grid.fillHoles():SeqenceEntity
       new entity.WaitingEntity(1000),
-      this.endTurn(),
       new entity.FunctionCallEntity(() => {
         this.refresh();
-
         this.disablingAnimation("level.regenerate", false);
       }),
     ]);
   }
 
-  public onInfection(infectionCount = 1): void {
-    this.disablingAnimation("level.onInfection", true);
-
-    if (this.grid.isGameOver()) {
-      this.gameOver();
-      return;
-    }
-
-    const infectionSequence = this.grid.infect(infectionCount * 5);
-
-    this._activateChildEntity(
-      new entity.EntitySequence([
-        infectionSequence,
-        new entity.FunctionCallEntity(() => {
-          this.disablingAnimation("level.onInfection", false);
-        }),
-      ])
-    );
+  public infect(): entity.Entity {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.disablingAnimation("level.onInfection", true);
+      }),
+      this.grid.infect(),
+      new entity.FunctionCallEntity(() => {
+        this.disablingAnimation("level.onInfection", false);
+      }),
+    ]);
   }
 }

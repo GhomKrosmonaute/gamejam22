@@ -445,6 +445,8 @@ export class Grid extends entity.CompositeEntity {
   }
 
   fillHoles(): nucleotide.Nucleotide[] {
+    // todo: use changeState(): entity.Sequence instead of state accessor and returns it
+
     const holes = this.nucleotides.filter((n) => n.state === "missing");
     for (const nucleotide of holes) {
       this.generateNucleotide(nucleotide);
@@ -599,6 +601,8 @@ export class Grid extends entity.CompositeEntity {
    * Regenerate a certain number of nucleotides
    */
   regenerate(n: number, filter: (n: nucleotide.Nucleotide) => boolean): void {
+    // todo: use changeState(): entity.Sequence instead of state accessor and returns it
+
     // Pick a certain number of non-infected nucleotides
     // @ts-ignore
     const nucleotides: nucleotide.Nucleotide[] = _.chain(this.nucleotides)
@@ -624,17 +628,18 @@ export class Grid extends entity.CompositeEntity {
     nucleotide.generateColor();
   }
 
-  isGameOver(): boolean {
+  isFullyInfected(): boolean {
     return !this.nucleotides.some(
       (n) => n.state === "present" && n.type === "normal"
     );
   }
 
   /**
-   * Returns an entity sequence that gradually infects each of the nucleotides
-   * @param count
+   * Returns an entity sequence that infect a quart of grid nucleotides
    */
-  infect(count: number): entity.EntitySequence {
+  infect(): entity.EntitySequence {
+    const count = Math.ceil(this.nucleotides.length / 4);
+
     // @ts-ignore
     const infected = _.chain(this.nucleotides)
       .filter((n) => n.state === "present" && n.type === "normal")
