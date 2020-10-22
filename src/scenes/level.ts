@@ -222,6 +222,8 @@ export interface LevelEvents {
   virusLeaves: [virus.Virus];
   closedPopup: [popup.Popup];
   minimizedPopup: [popup.Popup];
+  pathCrunched: [];
+  partialCrunched: [];
   pathUpdated: [];
   ringReached: [ring: hud.Ring];
   sequenceDown: [];
@@ -452,10 +454,21 @@ export class Level extends entity.CompositeEntity {
       }
     });
 
-    this.on("virusLeaves", () => {
-      if (this.sequenceManager.sequenceCount === 1) {
+    this.on("pathCrunched", () => {
+      this._activateChildEntity(this.fillHoles());
+    });
+
+    this.on("sequenceDown", () => {
+      if (
+        this.options.variant === "continuous" ||
+        this.options.variant === "long"
+      ) {
         this.sequenceManager.add();
-        this._activateChildEntity(this.fillHoles());
+      } else {
+        if (this.sequenceManager.sequenceCount <= 1) {
+          this.sequenceManager.add();
+          this._activateChildEntity(this.fillHoles());
+        }
       }
     });
 
@@ -759,11 +772,11 @@ export class Level extends entity.CompositeEntity {
       return new entity.NullEntity();
     }
 
-    this.disablingAnimation("level.attemptCrunch", true);
-
     const sequenceCrunch = this.sequenceManager.crunch(this.path);
 
     if (!sequenceCrunch) return new entity.NullEntity();
+
+    this.disablingAnimation("level.attemptCrunch", true);
 
     const context: entity.Entity[] = [this.path.crunch(), sequenceCrunch];
 
@@ -777,16 +790,26 @@ export class Level extends entity.CompositeEntity {
 
     const first = [...this.sequenceManager.sequences][0];
 
-    if (this.options.variant === "long" && first && first.maxActiveLength < 3) {
-      context.push(first.down(!this.options.disableScore));
+    if (this.options.variant === "long") {
+      if (first && first.maxActiveLength < 3) {
+        context.push(first.down(!this.options.disableScore));
+      }
+
+      context.push(this.fillHoles());
     }
 
-    if (this.sequenceManager.sequenceCount === 0) {
-      context.push(this.fillHoles());
+    if (
+      this.options.variant === "turnBased" ||
+      this.options.variant === "continuous"
+    ) {
+      if (this.sequenceManager.sequenceCount === 0) {
+        context.push(this.fillHoles());
+      }
     }
 
     context.push(
       new entity.FunctionCallEntity(() => {
+        this.emit("pathCrunched");
         this.disablingAnimation("level.attemptCrunch", false);
       })
     );
@@ -819,14 +842,14 @@ export class Level extends entity.CompositeEntity {
         requestTransition: () => !this.disablingAnimations.has("path.crunch"),
       }),
       new entity.FunctionCallEntity(() => {
-        this.disablingAnimation("level.regenerate", true);
+        this.disablingAnimation("level.fillHoles", true);
         this.grid.fillHoles();
       }),
       // todo: replace waiting entity by this.grid.fillHoles():SeqenceEntity
       new entity.WaitingEntity(1000),
       new entity.FunctionCallEntity(() => {
         this.refresh();
-        this.disablingAnimation("level.regenerate", false);
+        this.disablingAnimation("level.fillHoles", false);
       }),
     ]);
   }
@@ -834,11 +857,11 @@ export class Level extends entity.CompositeEntity {
   public infect(): entity.Entity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        this.disablingAnimation("level.onInfection", true);
+        this.disablingAnimation("level.infect", true);
       }),
       this.grid.infect(),
       new entity.FunctionCallEntity(() => {
-        this.disablingAnimation("level.onInfection", false);
+        this.disablingAnimation("level.infect", false);
       }),
     ]);
   }

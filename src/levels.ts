@@ -7,6 +7,7 @@ export const levels = {
     new level.Level("Zen mode", {
       variant: "long",
       maxScore: 1000,
+      forceMatching: true,
       scissorCount: 0,
       checks: {
         "Not infected": (level) => !level.wasInfected,

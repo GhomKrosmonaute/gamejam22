@@ -270,6 +270,9 @@ export class SequenceManager extends entity.CompositeEntity {
     context.push(
       new entity.FunctionCallEntity(() => {
         this.adjustment.adjust();
+        if (partialCrunch) {
+          this.level.emit("partialCrunched");
+        }
       })
     );
 
