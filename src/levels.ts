@@ -10,11 +10,13 @@ export const levels = {
       maxScore: 1000,
       forceMatching: true,
       disableBonuses: true,
+      zenMoves: 10,
       scissorCount: 0,
       checks: {
-        "Not infected": (level) => !level.wasInfected,
-        "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
-        "One shot sequence": (level) => level.oneShotLongSequence,
+        "Reach 1000 pts": (context) =>
+          context.score >= context.options.maxScore,
+        "One shot sequence": (context) => context.oneShotLongSequence,
+        "Win in 5 moves or less": (context) => context.zenMoves <= 5,
       },
       gaugeRings: [(context) => null, (context) => null, (context) => null],
       hooks: [
