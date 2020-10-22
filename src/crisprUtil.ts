@@ -5,7 +5,9 @@ import * as util from "booyah/src/util";
 
 export const width = 1080;
 export const height = 1920;
-export const debug = util.stringToBool(new URL(window.location.href).searchParams.get("debug"));
+export const debug = util.stringToBool(
+  new URL(window.location.href).searchParams.get("debug")
+);
 
 export class BetterPoint extends PIXI.Point {
   public readonly origin = new PIXI.Point();

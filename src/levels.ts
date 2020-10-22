@@ -1,6 +1,7 @@
 import * as entity from "booyah/src/entity";
-import * as level from "./scenes/level";
 import * as popup from "./entities/popup";
+import * as level from "./scenes/level";
+import * as anim from "./animations";
 
 export const levels = {
   "Zen mode": () =>
@@ -35,11 +36,12 @@ export const levels = {
       ],
     }),
 
-  "Falling mode": () =>
-    new level.Level("Falling mode", (context) => ({
+  "Time challenge": () =>
+    new level.Level("Time challenge", (context) => ({
       variant: "continuous",
       gridShape: "medium",
       forceMatching: true,
+      scissorCount: 3,
       maxScore: 400,
       gaugeRings: [
         (context) => context.bonusesManager.add(context.swapBonus),
@@ -367,6 +369,12 @@ export const levels = {
                                             minimizeOnClose: false,
                                             coolDown: 1000,
                                             onClose: () => {
+                                              context.activate(
+                                                anim.title(
+                                                  context.container,
+                                                  "Go!"
+                                                )
+                                              );
                                               context.disablingAnimation(
                                                 "tutorial",
                                                 false

@@ -238,6 +238,40 @@ export function move(
   ]);
 }
 
+export function title(
+  container: PIXI.Container,
+  text: string,
+  duration = 2500
+): entity.EntitySequence {
+  let pixiText = crisprUtil.makeText(text, {
+    fontSize: 100,
+    fill: 0xffffff,
+    stroke: 0x000000,
+    strokeThickness: 20,
+  });
+  pixiText.scale.set(0);
+  pixiText.position.set(crisprUtil.width / 2, crisprUtil.height / 2);
+
+  return new entity.EntitySequence([
+    new entity.FunctionCallEntity(() => {
+      container.addChild(pixiText);
+    }),
+    new tween.Tween({
+      duration,
+      from: 1,
+      to: 0,
+      easing: easing.easeOutQuint,
+      onUpdate: (value) => {
+        pixiText.scale.set((1 - value) * 20);
+        pixiText.alpha = value;
+      },
+    }),
+    new entity.FunctionCallEntity(() => {
+      container.removeChild(pixiText);
+    }),
+  ]);
+}
+
 export function textFade(
   container: PIXI.Container,
   text: PIXI.Text,
