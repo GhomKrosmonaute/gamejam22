@@ -1,10 +1,12 @@
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
+import * as tween from "booyah/src/tween";
 import * as util from "booyah/src/util";
 
 import * as crisprUtil from "../crisprUtil";
 import * as levels from "../levels";
+import * as anim from "../animations";
 
 import * as minimap from "./minimap";
 
@@ -17,12 +19,6 @@ import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
-import {
-  HealBonus,
-  SwapBonus,
-  SyringeBonus,
-  TimeBonus,
-} from "../entities/bonus";
 
 export type LevelVariant = "turnBased" | "continuous" | "long";
 
@@ -67,6 +63,9 @@ export interface LevelOptions {
   resetGrid: boolean;
   resetSequences: boolean;
   resetBonuses: boolean;
+
+  // zen
+  zenMoves: number;
 }
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
@@ -107,6 +106,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   resetGrid: true,
   resetSequences: true,
   resetBonuses: true,
+
+  // zen
+  zenMoves: 5,
 };
 
 export type LevelEventName = keyof LevelEvents;
@@ -253,10 +255,11 @@ export class Level extends entity.CompositeEntity {
   public goButton: hud.GoButton;
 
   // game
+  public score: number;
+  public zenMoves: number;
   public wasInfected = false;
   public someVirusHasEscaped = false;
   public crunchCount = 0;
-  public score: number;
   public failed = false;
   public sequenceWasCrunched = false;
   public scissorsWasIncludes = false;
@@ -402,10 +405,10 @@ export class Level extends entity.CompositeEntity {
       this.options.initialBonuses
     );
 
-    this.syringeBonus = new SyringeBonus(this.bonusesManager);
-    this.healBonus = new HealBonus(this.bonusesManager);
-    this.swapBonus = new SwapBonus(this.bonusesManager);
-    this.timeBonus = new TimeBonus(this.bonusesManager);
+    this.syringeBonus = new bonuses.SyringeBonus(this.bonusesManager);
+    this.healBonus = new bonuses.HealBonus(this.bonusesManager);
+    this.swapBonus = new bonuses.SwapBonus(this.bonusesManager);
+    this.timeBonus = new bonuses.TimeBonus(this.bonusesManager);
 
     this._activateChildEntity(this.bonusesManager, this.config);
   }
@@ -452,6 +455,7 @@ export class Level extends entity.CompositeEntity {
     this.on("virusLeaves", () => {
       if (this.sequenceManager.sequenceCount === 1) {
         this.sequenceManager.add();
+        this._activateChildEntity(this.fillHoles());
       }
     });
 
@@ -618,6 +622,52 @@ export class Level extends entity.CompositeEntity {
     }
   }
 
+  removeHalfScore(): entity.Entity {
+    return new entity.EntitySequence([
+      new entity.ParallelEntity([
+        new tween.Tween({
+          from: this.score,
+          to: Math.floor(this.score / 2),
+          duration: 600,
+          onUpdate: (value) => this.setScore(value),
+        }),
+        anim.tweenShaking(this.gauge.bar, 600, 10, 0),
+        new entity.EntitySequence([
+          new tween.Tween({
+            from: 0xffffff,
+            to: 0xff0000,
+            duration: 300,
+            onUpdate: (value) => this.gauge.setTint(value),
+            interpolate: tween.interpolation.color,
+          }),
+          new tween.Tween({
+            from: 0xff0000,
+            to: 0xffffff,
+            duration: 300,
+            onUpdate: (value) => this.gauge.setTint(value),
+            interpolate: tween.interpolation.color,
+          }),
+        ]),
+      ]),
+    ]);
+  }
+
+  removeZenMove(): entity.Entity {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.zenMoves--;
+        if (this.zenMoves <= 0) {
+          if (this.score >= this.options.maxScore) {
+            this.minimap.saveResults(this);
+            this._activateChildEntity(new popup.TerminatedLevelPopup());
+          } else {
+            this.gameOverByFail();
+          }
+        }
+      }),
+    ]);
+  }
+
   gameOverByFail() {
     this.failed = true;
     if (this.options.retryOnFail) {
@@ -660,6 +710,19 @@ export class Level extends entity.CompositeEntity {
     this._transition = entity.makeTransition();
   }
 
+  setScore(score: number) {
+    if (this.options.disableScore) return;
+
+    if (score >= this.options.maxScore) {
+      this.emit("maxScoreReached");
+      this.score = this.options.maxScore;
+    } else {
+      this.score = score;
+    }
+
+    this.emit("scoreUpdated", this.score);
+  }
+
   addScore(score: number) {
     if (this.options.disableScore) return;
 
@@ -672,11 +735,7 @@ export class Level extends entity.CompositeEntity {
       this.score += score;
     }
 
-    this.emit("scoreUpdated", score);
-
-    if (!this.options.disableGauge) {
-      this.gauge.setValue(this.score);
-    }
+    this.emit("scoreUpdated", this.score);
   }
 
   get isDisablingAnimationInProgress(): boolean {

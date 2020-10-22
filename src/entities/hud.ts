@@ -34,11 +34,18 @@ export class Gauge extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
+  get bar(): PIXI.Sprite {
+    return this._bar;
+  }
+
   /**
    * Set value of gauge bar (value/maxValue)
    * @param {number} value - The new value of gauge bar
    */
   setValue(value: number) {
+    // todo: maybe use down for animation
+    const down = this._value > value;
+
     this._value = value;
     this._bar.width = this.getBarWidth();
     this._bar.position.set(this.getBarPosition(), 0);
@@ -56,6 +63,10 @@ export class Gauge extends entity.CompositeEntity {
         })
       );
     }
+  }
+
+  setTint(tint: number) {
+    this._bar.tint = tint;
   }
 
   getBarWidth(): number {
@@ -199,6 +210,8 @@ export class Gauge extends entity.CompositeEntity {
       });
     });
 
+    this.level.on("scoreUpdated", this.setValue.bind(this));
+
     this.setValue(0);
   }
 
@@ -295,48 +308,51 @@ export class GoButton extends entity.CompositeEntity {
       }),
     ];
 
-    if (
-      this.level.options.variant === "turnBased" ||
-      this.level.options.variant === "long"
-    ) {
-      // pass turn in turnBased mode and long mode
-      // ? has holes
-      //    : => fill holes
-      //    ! => regenerate some nucleotides
-      if (this.level.grid.containsHoles()) {
-        context.push(this.level.fillHoles());
-      } else {
+    switch (this.level.options.variant) {
+      case "turnBased":
+        // ? has holes
+        //    : => fill holes
+        //    ! => regenerate some nucleotides
+        if (this.level.grid.containsHoles()) {
+          context.push(this.level.fillHoles(), this.level.infect());
+        } else {
+          context.push(
+            new entity.FunctionCallEntity(() => {
+              this.level.grid.regenerate(
+                Math.ceil(this.level.grid.nucleotides.length / 2),
+                (n) => n.state === "present" && n.type !== "scissors"
+              );
+            }),
+
+            // todo: replace waiting entity by this.level.grid.regenerate():SequenceEntity
+            new entity.WaitingEntity(1200),
+
+            this.level.sequenceManager.dropSequences(1),
+            this.level.infect()
+          );
+        }
+        break;
+      case "long":
         context.push(
-          new entity.FunctionCallEntity(() => {
-            this.level.grid.regenerate(
-              Math.ceil(this.level.grid.nucleotides.length / 2),
-              (n) => n.state === "present" && n.type !== "scissors"
-            );
-          }),
-
-          // todo: replace waiting entity by this.level.grid.regenerate():SeqenceEntity
-          new entity.WaitingEntity(1200),
-
-          this.level.sequenceManager.dropSequences(1),
-          this.level.infect(),
-          new entity.FunctionCallEntity(() => {
-            this.level.refresh();
-          })
+          this.level.sequenceManager.dropSequences(),
+          this.level.removeHalfScore(),
+          this.level.removeZenMove()
         );
-      }
-    } else {
-      // mode continuous => pass the turn
-      // => down all sequences
-      // => infect
-      context.push(
-        this.level.sequenceManager.dropSequences(),
-        this.level.infect()
-      );
+        break;
+      case "continuous":
+        // => down all sequences
+        // => infect
+        context.push(
+          this.level.sequenceManager.dropSequences(),
+          this.level.infect()
+        );
+        break;
     }
 
     context.push(
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("goButton._onGo", false);
+        this.level.refresh();
         this.level.checkGameOverByInfection();
       })
     );

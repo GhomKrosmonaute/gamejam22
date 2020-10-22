@@ -4,7 +4,7 @@ import * as geom from "booyah/src/geom";
 
 export const width = 1080;
 export const height = 1920;
-export const debug = true;
+export const debug = false;
 
 export class BetterPoint extends PIXI.Point {
   public readonly origin = new PIXI.Point();
