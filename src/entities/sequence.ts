@@ -15,36 +15,56 @@ import * as virus from "./virus";
 
 import * as level from "../scenes/level";
 
-/**
- * emits:
- * - crunch(s: Sequence)
- */
-export class SequenceManager extends entity.CompositeEntity {
-  public sequences = new Set<Sequence>();
-  public container = new PIXI.Container();
+export class SequenceAdjustment extends entity.CompositeEntity {
+  private readonly disablingAnimation = "adjustSequences";
 
-  private adjustment: entity.Entity = null;
+  get level(): level.Level {
+    return this._entityConfig.level;
+  }
 
-  _setup() {
-    this.container = new PIXI.Container();
-    this._entityConfig.container.addChild(this.container);
-
-    if (this.level.options.sequences) {
-      for (const colors of this.level.options.sequences) {
-        this.set(colors);
-      }
-    } else {
-      this.add();
+  adjust() {
+    if (this.level.disablingAnimations.has(this.disablingAnimation)) {
+      this._deactivateAllChildEntities();
     }
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        new entity.FunctionCallEntity(() => {
+          this.level.disablingAnimation(this.disablingAnimation, true);
+        }),
+        new entity.ParallelEntity(
+          [...this.level.sequenceManager.sequences].map((sequence) => {
+            return new tween.Tween({
+              duration: 2000,
+              easing: easing.easeInOutQuad,
+              from: sequence.container.position.y,
+              to: this.getHeight(sequence),
+              onUpdate: function (value: number) {
+                (<Sequence>this).container.position.y = value;
+              }.bind(sequence),
+            });
+          })
+        ),
+        new entity.FunctionCallEntity(() => {
+          this.level.disablingAnimation(this.disablingAnimation, false);
+        }),
+      ])
+    );
   }
 
-  _teardown() {
-    this.sequences.clear();
-    this.container.removeChildren();
-    this._entityConfig.container.removeChild(this.container);
+  getHeight(sequence: Sequence) {
+    const range = this.getRange();
+    if (this.level.options.variant === "continuous") return range.top;
+    if (this.level.sequenceManager.sequences.size < 2) return range.middle;
+    return crisprUtil.proportion(
+      [...this.level.sequenceManager.sequences].indexOf(sequence),
+      0,
+      this.level.sequenceManager.sequences.size,
+      range.top,
+      range.bottom
+    );
   }
 
-  private _getSequenceRangeY(): crisprUtil.Range {
+  getRange(): crisprUtil.Range {
     const range: crisprUtil.Range = {
       top: 0,
       middle: 0,
@@ -68,6 +88,53 @@ export class SequenceManager extends entity.CompositeEntity {
 
     range.middle = (range.top + range.bottom) / 2;
     return range;
+  }
+}
+
+/**
+ * emits:
+ * - crunch(s: Sequence)
+ */
+export class SequenceManager extends entity.CompositeEntity {
+  public sequences = new Set<Sequence>();
+  public container = new PIXI.Container();
+  public adjustment = new SequenceAdjustment();
+
+  _setup() {
+    this.container = new PIXI.Container();
+    this._entityConfig.container.addChild(this.container);
+
+    this._activateChildEntity(this.adjustment);
+
+    this.generateFirstSequences();
+  }
+
+  _teardown() {
+    this.container.removeChildren();
+    this._entityConfig.container.removeChild(this.container);
+    this.container = null;
+  }
+
+  reset() {
+    this.sequences.forEach((s) => {
+      this._deactivateChildEntity(s);
+    });
+
+    this.generateFirstSequences();
+
+    if (crisprUtil.debug) {
+      console.log("--> DONE", "sequenceManager.reset()");
+    }
+  }
+
+  generateFirstSequences() {
+    if (this.level.options.sequences) {
+      for (const colors of this.level.options.sequences) {
+        this.set(colors);
+      }
+    } else {
+      this.add();
+    }
   }
 
   get level(): level.Level {
@@ -112,7 +179,7 @@ export class SequenceManager extends entity.CompositeEntity {
       colors,
       new PIXI.Point(
         crisprUtil.width / 2 - (colors.length * nucleotideWidth * 0.8) / 2,
-        this._getSequenceRangeY().top
+        this.adjustment.getRange().top
       )
     );
     this._activateChildEntity(
@@ -122,7 +189,7 @@ export class SequenceManager extends entity.CompositeEntity {
       })
     );
     this.sequences.add(sequence);
-    this.adjustRelativePositionOfSequences();
+    this.adjustment.adjust();
   }
 
   add(length?: number) {
@@ -136,7 +203,7 @@ export class SequenceManager extends entity.CompositeEntity {
       length,
       new PIXI.Point(
         crisprUtil.width / 2 - (length * nucleotideWidth * 0.8) / 2,
-        this._getSequenceRangeY().top
+        this.adjustment.getRange().top
       )
     );
     this._activateChildEntity(
@@ -146,56 +213,79 @@ export class SequenceManager extends entity.CompositeEntity {
       })
     );
     this.sequences.add(sequence);
-    this.adjustRelativePositionOfSequences();
+    this.adjustment.adjust();
   }
 
   /** remove all validated sequences */
-  crunch(_path: path.Path, callback?: () => any) {
-    const finish: Promise<void>[] = [];
-
+  crunch(_path: path.Path): entity.EntitySequence | void {
     if (this.matchesSequence(_path) !== true) return;
 
     const signature = _path.signature;
     const removedSequences: Sequence[] = [];
+    let partialCrunch = false;
+
     for (const s of this.sequences) {
       if (this._entityConfig.level.options.variant === "long") {
         if (s.validate(signature, "partial")) {
           s.deactivateSegment(_path.signature);
+
+          partialCrunch = true;
 
           if (s.isInactive()) {
             removedSequences.push(s);
           }
         }
       } else if (s.validate(signature)) {
+        partialCrunch = true;
+
         removedSequences.push(s);
       }
     }
 
-    if (removedSequences.length > 0) {
+    const context: entity.Entity[] = [];
+
+    if (removedSequences.length > 0 || partialCrunch) {
       this.level.path.crunchCountBeforeSequenceDown++;
 
-      for (const s of removedSequences) {
-        this.emit("crunch", s);
-        finish.push(
-          new Promise((resolve) => {
-            this.removeSequence(true, s, resolve);
-          })
+      if (crisprUtil.debug) {
+        console.log(
+          "updated",
+          "crunchCountBeforeSequenceDown",
+          this.level.path.crunchCountBeforeSequenceDown
         );
       }
 
-      this.adjustRelativePositionOfSequences();
+      for (const s of removedSequences) {
+        context.push(
+          new entity.FunctionCallEntity(() => {
+            this.emit("crunch", s);
+          }),
+          this.removeSequence(!this.level.options.disableScore, s)
+        );
+      }
     }
 
     // if (crunched) path.items.forEach((n) => (n.state = "missing"));
 
-    Promise.all(finish).then(callback);
+    context.push(
+      new entity.FunctionCallEntity(() => {
+        this.adjustment.adjust();
+        if (partialCrunch) {
+          this.level.emitLevelEvent("partialCrunched");
+        }
+      })
+    );
+
+    return new entity.EntitySequence(context);
   }
 
-  removeSequence(addScore: boolean, s: Sequence, callback?: () => any) {
-    s.down(addScore, () => {
-      this.adjustRelativePositionOfSequences();
-      if (callback) callback();
-    });
+  removeSequence(addScore: boolean, s: Sequence): entity.ParallelEntity {
+    return new entity.ParallelEntity([
+      s.down(addScore),
+      new entity.FunctionCallEntity(() => {
+        this.adjustment.adjust();
+      }),
+    ]);
   }
 
   /**
@@ -203,85 +293,39 @@ export class SequenceManager extends entity.CompositeEntity {
    * Removes sequences that reached the bottom, and returns them.
    */
   advanceSequences(fraction: number): Sequence[] {
-    const yDist =
-      this._getSequenceRangeY().bottom - this._getSequenceRangeY().top;
+    const range = this.adjustment.getRange();
+
+    const yDist = range.bottom - range.top;
 
     const droppedSequences: Sequence[] = [];
     for (const s of this.sequences) {
       s.container.position.y += fraction * yDist;
 
-      if (s.container.position.y >= this._getSequenceRangeY().bottom) {
+      if (s.container.position.y >= range.bottom) {
         droppedSequences.push(s);
       }
     }
 
     if (droppedSequences.length > 0) {
-      droppedSequences.forEach((s, i) => {
+      droppedSequences.forEach((s) => {
         s.nucleotides.forEach((n) => (n.sprite.tint = 0x000000));
-        s.down(false);
+        this._activateChildEntity(s.down(false));
       });
     }
 
     return droppedSequences;
   }
 
-  /** Drops the last @count sequences and returns them */
-  dropSequences(count = 1): Sequence[] {
-    const droppedSequences = _.last([...this.sequences], count);
+  /** Drops @count of sequences or all sequences */
+  dropSequences(count?: number): entity.Entity {
+    const droppedSequences = count
+      ? _.last([...this.sequences], count)
+      : [...this.sequences];
 
-    droppedSequences.forEach((s) => {
-      this.removeSequence(false, s);
-    });
-
-    return droppedSequences;
-  }
-
-  /**
-   * In the case that sequences are layed out, distributes them evenly
-   */
-  adjustRelativePositionOfSequences() {
-    this.level.disablingAnimations.add(
-      "sequence.adjustRelativePositionOfSequences"
-    );
-
-    if (this.adjustment && this.adjustment.isSetup) {
-      this._deactivateChildEntity(this.adjustment);
-    }
-
-    this.adjustment = new entity.EntitySequence([
-      new entity.ParallelEntity(
-        [...this.sequences].map((s, i) => {
-          return new tween.Tween({
-            duration: 2000,
-            easing: easing.easeInOutQuad,
-            from: s.container.position.y,
-            to: this.getSequenceYByIndex(i),
-            onUpdate: function (value: number) {
-              (<Sequence>this).container.position.y = value;
-            }.bind(s),
-          });
-        })
-      ),
-      new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.delete(
-          "sequence.adjustRelativePositionOfSequences"
-        );
-      }),
-    ]);
-
-    this._activateChildEntity(this.adjustment);
-  }
-
-  getSequenceYByIndex(index: number) {
-    const range = this._getSequenceRangeY();
-    if (this.level.options.variant === "continuous") return range.top;
-    if (this.sequences.size === 1) return range.middle;
-    return crisprUtil.proportion(
-      index,
-      0,
-      this.sequences.size,
-      range.top,
-      range.bottom
+    return new entity.ParallelEntity(
+      droppedSequences.map((s) => {
+        return this.removeSequence(false, s);
+      })
     );
   }
 
@@ -363,21 +407,28 @@ export class Sequence extends entity.CompositeEntity {
 
     this._activateChildEntity(this.virus, this.level.config);
 
+    const requestTransition = () =>
+      this.virus.isSetup &&
+      this.level.isInit &&
+      !this.level.disablingAnimations.has("preventVirus") &&
+      ![...this.level.disablingAnimations].some((name) =>
+        name.startsWith("popup")
+      );
+
     return new entity.EntitySequence([
-      new entity.FunctionalEntity({
-        requestTransition: () =>
-          this.virus.isSetup && !this.level.disablingAnimations.has("popup"),
-      }),
+      new entity.FunctionalEntity({ requestTransition }),
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.add("sequence._initVirus");
+        this.level.disablingAnimation("sequence._initVirus", true);
       }),
       this.virus.come(),
+      new entity.FunctionalEntity({ requestTransition }),
       new entity.FunctionCallEntity(() => this._initNucleotides()),
       this.virus.stingIn(),
       new entity.WaitingEntity(1000),
       this.virus.stingOut(),
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.delete("sequence._initVirus");
+        this.level.disablingAnimation("sequence._initVirus", false);
+        this.level.emitLevelEvent("injectedSequence", this);
       }),
       // todo: wait the crunch, then leave (if virus is not killed before)
     ]);
@@ -436,9 +487,7 @@ export class Sequence extends entity.CompositeEntity {
       if (this.virus) {
         crisprUtil.positionAlongMembrane(n.position, this.virus.angle);
         n.position.x -= this.container.x;
-        n.position.y -= this.level.sequenceManager.getSequenceYByIndex(
-          [...this.level.sequenceManager.sequences].indexOf(this)
-        );
+        n.position.y -= this.level.sequenceManager.adjustment.getHeight(this);
       }
       n.floating.active.y = true;
       n.floating.amplitude.y = 0.5;
@@ -499,28 +548,47 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _teardown() {
+    this.level.sequenceManager.sequences.delete(this);
     this.nucleotides = [];
     this.container.removeChildren();
     this._entityConfig.container.removeChild(this.container);
   }
 
-  down(addScore: boolean, callback?: () => any) {
-    this.level.sequenceWasCrunched = true;
-    this.level.crunchedSequenceCount++;
+  down(addScore: boolean) {
+    let isLong: boolean, fully: boolean, shots: number;
 
-    this.level.disablingAnimations.add("sequence.down");
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimation("sequence.down", true);
+        this.level.sequenceWasCrunched = true;
+        this.level.crunchedSequenceCount++;
 
-    const isLong = this.level.options.variant === "long";
-    const fully = this.nucleotides.every((n) => n.state === "inactive");
-    const shots = this.level.path.crunchCountBeforeSequenceDown;
+        if (crisprUtil.debug) {
+          console.log(
+            "updated",
+            "crunchedSequenceCount",
+            this.level.crunchedSequenceCount
+          );
+        }
 
-    if (isLong && fully && shots === 1) {
-      this.level.oneShotLongSequence = true;
-    }
+        isLong = this.level.options.variant === "long";
+        fully = this.nucleotides.every((n) => n.state === "inactive");
+        shots = this.level.path.crunchCountBeforeSequenceDown;
 
-    this.level.path.crunchCountBeforeSequenceDown = 0;
+        if (isLong && fully && shots === 1) {
+          this.level.oneShotLongSequence = true;
 
-    this._activateChildEntity(
+          if (crisprUtil.debug) {
+            console.log(
+              "updated",
+              "oneShotLongSequence",
+              this.level.oneShotLongSequence
+            );
+          }
+        }
+
+        this.level.path.crunchCountBeforeSequenceDown = 0;
+      }),
       anim.sequenced({
         items: this.nucleotides,
         timeBetween: isLong ? 80 : 200,
@@ -584,25 +652,25 @@ export class Sequence extends entity.CompositeEntity {
         },
         callback: () => {
           const end = () => {
-            this.level.sequenceManager.sequences.delete(this);
-            this.level.disablingAnimations.delete("sequence.down");
-            this.level.emit("sequenceDown");
+            this.level.disablingAnimation("sequence.down", false);
+            this.level.emitLevelEvent("sequenceDown");
+            this.level.sequenceManager.adjustment.adjust();
             this._transition = entity.makeTransition();
-            callback?.();
           };
+
           if (this.virus && this.virus.isSetup) {
             this._activateChildEntity(
               new entity.EntitySequence([
                 this.virus.kill(),
-                new entity.FunctionCallEntity(() => end()),
+                new entity.FunctionCallEntity(end),
               ])
             );
           } else {
             end();
           }
         },
-      })
-    );
+      }),
+    ]);
   }
 
   validate(
@@ -629,9 +697,12 @@ export class Sequence extends entity.CompositeEntity {
    */
   deactivateSegment(signature: string): boolean {
     const segment = this.getMatchingSegment(signature);
+
     if (!segment) return false;
 
     segment.forEach((n) => (n.state = "inactive"));
+
+    return true;
   }
 
   highlightSegment(signature: string = ""): void {

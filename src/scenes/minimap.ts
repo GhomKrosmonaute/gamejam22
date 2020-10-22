@@ -8,6 +8,8 @@ import * as levels from "../levels";
 
 import * as level from "./level";
 
+import * as popup from "../entities/popup";
+
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
 
@@ -87,13 +89,29 @@ export class Minimap extends entity.CompositeEntity {
       );
       levelSprite.anchor.set(0.5);
       levelSprite.scale.set(0.55 + Math.random() * 0.15);
+      levelSprite.position.copyFrom(position);
       levelSprite.interactive = true;
       levelSprite.buttonMode = true;
-      levelSprite.position.copyFrom(position);
 
       const text = crisprUtil.makeText(levelName, {
         fill: 0xffffff,
       });
+
+      if (!crisprUtil.debug) {
+        const levelIndex = levels.levelNames.indexOf(levelName);
+        if (levelIndex < levels.levelNames.length - 1) {
+          console.log("index", levelIndex, levelName);
+          const previousLevelName = levels.levelNames[levelIndex + 1];
+          if (!localStorage.getItem(previousLevelName)) {
+            console.log("local", levelIndex + 1, previousLevelName);
+            //text.style.fill = 0xb0b0b0;
+            text.visible = false;
+            levelSprite.tint = 0xb0b0b0;
+            levelSprite.interactive = false;
+            levelSprite.buttonMode = false;
+          }
+        }
+      }
 
       this._on(levelSprite, "pointerup", () => {
         levelSprite.filters = [new PIXI.filters.AlphaFilter(1)];
@@ -191,16 +209,18 @@ export class Minimap extends entity.CompositeEntity {
     this.links = null;
   }
 
-  private setLevel(levelName: levels.LevelName) {
+  public setLevel(levelName: levels.LevelName) {
+    popup.Popup.minimized.clear();
     this._transition = entity.makeTransition(levelName);
   }
 
-  public setResult(levelName: levels.LevelName, results: level.LevelResults) {
+  public saveResults(l: level.Level) {
+    const results = l.checkAndReturnsResults();
     let oldResults: level.LevelResults;
-    const data = localStorage.getItem(levelName);
+    const data = localStorage.getItem(l.name);
     if (data) oldResults = JSON.parse(data);
     if (!oldResults || oldResults.checkedCount < results.checkedCount) {
-      localStorage.setItem(levelName, JSON.stringify(results));
+      localStorage.setItem(l.name, JSON.stringify(results));
     }
   }
 }

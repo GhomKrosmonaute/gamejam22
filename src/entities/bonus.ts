@@ -9,6 +9,7 @@ import * as nucleotide from "./nucleotide";
 import * as sequence from "./sequence";
 import * as anim from "../animations";
 import * as crispUtil from "../crisprUtil";
+import * as crisprUtil from "../crisprUtil";
 
 export abstract class Bonus extends entity.CompositeEntity {
   public isUpdateDisabled = false;
@@ -16,10 +17,14 @@ export abstract class Bonus extends entity.CompositeEntity {
   public shakes: anim.ShakesManager;
   public position: PIXI.Point;
 
-  private _count = 0;
+  public _count = 0;
   private _highlight = false;
 
   abstract name: string;
+
+  constructor(private bonusesManager: BonusesManager) {
+    super();
+  }
 
   setup(frameInfo: entity.FrameInfo, entityConfig: entity.EntityConfig) {
     super.setup(frameInfo, entityConfig);
@@ -81,6 +86,16 @@ export abstract class Bonus extends entity.CompositeEntity {
       })
     );
   }
+
+  initListener() {
+    this._on(this.sprite, "pointerup", () => {
+      this.bonusesManager.selection(this);
+    });
+  }
+
+  shutdownListener() {
+    this._off(this.sprite);
+  }
 }
 
 export class TimeBonus extends Bonus {
@@ -125,7 +140,7 @@ export class SwapBonus extends Bonus {
 
     this.isUpdateDisabled = true;
     this.level.grid.swap(a, b, false);
-    this.level.disablingAnimations.add(this.name);
+    this.level.disablingAnimation(this.name, true);
     this._activateChildEntity(
       anim.swap(
         a,
@@ -142,7 +157,7 @@ export class SwapBonus extends Bonus {
         () => {
           b.bubble(150).catch();
           a.bubble(150)
-            .then(() => this.level.disablingAnimations.delete(this.name))
+            .then(() => this.level.disablingAnimation(this.name, false))
             .catch();
           this.end();
         }
@@ -221,7 +236,7 @@ export class HealBonus extends Bonus {
     this._once(this.level.grid, "drag", (target: nucleotide.Nucleotide) => {
       const stages = [[target], ...this.level.grid.getStarStages(target)];
 
-      this.level.disablingAnimations.add(this.name);
+      this.level.disablingAnimation(this.name, true);
 
       this._activateChildEntity(
         new entity.EntitySequence([
@@ -252,7 +267,7 @@ export class HealBonus extends Bonus {
               Promise.all(promises).then(finish);
             },
             callback: () => {
-              this.level.disablingAnimations.delete(this.name);
+              this.level.disablingAnimation(this.name, false);
               this.end();
             },
           }),
@@ -269,12 +284,20 @@ export class SyringeBonus extends Bonus {
     this.level.sequenceManager.container.buttonMode = true;
 
     this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
-      this.level.disablingAnimations.add(this.name);
-      this.level.sequenceManager.removeSequence(true, s, () => {
-        this.level.sequenceManager.add();
-        this.level.disablingAnimations.delete(this.name);
-        this.end();
-      });
+      this.level.disablingAnimation(this.name, true);
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          this.level.sequenceManager.removeSequence(
+            !this.level.options.disableScore,
+            s
+          ),
+          new entity.FunctionCallEntity(() => {
+            this.level.sequenceManager.add();
+            this.level.disablingAnimation(this.name, false);
+            this.end();
+          }),
+        ])
+      );
     });
   }
 
@@ -282,11 +305,6 @@ export class SyringeBonus extends Bonus {
     this.level.sequenceManager.container.buttonMode = false;
   }
 }
-
-export const syringeBonus = new SyringeBonus();
-export const healBonus = new HealBonus();
-export const swapBonus = new SwapBonus();
-export const timeBonus = new TimeBonus();
 
 export interface InitialBonus {
   bonus: Bonus;
@@ -297,8 +315,8 @@ export type InitialBonuses = InitialBonus[];
 
 export class BonusesManager extends entity.CompositeEntity {
   public container: PIXI.Container;
-  public bonuses: Bonus[] = [];
-  public selected: string;
+  public bonuses = new Set<Bonus>();
+  public selected: Bonus;
   public shakeAmount = 3;
   public wasBonusUsed = false;
   private bonusBackground: PIXI.Sprite;
@@ -355,9 +373,7 @@ export class BonusesManager extends entity.CompositeEntity {
       }
     });
 
-    this.initialBonuses.forEach(({ bonus, quantity }) => {
-      this.add(bonus, quantity ?? 1);
-    });
+    this.generateFirstBonuses();
   }
 
   _update() {
@@ -373,16 +389,38 @@ export class BonusesManager extends entity.CompositeEntity {
     this.container = null;
   }
 
-  getSelectedBonus(): Bonus | null {
-    return this.bonuses.find((b) => b.name === this.selected);
+  reset() {
+    this.bonuses.forEach(this.remove.bind(this));
+    if (crisprUtil.debug) {
+      console.log("--> DONE", "bonusManager.reset()");
+    }
+  }
+
+  generateFirstBonuses() {
+    this.initialBonuses.forEach(({ bonus, quantity }) => {
+      this.add(bonus, quantity ?? 1);
+    });
+  }
+
+  remove(bonus: Bonus): this {
+    if (!this.bonuses.has(bonus)) {
+      return;
+    }
+    this.container.removeChild(bonus.sprite);
+    bonus.shutdownListener();
+    bonus.sprite = null;
+    bonus.shakes = null;
+    bonus._count = 0;
+    this.bonuses.delete(bonus);
+    return this;
   }
 
   add(bonus: Bonus, count = 1): this {
-    if (this.bonuses.includes(bonus)) {
+    if (this.bonuses.has(bonus)) {
       bonus.count += count;
       return;
     }
-    const position = new PIXI.Point(100 + this.bonuses.length * 190, 100);
+    const position = new PIXI.Point(100 + this.bonuses.size * 190, 100);
     const sprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         `images/bonus_${bonus.name}.png`
@@ -403,20 +441,22 @@ export class BonusesManager extends entity.CompositeEntity {
 
     bonus.count = count;
 
-    this._on(bonus.sprite, "pointerup", () => this.selection(bonus));
+    bonus.initListener();
 
-    this.bonuses.push(bonus);
+    this.bonuses.add(bonus);
 
     return this;
   }
 
   selection(bonus: Bonus) {
+    console.log("coucou");
+
     if (bonus.isSetup) {
       this.selected = null;
       return bonus.abort();
     }
 
-    const old = this.getSelectedBonus();
+    const old = this.selected;
     if (old === bonus) {
       this.selected = null;
       return bonus.abort();
@@ -424,7 +464,7 @@ export class BonusesManager extends entity.CompositeEntity {
 
     if (bonus.count <= 0 || this.level.isDisablingAnimationInProgress) return;
 
-    this.selected = bonus.name;
+    this.selected = bonus;
 
     this._activateChildEntity(
       bonus,

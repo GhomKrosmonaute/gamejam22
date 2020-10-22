@@ -20,14 +20,31 @@ export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
   return opposedNeighborIndex as NeighborIndex;
 }
 
+export const colCount = 7;
+export const rowCount = 7;
+
 export type GridPreset<T = true> = ((T | null)[] | null)[];
+
+export type GridArrowShape = (x: number, y: number) => boolean;
 
 export type GridShape =
   | "mini"
   | "medium"
   | "full"
   | GridPreset<nucleotide.ColorName>
-  | ((x: number, y: number) => boolean);
+  | GridArrowShape;
+
+export const gridShapes: { [k: string]: GridArrowShape } = {
+  mini: (x, y) => x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0),
+  medium: (x, y) =>
+    x < 1 ||
+    x > 5 ||
+    y < 1 ||
+    y > 5 ||
+    (x === 1 && y === 1) ||
+    (x === 5 && y === 1) ||
+    (x !== 3 && x > 0 && x < 6 && y === 5),
+};
 
 /** Represent the game nucleotides grid
  *
@@ -36,7 +53,7 @@ export type GridShape =
  *
  */
 export class Grid extends entity.CompositeEntity {
-  public container: PIXI.Container;
+  public container: PIXI.Graphics;
   public allNucleotides: nucleotide.Nucleotide[] = [];
   public nucleotideContainer: PIXI.Container;
   public x = crisprUtil.width * 0.09;
@@ -45,15 +62,10 @@ export class Grid extends entity.CompositeEntity {
   public cursor = new PIXI.Point();
   public lastHovered: nucleotide.Nucleotide | null;
 
-  constructor(
-    public colCount: number,
-    public rowCount: number,
-    public scissorCount: number,
-    public nucleotideRadius: number,
-    public shape: GridShape,
-    public presetScissors?: GridPreset
-  ) {
+  constructor() {
     super();
+    // @ts-ignore
+    window.grid = this;
   }
 
   get level(): level.Level {
@@ -61,7 +73,11 @@ export class Grid extends entity.CompositeEntity {
   }
 
   _setup() {
-    this.container = new PIXI.Container();
+    this.container = new PIXI.Graphics();
+    this.container
+      .beginFill(0x000000, 0.001)
+      .drawRect(0, 0, crisprUtil.width, crisprUtil.height)
+      .endFill();
     this.container.interactive = true;
 
     // Keep track of last pointer position
@@ -70,7 +86,7 @@ export class Grid extends entity.CompositeEntity {
     this._on(this.container, "pointermove", this._onPointerMove);
 
     if (crisprUtil.debug) {
-      this.on("drag", (n: nucleotide.Nucleotide) => {
+      this._on(this, "drag", (n: nucleotide.Nucleotide) => {
         console.log(this.getGridPositionOf(n));
       });
     }
@@ -81,86 +97,14 @@ export class Grid extends entity.CompositeEntity {
     this.nucleotideContainer.position.set(this.x, this.y);
     this.container.addChild(this.nucleotideContainer);
 
-    this.allNucleotides.length = this.colCount * this.rowCount;
+    this.generateShape();
 
-    const addNucleotide = (
-      x: number,
-      y: number,
-      color?: nucleotide.ColorName
-    ) => {
-      const n = new nucleotide.Nucleotide(
-        this.nucleotideRadius,
-        "grid",
-        this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y)),
-        0,
-        color
-      );
-      n.floating.active.x = true;
-      n.floating.active.y = true;
-      n.floating.speed.set(1.4, 2);
-      n.floating.amplitude.set(0.3, 0.3);
-      n.type = "normal";
-      this._activateChildEntity(
-        n,
-        entity.extendConfig({
-          container: this.nucleotideContainer,
-        })
-      );
-      this.allNucleotides[y * this.colCount + x] = n;
-    };
-
-    if (Array.isArray(this.shape)) {
-      this.shape.forEach((row, y) => {
-        if (row)
-          row.forEach((col, x) => {
-            if (col) addNucleotide(x, y, col);
-          });
-      });
-    } else {
-      for (let x = 0; x < this.colCount; x++) {
-        for (let y = 0; y < this.rowCount; y++) {
-          if (x % 2 === 0 && y === this.rowCount - 1) continue;
-          if (
-            this.shape === "mini" &&
-            (x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0))
-          )
-            continue;
-          if (
-            this.shape === "medium" &&
-            (x < 1 ||
-              x > 5 ||
-              y < 1 ||
-              y > 5 ||
-              (x === 1 && y === 1) ||
-              (x === 5 && y === 1) ||
-              (x !== 3 && x > 0 && x < 6 && y === 5))
-          )
-            continue;
-
-          if (typeof this.shape === "function" && !this.shape(x, y)) continue;
-
-          addNucleotide(x, y);
-        }
+    this._on(this, "pointerup", () => {
+      if (this.level.options.variant !== "long") {
+        const crunch = this.level.attemptCrunch();
+        if (crunch) this._activateChildEntity(crunch);
       }
-    }
-
-    if (this.presetScissors) {
-      this.presetScissors.forEach((row, y) => {
-        if (row)
-          row.forEach((col, x) => {
-            if (col) {
-              const n = this.getNucleotideFromGridPosition(
-                new PIXI.Point(x, y)
-              );
-              n.type = "scissors";
-            }
-          });
-      });
-    }
-
-    this.addScissors(this.nucleotides);
-
-    this.nucleotides.forEach((n) => (n.state = "present"));
+    });
   }
 
   _update() {
@@ -180,6 +124,112 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides = [];
   }
 
+  get shape(): (nucleotide.ColorName | "s")[][] {
+    const shape: (nucleotide.ColorName | "s")[][] = [];
+    for (let y = 0; y < colCount; y++) {
+      shape.push([]);
+      for (let x = 0; x < rowCount; x++) {
+        const n = this.getNucleotideFromGridPosition(new PIXI.Point(x, y));
+        if (n) {
+          if (n.type === "normal") {
+            shape[y][x] = n.colorName;
+          } else {
+            shape[y][x] = "s";
+          }
+        }
+      }
+    }
+    return shape;
+  }
+
+  addNucleotide(x: number, y: number, color?: nucleotide.ColorName) {
+    const n = new nucleotide.Nucleotide(
+      this.level.options.nucleotideRadius,
+      "grid",
+      this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y)),
+      0,
+      color
+    );
+    n.floating.active.x = true;
+    n.floating.active.y = true;
+    n.floating.speed.set(1.4, 2);
+    n.floating.amplitude.set(0.3, 0.3);
+    n.type = "normal";
+    this._activateChildEntity(
+      n,
+      entity.extendConfig({
+        container: this.nucleotideContainer,
+      })
+    );
+    this.allNucleotides[y * colCount + x] = n;
+  }
+
+  generateShape() {
+    this.allNucleotides.length = colCount * rowCount;
+
+    // colors and shape
+    const shape = this.level.options.gridShape;
+    if (Array.isArray(shape)) {
+      // preset grid colors and shape
+      shape.forEach((row, y) => {
+        if (row)
+          row.forEach((col, x) => {
+            if (col) this.addNucleotide(x, y, col);
+          });
+      });
+    } else {
+      // preset shape
+      for (let x = 0; x < colCount; x++) {
+        for (let y = 0; y < rowCount; y++) {
+          if (x % 2 === 0 && y === rowCount - 1) continue;
+
+          if (shape !== "full") {
+            if (typeof shape === "string") {
+              if (gridShapes[shape](x, y)) continue;
+            } else if (typeof shape === "function") {
+              if (shape(x, y)) continue;
+            }
+          }
+
+          this.addNucleotide(x, y);
+        }
+      }
+    }
+
+    // preset scissors
+    if (this.level.options.presetScissors) {
+      this.level.options.presetScissors.forEach((row, y) => {
+        if (row)
+          row.forEach((col, x) => {
+            if (col) {
+              const n = this.getNucleotideFromGridPosition(
+                new PIXI.Point(x, y)
+              );
+              n.type = "scissors";
+            }
+          });
+      });
+    }
+
+    // finalize
+    this.addScissors(this.nucleotides);
+    this.nucleotides.forEach((n) => (n.state = "present"));
+  }
+
+  reset() {
+    this.nucleotides.forEach((n) => {
+      this._deactivateChildEntity(n);
+    });
+
+    this.allNucleotides = [];
+
+    this.generateShape();
+
+    if (crisprUtil.debug) {
+      console.log("--> DONE", "grid.reset()");
+    }
+  }
+
   private _onPointerDown(e: PIXI.InteractionEvent) {
     this.isPointerDown = true;
     this.updateCursor(e);
@@ -188,7 +238,7 @@ export class Grid extends entity.CompositeEntity {
 
     const bonus = this.level.options.disableBonuses
       ? null
-      : this.level.bonusesManager.getSelectedBonus();
+      : this.level.bonusesManager.selected;
 
     if (!bonus || bonus.name === "time") {
       hovered = this.getHovered();
@@ -231,7 +281,8 @@ export class Grid extends entity.CompositeEntity {
     if (safe.length === 0) return;
 
     while (
-      safe.filter((n) => n.type === "scissors").length < this.scissorCount
+      safe.filter((n) => n.type === "scissors").length <
+      this.level.options.scissorCount
     ) {
       let randomIndex;
       do {
@@ -254,7 +305,7 @@ export class Grid extends entity.CompositeEntity {
     const normals = this.nucleotides.filter((n) => n.type === "normal");
 
     if (normals.length < length) {
-      return null;
+      throw new Error("bad length request");
     }
 
     let current = crisprUtil.random(normals);
@@ -289,14 +340,14 @@ export class Grid extends entity.CompositeEntity {
   getNucleotideFromGridPosition(
     gridPos: PIXI.Point
   ): nucleotide.Nucleotide | null {
-    return this.allNucleotides[gridPos.y * this.colCount + gridPos.x];
+    return this.allNucleotides[gridPos.y * colCount + gridPos.x];
   }
 
   getGridPositionOf(n: nucleotide.Nucleotide): PIXI.Point | null {
     const index = this.allNucleotides.indexOf(n);
     if (index === -1) return null;
-    const x = index % this.colCount;
-    const y = Math.floor(index / this.colCount);
+    const x = index % colCount;
+    const y = Math.floor(index / colCount);
     return new PIXI.Point(x, y);
   }
 
@@ -323,7 +374,7 @@ export class Grid extends entity.CompositeEntity {
       height,
       dist,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.nucleotideRadius
+      this.level.options.nucleotideRadius
     );
     const x = width / 2 + gridPos.x * dist.x;
     const y =
@@ -394,6 +445,8 @@ export class Grid extends entity.CompositeEntity {
   }
 
   fillHoles(): nucleotide.Nucleotide[] {
+    // todo: use changeState(): entity.Sequence instead of state accessor and returns it
+
     const holes = this.nucleotides.filter((n) => n.state === "missing");
     for (const nucleotide of holes) {
       this.generateNucleotide(nucleotide);
@@ -548,6 +601,8 @@ export class Grid extends entity.CompositeEntity {
    * Regenerate a certain number of nucleotides
    */
   regenerate(n: number, filter: (n: nucleotide.Nucleotide) => boolean): void {
+    // todo: use changeState(): entity.Sequence instead of state accessor and returns it
+
     // Pick a certain number of non-infected nucleotides
     // @ts-ignore
     const nucleotides: nucleotide.Nucleotide[] = _.chain(this.nucleotides)
@@ -573,17 +628,18 @@ export class Grid extends entity.CompositeEntity {
     nucleotide.generateColor();
   }
 
-  isGameOver(): boolean {
+  isFullyInfected(): boolean {
     return !this.nucleotides.some(
       (n) => n.state === "present" && n.type === "normal"
     );
   }
 
   /**
-   * Returns an entity sequence that gradually infects each of the nucleotides
-   * @param count
+   * Returns an entity sequence that infect a quart of grid nucleotides
    */
-  infect(count: number): entity.EntitySequence {
+  infect(): entity.EntitySequence {
+    const count = Math.ceil(this.nucleotides.length / 4);
+
     // @ts-ignore
     const infected = _.chain(this.nucleotides)
       .filter((n) => n.state === "present" && n.type === "normal")
@@ -593,11 +649,11 @@ export class Grid extends entity.CompositeEntity {
 
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimations.add("grid.infect");
+        this.level.disablingAnimation("grid.infect", true);
 
         if (infected.length > 0) {
           this.level.wasInfected = true;
-          this.level.emit("infected");
+          this.level.emitLevelEvent("infected");
         }
       }),
       anim.sequenced({
@@ -607,7 +663,7 @@ export class Grid extends entity.CompositeEntity {
           item.state = "infected";
         },
         callback: () => {
-          this.level.disablingAnimations.delete("grid.infect");
+          this.level.disablingAnimation("grid.infect", false);
         },
       }),
     ]);

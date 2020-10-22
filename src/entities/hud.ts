@@ -13,7 +13,7 @@ import * as level from "../scenes/level";
  * Emits:
  * - reached()
  */
-export type Ring = PIXI.Sprite & { base?: PIXI.Point };
+export type Ring = PIXI.Sprite & { base?: PIXI.Point; index?: number };
 
 export class Gauge extends entity.CompositeEntity {
   private _container = new PIXI.Container();
@@ -34,11 +34,18 @@ export class Gauge extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
+  get bar(): PIXI.Sprite {
+    return this._bar;
+  }
+
   /**
    * Set value of gauge bar (value/maxValue)
    * @param {number} value - The new value of gauge bar
    */
   setValue(value: number) {
+    // todo: maybe use down for animation
+    const down = this._value > value;
+
     this._value = value;
     this._bar.width = this.getBarWidth();
     this._bar.position.set(this.getBarPosition(), 0);
@@ -56,6 +63,10 @@ export class Gauge extends entity.CompositeEntity {
         })
       );
     }
+  }
+
+  setTint(tint: number) {
+    this._bar.tint = tint;
   }
 
   getBarWidth(): number {
@@ -111,8 +122,12 @@ export class Gauge extends entity.CompositeEntity {
     this._container.interactive = true;
     this._container.buttonMode = true;
     this._on(this._container, "pointerup", () => {
-      if (this._statePopup.isSetup) return;
-      this._activateChildEntity(this._statePopup, entity.extendConfig({}));
+      if (
+        !this._statePopup.isSetup &&
+        !this.level.isDisablingAnimationInProgress
+      ) {
+        this._activateChildEntity(this._statePopup, entity.extendConfig({}));
+      }
     });
 
     // assign sprites
@@ -140,6 +155,8 @@ export class Gauge extends entity.CompositeEntity {
         ].texture
       );
 
+      ring.index = i;
+
       const position = new crisprUtil.BetterPoint(
         crisprUtil.proportion(i, -1, this._ringCount, 0, 450, true),
         ring.height * 0.5
@@ -152,11 +169,10 @@ export class Gauge extends entity.CompositeEntity {
       ring.base.copyFrom(position);
 
       this._once(ring, "reached", () => {
-        this.level.emit(
-          "ringReached",
-          ring,
-          this._rings.children.indexOf(ring)
-        );
+        this.level.options.gaugeRings[ring.index](this.level, ring);
+        ring.tint = 0x6bffff;
+        this.level.emitLevelEvent("ringReached", ring);
+        this._activateChildEntity(anim.tweenShaking(ring, 2000, 10, 0));
       });
 
       this._rings.addChild(ring);
@@ -183,6 +199,18 @@ export class Gauge extends entity.CompositeEntity {
         onStep: (ring) => anim.popup(ring, 200),
       })
     );
+
+    // setup shockwave on max score is reached
+    this._on(this.level, "maxScoreReached", () => {
+      this.bubbleRings({
+        timeBetween: 100,
+        forEach: (ring: Ring) => {
+          ring.tint = 0x007784;
+        },
+      });
+    });
+
+    this.level.onLevelEvent("scoreUpdated", this.setValue.bind(this));
 
     this.setValue(0);
   }
@@ -232,7 +260,10 @@ export class GoButton extends entity.CompositeEntity {
     );
     this.sprite.interactive = true;
     this.sprite.buttonMode = true;
-    this._on(this.sprite, "pointerup", this._onGo);
+    this._on(this.sprite, "pointerup", () => {
+      const go = this._onGo();
+      if (go) this._activateChildEntity(go);
+    });
     this.container.addChild(this.sprite);
 
     this.text = crisprUtil.makeText("GO", {
@@ -258,46 +289,74 @@ export class GoButton extends entity.CompositeEntity {
     this.text.text = text;
   }
 
-  private _onGo(): void {
-    if (this.level.isDisablingAnimationInProgress) return;
+  private _onGo(): entity.Entity {
+    if (this.level.isDisablingAnimationInProgress) {
+      return anim.tweenShaking(this.sprite, 300, 6);
+    }
 
     if (this.level.options.variant === "long") {
       if (this.level.path.items.length > 0) {
         return this.level.attemptCrunch();
       }
-    } else if (this.level.path.items.length > 0) return;
+    } else if (this.level.path.items.length > 0) {
+      return anim.tweenShaking(this.sprite, 300, 6);
+    }
 
-    if (
-      this.level.options.variant === "turnBased" ||
-      this.level.options.variant === "long"
-    ) {
-      if (this.level.grid.containsHoles()) {
-        this.level.regenerate();
-      } else {
-        // TODO: add confirm dialog "Are you sure?"
-        this.level.disablingAnimations.add("goButton._onGo");
+    const context: entity.Entity[] = [
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimation("goButton._onGo", true);
+      }),
+    ];
 
-        this._activateChildEntity(
-          new entity.EntitySequence([
+    switch (this.level.options.variant) {
+      case "turnBased":
+        // ? has holes
+        //    : => fill holes
+        //    ! => regenerate some nucleotides
+        if (this.level.grid.containsHoles()) {
+          context.push(this.level.fillHoles(), this.level.infect());
+        } else {
+          context.push(
             new entity.FunctionCallEntity(() => {
               this.level.grid.regenerate(
                 Math.ceil(this.level.grid.nucleotides.length / 2),
                 (n) => n.state === "present" && n.type !== "scissors"
               );
             }),
+
+            // todo: replace waiting entity by this.level.grid.regenerate():SequenceEntity
             new entity.WaitingEntity(1200),
-            new entity.FunctionCallEntity(() => {
-              this.level.endTurn();
-              this.level.refresh();
-              this.level.disablingAnimations.delete("goButton._onGo");
-            }),
-          ])
+
+            this.level.sequenceManager.dropSequences(1),
+            this.level.infect()
+          );
+        }
+        break;
+      case "long":
+        context.push(
+          this.level.sequenceManager.dropSequences(),
+          this.level.removeHalfScore(),
+          this.level.removeZenMove()
         );
-      }
-    } else {
-      // As if the sequence dropped all the way down
-      this.level.sequenceManager.dropSequences();
-      this.level.onInfection();
+        break;
+      case "continuous":
+        // => down all sequences
+        // => infect
+        context.push(
+          this.level.sequenceManager.dropSequences(),
+          this.level.infect()
+        );
+        break;
     }
+
+    context.push(
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimation("goButton._onGo", false);
+        this.level.refresh();
+        this.level.checkGameOverByInfection();
+      })
+    );
+
+    return new entity.EntitySequence(context);
   }
 }

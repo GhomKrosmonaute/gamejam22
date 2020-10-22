@@ -30,7 +30,7 @@ export class Path extends entity.CompositeEntity {
     );
 
     this._on(this, "updated", () => {
-      this.level.emit("pathUpdated");
+      this.level.emitLevelEvent("pathUpdated");
       this.refresh();
     });
   }
@@ -177,22 +177,22 @@ export class Path extends entity.CompositeEntity {
     }
   }
 
-  crunch(callback?: () => any) {
-    this.level.disablingAnimations.add("path.crunch");
+  crunch() {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.level.disablingAnimation("path.crunch", true);
 
-    if (this.correctlyContainsScissors()) {
-      this.level.scissorsWasIncludes = true;
-    }
-
-    this._activateChildEntity(
+        if (this.correctlyContainsScissors()) {
+          this.level.scissorsWasIncludes = true;
+        }
+      }),
       anim.sequenced({
         items: this.items,
         timeBetween: 50,
         waitForAllSteps: true,
         callback: () => {
-          this.level.disablingAnimations.delete("path.crunch");
-          this.emit("crunchAnimationFinished");
-          callback?.();
+          this.remove();
+          this.level.disablingAnimation("path.crunch", false);
         },
         onStep: (item, i, src, finish) => {
           const score = item.infected ? 15 : 10;
@@ -212,28 +212,28 @@ export class Path extends entity.CompositeEntity {
             )
           );
 
-          this._activateChildEntity(
-            anim.textFade(
-              this.level.grid.nucleotideContainer,
-              new PIXI.Text(`+ ${score}`, {
-                fill,
-                stroke,
-                strokeThickness: 10,
-                fontSize: 90 + score * 4,
-                fontFamily: "Cardenio Modern Bold",
-                dropShadow: true,
-                dropShadowBlur: 10,
-              }),
-              500,
-              item.position.clone(),
-              "up"
-            )
-          );
+          if (!this.level.options.disableScore) {
+            this._activateChildEntity(
+              anim.textFade(
+                this.level.grid.nucleotideContainer,
+                new PIXI.Text(`+ ${score}`, {
+                  fill,
+                  stroke,
+                  strokeThickness: 10,
+                  fontSize: 90 + score * 4,
+                  fontFamily: "Cardenio Modern Bold",
+                  dropShadow: true,
+                  dropShadowBlur: 10,
+                }),
+                500,
+                item.position.clone(),
+                "up"
+              )
+            );
+          }
         },
-      })
-    );
-
-    this.remove();
+      }),
+    ]);
   }
 
   toString(reverse = false) {
