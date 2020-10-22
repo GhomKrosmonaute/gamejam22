@@ -9,7 +9,6 @@ export const levels = {
       maxScore: 1000,
       forceMatching: true,
       disableBonuses: true,
-      sequenceLength: 3,
       scissorCount: 0,
       checks: {
         "Not infected": (level) => !level.wasInfected,

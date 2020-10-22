@@ -794,7 +794,8 @@ export class Level extends entity.CompositeEntity {
     const first = [...this.sequenceManager.sequences][0];
 
     if (this.options.variant === "long") {
-      if (first && first.maxActiveLength < 3) {
+      // In the case that some holes exist, remove the sequence
+      if (first && first.maxActiveLength > 0 && first.maxActiveLength < 3) {
         context.push(first.down(!this.options.disableScore));
       }
 
