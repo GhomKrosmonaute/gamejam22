@@ -56,14 +56,17 @@ const graphicalAssets = [
   "images/mini_bob_idle.json",
   "images/mini_bob_sting.json",
   "images/mini_bob_walk.json",
+  "images/mini_bob_dead.json",
   // Medium Bob
   "images/medium_bob_idle.json",
   "images/medium_bob_sting.json",
   "images/medium_bob_walk.json",
+  "images/medium_bob_dead.json",
   // Big Bob
   "images/big_bob_idle.json",
   "images/big_bob_sting.json",
   "images/big_bob_walk.json",
+  "images/big_bob_dead.json",
 ];
 
 const fontAssets = ["Cardenio Modern Bold", "Cardenio Modern Regular"];
