@@ -11,18 +11,6 @@ export const debug = debugParam
   ? !/^(?:false|0|null)$/i.test(debugParam)
   : false;
 
-export class BetterPoint extends PIXI.Point {
-  public readonly origin = new PIXI.Point();
-
-  constructor(x?: number, y?: number) {
-    super(x, y);
-    this.origin.set(x, y);
-  }
-
-  get base() {
-    return this.origin;
-  }
-}
 export function dist(a: number, b: number): number;
 export function dist(a: PIXI.Point, b: PIXI.Point): number;
 export function dist(x1: number, y1: number, x2: number, y2: number): number;

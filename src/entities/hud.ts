@@ -157,7 +157,7 @@ export class Gauge extends entity.CompositeEntity {
 
       ring.index = i;
 
-      const position = new crisprUtil.BetterPoint(
+      const position = new PIXI.Point(
         crisprUtil.proportion(i, -1, this._ringCount, 0, 450, true),
         ring.height * 0.5
       );
