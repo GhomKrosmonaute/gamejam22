@@ -647,7 +647,7 @@ export class Level extends entity.CompositeEntity {
           duration: 600,
           onUpdate: (value) => this.setScore(value),
         }),
-        anim.tweenShaking(this.gauge.bar, 600, 10, 0),
+        anim.tweenShaking(this.gauge.container, 600, 10, 0),
         new entity.EntitySequence([
           new tween.Tween({
             from: 0xffffff,

@@ -38,6 +38,10 @@ export class Gauge extends entity.CompositeEntity {
     return this._bar;
   }
 
+  get container(): PIXI.Container {
+    return this._container;
+  }
+
   /**
    * Set value of gauge bar (value/maxValue)
    * @param {number} value - The new value of gauge bar
