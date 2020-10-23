@@ -86,16 +86,6 @@ export abstract class Bonus extends entity.CompositeEntity {
       })
     );
   }
-
-  initListener() {
-    this._on(this.sprite, "pointerup", () => {
-      this.bonusesManager.selection(this);
-    });
-  }
-
-  shutdownListener() {
-    this._off(this.sprite);
-  }
 }
 
 export class TimeBonus extends Bonus {
@@ -409,12 +399,17 @@ export class BonusesManager extends entity.CompositeEntity {
     if (!this.bonuses.has(bonus)) {
       return;
     }
+
+    this._off(bonus.sprite);
+
     this.container.removeChild(bonus.sprite);
-    bonus.shutdownListener();
+
     bonus.sprite = null;
     bonus.shakes = null;
     bonus._count = 0;
+
     this.bonuses.delete(bonus);
+
     return this;
   }
 
@@ -424,6 +419,7 @@ export class BonusesManager extends entity.CompositeEntity {
       return;
     }
     const position = new PIXI.Point(100 + this.bonuses.size * 190, 100);
+
     const sprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         `images/bonus_${bonus.name}.png`
@@ -434,19 +430,18 @@ export class BonusesManager extends entity.CompositeEntity {
     sprite.interactive = true;
     sprite.position.copyFrom(position);
 
-    bonus.position = position;
-
-    bonus.sprite = sprite;
-
     this.container.addChild(sprite);
 
+    bonus.position = position;
+    bonus.sprite = sprite;
     bonus.shakes = new anim.ShakesManager(sprite);
-
     bonus.count = count;
 
-    bonus.initListener();
-
     this.bonuses.add(bonus);
+
+    this._on(bonus.sprite, "pointerup", () => {
+      this.selection(bonus);
+    });
 
     return this;
   }
@@ -459,11 +454,14 @@ export class BonusesManager extends entity.CompositeEntity {
       return bonus.abort();
     }
 
-    const old = this.selected;
-    if (old === bonus) {
+    if (this.selected === bonus) {
       this.selected = null;
       return bonus.abort();
     }
+
+    // if (this.selected) {
+    //   console.warn("bonus already selected:", this.selected, "target bonus:", bonus)
+    // }
 
     if (bonus.count <= 0 || this.level.isDisablingAnimationInProgress) return;
 

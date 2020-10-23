@@ -44,16 +44,6 @@ export const levels = {
       gridShape: "medium",
       forceMatching: true,
       scissorCount: 3,
-      initialBonuses: [
-        {
-          bonus: (context) => context.swapBonus,
-          quantity: 15,
-        },
-        {
-          bonus: (context) => context.timeBonus,
-          quantity: 15,
-        },
-      ],
       maxScore: 400,
       gaugeRings: [
         (context) => context.bonusesManager.add(context.swapBonus),
