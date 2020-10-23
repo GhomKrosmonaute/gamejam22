@@ -520,8 +520,11 @@ export abstract class ChecksPopup extends Popup {
       const row = new PIXI.Container();
 
       const pixiText = crisprUtil.makeText(text, {
-        stroke: 0xffffff,
-        strokeThickness: 15,
+        fill: check ? 0x00ff00 : 0xff0000,
+        strokeThickness: 10,
+        stroke: 0x000000,
+        fontSize: 70,
+        fontStyle: "bold",
       });
 
       pixiText.position.set(this.center.x, 50);
@@ -530,8 +533,9 @@ export abstract class ChecksPopup extends Popup {
 
       const icon = crisprUtil.makeText(check ? "✅" : "❌", {
         align: "right",
-        strokeThickness: 20,
+        strokeThickness: 10,
         stroke: 0x000000,
+        fontSize: 60,
       });
 
       icon.position.set(this.width - 100, 50);
