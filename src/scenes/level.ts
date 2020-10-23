@@ -398,6 +398,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _disableButton() {
+    if (this.options.disableButton) return;
     this._deactivateChildEntity(this.goButton);
     this.goButton = null;
   }
@@ -430,6 +431,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _disableZenMoves() {
+    if (this.options.variant !== "zen") return;
     this._deactivateChildEntity(this.zenMovesIndicator);
     this.zenMovesIndicator = null;
   }
@@ -446,6 +448,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _disableGauge() {
+    if (this.options.disableGauge) return;
     this._deactivateChildEntity(this.gauge);
     this.gauge = null;
   }
@@ -479,9 +482,15 @@ export class Level extends entity.CompositeEntity {
         }
       });
 
+      // remove a zen move
+      this.onceLevelEvent("pathCrunched", () => {
+        this.zenMovesIndicator.removeOne();
+      });
+    }
+
+    if (this.options.variant === "zen" || this.options.variant === "fall") {
       // directly fill holes after crunch
       this.onLevelEvent("pathCrunched", () => {
-        this.zenMovesIndicator.removeOne();
         this._activateChildEntity(this.fillHoles());
       });
     }
@@ -536,10 +545,6 @@ export class Level extends entity.CompositeEntity {
   }
 
   _teardown() {
-    this._disableBonuses();
-    this._disableButton();
-    this._initZenMoves();
-    this._disableGauge();
     this.container.removeChildren();
     this._entityConfig.container.removeChildren();
     this.disablingAnimations.clear();
