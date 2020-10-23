@@ -425,7 +425,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
 
     this._count++;
     this.animate(
-      anim.bubble(this.text, 1.2, 300, { onTop: this.updateText.bind(this) })
+      anim.bubble(this.text, 1.2, 150, { onTop: this.updateText.bind(this) })
     );
   }
 
@@ -438,12 +438,12 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
     } else {
       this.animate(
         new entity.ParallelEntity([
-          anim.tweenShaking(this.text, 400, 10, 0),
+          anim.tweenShaking(this.text, 600, 10, 0),
           new entity.EntitySequence([
             new tween.Tween({
               from: 0xffffff,
               to: 0xff0000,
-              duration: 200,
+              duration: 300,
               onUpdate: (value) => (this.text.tint = value),
               onTeardown: this.updateText.bind(this),
               interpolate: tween.interpolation.color,
@@ -451,7 +451,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
             new tween.Tween({
               from: 0xff0000,
               to: 0xffffff,
-              duration: 200,
+              duration: 300,
               onUpdate: (value) => (this.text.tint = value),
               interpolate: tween.interpolation.color,
             }),

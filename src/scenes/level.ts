@@ -483,7 +483,7 @@ export class Level extends entity.CompositeEntity {
       });
 
       // remove a zen move
-      this.onceLevelEvent("pathCrunched", () => {
+      this.onLevelEvent("pathCrunched", () => {
         this.zenMovesIndicator.removeOne();
       });
     }
