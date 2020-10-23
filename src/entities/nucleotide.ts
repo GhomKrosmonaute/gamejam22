@@ -138,7 +138,11 @@ export class Nucleotide extends entity.CompositeEntity {
       this.shakes.setShake("highlight", 2);
 
       if (this.parent === "grid") {
-        this.sprite.scale.set(0.9);
+        if (this.infected) {
+          this.infectionSprite.scale.set(0.9);
+        } else {
+          this.sprite.scale.set(0.9);
+        }
       } else {
         this.sprite.scale.set(1.1);
       }
@@ -157,7 +161,13 @@ export class Nucleotide extends entity.CompositeEntity {
       this.shakes.removeShake("highlight");
 
       if (this.parent === "grid") {
-        this.sprite.scale.set(1);
+        if (this.infected) {
+          this.infectionSprite.scale.set(1);
+        } else {
+          this.sprite.scale.set(1);
+        }
+      } else {
+        //this.sprite.scale.set(1.1);
       }
 
       this._container.removeChild(this._highlightSprite);
