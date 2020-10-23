@@ -16,7 +16,8 @@ export const levels = {
         "Reach 1000 pts": (context) =>
           context.score >= context.options.maxScore,
         "One shot sequence": (context) => context.oneShotLongSequence,
-        "Win in 5 moves or less": (context) => context.zenMoves <= 5,
+        "Win in 5 moves or less": (context) =>
+          context.zenMovesIndicator.count <= 5,
       },
       gaugeRings: [(context) => null, (context) => null, (context) => null],
       hooks: [

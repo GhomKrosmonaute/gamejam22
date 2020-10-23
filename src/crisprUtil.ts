@@ -1,7 +1,9 @@
 import * as PIXI from "pixi.js";
 
 import * as geom from "booyah/src/geom";
-import * as util from "booyah/src/util";
+import * as entity from "booyah/src/entity";
+
+import * as level from "./scenes/level";
 
 export const width = 1080;
 export const height = 1920;
@@ -123,7 +125,7 @@ export function positionAlongMembrane(
   }
 }
 
-export function makeText(text: string, options?: Partial<PIXI.TextStyle>) {
+export function makeText(text: string = "", options?: Partial<PIXI.TextStyle>) {
   const defaultConfig = {
     fontFamily: "Cardenio Modern Bold",
     fontSize: 80,

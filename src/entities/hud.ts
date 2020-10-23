@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
+import * as tween from "booyah/dist/tween";
 
 import * as popup from "./popup";
 
@@ -265,7 +266,7 @@ export class GoButton extends entity.CompositeEntity {
     this.sprite.interactive = true;
     this.sprite.buttonMode = true;
     this._on(this.sprite, "pointerup", () => {
-      const go = this._onGo();
+      const go = this.press();
       if (go) this._activateChildEntity(go);
     });
     this.container.addChild(this.sprite);
@@ -293,7 +294,7 @@ export class GoButton extends entity.CompositeEntity {
     this.text.text = text;
   }
 
-  private _onGo(): entity.Entity {
+  private press(): entity.Entity {
     if (this.level.isDisablingAnimationInProgress) {
       return anim.tweenShaking(this.sprite, 300, 6);
     }
@@ -308,7 +309,7 @@ export class GoButton extends entity.CompositeEntity {
 
     const context: entity.Entity[] = [
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimation("goButton._onGo", true);
+        this.level.disablingAnimation("goButton.press", true);
       }),
     ];
 
@@ -340,7 +341,9 @@ export class GoButton extends entity.CompositeEntity {
         context.push(
           this.level.sequenceManager.dropSequences(),
           this.level.removeHalfScore(),
-          this.level.removeZenMove()
+          new entity.FunctionCallEntity(() => {
+            this.level.zenMovesIndicator.removeOne();
+          })
         );
         break;
       case "continuous":
@@ -355,12 +358,111 @@ export class GoButton extends entity.CompositeEntity {
 
     context.push(
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimation("goButton._onGo", false);
+        this.level.disablingAnimation("goButton.press", false);
         this.level.refresh();
         this.level.checkGameOverByInfection();
       })
     );
 
     return new entity.EntitySequence(context);
+  }
+}
+
+export class ZenMovesIndicator extends entity.CompositeEntity {
+  private _count: number;
+  private text: PIXI.Text;
+  private animation: entity.Entity;
+  private position = new PIXI.Point(50, crisprUtil.height - 100);
+
+  get level(): level.Level {
+    return this._entityConfig.level;
+  }
+
+  get count(): number {
+    return this._count;
+  }
+
+  set count(n: number) {
+    this._count = n;
+    this.updateText();
+  }
+
+  protected _setup() {
+    this._count = this.level.options.zenMoves;
+    this.text = crisprUtil.makeText("", {
+      align: "right",
+      fontSize: 100,
+    });
+    this.resetText();
+    this.updateText();
+    this._entityConfig.container.addChild(this.text);
+  }
+
+  protected _teardown() {
+    this._entityConfig.container.removeChild(this.text);
+    this.text = null;
+  }
+
+  addOne() {
+    if (!this.isSetup) return;
+
+    this._count++;
+    this.animate(
+      anim.bubble(this.text, 1.2, 300, { onTop: this.updateText.bind(this) })
+    );
+  }
+
+  removeOne() {
+    if (!this.isSetup) return;
+
+    this._count--;
+    if (this._count === 0) {
+      this.level.emitLevelEvent("outOfZenMoves");
+    } else {
+      this.animate(
+        new entity.ParallelEntity([
+          anim.tweenShaking(this.text, 400, 10, 0),
+          new entity.EntitySequence([
+            new tween.Tween({
+              from: 0xffffff,
+              to: 0xff0000,
+              duration: 200,
+              onUpdate: (value) => (this.text.tint = value),
+              onTeardown: this.updateText.bind(this),
+              interpolate: tween.interpolation.color,
+            }),
+            new tween.Tween({
+              from: 0xff0000,
+              to: 0xffffff,
+              duration: 200,
+              onUpdate: (value) => (this.text.tint = value),
+              interpolate: tween.interpolation.color,
+            }),
+          ]),
+        ])
+      );
+    }
+  }
+
+  private updateText() {
+    this.text.text = `Rest ${this._count} moves`;
+  }
+
+  private resetText() {
+    this.text.scale.set(1);
+    this.text.tint = 0xffffff;
+    this.text.position.copyFrom(this.position);
+    this.text.anchor.x = 0;
+  }
+
+  private animate(e: entity.Entity) {
+    if (this.animation && this.animation.isSetup) {
+      this._deactivateChildEntity(this.animation);
+      this.resetText();
+    }
+
+    this.animation = e;
+
+    this._activateChildEntity(this.animation);
   }
 }

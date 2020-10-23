@@ -130,11 +130,10 @@ export interface LevelEvents {
   sequenceDown: [];
   scoreUpdated: [score: number];
   clickedBonus: [bonus: bonuses.Bonus];
+  outOfZenMoves: [];
   maxScoreReached: [];
   injectedSequence: [sequence.Sequence];
   clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
-  activatedChildEntity: [entity: entity.Entity];
-  deactivatedChildEntity: [entity: entity.Entity];
 }
 
 export interface HookOptions<Entity, EventName extends LevelEventName> {
@@ -255,10 +254,10 @@ export class Level extends entity.CompositeEntity {
   public path: path.Path;
   public grid: grid.Grid;
   public goButton: hud.GoButton;
+  public zenMovesIndicator: hud.ZenMovesIndicator;
 
   // game
   public score: number;
-  public zenMoves: number;
   public wasInfected = false;
   public someVirusHasEscaped = false;
   public crunchCount = 0;
@@ -423,8 +422,21 @@ export class Level extends entity.CompositeEntity {
     this.bonusesManager = null;
   }
 
+  private _initZenMoves() {
+    if (this.options.variant !== "long") return;
+
+    this.zenMovesIndicator = new hud.ZenMovesIndicator();
+
+    this._activateChildEntity(this.zenMovesIndicator, this.config);
+  }
+
+  private _disableZenMoves() {
+    this._deactivateChildEntity(this.zenMovesIndicator);
+    this.zenMovesIndicator = null;
+  }
+
   private _initGauge() {
-    if (this.options.disableGauge) return;
+    if (this.options.disableGauge || this.options.variant === "long") return;
 
     this.gauge = new hud.Gauge(
       this.options.gaugeRings.length,
@@ -451,9 +463,18 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
 
-    this.onLevelEvent("deactivatedChildEntity", (e) => {
-      if (e instanceof Hook) {
-        this.options.hooks = this.options.hooks.filter((h) => h !== e);
+    // this._on(this,"deactivatedChildEntity", (e) => {
+    //   if (e instanceof Hook) {
+    //     this.options.hooks = this.options.hooks.filter((h) => h !== e);
+    //   }
+    // });
+
+    this.onLevelEvent("outOfZenMoves", () => {
+      if (this.score >= this.options.maxScore) {
+        this.minimap.saveResults(this);
+        this._activateChildEntity(new popup.TerminatedLevelPopup());
+      } else {
+        this.gameOverByFail();
       }
     });
 
@@ -483,6 +504,7 @@ export class Level extends entity.CompositeEntity {
     this.emitLevelEvent("init");
     this.isInit = true;
 
+    this._initZenMoves();
     this._initGrid();
     this._initPath();
     this._initHairs();
@@ -511,6 +533,10 @@ export class Level extends entity.CompositeEntity {
   }
 
   _teardown() {
+    this._disableBonuses();
+    this._disableButton();
+    this._initZenMoves();
+    this._disableGauge();
     this.container.removeChildren();
     this._entityConfig.container.removeChildren();
     this.disablingAnimations.clear();
@@ -665,22 +691,6 @@ export class Level extends entity.CompositeEntity {
           }),
         ]),
       ]),
-    ]);
-  }
-
-  removeZenMove(): entity.Entity {
-    return new entity.EntitySequence([
-      new entity.FunctionCallEntity(() => {
-        this.zenMoves--;
-        if (this.zenMoves <= 0) {
-          if (this.score >= this.options.maxScore) {
-            this.minimap.saveResults(this);
-            this._activateChildEntity(new popup.TerminatedLevelPopup());
-          } else {
-            this.gameOverByFail();
-          }
-        }
-      }),
     ]);
   }
 
