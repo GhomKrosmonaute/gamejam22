@@ -29,6 +29,10 @@ export const levels = {
             title: "Zen mode",
             content:
               "On this variant, have fun making very long DNA sequences.\n\nReach 1000 pts!",
+            popupOptions: {
+              minimizeOnClose: false,
+              coolDown: 2000,
+            },
           }),
         }),
         new level.Hook({
@@ -62,6 +66,7 @@ export const levels = {
                 popupOptions: {
                   id: "popup ring 1",
                   from: ring.position,
+                  coolDown: 2000,
                   logo: "🥶",
                 },
               }),
@@ -87,6 +92,8 @@ export const levels = {
               "It's a time bomb, crunch the sequences before they hit the grid!\n\nReach 400 pts!",
             popupOptions: {
               logo: "😱",
+              minimizeOnClose: false,
+              coolDown: 2000,
             },
           }),
         }),
@@ -118,6 +125,7 @@ export const levels = {
                 popupOptions: {
                   id: "popup ring 1",
                   from: ring.position,
+                  coolDown: 2000,
                 },
               }),
             ])
@@ -141,6 +149,7 @@ export const levels = {
             content: "Let's try the turn-by-turn variant.\n\nReach 300 pts!",
             popupOptions: {
               minimizeOnClose: false,
+              coolDown: 2000,
             },
           }),
         }),
