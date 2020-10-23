@@ -20,7 +20,7 @@ import * as path from "../entities/path";
 import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
-export type LevelVariant = "turnBased" | "continuous" | "long";
+export type LevelVariant = "turn" | "fall" | "zen";
 
 export interface LevelResults {
   checks: { [text: string]: boolean };
@@ -77,7 +77,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableScore: false,
   retryOnFail: true,
   displayTurnTitles: true,
-  variant: "turnBased",
+  variant: "turn",
   presetScissors: null,
   dropSpeed: 0.001,
   maxScore: 1000,
@@ -372,7 +372,6 @@ export class Level extends entity.CompositeEntity {
 
   private _initPath() {
     this.path = new path.Path();
-    this.onLevelEvent("pathUpdated", this.refresh);
     this._activateChildEntity(this.path, this.config);
   }
 
@@ -404,7 +403,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initBonuses() {
-    if (this.options.disableBonuses) return;
+    if (this.options.disableBonuses || this.options.variant === "zen") return;
     this.bonusesManager = new bonuses.BonusesManager(
       this.options.initialBonuses
     );
@@ -418,15 +417,15 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _disableBonuses() {
+    if (this.options.disableBonuses || this.options.variant === "zen") return;
+
     this._deactivateChildEntity(this.bonusesManager);
     this.bonusesManager = null;
   }
 
   private _initZenMoves() {
-    if (this.options.variant !== "long") return;
-
+    if (this.options.variant !== "zen") return;
     this.zenMovesIndicator = new hud.ZenMovesIndicator();
-
     this._activateChildEntity(this.zenMovesIndicator, this.config);
   }
 
@@ -436,7 +435,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initGauge() {
-    if (this.options.disableGauge || this.options.variant === "long") return;
+    if (this.options.disableGauge) return;
 
     this.gauge = new hud.Gauge(
       this.options.gaugeRings.length,
@@ -469,24 +468,28 @@ export class Level extends entity.CompositeEntity {
     //   }
     // });
 
-    this.onLevelEvent("outOfZenMoves", () => {
-      if (this.score >= this.options.maxScore) {
-        this.minimap.saveResults(this);
-        this._activateChildEntity(new popup.TerminatedLevelPopup());
-      } else {
-        this.gameOverByFail();
-      }
-    });
+    if (this.options.variant === "zen") {
+      // game over if out of zenMoves
+      this.onLevelEvent("outOfZenMoves", () => {
+        if (this.score >= this.options.maxScore) {
+          this.minimap.saveResults(this);
+          this._activateChildEntity(new popup.TerminatedLevelPopup());
+        } else {
+          this.gameOverByFail();
+        }
+      });
 
-    this.onLevelEvent("pathCrunched", () => {
-      this._activateChildEntity(this.fillHoles());
-    });
+      // directly fill holes after crunch
+      this.onLevelEvent("pathCrunched", () => {
+        this.zenMovesIndicator.removeOne();
+        this._activateChildEntity(this.fillHoles());
+      });
+    }
+
+    this.onLevelEvent("pathUpdated", this.refresh.bind(this));
 
     this.onLevelEvent("sequenceDown", () => {
-      if (
-        this.options.variant === "continuous" ||
-        this.options.variant === "long"
-      ) {
+      if (this.options.variant !== "turn") {
         this.sequenceManager.add();
       } else {
         if (this.sequenceManager.sequenceCount <= 1) {
@@ -519,7 +522,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update() {
-    if (this.options.variant !== "continuous") return;
+    if (this.options.variant !== "fall") return;
     if (this.fallingStopped) return;
     if ([...this.disablingAnimations].some((name) => !name.startsWith("popup")))
       return;
@@ -793,7 +796,7 @@ export class Level extends entity.CompositeEntity {
 
     const context: entity.Entity[] = [this.path.crunch(), sequenceCrunch];
 
-    if (this.options.variant === "turnBased") {
+    if (this.options.variant === "turn") {
       context.push(
         new entity.FunctionCallEntity(() => {
           this.sequenceManager.adjustment.adjust();
@@ -803,7 +806,7 @@ export class Level extends entity.CompositeEntity {
 
     const first = [...this.sequenceManager.sequences][0];
 
-    if (this.options.variant === "long") {
+    if (this.options.variant === "zen") {
       // In the case that some holes exist, remove the sequence
       if (first && first.maxActiveLength > 0 && first.maxActiveLength < 3) {
         context.push(first.down(!this.options.disableScore));
@@ -812,10 +815,7 @@ export class Level extends entity.CompositeEntity {
       context.push(this.fillHoles());
     }
 
-    if (
-      this.options.variant === "turnBased" ||
-      this.options.variant === "continuous"
-    ) {
+    if (this.options.variant === "turn" || this.options.variant === "fall") {
       if (this.sequenceManager.sequenceCount === 0) {
         context.push(this.fillHoles());
       }
@@ -839,7 +839,7 @@ export class Level extends entity.CompositeEntity {
     if (this.path.items.length > 0) {
       const match = this.sequenceManager.matchesSequence(this.path);
       if (match === true) {
-        if (this.options.variant === "long") this.setGoButtonText("CRUNCH");
+        if (this.options.variant === "zen") this.setGoButtonText("CRUNCH");
         else this.setGoButtonText("MATCH");
       } else {
         this.setGoButtonText(match);

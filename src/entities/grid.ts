@@ -100,7 +100,7 @@ export class Grid extends entity.CompositeEntity {
     this.generateShape();
 
     this._on(this, "pointerup", () => {
-      if (this.level.options.variant !== "long") {
+      if (this.level.options.variant !== "zen") {
         const crunch = this.level.attemptCrunch();
         if (crunch) this._activateChildEntity(crunch);
       }

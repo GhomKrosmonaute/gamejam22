@@ -19,7 +19,19 @@ const FLOATING_AMPLITUDE = 0.06;
  * **callback**:
  * - if waitForAllSteps flag is true, wait for all "finished" steps.
  * - if waitForAllSteps flag is false, wait for all steps are started.
+ *
+ * <br>
+ *
+ * todo: implement easing option
  */
+export function sequenced<T = void>(options: {
+  onStep: (index: number, finish: () => unknown) => void | entity.Entity;
+  items: number;
+  delay?: number;
+  timeBetween: number;
+  waitForAllSteps?: boolean;
+  callback?: AnimationCallback;
+}): entity.EntitySequence;
 export function sequenced<T>(options: {
   onStep: (
     item: T,
@@ -32,8 +44,25 @@ export function sequenced<T>(options: {
   timeBetween: number;
   waitForAllSteps?: boolean;
   callback?: AnimationCallback;
+}): entity.EntitySequence;
+export function sequenced<T>(options: {
+  onStep: (
+    item: T | number,
+    index: number | (() => unknown),
+    src?: T[],
+    finish?: () => unknown
+  ) => void | entity.Entity;
+  items: T[] | number;
+  delay?: number;
+  timeBetween: number;
+  waitForAllSteps?: boolean;
+  callback?: AnimationCallback;
 }): entity.EntitySequence {
-  const context: entity.Entity[] = options.items.map((item, index, src) => {
+  const list =
+    typeof options.items === "number"
+      ? new Array(options.items).fill(0)
+      : options.items;
+  const context: entity.Entity[] = list.map((item, index, src) => {
     let stepEntity: entity.EntityResolvable;
 
     if (options.waitForAllSteps) {
@@ -43,20 +72,31 @@ export function sequenced<T>(options: {
         stepEntity = new entity.EntitySequence([
           new entity.FunctionCallEntity(() => {
             promise = new Promise((resolve) => {
-              options.onStep(item, index, src, resolve);
+              if (typeof options.items === "number") {
+                options.onStep(index, resolve);
+              } else {
+                options.onStep(item, index, src, resolve);
+              }
             });
           }),
         ]);
       } else {
         stepEntity = () => {
-          const step = options.onStep(item, index, src, () => null);
+          const step =
+            typeof options.items === "number"
+              ? options.onStep(index, () => null)
+              : options.onStep(item, index, src, () => null);
           if (step) return step;
           return new entity.FunctionCallEntity(() => null);
         };
       }
     } else {
       stepEntity = new entity.FunctionCallEntity(() => {
-        options.onStep(item, index, src, () => null);
+        if (typeof options.items === "number") {
+          options.onStep(index, () => null);
+        } else {
+          options.onStep(item, index, src, () => null);
+        }
       });
     }
 
@@ -67,7 +107,12 @@ export function sequenced<T>(options: {
   });
 
   context.push(
-    new entity.WaitingEntity(options.timeBetween * options.items.length)
+    new entity.WaitingEntity(
+      options.timeBetween *
+        (typeof options.items === "number"
+          ? options.items
+          : options.items.length)
+    )
   );
 
   const sequence: entity.Entity[] = [new entity.ParallelEntity(context)];

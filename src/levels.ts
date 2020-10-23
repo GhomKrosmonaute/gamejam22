@@ -6,7 +6,7 @@ import * as anim from "./animations";
 export const levels = {
   "Zen mode": () =>
     new level.Level("Zen mode", {
-      variant: "long",
+      variant: "zen",
       maxScore: 1000,
       forceMatching: true,
       disableBonuses: true,
@@ -41,7 +41,7 @@ export const levels = {
 
   "Time challenge": () =>
     new level.Level("Time challenge", (context) => ({
-      variant: "continuous",
+      variant: "fall",
       gridShape: "medium",
       forceMatching: true,
       scissorCount: 3,
@@ -100,7 +100,7 @@ export const levels = {
 
   "Turn mode": () =>
     new level.Level("Turn mode", (context) => ({
-      variant: "turnBased",
+      variant: "turn",
       maxScore: 300,
       minStarNeeded: 1,
       gaugeRings: [
@@ -154,7 +154,7 @@ export const levels = {
 
   Tutorial: () =>
     new level.Level("Tutorial", {
-      variant: "turnBased",
+      variant: "turn",
       scissorCount: 0,
       gridShape: [],
       sequences: [["r", "g", "b"]],

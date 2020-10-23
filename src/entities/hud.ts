@@ -299,7 +299,7 @@ export class GoButton extends entity.CompositeEntity {
       return anim.tweenShaking(this.sprite, 300, 6);
     }
 
-    if (this.level.options.variant === "long") {
+    if (this.level.options.variant === "zen") {
       if (this.level.path.items.length > 0) {
         return this.level.attemptCrunch();
       }
@@ -314,7 +314,7 @@ export class GoButton extends entity.CompositeEntity {
     ];
 
     switch (this.level.options.variant) {
-      case "turnBased":
+      case "turn":
         // ? has holes
         //    : => fill holes
         //    ! => regenerate some nucleotides
@@ -337,7 +337,7 @@ export class GoButton extends entity.CompositeEntity {
           );
         }
         break;
-      case "long":
+      case "zen":
         context.push(
           this.level.sequenceManager.dropSequences(),
           this.level.removeHalfScore(),
@@ -346,7 +346,7 @@ export class GoButton extends entity.CompositeEntity {
           })
         );
         break;
-      case "continuous":
+      case "fall":
         // => down all sequences
         // => infect
         context.push(
@@ -369,6 +369,7 @@ export class GoButton extends entity.CompositeEntity {
 }
 
 export class ZenMovesIndicator extends entity.CompositeEntity {
+  protected init = false;
   private _count: number;
   private text: PIXI.Text;
   private animation: entity.Entity;
@@ -388,18 +389,34 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
   }
 
   protected _setup() {
-    this._count = this.level.options.zenMoves;
+    this._count = 0;
     this.text = crisprUtil.makeText("", {
       align: "right",
       fontSize: 100,
+      stroke: 0xffffff,
+      strokeThickness: 10,
     });
     this.resetText();
     this.updateText();
     this._entityConfig.container.addChild(this.text);
+
+    this._activateChildEntity(
+      anim.sequenced({
+        timeBetween: 100,
+        items: this.level.options.zenMoves,
+        onStep: () => {
+          this.addOne();
+        },
+        callback: () => {
+          this.init = true;
+        },
+      })
+    );
   }
 
   protected _teardown() {
     this._entityConfig.container.removeChild(this.text);
+    this.init = false;
     this.text = null;
   }
 
