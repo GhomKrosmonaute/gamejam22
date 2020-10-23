@@ -149,3 +149,18 @@ export const axes: Axe[] = ["x", "y"];
 export function forAxes(callback: (axe: Axe) => any) {
   axes.forEach(callback);
 }
+
+/**
+ * Class Decorator that includes level getter <br>
+ * todo: fix decorator
+ */
+export function leveled<T extends Function>(
+  con: T
+): con is T & { level: level.Level } {
+  Object.defineProperty(con.prototype, "level", {
+    get: (): level.Level => {
+      return this._entityConfig.level;
+    },
+  });
+  return true;
+}
