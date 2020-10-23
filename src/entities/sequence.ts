@@ -53,7 +53,7 @@ export class SequenceAdjustment extends entity.CompositeEntity {
 
   getHeight(sequence: Sequence) {
     const range = this.getRange();
-    if (this.level.options.variant === "continuous") return range.top;
+    if (this.level.options.variant === "fall") return range.top;
     if (this.level.sequenceManager.sequences.size < 2) return range.middle;
     return crisprUtil.proportion(
       [...this.level.sequenceManager.sequences].indexOf(sequence),
@@ -72,15 +72,15 @@ export class SequenceAdjustment extends entity.CompositeEntity {
     };
 
     switch (this.level.options.variant) {
-      case "turnBased":
+      case "turn":
         range.top = crisprUtil.height * 0.25;
         range.bottom = crisprUtil.height * 0.42;
         break;
-      case "continuous":
+      case "fall":
         range.top = crisprUtil.height * 0.22;
         range.bottom = crisprUtil.height * 0.46;
         break;
-      case "long":
+      case "zen":
         range.top = crisprUtil.height * 0.3;
         range.bottom = crisprUtil.height * 0.3;
         break;
@@ -143,10 +143,10 @@ export class SequenceManager extends entity.CompositeEntity {
 
   get sequenceCountLimit(): number {
     switch (this.level.options.variant) {
-      case "turnBased":
+      case "turn":
         return 3;
-      case "continuous":
-      case "long":
+      case "fall":
+      case "zen":
         return 1;
     }
   }
@@ -160,11 +160,11 @@ export class SequenceManager extends entity.CompositeEntity {
       return this.level.options.sequenceLength;
 
     switch (this.level.options.variant) {
-      case "turnBased":
+      case "turn":
         return crisprUtil.random(4, 7);
-      case "continuous":
+      case "fall":
         return crisprUtil.random(3, 5);
-      case "long":
+      case "zen":
         return 13;
     }
   }
@@ -225,7 +225,7 @@ export class SequenceManager extends entity.CompositeEntity {
     let partialCrunch = false;
 
     for (const s of this.sequences) {
-      if (this._entityConfig.level.options.variant === "long") {
+      if (this.level.options.variant === "zen") {
         if (s.validate(signature, "partial")) {
           s.deactivateSegment(_path.signature);
 
@@ -332,7 +332,7 @@ export class SequenceManager extends entity.CompositeEntity {
   matchesSequence(_path: path.Path): string | true {
     // TODO: perhaps this should only work if one and only one sequence matches?
 
-    if (this._entityConfig.level.options.variant === "long") {
+    if (this.level.options.variant === "zen") {
       return (
         (_path.length > 2 &&
           [...this.sequences].some((s) =>
@@ -456,7 +456,7 @@ export class Sequence extends entity.CompositeEntity {
     for (let i = 0; i < this.baseLength; i++) {
       const position = new PIXI.Point();
 
-      if (this.level.options.variant === "long") {
+      if (this.level.options.variant === "zen") {
         crisprUtil.positionAlongMembrane(
           position,
           crisprUtil.proportion(
@@ -538,7 +538,7 @@ export class Sequence extends entity.CompositeEntity {
       this._entityConfig.level.sequenceManager.emit("click", this);
     });
 
-    if (this.level.options.variant === "long") {
+    if (this.level.options.variant === "zen") {
       this._initNucleotides();
     } else {
       this._activateChildEntity(this._initVirus());
@@ -571,7 +571,7 @@ export class Sequence extends entity.CompositeEntity {
           );
         }
 
-        isLong = this.level.options.variant === "long";
+        isLong = this.level.options.variant === "zen";
         fully = this.nucleotides.every((n) => n.state === "inactive");
         shots = this.level.path.crunchCountBeforeSequenceDown;
 

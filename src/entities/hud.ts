@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
+import * as tween from "booyah/dist/tween";
 
 import * as popup from "./popup";
 
@@ -36,6 +37,10 @@ export class Gauge extends entity.CompositeEntity {
 
   get bar(): PIXI.Sprite {
     return this._bar;
+  }
+
+  get container(): PIXI.Container {
+    return this._container;
   }
 
   /**
@@ -261,7 +266,7 @@ export class GoButton extends entity.CompositeEntity {
     this.sprite.interactive = true;
     this.sprite.buttonMode = true;
     this._on(this.sprite, "pointerup", () => {
-      const go = this._onGo();
+      const go = this.press();
       if (go) this._activateChildEntity(go);
     });
     this.container.addChild(this.sprite);
@@ -289,12 +294,12 @@ export class GoButton extends entity.CompositeEntity {
     this.text.text = text;
   }
 
-  private _onGo(): entity.Entity {
+  private press(): entity.Entity {
     if (this.level.isDisablingAnimationInProgress) {
       return anim.tweenShaking(this.sprite, 300, 6);
     }
 
-    if (this.level.options.variant === "long") {
+    if (this.level.options.variant === "zen") {
       if (this.level.path.items.length > 0) {
         return this.level.attemptCrunch();
       }
@@ -304,12 +309,12 @@ export class GoButton extends entity.CompositeEntity {
 
     const context: entity.Entity[] = [
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimation("goButton._onGo", true);
+        this.level.disablingAnimation("goButton.press", true);
       }),
     ];
 
     switch (this.level.options.variant) {
-      case "turnBased":
+      case "turn":
         // ? has holes
         //    : => fill holes
         //    ! => regenerate some nucleotides
@@ -332,14 +337,16 @@ export class GoButton extends entity.CompositeEntity {
           );
         }
         break;
-      case "long":
+      case "zen":
         context.push(
           this.level.sequenceManager.dropSequences(),
           this.level.removeHalfScore(),
-          this.level.removeZenMove()
+          new entity.FunctionCallEntity(() => {
+            this.level.zenMovesIndicator.removeOne();
+          })
         );
         break;
-      case "continuous":
+      case "fall":
         // => down all sequences
         // => infect
         context.push(
@@ -351,12 +358,128 @@ export class GoButton extends entity.CompositeEntity {
 
     context.push(
       new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimation("goButton._onGo", false);
+        this.level.disablingAnimation("goButton.press", false);
         this.level.refresh();
         this.level.checkGameOverByInfection();
       })
     );
 
     return new entity.EntitySequence(context);
+  }
+}
+
+export class ZenMovesIndicator extends entity.CompositeEntity {
+  protected init = false;
+  private _count: number;
+  private text: PIXI.Text;
+  private animation: entity.Entity;
+  private position = new PIXI.Point(50, crisprUtil.height - 100);
+
+  get level(): level.Level {
+    return this._entityConfig.level;
+  }
+
+  get count(): number {
+    return this._count;
+  }
+
+  set count(n: number) {
+    this._count = n;
+    this.updateText();
+  }
+
+  protected _setup() {
+    this._count = 0;
+    this.text = crisprUtil.makeText("", {
+      align: "right",
+      fontSize: 100,
+      stroke: 0xffffff,
+      strokeThickness: 10,
+    });
+    this.resetText();
+    this.updateText();
+    this._entityConfig.container.addChild(this.text);
+
+    this._activateChildEntity(
+      anim.sequenced({
+        timeBetween: 100,
+        items: this.level.options.zenMoves,
+        onStep: () => {
+          this.addOne();
+        },
+        callback: () => {
+          this.init = true;
+        },
+      })
+    );
+  }
+
+  protected _teardown() {
+    this._entityConfig.container.removeChild(this.text);
+    this.init = false;
+    this.text = null;
+  }
+
+  addOne() {
+    if (!this.isSetup) return;
+
+    this._count++;
+    this.animate(
+      anim.bubble(this.text, 1.2, 150, { onTop: this.updateText.bind(this) })
+    );
+  }
+
+  removeOne() {
+    if (!this.isSetup) return;
+
+    this._count--;
+    if (this._count === 0) {
+      this.level.emitLevelEvent("outOfZenMoves");
+    } else {
+      this.animate(
+        new entity.ParallelEntity([
+          anim.tweenShaking(this.text, 600, 10, 0),
+          new entity.EntitySequence([
+            new tween.Tween({
+              from: 0xffffff,
+              to: 0xff0000,
+              duration: 300,
+              onUpdate: (value) => (this.text.tint = value),
+              onTeardown: this.updateText.bind(this),
+              interpolate: tween.interpolation.color,
+            }),
+            new tween.Tween({
+              from: 0xff0000,
+              to: 0xffffff,
+              duration: 300,
+              onUpdate: (value) => (this.text.tint = value),
+              interpolate: tween.interpolation.color,
+            }),
+          ]),
+        ])
+      );
+    }
+  }
+
+  private updateText() {
+    this.text.text = `Rest ${this._count} moves`;
+  }
+
+  private resetText() {
+    this.text.scale.set(1);
+    this.text.tint = 0xffffff;
+    this.text.position.copyFrom(this.position);
+    this.text.anchor.x = 0;
+  }
+
+  private animate(e: entity.Entity) {
+    if (this.animation && this.animation.isSetup) {
+      this._deactivateChildEntity(this.animation);
+      this.resetText();
+    }
+
+    this.animation = e;
+
+    this._activateChildEntity(this.animation);
   }
 }

@@ -4,6 +4,7 @@
   "compilerOptions": {
     "alwaysStrict": true,
     "noImplicitAny": true,
+    "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "declaration": true,
     "declarationMap": true,

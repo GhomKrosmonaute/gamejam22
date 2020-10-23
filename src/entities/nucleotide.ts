@@ -46,7 +46,6 @@ export class Nucleotide extends entity.CompositeEntity {
   public _container: PIXI.Container;
   public type: NucleotideType = "normal";
   public isHovered = false;
-  public isHearthBeatActive = false;
   public shakes: anim.ShakesManager;
   public position: PIXI.Point;
   public id = Math.random();
@@ -120,18 +119,6 @@ export class Nucleotide extends entity.CompositeEntity {
     this._container.position.copyFrom(this.position);
     this.pathArrow.position.copyFrom(this.position);
     this.shakes.anchor.copyFrom(this.position);
-
-    // infected hearth beat animation
-    if (this.infected && !this.isHearthBeatActive) {
-      this.isHearthBeatActive = true;
-      this._activateChildEntity(
-        anim.heartBeat(this._container, 400, 1.1, () => {
-          setTimeout(() => {
-            this.isHearthBeatActive = false;
-          }, 1500 + Math.random() * 1000);
-        })
-      );
-    }
   }
 
   _teardown() {
@@ -151,7 +138,11 @@ export class Nucleotide extends entity.CompositeEntity {
       this.shakes.setShake("highlight", 2);
 
       if (this.parent === "grid") {
-        this.sprite.scale.set(0.9);
+        if (this.infected) {
+          this.infectionSprite.scale.set(0.9);
+        } else {
+          this.sprite.scale.set(0.9);
+        }
       } else {
         this.sprite.scale.set(1.1);
       }
@@ -170,7 +161,13 @@ export class Nucleotide extends entity.CompositeEntity {
       this.shakes.removeShake("highlight");
 
       if (this.parent === "grid") {
-        this.sprite.scale.set(1);
+        if (this.infected) {
+          this.infectionSprite.scale.set(1);
+        } else {
+          this.sprite.scale.set(1);
+        }
+      } else {
+        //this.sprite.scale.set(1.1);
       }
 
       this._container.removeChild(this._highlightSprite);
