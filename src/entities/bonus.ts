@@ -307,7 +307,7 @@ export class SyringeBonus extends Bonus {
 }
 
 export interface InitialBonus {
-  bonus: Bonus;
+  bonus: ((context: level.Level) => Bonus) | Bonus;
   quantity?: number;
 }
 
@@ -398,7 +398,10 @@ export class BonusesManager extends entity.CompositeEntity {
 
   generateFirstBonuses() {
     this.initialBonuses.forEach(({ bonus, quantity }) => {
-      this.add(bonus, quantity ?? 1);
+      this.add(
+        typeof bonus === "function" ? bonus(this.level) : bonus,
+        quantity ?? 1
+      );
     });
   }
 
