@@ -85,6 +85,7 @@ booyah.go({
   screenSize: new PIXI.Point(crisprUtil.width, crisprUtil.height),
   graphicalAssets,
   fontAssets,
+  splashScreen: "images/splash_screen.jpg",
   graphics: {
     menu: "images/hud_menu_button.png",
   },

@@ -4,24 +4,28 @@
   font-style: normal;
   font-weight: 400;
   src: local("Roboto Condensed"), local("RobotoCondensed-Regular"),
-  url("booyah/fonts/roboto-condensed/roboto-condensed-v16-latin-regular.woff2")
-  format("woff2"),
-  url("booyah/fonts/roboto-condensed/roboto-condensed-v16-latin-regular.woff")
-  format("woff");
+    url("booyah/fonts/roboto-condensed/roboto-condensed-v16-latin-regular.woff2")
+      format("woff2"),
+    url("booyah/fonts/roboto-condensed/roboto-condensed-v16-latin-regular.woff")
+      format("woff");
 }
 
 @font-face {
-  font-family: 'Cardenio Modern Bold';
-  src: url('fonts/cardeniomodern-bold/cardeniomodern-bold-webfont.woff2') format('woff2'),
-  url('fonts/cardeniomodern-bold/cardeniomodern-bold-webfont.woff') format('woff');
+  font-family: "Cardenio Modern Bold";
+  src: url("fonts/cardeniomodern-bold/cardeniomodern-bold-webfont.woff2")
+      format("woff2"),
+    url("fonts/cardeniomodern-bold/cardeniomodern-bold-webfont.woff")
+      format("woff");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
-  font-family: 'Cardenio Modern Regular';
-  src: url('fonts/cardeniomodern-regular/cardeniomodern-regular-webfont.woff2') format('woff2'),
-  url('fonts/cardeniomodern-regular/cardeniomodern-regular-webfont.woff') format('woff');
+  font-family: "Cardenio Modern Regular";
+  src: url("fonts/cardeniomodern-regular/cardeniomodern-regular-webfont.woff2")
+      format("woff2"),
+    url("fonts/cardeniomodern-regular/cardeniomodern-regular-webfont.woff")
+      format("woff");
   font-weight: normal;
   font-style: normal;
 }
@@ -62,7 +66,11 @@ body {
   height: calc((16 / 9) * 100vw);
   max-height: calc(100vh - 50px);
 
-  background-color: grey;
+  /* This background color will be overridden by the image */
+  background-color: #1d1d32;
+
+  background-image: url(images/cellule_background.png);
+  background-size: cover;
 
   user-select: none;
   -moz-user-select: none;
