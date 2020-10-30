@@ -490,15 +490,24 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initMusic() {
-    let music : string;
-    
-    if(this.options.music) {
+    let music: string;
+
+    if (this.options.music) {
       music = this.options.music;
     } else {
-      switch(this.options.variant) {
-        case "turn": { music = "turn_by_turn"; break; }
-        case "fall": { music = "time_challenge"; break; }
-        case "zen": { music = "zen"; break; }
+      switch (this.options.variant) {
+        case "turn": {
+          music = "turn_by_turn";
+          break;
+        }
+        case "fall": {
+          music = "time_challenge";
+          break;
+        }
+        case "zen": {
+          music = "zen";
+          break;
+        }
       }
     }
 

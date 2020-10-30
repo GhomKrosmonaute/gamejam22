@@ -405,7 +405,7 @@ export class Sequence extends entity.CompositeEntity {
   _initVirus() {
     this.virus = new virus.Virus(this.level.options.virus);
 
-    this._activateChildEntity(this.virus, this.level.config);
+    this.level.activate(this.virus);
 
     const requestTransition = () =>
       this.virus.isSetup &&
@@ -663,7 +663,7 @@ export class Sequence extends entity.CompositeEntity {
               new entity.EntitySequence([
                 new entity.ParallelEntity([
                   new entity.FunctionCallEntity(() => {
-                    this._activateChildEntity(
+                    this.level.activate(
                       addScore ? this.virus.kill() : this.virus.leave()
                     );
                   }),
