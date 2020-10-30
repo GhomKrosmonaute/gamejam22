@@ -2,17 +2,23 @@ import * as entity from "booyah/src/entity";
 import * as popup from "./entities/popup";
 import * as level from "./scenes/level";
 import * as anim from "./animations";
+import { contains } from "booyah/dist/util";
 
 export const levels = {
   "MV Mod": () =>
     new level.Level("MV Mod", {
       virus: "big",
       variant: "fall",
-      dropSpeed: 1.2,
+      dropSpeed: 1,
       gridShape: "medium",
       sequenceLength: 7,
       forceMatching: true,
       scissorCount: 3,
+      gaugeRings: [
+        (context) => (context.options.dropSpeed = 1.2),
+        (context) => context.bonusesManager.add(context.timeBonus),
+        (context) => (context.options.dropSpeed = 1.3),
+      ],
     }),
 
   // todo: intermediary levels with medium virus

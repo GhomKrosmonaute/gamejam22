@@ -661,7 +661,14 @@ export class Sequence extends entity.CompositeEntity {
           if (this.virus && this.virus.isSetup) {
             this._activateChildEntity(
               new entity.EntitySequence([
-                addScore ? this.virus.kill() : this.virus.leave(),
+                new entity.ParallelEntity([
+                  new entity.FunctionCallEntity(() => {
+                    this._activateChildEntity(
+                      addScore ? this.virus.kill() : this.virus.leave()
+                    );
+                  }),
+                  new entity.WaitingEntity(1000),
+                ]),
                 new entity.FunctionCallEntity(end),
               ])
             );
