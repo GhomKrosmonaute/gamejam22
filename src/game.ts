@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 
 import * as booyah from "booyah/src/booyah";
+import * as audio from "booyah/src/audio";
 
 import * as minimap from "./scenes/minimap";
 
@@ -71,9 +72,11 @@ const graphicalAssets = [
 
 const fontAssets = ["Cardenio Modern Bold", "Cardenio Modern Regular"];
 
+const fxAssets = ["sfx_notification"];
+
 const entityInstallers: any = [
   // audio.installJukebox,
-  // audio.installFxMachine,
+  audio.installFxMachine,
   booyah.makeInstallMenu({
     menuButtonPosition: new PIXI.Point(crisprUtil.width, 0),
   }),
@@ -84,6 +87,7 @@ booyah.go({
   entityInstallers,
   screenSize: new PIXI.Point(crisprUtil.width, crisprUtil.height),
   graphicalAssets,
+  fxAssets,
   fontAssets,
   graphics: {
     menu: "images/hud_menu_button.png",

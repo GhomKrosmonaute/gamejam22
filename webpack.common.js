@@ -72,6 +72,10 @@ module.exports = {
           from: "fonts",
           to: "fonts",
         },
+        {
+          from: "audio",
+          to: "audio",
+        },
       ],
     }),
     // //opimize all image file
