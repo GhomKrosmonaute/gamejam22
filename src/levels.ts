@@ -76,8 +76,8 @@ export const levels = {
 
   // todo: intermediary levels with medium virus
 
-  "Zen mode": () =>
-    new level.Level("Zen mode", {
+  Zen: () =>
+    new level.Level("Zen", {
       variant: "zen",
       maxScore: 1000,
       forceMatching: true,
@@ -97,9 +97,9 @@ export const levels = {
           event: "setup",
           once: true,
           entity: new popup.TutorialPopup({
-            title: "Zen mode",
+            title: "Zen",
             content:
-              "On this variant, have fun making very long DNA sequences.\n\nReach 1000 pts!",
+              "No viruses, no scissors. You can even start in the middle.\n\nChill out and enjoy making long DNA sequences.\n\nYou have 10 moves to rack up as many points as possible.\n\nReach 1000 points to continue",
             popupOptions: {
               minimizeOnClose: false,
               coolDown: 2000,
@@ -131,8 +131,9 @@ export const levels = {
                 context.timeBonus.highlight = true;
               }),
               new popup.TutorialPopup({
-                title: "The Time bonus",
-                content: "Can freeze the game for 5 seconds!",
+                title: "Freeze",
+                content:
+                  "Click the freeze bonus to stop the clock for 5 seconds",
                 image: "images/bonus_time.png",
                 popupOptions: {
                   id: "popup ring 1",
@@ -161,9 +162,9 @@ export const levels = {
             context.disablingAnimation("preventVirus", true);
             context.activate(
               new popup.TutorialPopup({
-                title: "Oh no!",
+                title: "Time attack!",
                 content:
-                  "It's a time bomb, crunch the sequences before they hit the grid!\n\nReach 400 pts!",
+                  "Crunch the sequences before they hit the grid!\n\nReach 400 points to continue",
                 popupOptions: {
                   id: "intro popup",
                   logo: "😱",
@@ -197,8 +198,8 @@ export const levels = {
       ],
     })),
 
-  "Turn mode": () =>
-    new level.Level("Turn mode", (context) => ({
+  "Turn by turn": () =>
+    new level.Level("Turn by turn", (context) => ({
       variant: "turn",
       maxScore: 300,
       minStarNeeded: 1,
@@ -214,8 +215,8 @@ export const levels = {
                 context.swapBonus.highlight = true;
               }),
               new popup.TutorialPopup({
-                title: "The Swap bonus",
-                content: "Can swap two nucleotides",
+                title: "Swap",
+                content: "Click the swap bonus to switch two nucleotides",
                 image: "images/bonus_swap.png",
                 popupOptions: {
                   id: "popup ring 1",
@@ -240,8 +241,9 @@ export const levels = {
           event: "init",
           once: true,
           entity: new popup.TutorialPopup({
-            title: "Enjoy!",
-            content: "Let's try the turn-by-turn variant.\n\nReach 300 pts!",
+            title: "Turn by turn",
+            content:
+              "Now you know the basics, try with some longer sequences.\n\nReach 300 points to continue!",
             popupOptions: {
               minimizeOnClose: false,
               coolDown: 2000,
@@ -448,8 +450,9 @@ export const levels = {
                               p.id === "popup step 4.1" &&
                               context.disablingAnimations.has("tutorial"),
                             entity: new popup.TutorialPopup({
-                              title: "Clean up infections!",
-                              content: "Using the infected DNA in a sequence.",
+                              title: "Clean up!",
+                              content:
+                                "Use the infected DNA in a sequence to clean the infection",
                               image: "images/infection_red.png",
                               popupOptions: {
                                 minimizeOnClose: false,
