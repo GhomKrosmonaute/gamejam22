@@ -403,7 +403,7 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _initVirus() {
-    this.virus = new virus.Virus("mini");
+    this.virus = new virus.Virus(this.level.options.virus);
 
     this._activateChildEntity(this.virus, this.level.config);
 
@@ -661,7 +661,14 @@ export class Sequence extends entity.CompositeEntity {
           if (this.virus && this.virus.isSetup) {
             this._activateChildEntity(
               new entity.EntitySequence([
-                this.virus.kill(),
+                new entity.ParallelEntity([
+                  new entity.FunctionCallEntity(() => {
+                    this._activateChildEntity(
+                      addScore ? this.virus.kill() : this.virus.leave()
+                    );
+                  }),
+                  new entity.WaitingEntity(1000),
+                ]),
                 new entity.FunctionCallEntity(end),
               ])
             );

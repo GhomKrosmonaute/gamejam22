@@ -10,10 +10,10 @@ import * as crisprUtil from "../crisprUtil";
 import * as level from "../scenes/level";
 
 export type VirusType = "mini" | "medium" | "big";
-export type VirusAnimation = "sting" | "idle" | "walk";
+export type VirusAnimation = "sting" | "idle" | "walk" | "dead";
 
-export const leftEdge = 25;
-export const rightEdge = -25;
+export const leftEdge = 30;
+export const rightEdge = -30;
 
 /**
  * Emits:
@@ -25,8 +25,13 @@ export class Virus extends entity.CompositeEntity {
   private _container = new PIXI.Container();
   private _animation: entity.AnimatedSpriteEntity;
   private _previousAnimationName: VirusAnimation;
+  private _position = new PIXI.Point();
 
-  constructor(public readonly type: VirusType) {
+  public rounded = true;
+  public scale = 1;
+  public filters: PIXI.Filter[] = [];
+
+  constructor(public type: VirusType) {
     super();
   }
 
@@ -34,8 +39,14 @@ export class Virus extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  get randomAngle(): number {
+  get randomStartAngle(): number {
     return Math.random() < 0.5 ? leftEdge : rightEdge;
+  }
+
+  get randomAngle(): number {
+    return this.angle < 0
+      ? crisprUtil.random(-2, rightEdge * 0.5)
+      : crisprUtil.random(2, leftEdge * 0.5);
   }
 
   get angle(): number {
@@ -44,17 +55,33 @@ export class Virus extends entity.CompositeEntity {
 
   set angle(value) {
     crisprUtil.positionAlongMembrane(this._container, value);
+    this.refreshRoundedPosition();
+  }
+
+  get position(): PIXI.IPointData {
+    return this._position;
+  }
+
+  set position(point: PIXI.IPointData) {
+    if (!this.rounded) {
+      this._container.position.copyFrom(point);
+      this._position.copyFrom(point);
+    } else {
+      crisprUtil.positionAlongMembrane(this._container, this.angle);
+      this._position.copyFrom(point);
+      this.refreshRoundedPosition();
+    }
+  }
+
+  public angleTooClose(angle: number): boolean {
+    return crisprUtil.dist(angle, this.angle) < 10;
   }
 
   protected _setup() {
-    // set starting angle
-    do {
-      this.angle = this.randomAngle;
-    } while (
-      this.level.sequenceManager.viruses.some((v) => {
-        return v !== this && crisprUtil.dist(this.angle, v.angle) < 10;
-      })
-    );
+    if (this.rounded) {
+      // set starting angle
+      this.angle = this.randomStartAngle;
+    }
 
     this._entityConfig.container.addChild(this._container);
   }
@@ -63,14 +90,35 @@ export class Virus extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this._container);
   }
 
-  moveTo(angle: number): entity.EntitySequence {
+  moveToPosition(position: PIXI.IPointData): entity.EntitySequence {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.setAnimatedSprite("walk", true);
+        if (position.x < this._container.position.x)
+          this._animation.sprite.scale.x *= -1;
+      }),
+      new tween.Tween({
+        duration: this.type === "big" ? 2500 : 1000,
+        obj: this._container,
+        property: "position",
+        from: this._container.position.clone(),
+        to: new PIXI.Point(position.x, position.y),
+        easing: easing.easeInOutQuad,
+        interpolate: tween.interpolation.point,
+      }),
+    ]);
+  }
+
+  moveToAngle(angle: number): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("walk", true);
         if (angle > this.angle) this._animation.sprite.scale.x *= -1;
+
+        this._entityConfig.fxMachine.play("virus_move");
       }),
       new tween.Tween({
-        duration: 1000,
+        duration: this.type === "big" ? 2500 : 1000,
         from: this.angle,
         to: angle,
         easing: easing.easeInOutQuad,
@@ -82,18 +130,33 @@ export class Virus extends entity.CompositeEntity {
   }
 
   come(): entity.EntitySequence {
+    let angle: number = null;
     return new entity.EntitySequence([
-      this.moveTo(
-        this.angle < 0
-          ? crisprUtil.random(-2, rightEdge * 0.5)
-          : crisprUtil.random(2, leftEdge * 0.5)
-      ),
+      new entity.FunctionCallEntity(() => {
+        while (
+          angle === null ||
+          this.level.sequenceManager.viruses.some((v) => {
+            return v !== this && v.angleTooClose(angle);
+          })
+        ) {
+          angle = this.randomAngle;
+        }
+      }),
+      this.moveToAngle(angle),
     ]);
   }
 
   leave(): entity.EntitySequence {
     return new entity.EntitySequence([
-      this.moveTo(this.angle < 0 ? rightEdge : leftEdge),
+      this.rounded
+        ? this.moveToAngle(this.angle < 0 ? rightEdge : leftEdge)
+        : this.moveToPosition({
+            x:
+              this._position.x < crisprUtil.width / 2
+                ? crisprUtil.width * -0.5
+                : crisprUtil.width * 1.5,
+            y: this._position.y,
+          }),
       new entity.FunctionCallEntity(() => {
         this.level.emitLevelEvent("virusLeaves", this);
         this._transition = entity.makeTransition();
@@ -104,9 +167,13 @@ export class Virus extends entity.CompositeEntity {
   kill(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        // todo: use death animation
+        this.setAnimatedSprite("dead", false);
       }),
-      this.leave(),
+      new entity.WaitForEvent(this, "terminatedAnimation"),
+      new entity.FunctionCallEntity(() => {
+        this.level.emitLevelEvent("virusLeaves", this);
+        this._transition = entity.makeTransition();
+      }),
     ]);
   }
 
@@ -118,13 +185,23 @@ export class Virus extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("sting", false);
       }),
+      // Slight wait before playing sound.
+      // TODO: make this sound longer?
+      new entity.FunctionalEntity({
+        requestTransition: () =>
+          this._animation.sprite.currentFrame >=
+          this._animation.sprite.totalFrames * 0.25,
+      }),
+      new entity.FunctionCallEntity(() => {
+        this._entityConfig.fxMachine.play("virus_sting");
+      }),
       new entity.FunctionalEntity({
         requestTransition: () =>
           this._animation.sprite.currentFrame >=
           this._animation.sprite.totalFrames * 0.5,
       }),
       new entity.FunctionCallEntity(() => {
-        this._animation.sprite.stop();
+        this.stop();
         this.emit("stungIn");
       }),
     ]);
@@ -139,13 +216,34 @@ export class Virus extends entity.CompositeEntity {
         if (this._previousAnimationName !== "sting") {
           throw new Error("stingIn must be called before stingOut.");
         }
-        this._animation.sprite.play();
+        this.play();
       }),
       new entity.WaitForEvent(this, "terminatedAnimation"),
       new entity.FunctionCallEntity(() => {
         this.emit("stungOut");
       }),
     ]);
+  }
+
+  private stop() {
+    this._animation.sprite.animationSpeed = 0;
+  }
+
+  private play() {
+    this._animation.sprite.animationSpeed = 25 / 60;
+  }
+
+  private pause() {
+    if (this._animation.sprite.animationSpeed === 0) {
+      this.play();
+    } else {
+      this.stop();
+    }
+  }
+
+  private refreshRoundedPosition() {
+    this._container.position.x += this.position.x;
+    this._container.position.y += this.position.y;
   }
 
   private setAnimatedSprite(animationName: VirusAnimation, loop = true) {
@@ -161,14 +259,57 @@ export class Virus extends entity.CompositeEntity {
       ]
     );
 
-    this._animation.sprite.animationSpeed = 25 / 60;
-    this._animation.sprite.scale.set(0.12);
-    this._animation.sprite.anchor.set(0.5, 1);
+    // todo: continue to adapt sises of big and medium, for all virusAnimation states
+    switch (this.type) {
+      case "mini":
+        this._animation.sprite.scale.set(
+          animationName === "dead" ? 0.25 : 0.12
+        );
+        this._animation.sprite.anchor.set(
+          0.5,
+          animationName === "dead" ? 0.7 : 0.95
+        );
+        break;
+      case "medium":
+        this._animation.sprite.scale.set(0.3);
+        this._animation.sprite.anchor.set(0.5, 1);
+        break;
+      case "big":
+        switch (animationName) {
+          case "dead":
+            this._animation.sprite.scale.set(0.5);
+            this._animation.sprite.anchor.set(0.5, 0.67);
+            break;
+          case "idle":
+            this._animation.sprite.scale.set(0.218);
+            this._animation.sprite.anchor.set(0.5, 0.88);
+            break;
+          case "sting":
+            this._animation.sprite.scale.set(0.24);
+            this._animation.sprite.anchor.set(0.5, 0.98);
+            break;
+          case "walk":
+            this._animation.sprite.scale.set(0.225);
+            this._animation.sprite.anchor.set(0.5, 0.88);
+            break;
+        }
+        break;
+    }
+
+    this._animation.sprite.scale.set(
+      this._animation.sprite.scale.x * this.scale
+    );
+
+    this._animation.sprite.filters = this.filters;
     this._animation.sprite.loop = loop;
     this._animation.options.transitionOnComplete = () => {
       this.emit("terminatedAnimation");
-      this.setAnimatedSprite("idle");
+      if (animationName !== "dead") {
+        this.setAnimatedSprite("idle");
+      }
     };
+
+    this.play();
 
     this._activateChildEntity(
       this._animation,

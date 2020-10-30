@@ -175,7 +175,7 @@ export class Minimap extends entity.CompositeEntity {
         container: this.container,
       })
     );
-
+    this.scrollBox.scrollTo(new PIXI.Point(0, -9999999));
     this.scrollBox.refresh();
 
     this._entityConfig.container.addChild(this.container);

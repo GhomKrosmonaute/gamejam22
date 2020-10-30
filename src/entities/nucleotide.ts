@@ -244,6 +244,8 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._state;
   }
   set state(newState: NucleotideState) {
+    if (!this.isSetup) return;
+
     if (newState === this._state) {
       this.emit("stateChanged", newState);
       return;

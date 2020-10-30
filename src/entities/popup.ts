@@ -165,6 +165,8 @@ export abstract class Popup extends entity.CompositeEntity {
           if (this.options.minimizeOnSetup) {
             this.minimize({ animated: false });
           } else {
+            this._playSound();
+
             this._activateChildEntity(
               new entity.ParallelEntity([
                 anim.popup(this._container, 700),
@@ -502,6 +504,10 @@ export abstract class Popup extends entity.CompositeEntity {
       callback();
     });
   }
+
+  protected _playSound() {
+    this._entityConfig.fxMachine.play("notification");
+  }
 }
 
 export class FloatingPopup extends Popup {
@@ -717,6 +723,12 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
     }
 
     this.addCheckRows();
+  }
+
+  protected _playSound() {
+    // Play sound depending on number of stars
+    const results = this.level.checkAndReturnsResults();
+    this._entityConfig.fxMachine.play(`star_${results.starCount}`);
   }
 }
 

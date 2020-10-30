@@ -174,6 +174,8 @@ export class Gauge extends entity.CompositeEntity {
       ring.base.copyFrom(position);
 
       this._once(ring, "reached", () => {
+        this._entityConfig.fxMachine.play("score_ring");
+
         this.level.options.gaugeRings[ring.index](this.level, ring);
         ring.tint = 0x6bffff;
         this.level.emitLevelEvent("ringReached", ring);

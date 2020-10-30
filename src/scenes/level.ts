@@ -22,6 +22,8 @@ import * as hud from "../entities/hud";
 
 export type LevelVariant = "turn" | "fall" | "zen";
 
+export const baseDropSpeed = 0.001;
+
 export interface LevelResults {
   checks: { [text: string]: boolean };
   checkCount: number;
@@ -40,6 +42,7 @@ export interface LevelOptions {
   retryOnFail: boolean;
   displayTurnTitles: boolean;
   variant: LevelVariant;
+  virus: virus.VirusType;
   maxScore: number;
   dropSpeed: number;
   baseGain: number;
@@ -78,8 +81,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   retryOnFail: true,
   displayTurnTitles: true,
   variant: "turn",
+  virus: "mini",
   presetScissors: null,
-  dropSpeed: 0.001,
+  dropSpeed: 1,
   maxScore: 1000,
   baseGain: 10,
   baseScore: 0,
@@ -119,12 +123,15 @@ export type LevelEventParams<
 export interface LevelEvents {
   init: [];
   setup: [];
+  canReset: [];
   infected: [];
+  fallingDown: [];
   virusLeaves: [virus.Virus];
   closedPopup: [popup.Popup];
   minimizedPopup: [popup.Popup];
   pathCrunched: [];
   partialCrunched: [];
+  cleanedInfection: [];
   pathUpdated: [];
   ringReached: [ring: hud.Ring];
   sequenceDown: [];
@@ -138,6 +145,7 @@ export interface LevelEvents {
 
 export interface HookOptions<Entity, EventName extends LevelEventName> {
   id: string;
+  delay?: number;
   event: EventName;
   /** Filter function, trigger hook if it returns `true` */
   filter?: (...params: LevelEventParams<EventName>) => boolean | void;
@@ -188,6 +196,8 @@ export class Hook<
     ) {
       this.level.triggeredHooks.add(this.options.id);
 
+      const delay = this.options.delay ?? 0;
+
       if (this.options.reset) {
         if (crisprUtil.debug) {
           console.log("hook reset:", this.options.id);
@@ -212,20 +222,35 @@ export class Hook<
         };
 
         // apply changes
-        this.level.reset({
-          ...this.level.options,
-          ...resetOptions,
-          ...newOptions,
-        });
+        this._activateChildEntity(
+          new entity.EntitySequence([
+            new entity.WaitingEntity(delay),
+            new entity.FunctionCallEntity(() => {
+              this.level.reset({
+                ...this.level.options,
+                ...resetOptions,
+                ...newOptions,
+              });
+            }),
+          ])
+        );
       } else if (this.options.entity) {
         if (crisprUtil.debug) {
           console.log("hook activate:", this.options.id, this.options.entity);
         }
-        if (this.options.entity instanceof popup.Popup) {
-          this.level.activate(this.options.entity);
-        } else {
-          this._activateChildEntity(this.options.entity);
-        }
+
+        this._activateChildEntity(
+          new entity.EntitySequence([
+            new entity.WaitingEntity(delay),
+            new entity.FunctionCallEntity(() => {
+              if (this.options.entity instanceof popup.Popup) {
+                this.level.activate(this.options.entity);
+              } else {
+                this._activateChildEntity(this.options.entity);
+              }
+            }),
+          ])
+        );
       } else {
         if (crisprUtil.debug) {
           console.error("hook called but not triggered:", this.options.id);
@@ -287,6 +312,9 @@ export class Level extends entity.CompositeEntity {
         : optionsResolvable;
     this.options = util.fillInOptions(options, defaultLevelOptions);
     this.score = this.options.baseScore;
+
+    // @ts-ignore
+    window.level = this;
   }
 
   activate(entity: entity.Entity) {
@@ -508,6 +536,20 @@ export class Level extends entity.CompositeEntity {
       }
     });
 
+    this.onLevelEvent("fallingDown", () => {
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          new entity.FunctionCallEntity(() => {
+            this.path.remove();
+          }),
+          this.infect(),
+          new entity.FunctionCallEntity(() => {
+            this.checkGameOverByInfection();
+          }),
+        ])
+      );
+    });
+
     this._initDisablingAnimations();
     this._initBackground();
     this._initForeground();
@@ -520,17 +562,30 @@ export class Level extends entity.CompositeEntity {
     this._initGrid();
     this._initPath();
     this._initHairs();
-    this._initSequences();
     this._initBonuses();
     this._initButton();
     this._initGauge();
 
-    this.refresh();
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        new entity.FunctionalEntity({
+          requestTransition: () =>
+            !this.disablingAnimations.has("preventVirus"),
+        }),
+        new entity.FunctionCallEntity(() => {
+          this._initSequences();
 
-    this.emitLevelEvent("setup");
+          this.refresh();
+
+          this.emitLevelEvent("setup");
+        }),
+      ])
+    );
   }
 
   _update() {
+    if (this.failed) return;
+    if (!this.sequenceManager || !this.sequenceManager.isSetup) return;
     if (this.options.variant !== "fall") return;
     if (this.fallingStopped) return;
     if ([...this.disablingAnimations].some((name) => !name.startsWith("popup")))
@@ -538,9 +593,11 @@ export class Level extends entity.CompositeEntity {
 
     // if falling sequence is down, infect
     if (
-      this.sequenceManager.advanceSequences(this.options.dropSpeed).length > 0
+      this.sequenceManager.advanceSequences(
+        this.options.dropSpeed * baseDropSpeed
+      ).length > 0
     ) {
-      this._activateChildEntity(this.infect());
+      this.emitLevelEvent("fallingDown");
     }
   }
 

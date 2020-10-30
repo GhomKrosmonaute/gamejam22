@@ -62,12 +62,6 @@ export class Grid extends entity.CompositeEntity {
   public cursor = new PIXI.Point();
   public lastHovered: nucleotide.Nucleotide | null;
 
-  constructor() {
-    super();
-    // @ts-ignore
-    window.grid = this;
-  }
-
   get level(): level.Level {
     return this._entityConfig.level;
   }
@@ -455,6 +449,8 @@ export class Grid extends entity.CompositeEntity {
 
     holes.forEach((n) => (n.state = "present"));
 
+    this._entityConfig.fxMachine.play("spawn");
+
     return holes;
   }
 
@@ -661,6 +657,8 @@ export class Grid extends entity.CompositeEntity {
         timeBetween: 100,
         onStep: (item) => {
           item.state = "infected";
+
+          this._entityConfig.fxMachine.play("infection");
         },
         callback: () => {
           this.level.disablingAnimation("grid.infect", false);
