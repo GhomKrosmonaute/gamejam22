@@ -99,6 +99,7 @@ const fxAssets = [
   "bonus_pick",
   "bonus_swap",
   "bonus_time",
+  "validate",
 ];
 
 const entityInstallers: any = [
