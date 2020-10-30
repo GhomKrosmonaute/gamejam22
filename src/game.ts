@@ -76,9 +76,17 @@ const fxAssets = [
   "notification",
   "virus_move",
   "virus_sting",
-  "nucleotide_touch_1",
-  "nucleotide_touch_2",
-  "nucleotide_touch_3",
+  "explode_1",
+  "explode_2",
+  "explode_3",
+  "note_1",
+  "note_2",
+  "note_3",
+  "note_4",
+  "note_5",
+  "note_6",
+  "note_7",
+  "note_8",
 ];
 
 const entityInstallers: any = [

@@ -103,7 +103,7 @@ export class Path extends entity.CompositeEntity {
       // Otherwise, start path anew
       this.items = this.items.length > 0 ? [] : [n];
 
-      this._playNucleotideTouch();
+      this._playNote();
     }
 
     return true;
@@ -141,7 +141,7 @@ export class Path extends entity.CompositeEntity {
 
     // Add to the path
     this.items.push(n);
-    this._playNucleotideTouch();
+    this._playNote();
 
     this.emit("updated");
     return true;
@@ -216,10 +216,12 @@ export class Path extends entity.CompositeEntity {
             anim.down(
               item.infected ? item.infectionSprite : item.sprite,
               500,
-              function () {
-                this.once("stateChanged", finish);
-                this.state = "missing";
-              }.bind(item)
+              () => {
+                item.once("stateChanged", finish);
+                item.state = "missing";
+
+                this._playExplosion();
+              }
             )
           );
 
@@ -251,8 +253,13 @@ export class Path extends entity.CompositeEntity {
     return (reverse ? this.nucleotides.reverse() : this.nucleotides).join(",");
   }
 
-  private _playNucleotideTouch(): void {
+  private _playNote(): void {
+    const n = 1 + Math.min(7, this.items.length);
+    this._entityConfig.fxMachine.play(`note_${n}`);
+  }
+
+  private _playExplosion(): void {
     const r = _.random(1, 3);
-    this._entityConfig.fxMachine.play(`nucleotide_touch_${r}`);
+    this._entityConfig.fxMachine.play(`explode_${r}`);
   }
 }
