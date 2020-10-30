@@ -59,6 +59,13 @@ export const levels = {
             }),
           ]),
         }),
+        new level.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            context.activate(anim.title(context.container, "Go!"));
+          }),
+        }),
       ],
     })),
 
@@ -145,21 +152,42 @@ export const levels = {
           id: "intro",
           event: "init",
           once: true,
-          entity: new popup.TutorialPopup({
-            title: "Oh no!",
-            content:
-              "It's a time bomb, crunch the sequences before they hit the grid!\n\nReach 400 pts!",
-            popupOptions: {
-              logo: "😱",
-              minimizeOnClose: false,
-              coolDown: 2000,
-            },
+          entity: new entity.FunctionCallEntity(() => {
+            context.disablingAnimation("preventVirus", true);
+            context.activate(
+              new popup.TutorialPopup({
+                title: "Oh no!",
+                content:
+                  "It's a time bomb, crunch the sequences before they hit the grid!\n\nReach 400 pts!",
+                popupOptions: {
+                  id: "intro popup",
+                  logo: "😱",
+                  minimizeOnClose: false,
+                  coolDown: 2000,
+                },
+              })
+            );
+          }),
+        }),
+        new level.Hook({
+          id: "start",
+          event: "closedPopup",
+          filter: (p) => p.id === "intro popup",
+          entity: new entity.FunctionCallEntity(() => {
+            context.disablingAnimation("preventVirus", false);
           }),
         }),
         new level.Hook({
           id: "outro",
           event: "maxScoreReached",
           entity: new popup.TerminatedLevelPopup(),
+        }),
+        new level.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            context.activate(anim.title(context.container, "Go!"));
+          }),
         }),
       ],
     })),
