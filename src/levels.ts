@@ -1,3 +1,6 @@
+import * as PIXI from "pixi.js";
+import { OutlineFilter } from "@pixi/filter-outline";
+
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
@@ -29,19 +32,21 @@ export const levels = {
               (v) =>
                 new entity.FunctionCallEntity(() => {
                   v.type = "big";
-                  v.scale = 4;
+                  v.scale = 4.5;
+                  v.rounded = false;
                   v.angle = 0;
-                  v.position = { x: 0, y: crisp.height * 2 };
+                  v.position = { x: crisp.width / 2, y: crisp.height * 2 };
+                  v.filters = [new OutlineFilter(20, 0x000000)];
                 }),
               (v) => v.stingIn(),
               (v) =>
                 new tween.Tween({
-                  duration: 1500,
+                  duration: 500,
                   from: crisp.height * 2,
-                  to: crisp.height - 100,
+                  to: crisp.height,
                   easing: easing.easeOutCubic,
                   onUpdate: (value) => {
-                    v.position = { x: 0, y: value };
+                    v.position = { x: crisp.width / 2, y: value };
                   },
                 }),
               (v) => v.stingOut(),

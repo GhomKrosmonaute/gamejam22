@@ -27,7 +27,9 @@ export class Virus extends entity.CompositeEntity {
   private _previousAnimationName: VirusAnimation;
   private _position = new PIXI.Point();
 
+  public rounded = true;
   public scale = 1;
+  public filters: PIXI.Filter[] = [];
 
   constructor(public type: VirusType) {
     super();
@@ -53,7 +55,7 @@ export class Virus extends entity.CompositeEntity {
 
   set angle(value) {
     crisprUtil.positionAlongMembrane(this._container, value);
-    this.refreshPosition();
+    this.refreshRoundedPosition();
   }
 
   get position(): PIXI.IPointData {
@@ -61,9 +63,14 @@ export class Virus extends entity.CompositeEntity {
   }
 
   set position(point: PIXI.IPointData) {
-    crisprUtil.positionAlongMembrane(this._container, this.angle);
-    this._position.copyFrom(point);
-    this.refreshPosition();
+    if (!this.rounded) {
+      this._container.position.copyFrom(point);
+      this._position.copyFrom(point);
+    } else {
+      crisprUtil.positionAlongMembrane(this._container, this.angle);
+      this._position.copyFrom(point);
+      this.refreshRoundedPosition();
+    }
   }
 
   public angleTooClose(angle: number): boolean {
@@ -71,8 +78,10 @@ export class Virus extends entity.CompositeEntity {
   }
 
   protected _setup() {
-    // set starting angle
-    this.angle = this.randomStartAngle;
+    if (this.rounded) {
+      // set starting angle
+      this.angle = this.randomStartAngle;
+    }
 
     this._entityConfig.container.addChild(this._container);
   }
@@ -81,7 +90,26 @@ export class Virus extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this._container);
   }
 
-  moveTo(angle: number): entity.EntitySequence {
+  moveToPosition(position: PIXI.IPointData): entity.EntitySequence {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.setAnimatedSprite("walk", true);
+        if (position.x < this._container.position.x)
+          this._animation.sprite.scale.x *= -1;
+      }),
+      new tween.Tween({
+        duration: this.type === "big" ? 2500 : 1000,
+        obj: this._container,
+        property: "position",
+        from: this._container.position.clone(),
+        to: new PIXI.Point(position.x, position.y),
+        easing: easing.easeInOutQuad,
+        interpolate: tween.interpolation.point,
+      }),
+    ]);
+  }
+
+  moveToAngle(angle: number): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("walk", true);
@@ -112,13 +140,21 @@ export class Virus extends entity.CompositeEntity {
           angle = this.randomAngle;
         }
       }),
-      this.moveTo(angle),
+      this.moveToAngle(angle),
     ]);
   }
 
   leave(): entity.EntitySequence {
     return new entity.EntitySequence([
-      this.moveTo(this.angle < 0 ? rightEdge : leftEdge),
+      this.rounded
+        ? this.moveToAngle(this.angle < 0 ? rightEdge : leftEdge)
+        : this.moveToPosition({
+            x:
+              this._position.x < crisprUtil.width / 2
+                ? crisprUtil.width * -0.5
+                : crisprUtil.width * 1.5,
+            y: this._position.y,
+          }),
       new entity.FunctionCallEntity(() => {
         this.level.emitLevelEvent("virusLeaves", this);
         this._transition = entity.makeTransition();
@@ -193,7 +229,7 @@ export class Virus extends entity.CompositeEntity {
     }
   }
 
-  private refreshPosition() {
+  private refreshRoundedPosition() {
     this._container.position.x += this.position.x;
     this._container.position.y += this.position.y;
   }
@@ -252,6 +288,7 @@ export class Virus extends entity.CompositeEntity {
       this._animation.sprite.scale.x * this.scale
     );
 
+    this._animation.sprite.filters = this.filters;
     this._animation.sprite.loop = loop;
     this._animation.options.transitionOnComplete = () => {
       this.emit("terminatedAnimation");
