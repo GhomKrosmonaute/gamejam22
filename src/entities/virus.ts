@@ -135,7 +135,7 @@ export class Virus extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("sting", false);
       }),
-      // Slight wait before playing sound. 
+      // Slight wait before playing sound.
       // TODO: make this sound longer?
       new entity.FunctionalEntity({
         requestTransition: () =>
