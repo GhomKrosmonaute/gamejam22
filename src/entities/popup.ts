@@ -165,7 +165,7 @@ export abstract class Popup extends entity.CompositeEntity {
           if (this.options.minimizeOnSetup) {
             this.minimize({ animated: false });
           } else {
-            this._entityConfig.fxMachine.play("sfx_notification");
+            this._entityConfig.fxMachine.play("notification");
 
             this._activateChildEntity(
               new entity.ParallelEntity([

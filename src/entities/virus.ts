@@ -72,6 +72,8 @@ export class Virus extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("walk", true);
         if (angle > this.angle) this._animation.sprite.scale.x *= -1;
+
+        this._entityConfig.fxMachine.play("virus_move");
       }),
       new tween.Tween({
         duration: this.type === "big" ? 2500 : 1000,
@@ -132,6 +134,16 @@ export class Virus extends entity.CompositeEntity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("sting", false);
+      }),
+      // Slight wait before playing sound. 
+      // TODO: make this sound longer?
+      new entity.FunctionalEntity({
+        requestTransition: () =>
+          this._animation.sprite.currentFrame >=
+          this._animation.sprite.totalFrames * 0.25,
+      }),
+      new entity.FunctionCallEntity(() => {
+        this._entityConfig.fxMachine.play("virus_sting");
       }),
       new entity.FunctionalEntity({
         requestTransition: () =>

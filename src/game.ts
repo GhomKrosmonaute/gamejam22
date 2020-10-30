@@ -72,7 +72,7 @@ const graphicalAssets = [
 
 const fontAssets = ["Cardenio Modern Bold", "Cardenio Modern Regular"];
 
-const fxAssets = ["sfx_notification"];
+const fxAssets = ["notification", "virus_move", "virus_sting"];
 
 const entityInstallers: any = [
   // audio.installJukebox,
