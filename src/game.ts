@@ -102,8 +102,10 @@ const fxAssets = [
   "validate",
 ];
 
+const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen"];
+
 const entityInstallers: any = [
-  // audio.installJukebox,
+  audio.installJukebox,
   audio.installFxMachine,
   booyah.makeInstallMenu({
     menuButtonPosition: new PIXI.Point(crisprUtil.width, 0),
@@ -116,6 +118,7 @@ booyah.go({
   screenSize: new PIXI.Point(crisprUtil.width, crisprUtil.height),
   graphicalAssets,
   fxAssets,
+  musicAssets,
   fontAssets,
   graphics: {
     menu: "images/hud_menu_button.png",

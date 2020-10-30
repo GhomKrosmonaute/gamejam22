@@ -23,6 +23,8 @@ export class Minimap extends entity.CompositeEntity {
   private scrollBox: scroll.Scrollbox;
 
   protected _setup() {
+    this._entityConfig.jukebox.changeMusic("menu");
+
     this.links = new PIXI.Graphics();
     this.container = new PIXI.Container();
     this.buttons = new PIXI.Container();
