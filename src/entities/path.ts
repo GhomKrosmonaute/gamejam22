@@ -256,9 +256,26 @@ export class Path extends entity.CompositeEntity {
   private _playNote(): void {
     if (this.items.length === 0) return;
 
+    // There are in fact two sounds, the first is the note, and the 2nd depends on the length
+
     // Pick a number between 1 and 8
     const n = Math.min(8, this.items.length);
     this._entityConfig.fxMachine.play(`note_${n}`);
+
+    const lastNucleotide = this.items[this.items.length - 1];
+    let sound: string;
+    if (lastNucleotide.type === "scissors") {
+      sound = "tile_scissors";
+    } else if (lastNucleotide.colorName === "r") {
+      sound = "tile_red";
+    } else if (lastNucleotide.colorName === "g") {
+      sound = "tile_green";
+    } else if (lastNucleotide.colorName === "b") {
+      sound = "tile_blue";
+    } else if (lastNucleotide.colorName === "y") {
+      sound = "tile_yellow";
+    }
+    this._entityConfig.fxMachine.play(sound);
   }
 
   private _playExplosion(): void {
