@@ -449,6 +449,8 @@ export class Grid extends entity.CompositeEntity {
 
     holes.forEach((n) => (n.state = "present"));
 
+    this._entityConfig.fxMachine.play("spawn");
+
     return holes;
   }
 

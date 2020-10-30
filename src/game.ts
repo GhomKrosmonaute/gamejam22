@@ -93,6 +93,7 @@ const fxAssets = [
   "star_1",
   "star_2",
   "star_3",
+  "spawn",
 ];
 
 const entityInstallers: any = [
