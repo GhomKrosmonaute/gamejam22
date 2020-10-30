@@ -89,6 +89,10 @@ const fxAssets = [
   "note_8",
   "infection",
   "score_ring",
+  "star_0",
+  "star_1",
+  "star_2",
+  "star_3",
 ];
 
 const entityInstallers: any = [

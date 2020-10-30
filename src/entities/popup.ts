@@ -587,6 +587,9 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
   onSetup() {
     const results = this.level.checkAndReturnsResults();
 
+    // Play sound depending on number of stars
+    this._entityConfig.fxMachine.play(`star_${results.starCount}`);
+
     // add star-based children
     {
       let title: PIXI.Text;
