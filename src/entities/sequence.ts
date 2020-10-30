@@ -403,7 +403,7 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _initVirus() {
-    this.virus = new virus.Virus("mini");
+    this.virus = new virus.Virus(this.level.options.virus);
 
     this._activateChildEntity(this.virus, this.level.config);
 
