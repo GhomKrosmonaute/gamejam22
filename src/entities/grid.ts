@@ -62,12 +62,6 @@ export class Grid extends entity.CompositeEntity {
   public cursor = new PIXI.Point();
   public lastHovered: nucleotide.Nucleotide | null;
 
-  constructor() {
-    super();
-    // @ts-ignore
-    window.grid = this;
-  }
-
   get level(): level.Level {
     return this._entityConfig.level;
   }

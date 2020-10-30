@@ -288,6 +288,9 @@ export class Level extends entity.CompositeEntity {
         : optionsResolvable;
     this.options = util.fillInOptions(options, defaultLevelOptions);
     this.score = this.options.baseScore;
+
+    // @ts-ignore
+    window.level = this
   }
 
   activate(entity: entity.Entity) {
