@@ -10,7 +10,7 @@ import * as crisprUtil from "../crisprUtil";
 import * as level from "../scenes/level";
 
 export type VirusType = "mini" | "medium" | "big";
-export type VirusAnimation = "sting" | "idle" | "walk";
+export type VirusAnimation = "sting" | "idle" | "walk" | "dead";
 
 export const leftEdge = 25;
 export const rightEdge = -25;
@@ -34,8 +34,14 @@ export class Virus extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  get randomAngle(): number {
+  get randomStartAngle(): number {
     return Math.random() < 0.5 ? leftEdge : rightEdge;
+  }
+
+  get randomAngle(): number {
+    return this.angle < 0
+      ? crisprUtil.random(-2, rightEdge * 0.5)
+      : crisprUtil.random(2, leftEdge * 0.5);
   }
 
   get angle(): number {
@@ -46,15 +52,13 @@ export class Virus extends entity.CompositeEntity {
     crisprUtil.positionAlongMembrane(this._container, value);
   }
 
+  public angleTooClose(angle: number): boolean {
+    return crisprUtil.dist(angle, this.angle) < 10;
+  }
+
   protected _setup() {
     // set starting angle
-    do {
-      this.angle = this.randomAngle;
-    } while (
-      this.level.sequenceManager.viruses.some((v) => {
-        return v !== this && crisprUtil.dist(this.angle, v.angle) < 10;
-      })
-    );
+    this.angle = this.randomStartAngle;
 
     this._entityConfig.container.addChild(this._container);
   }
@@ -82,12 +86,19 @@ export class Virus extends entity.CompositeEntity {
   }
 
   come(): entity.EntitySequence {
+    let angle: number = null;
     return new entity.EntitySequence([
-      this.moveTo(
-        this.angle < 0
-          ? crisprUtil.random(-2, rightEdge * 0.5)
-          : crisprUtil.random(2, leftEdge * 0.5)
-      ),
+      new entity.FunctionCallEntity(() => {
+        while (
+          angle === null ||
+          this.level.sequenceManager.viruses.some((v) => {
+            return v !== this && v.angleTooClose(angle);
+          })
+        ) {
+          angle = this.randomAngle;
+        }
+      }),
+      this.moveTo(angle),
     ]);
   }
 
@@ -104,9 +115,13 @@ export class Virus extends entity.CompositeEntity {
   kill(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        // todo: use death animation
+        this.setAnimatedSprite("dead", false);
       }),
-      this.leave(),
+      new entity.WaitForEvent(this, "terminatedAnimation"),
+      new entity.FunctionCallEntity(() => {
+        this.level.emitLevelEvent("virusLeaves", this);
+        this._transition = entity.makeTransition();
+      }),
     ]);
   }
 
@@ -124,7 +139,7 @@ export class Virus extends entity.CompositeEntity {
           this._animation.sprite.totalFrames * 0.5,
       }),
       new entity.FunctionCallEntity(() => {
-        this._animation.sprite.stop();
+        this.stop();
         this.emit("stungIn");
       }),
     ]);
@@ -139,13 +154,29 @@ export class Virus extends entity.CompositeEntity {
         if (this._previousAnimationName !== "sting") {
           throw new Error("stingIn must be called before stingOut.");
         }
-        this._animation.sprite.play();
+        this.play();
       }),
       new entity.WaitForEvent(this, "terminatedAnimation"),
       new entity.FunctionCallEntity(() => {
         this.emit("stungOut");
       }),
     ]);
+  }
+
+  private stop() {
+    this._animation.sprite.animationSpeed = 0;
+  }
+
+  private play() {
+    this._animation.sprite.animationSpeed = 25 / 60;
+  }
+
+  private pause() {
+    if (this._animation.sprite.animationSpeed === 0) {
+      this.play();
+    } else {
+      this.stop();
+    }
   }
 
   private setAnimatedSprite(animationName: VirusAnimation, loop = true) {
@@ -161,14 +192,22 @@ export class Virus extends entity.CompositeEntity {
       ]
     );
 
-    this._animation.sprite.animationSpeed = 25 / 60;
-    this._animation.sprite.scale.set(0.12);
-    this._animation.sprite.anchor.set(0.5, 1);
+    this._animation.sprite.scale.set(
+      this._previousAnimationName === "dead" ? 0.25 : 0.12
+    );
+    this._animation.sprite.anchor.set(
+      0.5,
+      this._previousAnimationName === "dead" ? 0.7 : 0.95
+    );
     this._animation.sprite.loop = loop;
     this._animation.options.transitionOnComplete = () => {
       this.emit("terminatedAnimation");
-      this.setAnimatedSprite("idle");
+      if (this._previousAnimationName !== "dead") {
+        this.setAnimatedSprite("idle");
+      }
     };
+
+    this.play();
 
     this._activateChildEntity(
       this._animation,

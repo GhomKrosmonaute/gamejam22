@@ -120,6 +120,7 @@ export interface LevelEvents {
   init: [];
   setup: [];
   infected: [];
+  fallingDown: [];
   virusLeaves: [virus.Virus];
   closedPopup: [popup.Popup];
   minimizedPopup: [popup.Popup];
@@ -508,6 +509,17 @@ export class Level extends entity.CompositeEntity {
       }
     });
 
+    this.onLevelEvent("fallingDown", () => {
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          this.infect(),
+          new entity.FunctionCallEntity(() => {
+            this.checkGameOverByInfection();
+          }),
+        ])
+      );
+    });
+
     this._initDisablingAnimations();
     this._initBackground();
     this._initForeground();
@@ -540,7 +552,7 @@ export class Level extends entity.CompositeEntity {
     if (
       this.sequenceManager.advanceSequences(this.options.dropSpeed).length > 0
     ) {
-      this._activateChildEntity(this.infect());
+      this.emitLevelEvent("fallingDown");
     }
   }
 
