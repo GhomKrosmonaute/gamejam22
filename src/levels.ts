@@ -105,7 +105,7 @@ export const levels = {
           entity: new popup.TutorialPopup({
             title: "Zen",
             content:
-              "No viruses, no scissors. You can even start in the middle.\n\nChill out and enjoy making long DNA sequences.\n\nYou have 10 moves to rack up as many points as possible.\n\nReach 1000 points to continue",
+              "No viruses, no scissors. You can even start in the middle.\n\nChill out and enjoy making long DNA sequences.\n\nYou have 10 moves to rack up 1000 points and continue",
             popupOptions: {
               minimizeOnClose: false,
               coolDown: 2000,
