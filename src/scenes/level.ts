@@ -584,6 +584,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update() {
+    if (this.failed) return;
     if (!this.sequenceManager || !this.sequenceManager.isSetup) return;
     if (this.options.variant !== "fall") return;
     if (this.fallingStopped) return;
