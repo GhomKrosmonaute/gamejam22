@@ -12,8 +12,8 @@ import * as level from "../scenes/level";
 export type VirusType = "mini" | "medium" | "big";
 export type VirusAnimation = "sting" | "idle" | "walk" | "dead";
 
-export const leftEdge = 25;
-export const rightEdge = -25;
+export const leftEdge = 30;
+export const rightEdge = -30;
 
 /**
  * Emits:
@@ -74,7 +74,7 @@ export class Virus extends entity.CompositeEntity {
         if (angle > this.angle) this._animation.sprite.scale.x *= -1;
       }),
       new tween.Tween({
-        duration: 1000,
+        duration: this.type === "big" ? 2500 : 1000,
         from: this.angle,
         to: angle,
         easing: easing.easeInOutQuad,
@@ -193,18 +193,46 @@ export class Virus extends entity.CompositeEntity {
     );
 
     // todo: continue to adapt sises of big and medium, for all virusAnimation states
+    switch (this.type) {
+      case "mini":
+        this._animation.sprite.scale.set(
+          animationName === "dead" ? 0.25 : 0.12
+        );
+        this._animation.sprite.anchor.set(
+          0.5,
+          animationName === "dead" ? 0.7 : 0.95
+        );
+        break;
+      case "medium":
+        this._animation.sprite.scale.set(0.3);
+        this._animation.sprite.anchor.set(0.5, 1);
+        break;
+      case "big":
+        switch (animationName) {
+          case "dead":
+            this._animation.sprite.scale.set(0.5);
+            this._animation.sprite.anchor.set(0.5, 0.67);
+            break;
+          case "idle":
+            this._animation.sprite.scale.set(0.218);
+            this._animation.sprite.anchor.set(0.5, 0.88);
+            break;
+          case "sting":
+            this._animation.sprite.scale.set(0.24);
+            this._animation.sprite.anchor.set(0.5, 0.98);
+            break;
+          case "walk":
+            this._animation.sprite.scale.set(0.225);
+            this._animation.sprite.anchor.set(0.5, 0.88);
+            break;
+        }
+        break;
+    }
 
-    this._animation.sprite.scale.set(
-      this._previousAnimationName === "dead" ? 0.25 : 0.12
-    );
-    this._animation.sprite.anchor.set(
-      0.5,
-      this._previousAnimationName === "dead" ? 0.7 : 0.95
-    );
     this._animation.sprite.loop = loop;
     this._animation.options.transitionOnComplete = () => {
       this.emit("terminatedAnimation");
-      if (this._previousAnimationName !== "dead") {
+      if (animationName !== "dead") {
         this.setAnimatedSprite("idle");
       }
     };
