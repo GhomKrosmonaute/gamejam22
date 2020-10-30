@@ -192,6 +192,8 @@ export class Virus extends entity.CompositeEntity {
       ]
     );
 
+    // todo: continue to adapt sises of big and medium, for all virusAnimation states
+
     this._animation.sprite.scale.set(
       this._previousAnimationName === "dead" ? 0.25 : 0.12
     );
