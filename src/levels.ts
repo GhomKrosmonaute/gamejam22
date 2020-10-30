@@ -4,7 +4,18 @@ import * as level from "./scenes/level";
 import * as anim from "./animations";
 
 export const levels = {
-  "MV Mod": () => new level.Level("MV Mod", {}),
+  "MV Mod": () =>
+    new level.Level("MV Mod", {
+      virus: "big",
+      variant: "fall",
+      dropSpeed: 1.2,
+      gridShape: "medium",
+      sequenceLength: 7,
+      forceMatching: true,
+      scissorCount: 3,
+    }),
+
+  // todo: intermediary levels with medium virus
 
   "Zen mode": () =>
     new level.Level("Zen mode", {

@@ -22,6 +22,8 @@ import * as hud from "../entities/hud";
 
 export type LevelVariant = "turn" | "fall" | "zen";
 
+export const baseDropSpeed = 0.001;
+
 export interface LevelResults {
   checks: { [text: string]: boolean };
   checkCount: number;
@@ -40,6 +42,7 @@ export interface LevelOptions {
   retryOnFail: boolean;
   displayTurnTitles: boolean;
   variant: LevelVariant;
+  virus: virus.VirusType;
   maxScore: number;
   dropSpeed: number;
   baseGain: number;
@@ -78,8 +81,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   retryOnFail: true,
   displayTurnTitles: true,
   variant: "turn",
+  virus: "mini",
   presetScissors: null,
-  dropSpeed: 0.001,
+  dropSpeed: 1,
   maxScore: 1000,
   baseGain: 10,
   baseScore: 0,
@@ -515,6 +519,9 @@ export class Level extends entity.CompositeEntity {
     this.onLevelEvent("fallingDown", () => {
       this._activateChildEntity(
         new entity.EntitySequence([
+          new entity.FunctionCallEntity(() => {
+            this.path.remove();
+          }),
           this.infect(),
           new entity.FunctionCallEntity(() => {
             this.checkGameOverByInfection();
@@ -553,7 +560,9 @@ export class Level extends entity.CompositeEntity {
 
     // if falling sequence is down, infect
     if (
-      this.sequenceManager.advanceSequences(this.options.dropSpeed).length > 0
+      this.sequenceManager.advanceSequences(
+        this.options.dropSpeed * baseDropSpeed
+      ).length > 0
     ) {
       this.emitLevelEvent("fallingDown");
     }
