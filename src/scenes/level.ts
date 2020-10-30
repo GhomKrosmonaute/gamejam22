@@ -562,17 +562,30 @@ export class Level extends entity.CompositeEntity {
     this._initGrid();
     this._initPath();
     this._initHairs();
-    this._initSequences();
     this._initBonuses();
     this._initButton();
     this._initGauge();
 
-    this.refresh();
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        new entity.FunctionalEntity({
+          requestTransition: () =>
+            !this.disablingAnimations.has("preventVirus"),
+        }),
+        new entity.FunctionCallEntity(() => {
+          this._initSequences();
 
-    this.emitLevelEvent("setup");
+          this.refresh();
+
+          this.emitLevelEvent("setup");
+        }),
+      ])
+    );
   }
 
   _update() {
+    if (this.failed) return;
+    if (!this.sequenceManager || !this.sequenceManager.isSetup) return;
     if (this.options.variant !== "fall") return;
     if (this.fallingStopped) return;
     if ([...this.disablingAnimations].some((name) => !name.startsWith("popup")))

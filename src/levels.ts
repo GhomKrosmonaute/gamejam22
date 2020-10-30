@@ -1,25 +1,79 @@
+import * as PIXI from "pixi.js";
+import { OutlineFilter } from "@pixi/filter-outline";
+
 import * as entity from "booyah/src/entity";
+import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 import * as popup from "./entities/popup";
 import * as level from "./scenes/level";
+import * as crisp from "./crisprUtil";
 import * as anim from "./animations";
 import { contains } from "booyah/dist/util";
 
 export const levels = {
   "MV Mod": () =>
-    new level.Level("MV Mod", {
+    new level.Level("MV Mod", (context) => ({
       virus: "big",
       variant: "fall",
       dropSpeed: 1,
       gridShape: "medium",
       sequenceLength: 7,
       forceMatching: true,
+      maxScore: 1000,
       scissorCount: 3,
       gaugeRings: [
         (context) => (context.options.dropSpeed = 1.2),
         (context) => context.bonusesManager.add(context.timeBonus),
         (context) => (context.options.dropSpeed = 1.3),
       ],
-    }),
+      hooks: [
+        new level.Hook({
+          id: "intro animation",
+          event: "init",
+          once: true,
+          entity: new entity.EntitySequence([
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", true);
+            }),
+            new anim.VirusSequence([
+              (v) =>
+                new entity.FunctionCallEntity(() => {
+                  v.type = "big";
+                  v.scale = 4.5;
+                  v.rounded = false;
+                  v.angle = 0;
+                  v.position = { x: crisp.width / 2, y: crisp.height * 2 };
+                  v.filters = [new OutlineFilter(20, 0x000000)];
+                }),
+              (v) => v.stingIn(),
+              (v) =>
+                new tween.Tween({
+                  duration: 500,
+                  from: crisp.height * 2,
+                  to: crisp.height,
+                  easing: easing.easeOutCubic,
+                  onUpdate: (value) => {
+                    v.position = { x: crisp.width / 2, y: value };
+                  },
+                }),
+              (v) => v.stingOut(),
+              () => new entity.WaitingEntity(500),
+              (v) => v.leave(),
+            ]),
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", false);
+            }),
+          ]),
+        }),
+        new level.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            context.activate(anim.title(context.container, "Go!"));
+          }),
+        }),
+      ],
+    })),
 
   // todo: intermediary levels with medium virus
 
@@ -104,21 +158,42 @@ export const levels = {
           id: "intro",
           event: "init",
           once: true,
-          entity: new popup.TutorialPopup({
-            title: "Oh no!",
-            content:
-              "It's a time bomb, crunch the sequences before they hit the grid!\n\nReach 400 pts!",
-            popupOptions: {
-              logo: "😱",
-              minimizeOnClose: false,
-              coolDown: 2000,
-            },
+          entity: new entity.FunctionCallEntity(() => {
+            context.disablingAnimation("preventVirus", true);
+            context.activate(
+              new popup.TutorialPopup({
+                title: "Oh no!",
+                content:
+                  "It's a time bomb, crunch the sequences before they hit the grid!\n\nReach 400 pts!",
+                popupOptions: {
+                  id: "intro popup",
+                  logo: "😱",
+                  minimizeOnClose: false,
+                  coolDown: 2000,
+                },
+              })
+            );
+          }),
+        }),
+        new level.Hook({
+          id: "start",
+          event: "closedPopup",
+          filter: (p) => p.id === "intro popup",
+          entity: new entity.FunctionCallEntity(() => {
+            context.disablingAnimation("preventVirus", false);
           }),
         }),
         new level.Hook({
           id: "outro",
           event: "maxScoreReached",
           entity: new popup.TerminatedLevelPopup(),
+        }),
+        new level.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            context.activate(anim.title(context.container, "Go!"));
+          }),
         }),
       ],
     })),
