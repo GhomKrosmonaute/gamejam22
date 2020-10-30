@@ -204,6 +204,8 @@ export class Path extends entity.CompositeEntity {
           this.level.disablingAnimation("path.crunch", false);
         },
         onStep: (item, i, src, finish) => {
+          this._playExplosion();
+
           const score = item.infected ? 15 : 10;
           const fill = item.infected ? item.fullColorName : "#ffeccc";
           const stroke = item.infected ? "#ffc200" : "black";
@@ -219,8 +221,6 @@ export class Path extends entity.CompositeEntity {
               () => {
                 item.once("stateChanged", finish);
                 item.state = "missing";
-
-                this._playExplosion();
               }
             )
           );
