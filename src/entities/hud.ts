@@ -311,6 +311,8 @@ export class GoButton extends entity.CompositeEntity {
 
     const context: entity.Entity[] = [
       new entity.FunctionCallEntity(() => {
+        this._entityConfig.fxMachine.play("skip");
+
         this.level.disablingAnimation("goButton.press", true);
       }),
     ];
@@ -319,21 +321,10 @@ export class GoButton extends entity.CompositeEntity {
       case "turn":
         // ? has holes
         //    : => fill holes
-        //    ! => regenerate some nucleotides
         if (this.level.grid.containsHoles()) {
           context.push(this.level.fillHoles(), this.level.infect());
         } else {
           context.push(
-            new entity.FunctionCallEntity(() => {
-              this.level.grid.regenerate(
-                Math.ceil(this.level.grid.nucleotides.length / 2),
-                (n) => n.state === "present" && n.type !== "scissors"
-              );
-            }),
-
-            // todo: replace waiting entity by this.level.grid.regenerate():SequenceEntity
-            new entity.WaitingEntity(1200),
-
             this.level.sequenceManager.dropSequences(1),
             this.level.infect()
           );

@@ -23,6 +23,8 @@ export class Minimap extends entity.CompositeEntity {
   private scrollBox: scroll.Scrollbox;
 
   protected _setup() {
+    this._entityConfig.jukebox.changeMusic("menu");
+
     this.links = new PIXI.Graphics();
     this.container = new PIXI.Container();
     this.buttons = new PIXI.Container();
@@ -114,6 +116,8 @@ export class Minimap extends entity.CompositeEntity {
       }
 
       this._on(levelSprite, "pointerup", () => {
+        this._entityConfig.fxMachine.play("validate");
+
         levelSprite.filters = [new PIXI.filters.AlphaFilter(1)];
         this._activateChildEntity(
           new tween.Tween({

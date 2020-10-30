@@ -8,7 +8,6 @@ import * as popup from "./entities/popup";
 import * as level from "./scenes/level";
 import * as crisp from "./crisprUtil";
 import * as anim from "./animations";
-import { contains } from "booyah/dist/util";
 
 export const levels = {
   "MV Mod": () =>
@@ -203,6 +202,9 @@ export const levels = {
       variant: "turn",
       maxScore: 300,
       minStarNeeded: 1,
+      forceMatching: true,
+      gridShape: "medium",
+      scissorCount: 3,
       gaugeRings: [
         (context, ring) =>
           context.activate(

@@ -60,6 +60,7 @@ export interface LevelOptions {
   hooks: Hook[];
   initialBonuses: bonuses.InitialBonuses;
   checks: { [text: string]: (level: Level) => boolean };
+  music: string;
 
   // reset options
   resetScore: boolean;
@@ -104,6 +105,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
     "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
     "Max score reached": (level) => level.score >= level.options.maxScore,
   },
+  music: null,
 
   // reset options
   resetScore: true,
@@ -487,6 +489,22 @@ export class Level extends entity.CompositeEntity {
     });
   }
 
+  private _initMusic() {
+    let music : string;
+    
+    if(this.options.music) {
+      music = this.options.music;
+    } else {
+      switch(this.options.variant) {
+        case "turn": { music = "turn_by_turn"; break; }
+        case "fall": { music = "time_challenge"; break; }
+        case "zen": { music = "zen"; break; }
+      }
+    }
+
+    this._entityConfig.jukebox.changeMusic(music);
+  }
+
   _setup() {
     this.isInit = false;
     this.container.sortableChildren = true;
@@ -551,6 +569,7 @@ export class Level extends entity.CompositeEntity {
     });
 
     this._initDisablingAnimations();
+    this._initMusic();
     this._initBackground();
     this._initForeground();
     this._initHooks();

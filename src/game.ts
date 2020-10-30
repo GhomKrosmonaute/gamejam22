@@ -76,6 +76,7 @@ const fxAssets = [
   "notification",
   "virus_move",
   "virus_sting",
+  "virus_death",
   "explode_1",
   "explode_2",
   "explode_3",
@@ -94,10 +95,17 @@ const fxAssets = [
   "star_2",
   "star_3",
   "spawn",
+  "skip",
+  "bonus_pick",
+  "bonus_swap",
+  "bonus_time",
+  "validate",
 ];
 
+const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen"];
+
 const entityInstallers: any = [
-  // audio.installJukebox,
+  audio.installJukebox,
   audio.installFxMachine,
   booyah.makeInstallMenu({
     menuButtonPosition: new PIXI.Point(crisprUtil.width, 0),
@@ -110,6 +118,7 @@ booyah.go({
   screenSize: new PIXI.Point(crisprUtil.width, crisprUtil.height),
   graphicalAssets,
   fxAssets,
+  musicAssets,
   fontAssets,
   splashScreen: "images/splash_screen.jpg",
   graphics: {
