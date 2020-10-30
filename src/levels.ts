@@ -1,5 +1,6 @@
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 import * as popup from "./entities/popup";
 import * as level from "./scenes/level";
 import * as crisp from "./crisprUtil";
@@ -28,17 +29,23 @@ export const levels = {
               (v) =>
                 new entity.FunctionCallEntity(() => {
                   v.type = "big";
-                  v.scale = 5;
+                  v.scale = 4;
                   v.angle = 0;
-                  v.position = { x: 0, y: crisp.height * 2 }
+                  v.position = { x: 0, y: crisp.height * 2 };
                 }),
               (v) => v.stingIn(),
-              // tween vers le haut jusqu'a ce que le virus dépasse de bas de l'écran
-              (v) => new tween.Tween({
-
-              }),
+              (v) =>
+                new tween.Tween({
+                  duration: 1500,
+                  from: crisp.height * 2,
+                  to: crisp.height - 100,
+                  easing: easing.easeOutCubic,
+                  onUpdate: (value) => {
+                    v.position = { x: 0, y: value };
+                  },
+                }),
               (v) => v.stingOut(),
-              // attendre 500 ms
+              () => new entity.WaitingEntity(500),
               (v) => v.leave(),
             ]),
             new entity.FunctionCallEntity(() => {

@@ -53,7 +53,7 @@ export class Virus extends entity.CompositeEntity {
 
   set angle(value) {
     crisprUtil.positionAlongMembrane(this._container, value);
-    this.refreshPosition()
+    this.refreshPosition();
   }
 
   get position(): PIXI.IPointData {
@@ -62,8 +62,8 @@ export class Virus extends entity.CompositeEntity {
 
   set position(point: PIXI.IPointData) {
     crisprUtil.positionAlongMembrane(this._container, this.angle);
-    this._position.copyFrom(point)
-    this.refreshPosition()
+    this._position.copyFrom(point);
+    this.refreshPosition();
   }
 
   public angleTooClose(angle: number): boolean {
@@ -193,9 +193,9 @@ export class Virus extends entity.CompositeEntity {
     }
   }
 
-  private refreshPosition(){
-    this._container.position.x += this.position.x
-    this._container.position.y += this.position.y
+  private refreshPosition() {
+    this._container.position.x += this.position.x;
+    this._container.position.y += this.position.y;
   }
 
   private setAnimatedSprite(animationName: VirusAnimation, loop = true) {

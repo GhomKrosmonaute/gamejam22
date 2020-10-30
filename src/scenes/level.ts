@@ -566,18 +566,21 @@ export class Level extends entity.CompositeEntity {
     this._initButton();
     this._initGauge();
 
-    this._activateChildEntity(new entity.EntitySequence([
-      new entity.FunctionalEntity({
-        requestTransition: () => !this.disablingAnimations.has("preventVirus")
-      }),
-      new entity.FunctionCallEntity(() => {
-        this._initSequences();
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        new entity.FunctionalEntity({
+          requestTransition: () =>
+            !this.disablingAnimations.has("preventVirus"),
+        }),
+        new entity.FunctionCallEntity(() => {
+          this._initSequences();
 
-        this.refresh();
+          this.refresh();
 
-        this.emitLevelEvent("setup");
-      })
-    ]))
+          this.emitLevelEvent("setup");
+        }),
+      ])
+    );
   }
 
   _update() {
