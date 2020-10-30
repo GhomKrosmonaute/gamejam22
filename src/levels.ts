@@ -14,6 +14,7 @@ export const levels = {
     new level.Level("MV Mod", (context) => ({
       virus: "big",
       variant: "fall",
+
       dropSpeed: 1,
       gridShape: "medium",
       sequenceLength: 7,
@@ -70,6 +71,11 @@ export const levels = {
           entity: new entity.FunctionCallEntity(() => {
             context.activate(anim.title(context.container, "Go!"));
           }),
+        }),
+        new level.Hook({
+          id: "outro",
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
         }),
       ],
     })),

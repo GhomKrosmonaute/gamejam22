@@ -318,7 +318,7 @@ export class Nucleotide extends entity.CompositeEntity {
           anim.tweenShaking(this._container, 150, 10, 3),
 
           new entity.FunctionCallEntity(() => {
-            this.shakes.setShake("infection", 2);
+            this.shakes.setShake("infection", 1);
 
             this._container.addChild(mask);
             this.infectionSprite.mask = mask;
