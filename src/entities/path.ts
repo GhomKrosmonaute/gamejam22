@@ -178,6 +178,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   crunch() {
+    let infected = false;
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("path.crunch", true);
@@ -192,12 +193,17 @@ export class Path extends entity.CompositeEntity {
         waitForAllSteps: true,
         callback: () => {
           this.remove();
+          if (infected) {
+            this.level.emitLevelEvent("cleanedInfection");
+          }
           this.level.disablingAnimation("path.crunch", false);
         },
         onStep: (item, i, src, finish) => {
           const score = item.infected ? 15 : 10;
           const fill = item.infected ? item.fullColorName : "#ffeccc";
           const stroke = item.infected ? "#ffc200" : "black";
+
+          if (item.infected) infected = true;
 
           this.level.addScore(score);
 

@@ -313,6 +313,7 @@ export const levels = {
                         sequences: [["g", "r", "g", "r", "r"]],
                         scissorCount: 3,
                         sequenceLength: 6,
+                        forceMatching: true,
                         disableButton: false,
                         hooks: [
                           new level.Hook({
@@ -345,7 +346,7 @@ export const levels = {
                                   new popup.TutorialPopup({
                                     title: "Infection",
                                     content:
-                                      "When you skip, parts of your grid will get infected.\n\nIf the entire grid gets infected, it’s game over.\n\nBut you can “clean up” the infection by using the infected DNA in a sequence.",
+                                      "When you skip, parts of your grid will get infected.\n\nIf the entire grid gets infected, it’s game over.",
                                     image: "images/infection_red.png",
                                     popupOptions: {
                                       id: "popup step 4.1",
@@ -359,9 +360,45 @@ export const levels = {
                             ]),
                           }),
                           new level.Hook({
-                            id: "step 4 => step 5",
+                            id: "step 4 .2",
                             event: "minimizedPopup",
-                            filter: (p) => p.id === "popup step 4.1",
+                            filter: (p) =>
+                              p.id === "popup step 4.1" &&
+                              context.disablingAnimations.has("tutorial"),
+                            entity: new popup.TutorialPopup({
+                              title: "Clean up infections!",
+                              content: "Using the infected DNA in a sequence.",
+                              image: "images/infection_red.png",
+                              popupOptions: {
+                                minimizeOnClose: false,
+                                id: "popup step 4.2",
+                                logo: "💉",
+                                coolDown: 2000,
+                              },
+                            }),
+                          }),
+                          new level.Hook({
+                            id: "step 4.3",
+                            event: "closedPopup",
+                            filter: (p) => p.id === "popup step 4.2",
+                            entity: new entity.FunctionCallEntity(() => {
+                              context.disablingAnimation("tutorial", false);
+                              context.disablingAnimation("preventVirus", false);
+                            }),
+                          }),
+                          new level.Hook({
+                            id: "step 4 => step 5",
+                            event: "cleanedInfection",
+                            entity: new entity.EntitySequence([
+                              new entity.WaitForEvent(context, "sequenceDown"),
+                              new entity.FunctionCallEntity(() => {
+                                context.emit("canReset");
+                              }),
+                            ]),
+                          }),
+                          new level.Hook({
+                            id: "step 4 => step 5",
+                            event: "canReset",
                             reset: {
                               gridShape: "medium",
                               resetGrid: true,

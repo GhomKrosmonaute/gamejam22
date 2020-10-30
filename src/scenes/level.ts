@@ -123,6 +123,7 @@ export type LevelEventParams<
 export interface LevelEvents {
   init: [];
   setup: [];
+  canReset: [];
   infected: [];
   fallingDown: [];
   virusLeaves: [virus.Virus];
@@ -130,6 +131,7 @@ export interface LevelEvents {
   minimizedPopup: [popup.Popup];
   pathCrunched: [];
   partialCrunched: [];
+  cleanedInfection: [];
   pathUpdated: [];
   ringReached: [ring: hud.Ring];
   sequenceDown: [];
@@ -143,6 +145,7 @@ export interface LevelEvents {
 
 export interface HookOptions<Entity, EventName extends LevelEventName> {
   id: string;
+  delay?: number;
   event: EventName;
   /** Filter function, trigger hook if it returns `true` */
   filter?: (...params: LevelEventParams<EventName>) => boolean | void;
@@ -193,6 +196,8 @@ export class Hook<
     ) {
       this.level.triggeredHooks.add(this.options.id);
 
+      const delay = this.options.delay ?? 0;
+
       if (this.options.reset) {
         if (crisprUtil.debug) {
           console.log("hook reset:", this.options.id);
@@ -217,20 +222,35 @@ export class Hook<
         };
 
         // apply changes
-        this.level.reset({
-          ...this.level.options,
-          ...resetOptions,
-          ...newOptions,
-        });
+        this._activateChildEntity(
+          new entity.EntitySequence([
+            new entity.WaitingEntity(delay),
+            new entity.FunctionCallEntity(() => {
+              this.level.reset({
+                ...this.level.options,
+                ...resetOptions,
+                ...newOptions,
+              });
+            }),
+          ])
+        );
       } else if (this.options.entity) {
         if (crisprUtil.debug) {
           console.log("hook activate:", this.options.id, this.options.entity);
         }
-        if (this.options.entity instanceof popup.Popup) {
-          this.level.activate(this.options.entity);
-        } else {
-          this._activateChildEntity(this.options.entity);
-        }
+
+        this._activateChildEntity(
+          new entity.EntitySequence([
+            new entity.WaitingEntity(delay),
+            new entity.FunctionCallEntity(() => {
+              if (this.options.entity instanceof popup.Popup) {
+                this.level.activate(this.options.entity);
+              } else {
+                this._activateChildEntity(this.options.entity);
+              }
+            }),
+          ])
+        );
       } else {
         if (crisprUtil.debug) {
           console.error("hook called but not triggered:", this.options.id);
