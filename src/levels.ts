@@ -1,6 +1,8 @@
 import * as entity from "booyah/src/entity";
+import * as tween from "booyah/src/tween";
 import * as popup from "./entities/popup";
 import * as level from "./scenes/level";
+import * as crisp from "./crisprUtil";
 import * as anim from "./animations";
 
 export const levels = {
@@ -17,6 +19,7 @@ export const levels = {
         new level.Hook({
           id: "intro animation",
           event: "init",
+          once: true,
           entity: new entity.EntitySequence([
             new entity.FunctionCallEntity(() => {
               context.disablingAnimation("preventVirus", true);
@@ -24,12 +27,16 @@ export const levels = {
             new anim.VirusSequence([
               (v) =>
                 new entity.FunctionCallEntity(() => {
-                  v.scale = 6;
+                  v.type = "big";
+                  v.scale = 5;
                   v.angle = 0;
-                  // placer le virus en dessous de l'écran
+                  v.position = { x: 0, y: crisp.height * 2 }
                 }),
               (v) => v.stingIn(),
               // tween vers le haut jusqu'a ce que le virus dépasse de bas de l'écran
+              (v) => new tween.Tween({
+
+              }),
               (v) => v.stingOut(),
               // attendre 500 ms
               (v) => v.leave(),
