@@ -76,6 +76,7 @@ const fxAssets = [
   "notification",
   "virus_move",
   "virus_sting",
+  "virus_death",
   "explode_1",
   "explode_2",
   "explode_3",
