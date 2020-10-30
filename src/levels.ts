@@ -32,7 +32,6 @@ export const levels = {
         "Win in 5 moves or less": (context) =>
           context.options.zenMoves - context.zenMovesIndicator.count <= 5,
       },
-      gaugeRings: [(context) => null, (context) => null, (context) => null],
       hooks: [
         new level.Hook({
           id: "intro",
