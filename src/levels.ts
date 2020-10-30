@@ -18,6 +18,7 @@ export const levels = {
       gridShape: "medium",
       sequenceLength: 7,
       forceMatching: true,
+      maxScore: 1000,
       scissorCount: 3,
       hooks: [
         new level.Hook({
