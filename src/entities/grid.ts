@@ -655,6 +655,8 @@ export class Grid extends entity.CompositeEntity {
         timeBetween: 100,
         onStep: (item) => {
           item.state = "infected";
+
+          this._entityConfig.fxMachine.play("infection");
         },
         callback: () => {
           this.level.disablingAnimation("grid.infect", false);
