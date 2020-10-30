@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
 
@@ -101,7 +102,10 @@ export class Path extends entity.CompositeEntity {
 
       // Otherwise, start path anew
       this.items = this.items.length > 0 ? [] : [n];
+
+      this._playNucleotideTouch();
     }
+
     return true;
   }
 
@@ -137,6 +141,7 @@ export class Path extends entity.CompositeEntity {
 
     // Add to the path
     this.items.push(n);
+    this._playNucleotideTouch();
 
     this.emit("updated");
     return true;
@@ -244,5 +249,10 @@ export class Path extends entity.CompositeEntity {
 
   toString(reverse = false) {
     return (reverse ? this.nucleotides.reverse() : this.nucleotides).join(",");
+  }
+
+  private _playNucleotideTouch(): void {
+    const r = _.random(1, 3);
+    this._entityConfig.fxMachine.play(`nucleotide_touch_${r}`);
   }
 }
