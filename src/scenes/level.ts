@@ -290,7 +290,7 @@ export class Level extends entity.CompositeEntity {
     this.score = this.options.baseScore;
 
     // @ts-ignore
-    window.level = this
+    window.level = this;
   }
 
   activate(entity: entity.Entity) {

@@ -4,6 +4,8 @@ import * as level from "./scenes/level";
 import * as anim from "./animations";
 
 export const levels = {
+  "MV Mod": () => new level.Level("MV Mod", {}),
+
   "Zen mode": () =>
     new level.Level("Zen mode", {
       variant: "zen",
