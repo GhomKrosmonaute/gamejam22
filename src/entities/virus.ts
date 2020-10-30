@@ -26,6 +26,8 @@ export class Virus extends entity.CompositeEntity {
   private _animation: entity.AnimatedSpriteEntity;
   private _previousAnimationName: VirusAnimation;
 
+  public scale = 1;
+
   constructor(public readonly type: VirusType) {
     super();
   }
@@ -228,6 +230,10 @@ export class Virus extends entity.CompositeEntity {
         }
         break;
     }
+
+    this._animation.sprite.scale.set(
+      this._animation.sprite.scale.x * this.scale
+    );
 
     this._animation.sprite.loop = loop;
     this._animation.options.transitionOnComplete = () => {

@@ -5,6 +5,7 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as nucleotide from "./entities/nucleotide";
+import * as virus from "./entities/virus";
 
 import * as crisprUtil from "./crisprUtil";
 
@@ -580,5 +581,17 @@ export class ShakesManager extends entity.EntityBase {
 
   protected _teardown() {
     this.removeAllShakes();
+  }
+}
+
+export class VirusSequence extends entity.EntitySequence {
+  private v = new virus.Virus("big");
+
+  constructor(private context: ((v: virus.Virus) => entity.Entity)[]) {
+    super(context.map((r) => () => r(this.v)));
+  }
+
+  _setup() {
+    this._activateChildEntity(this.v, entity.extendConfig({}));
   }
 }

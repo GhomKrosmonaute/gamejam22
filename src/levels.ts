@@ -5,7 +5,7 @@ import * as anim from "./animations";
 
 export const levels = {
   "MV Mod": () =>
-    new level.Level("MV Mod", {
+    new level.Level("MV Mod", (context) => ({
       virus: "big",
       variant: "fall",
       dropSpeed: 1.2,
@@ -13,7 +13,34 @@ export const levels = {
       sequenceLength: 7,
       forceMatching: true,
       scissorCount: 3,
-    }),
+      hooks: [
+        new level.Hook({
+          id: "intro animation",
+          event: "init",
+          entity: new entity.EntitySequence([
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", true);
+            }),
+            new anim.VirusSequence([
+              (v) =>
+                new entity.FunctionCallEntity(() => {
+                  v.scale = 6;
+                  v.angle = 0;
+                  // placer le virus en dessous de l'écran
+                }),
+              (v) => v.stingIn(),
+              // tween vers le haut jusqu'a ce que le virus dépasse de bas de l'écran
+              (v) => v.stingOut(),
+              // attendre 500 ms
+              (v) => v.leave(),
+            ]),
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", false);
+            }),
+          ]),
+        }),
+      ],
+    })),
 
   // todo: intermediary levels with medium virus
 
