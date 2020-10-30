@@ -96,6 +96,8 @@ export class TimeBonus extends Bonus {
       return this.abort();
     }
 
+    this._entityConfig.fxMachine.play("bonus_time");
+
     this.level.fallingStopped = true;
     this._activateChildEntity(
       new entity.EntitySequence([
@@ -153,6 +155,8 @@ export class SwapBonus extends Bonus {
         }
       )
     );
+
+    this._entityConfig.fxMachine.play("bonus_swap");
   }
 
   protected _setup() {
@@ -473,5 +477,7 @@ export class BonusesManager extends entity.CompositeEntity {
         container: this.container,
       })
     );
+
+    this._entityConfig.fxMachine.play("bonus_pick");
   }
 }

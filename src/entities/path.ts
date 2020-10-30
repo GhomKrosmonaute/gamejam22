@@ -254,7 +254,10 @@ export class Path extends entity.CompositeEntity {
   }
 
   private _playNote(): void {
-    const n = 1 + Math.min(7, this.items.length);
+    if (this.items.length === 0) return;
+
+    // Pick a number between 1 and 8
+    const n = Math.min(8, this.items.length);
     this._entityConfig.fxMachine.play(`note_${n}`);
   }
 
