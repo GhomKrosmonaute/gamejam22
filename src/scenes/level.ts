@@ -289,6 +289,7 @@ export class Level extends entity.CompositeEntity {
   public someVirusHasEscaped = false;
   public crunchCount = 0;
   public failed = false;
+  public finished = false;
   public sequenceWasCrunched = false;
   public scissorsWasIncludes = false;
   public oneShotLongSequence = false;
@@ -757,7 +758,7 @@ export class Level extends entity.CompositeEntity {
     }
   }
 
-  removeHalfScore(): entity.Entity {
+  removeHalfScore(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.ParallelEntity([
         new tween.Tween({
@@ -788,7 +789,10 @@ export class Level extends entity.CompositeEntity {
   }
 
   gameOverByFail() {
+    if(this.finished || this.failed) return;
+
     this.failed = true;
+
     if (this.options.retryOnFail) {
       this._activateChildEntity(new popup.FailedLevelPopup(), this.config);
     } else {

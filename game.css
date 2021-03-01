@@ -30,6 +30,22 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: "Alien League";
+  src: url("fonts/alienleague/alienleague.woff")
+  format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Geosans Light";
+  src: url("fonts/geosans-light/geosans-light.woff")
+  format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* From https://css-tricks.com/a-couple-of-use-cases-for-calc/ */
 /* So 100% means 100% */
 * {

@@ -17,29 +17,65 @@ const gameStates = {
 };
 
 const graphicalAssets = [
-  // images
+  "images/titlescreen_background.png",
+  "images/titlescreen_menu_button.png",
+
+  "images/map_background.png",
   "images/particles_background.png",
   "images/particles_foreground.png",
   "images/background.jpg",
   "images/membrane.png",
   "images/hole.png",
+
+  "images/menu_music_range_full.png",
+  "images/menu_music_range_middle.png",
+  "images/menu_music_range_disabled.png",
+  "images/menu_sound_range_full.png",
+  "images/menu_sound_range_middle.png",
+  "images/menu_sound_range_disabled.png",
+  "images/menu_fullscreen_button.png",
+  "images/menu_fullscreen_button_disabled.png",
+  "images/menu_subtitles_button.png",
+  "images/menu_subtitles_button_disabled.png",
+  "images/menu_playcurious_logo.png",
+  "images/menu_back_button.png",
+  "images/menu_background.png",
+  "images/menu_title.png",
+
   "images/bonus_swap.png",
   "images/bonus_heal.png",
   "images/bonus_time.png",
-  "images/bonus_syringe.png",
+  "images/bonus_swap_disabled.png",
+  "images/bonus_heal_disabled.png",
+  "images/bonus_time_disabled.png",
+
   "images/infection_red.png",
   "images/infection_blue.png",
   "images/infection_green.png",
   "images/infection_yellow.png",
+
+  "images/nucleotide_glow.png",
+  "images/nucleotide_bright.png",
+
   "images/hud_bonus_background.png",
-  "images/hud_go_button.png",
+  "images/hud_skip_button.png",
+  //"images/hud_menu_button.png",
   "images/hud_gauge_background.png",
   "images/hud_gauge_bar.png",
   "images/hud_gauge_ring.png",
-  "images/nucleotide_glow.png",
-  "images/nucleotide_bright.png",
+  "images/hud_gauge_ring_disabled.png",
+
   "images/popup_background.png",
-  "images/star.png",
+  "images/popup_background_bis.png",
+
+  "images/reward_stars_0.png",
+  "images/reward_stars_1.png",
+  "images/reward_stars_2.png",
+  "images/reward_stars_3.png",
+  "images/reward_title.png",
+  "images/reward_check.png",
+  "images/reward_cross.png",
+
   "images/cellule.png",
   "images/cellule_1.png",
   "images/cellule_2.png",
@@ -70,7 +106,12 @@ const graphicalAssets = [
   "images/big_bob_dead.json",
 ];
 
-const fontAssets = ["Cardenio Modern Bold", "Cardenio Modern Regular"];
+const fontAssets = [
+  "Cardenio Modern Bold",
+  "Cardenio Modern Regular",
+  "Alien League",
+  "Geosans Light",
+];
 
 const fxAssets = [
   "notification",
@@ -125,7 +166,7 @@ booyah.go({
   fxAssets,
   musicAssets,
   fontAssets,
-  splashScreen: "images/splash_screen.jpg",
+  splashScreen: "images/titlescreen_background.png",
   graphics: {
     menu: "images/hud_menu_button.png",
   },

@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+
 import { OutlineFilter } from "@pixi/filter-outline";
 
 import * as entity from "booyah/src/entity";
@@ -14,7 +15,6 @@ export const levels = {
     new level.Level("MV Mod", (context) => ({
       virus: "big",
       variant: "fall",
-
       dropSpeed: 1,
       gridShape: "medium",
       sequenceLength: 7,

@@ -258,7 +258,7 @@ export class GoButton extends entity.CompositeEntity {
 
     this.sprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
-        "images/hud_go_button.png"
+        "images/hud_skip_button.png"
       ].texture
     );
     this.sprite.position.set(
@@ -273,11 +273,11 @@ export class GoButton extends entity.CompositeEntity {
     });
     this.container.addChild(this.sprite);
 
-    this.text = crisprUtil.makeText("GO", {
-      fill: 0x000000,
-    });
-    this.text.position.set(this.sprite.width / 2, this.sprite.height / 2);
-    this.sprite.addChild(this.text);
+    // this.text = crisprUtil.makeText("GO", {
+    //   fill: 0x000000,
+    // });
+    // this.text.position.set(this.sprite.width / 2, this.sprite.height / 2);
+    // this.sprite.addChild(this.text);
 
     this._entityConfig.container.addChild(this.sprite);
   }
@@ -286,14 +286,14 @@ export class GoButton extends entity.CompositeEntity {
     const disabled = this.level.isDisablingAnimationInProgress;
     this.sprite.buttonMode = !disabled;
     this.sprite.interactive = !disabled;
-    this.text.style.fill = !disabled ? "#000000" : "#4e535d";
+    // this.text.style.fill = !disabled ? "#000000" : "#4e535d";
   }
 
   protected _teardown() {}
 
   public setText(text: string) {
-    this.text.style.fontSize = text.length > 6 ? 50 : 70;
-    this.text.text = text;
+    // this.text.style.fontSize = text.length > 6 ? 50 : 70;
+    // this.text.text = text;
   }
 
   private press(): entity.Entity {

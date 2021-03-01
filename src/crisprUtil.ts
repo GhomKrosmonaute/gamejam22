@@ -127,7 +127,7 @@ export function positionAlongMembrane(
 
 export function makeText(text: string = "", options?: Partial<PIXI.TextStyle>) {
   const defaultConfig = {
-    fontFamily: "Cardenio Modern Bold",
+    fontFamily: "Geosans Light",
     fontSize: 80,
     align: "center",
   };
