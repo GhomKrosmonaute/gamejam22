@@ -619,13 +619,13 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
 
     // add star-based children
     if (results.starCount === 3) {
-      this.setTitle("A.W.E.S.O.M.E");
+      this.setTitle("Awesome");
     } else if (results.starCount === 2) {
-      this.setTitle("G.R.E.A.T");
+      this.setTitle("Great");
     } else if (results.starCount === 1) {
-      this.setTitle("W.E.L.L D.O.N.E");
+      this.setTitle("Well done");
     } else {
-      this.setTitle("T.O.O B.A.D");
+      this.setTitle("Too bad");
       // todo: retry button
     }
 
