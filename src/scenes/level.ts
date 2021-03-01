@@ -789,7 +789,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   gameOverByFail() {
-    if(this.finished || this.failed) return;
+    if (this.finished || this.failed) return;
 
     this.failed = true;
 

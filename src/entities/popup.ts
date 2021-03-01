@@ -584,7 +584,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
   }
 
   setTitle(title: string, config: Partial<PIXI.TextStyle> = {}) {
-    if(this.title) this._container.removeChild(this.title);
+    if (this.title) this._container.removeChild(this.title);
 
     const dotted = title
       .replace(/\./g, "")
@@ -619,13 +619,13 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
 
     // add star-based children
     if (results.starCount === 3) {
-      this.setTitle("A.W.E.S.O.M.E")
+      this.setTitle("A.W.E.S.O.M.E");
     } else if (results.starCount === 2) {
-      this.setTitle("G.R.E.A.T")
+      this.setTitle("G.R.E.A.T");
     } else if (results.starCount === 1) {
-      this.setTitle("W.E.L.L D.O.N.E")
+      this.setTitle("W.E.L.L D.O.N.E");
     } else {
-      this.setTitle("T.O.O B.A.D")
+      this.setTitle("T.O.O B.A.D");
       // todo: retry button
     }
 
@@ -637,7 +637,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
         ].texture
       );
 
-      stars.position.x = 30
+      stars.position.x = 30;
 
       this.addRow(stars, 350);
 
