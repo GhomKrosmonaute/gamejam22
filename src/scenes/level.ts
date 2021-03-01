@@ -862,7 +862,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   get isDisablingAnimationInProgress(): boolean {
-    return this.disablingAnimations.size > 0;
+    return this.disablingAnimations.size > 0 || this.finished || this.failed;
   }
 
   public checkGameOverByInfection(): boolean {

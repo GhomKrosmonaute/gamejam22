@@ -637,7 +637,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
         ].texture
       );
 
-      stars.position.x = 30;
+      stars.position.x = 20;
 
       this.addRow(stars, 350);
 

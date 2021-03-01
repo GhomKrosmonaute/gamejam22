@@ -156,17 +156,16 @@ export class Gauge extends entity.CompositeEntity {
     for (let i = 0; i < this._ringCount; i++) {
       const ring: Ring = new PIXI.Sprite(
         this._entityConfig.app.loader.resources[
-          "images/hud_gauge_ring.png"
+          "images/hud_gauge_ring_disabled.png"
         ].texture
       );
-
-      ring.index = i;
 
       const position = new PIXI.Point(
         crisprUtil.proportion(i, -1, this._ringCount, 0, 450, true),
         ring.height * 0.5
       );
 
+      ring.index = i;
       ring.anchor.set(0.5);
       ring.scale.set(0);
       ring.position.copyFrom(position);
@@ -176,10 +175,30 @@ export class Gauge extends entity.CompositeEntity {
       this._once(ring, "reached", () => {
         this._entityConfig.fxMachine.play("score_ring");
 
-        this.level.options.gaugeRings[ring.index](this.level, ring);
-        ring.tint = 0x6bffff;
-        this.level.emitLevelEvent("ringReached", ring);
-        this._activateChildEntity(anim.tweenShaking(ring, 2000, 10, 0));
+        const activatedRing: Ring = new PIXI.Sprite(
+          this._entityConfig.app.loader.resources[
+            "images/hud_gauge_ring.png"
+          ].texture
+        );
+
+        activatedRing.index = ring.index;
+        activatedRing.anchor.set(0.5);
+        activatedRing.scale.set(0);
+        activatedRing.position.copyFrom(ring.base);
+        activatedRing.base = new PIXI.Point();
+        activatedRing.base.copyFrom(ring.base);
+
+        this._rings.removeChild(ring);
+        this._rings.addChild(activatedRing);
+
+        this.level.options.gaugeRings[activatedRing.index](
+          this.level,
+          activatedRing
+        );
+        this.level.emitLevelEvent("ringReached", activatedRing);
+        this._activateChildEntity(
+          anim.tweenShaking(activatedRing, 2000, 10, 0)
+        );
       });
 
       this._rings.addChild(ring);
@@ -212,7 +231,7 @@ export class Gauge extends entity.CompositeEntity {
       this.bubbleRings({
         timeBetween: 100,
         forEach: (ring: Ring) => {
-          ring.tint = 0x007784;
+          //todo: anim ?
         },
       });
     });
