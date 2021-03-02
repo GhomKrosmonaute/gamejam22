@@ -206,7 +206,7 @@ export const levels = {
   "Turn mode": () =>
     new level.Level("Turn mode", (context) => ({
       variant: "turn",
-      maxScore: 300,
+      maxScore: 400,
       minStarNeeded: 1,
       forceMatching: true,
       gridShape: "medium",

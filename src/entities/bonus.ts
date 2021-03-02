@@ -38,7 +38,7 @@ export abstract class Bonus extends entity.CompositeEntity {
 
   set highlight(value: boolean) {
     this._highlight = value;
-    this.sprite.scale.set(value ? 0.7 : 0.5);
+    this.sprite.scale.set(value ? 1.2 : 1);
   }
 
   get level(): level.Level {
@@ -58,12 +58,10 @@ export abstract class Bonus extends entity.CompositeEntity {
 
     if (this._count > 0) {
       const text = crispUtil.makeText(String(this._count), {
-        fontSize: 120,
-        fill: 0xffffff,
-        strokeThickness: 40,
-        stroke: 0x444444,
+        fontSize: 60,
+        fill: "#000000",
       });
-      text.position.set(-100, -100);
+      text.position.set(100, -50);
       this.sprite.addChild(text);
     }
   }
@@ -325,7 +323,7 @@ export class BonusesManager extends entity.CompositeEntity {
 
   _setup() {
     this.container = new PIXI.Container();
-    this.container.position.set(0, crispUtil.height - 200);
+    this.container.position.set(30, crispUtil.height - 230);
     this._entityConfig.container.addChild(this.container);
 
     this.bonusBackground = new PIXI.Sprite(
@@ -333,7 +331,6 @@ export class BonusesManager extends entity.CompositeEntity {
         "images/hud_bonus_background.png"
       ].texture
     );
-    this.bonusBackground.scale.set(0.65);
     this.container.addChild(this.bonusBackground);
 
     this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
@@ -344,8 +341,8 @@ export class BonusesManager extends entity.CompositeEntity {
         this.selected = null;
         this._activateChildEntity(
           new tween.Tween({
-            from: 0.7,
-            to: 0.5,
+            from: 1.2,
+            to: 1,
             duration: 20,
             onUpdate: (value) => bonus.sprite.scale.set(value),
           })
@@ -358,8 +355,8 @@ export class BonusesManager extends entity.CompositeEntity {
         bonus.level.path.remove();
         this._activateChildEntity(
           new tween.Tween({
-            from: 0.5,
-            to: 0.7,
+            from: 1,
+            to: 1.2,
             duration: 20,
             onUpdate: (value) => bonus.sprite.scale.set(value),
           })
@@ -422,14 +419,20 @@ export class BonusesManager extends entity.CompositeEntity {
       bonus.count += count;
       return;
     }
-    const position = new PIXI.Point(100 + this.bonuses.size * 190, 100);
+
+    console.log(this.bonusBackground.width);
+
+    const position = new PIXI.Point(
+      (this.bonusBackground.width / 3) * (this.bonuses.size + 1) -
+        this.bonusBackground.width / 6,
+      this.bonusBackground.height / 2
+    );
 
     const sprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         `images/bonus_${bonus.name}.png`
       ].texture
     );
-    sprite.scale.set(0.5);
     sprite.anchor.set(0.5);
     sprite.interactive = true;
     sprite.position.copyFrom(position);

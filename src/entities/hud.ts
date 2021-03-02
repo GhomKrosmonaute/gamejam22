@@ -81,8 +81,12 @@ export class Gauge extends entity.CompositeEntity {
     );
   }
 
+  get baseXOfBar(): number {
+    return this._bar.x;
+  }
+
   get reachedScorePosition(): number {
-    return 195 + this.getBarWidth();
+    return this.baseXOfBar + this.getBarWidth();
   }
 
   bubbleRings(options?: {
@@ -218,7 +222,7 @@ export class Gauge extends entity.CompositeEntity {
     this._container.addChild(this._rings);
     this._container.addChild(this._text);
 
-    this._rings.position.x = 195;
+    this._rings.position.x = this.baseXOfBar;
 
     this._entityConfig.container.addChild(this._container);
 
@@ -251,7 +255,7 @@ export class Gauge extends entity.CompositeEntity {
     if (this._value < this._maxValue) {
       const reachedScorePosition = this.reachedScorePosition;
       this._rings.children.forEach((ring: Ring) => {
-        if (reachedScorePosition >= ring.base.x + 195) {
+        if (reachedScorePosition >= this.baseXOfBar + ring.base.x) {
           ring.emit("reached");
         }
       });
