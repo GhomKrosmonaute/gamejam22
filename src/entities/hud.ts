@@ -81,12 +81,8 @@ export class Gauge extends entity.CompositeEntity {
     );
   }
 
-  getBarPosition(): number {
-    return crisprUtil.proportion(this._value, 0, this._maxValue, 200, 0, true);
-  }
-
   get reachedScorePosition(): number {
-    return this.getBarPosition() + this.getBarWidth();
+    return 195 + this.getBarWidth();
   }
 
   bubbleRings(options?: {
@@ -254,11 +250,8 @@ export class Gauge extends entity.CompositeEntity {
   _update() {
     if (this._value < this._maxValue) {
       const reachedScorePosition = this.reachedScorePosition;
-      this._rings.children.forEach((ring: Ring, i) => {
-        if (
-          reachedScorePosition >=
-          ring.base.x + 200 + (ring.width / 2) * (i / 2)
-        ) {
+      this._rings.children.forEach((ring: Ring) => {
+        if (reachedScorePosition >= ring.base.x + 195) {
           ring.emit("reached");
         }
       });
