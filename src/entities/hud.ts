@@ -53,11 +53,7 @@ export class Gauge extends entity.CompositeEntity {
 
     this._value = value;
     this._bar.width = this.getBarWidth();
-    this._bar.position.set(this.getBarPosition(), 0);
-    this._text.text =
-      new Intl.NumberFormat("en", { maximumSignificantDigits: 2 }).format(
-        Math.floor(this._value)
-      ) + " pts";
+    this._text.text = Math.floor(this._value) + " pts";
     if (!this._triggered) {
       this._triggered = true;
       this._activateChildEntity(
@@ -119,7 +115,7 @@ export class Gauge extends entity.CompositeEntity {
 
   _setup() {
     // todo: set clean position
-    this._container.position.set(-30, -25);
+    this._container.position.set(100, 50);
 
     // add popup
     this._statePopup = new popup.StatePopup();
@@ -149,6 +145,7 @@ export class Gauge extends entity.CompositeEntity {
         ].texture
       );
 
+      this._bar.position.set(195, 57);
       this._barBaseWidth = this._bar.width;
     }
 
@@ -161,7 +158,14 @@ export class Gauge extends entity.CompositeEntity {
       );
 
       const position = new PIXI.Point(
-        crisprUtil.proportion(i, -1, this._ringCount, 0, 450, true),
+        crisprUtil.proportion(
+          i,
+          -1,
+          this._ringCount,
+          0,
+          this._barBaseWidth,
+          true
+        ),
         ring.height * 0.5
       );
 
@@ -172,47 +176,53 @@ export class Gauge extends entity.CompositeEntity {
       ring.base = new PIXI.Point();
       ring.base.copyFrom(position);
 
-      this._once(ring, "reached", () => {
-        this._entityConfig.fxMachine.play("score_ring");
+      const that = this;
 
-        const activatedRing: Ring = new PIXI.Sprite(
-          this._entityConfig.app.loader.resources[
-            "images/hud_gauge_ring.png"
-          ].texture
-        );
+      this._once(
+        ring,
+        "reached",
+        function (this: Ring) {
+          that._entityConfig.fxMachine.play("score_ring");
 
-        activatedRing.index = ring.index;
-        activatedRing.anchor.set(0.5);
-        activatedRing.scale.set(0);
-        activatedRing.position.copyFrom(ring.base);
-        activatedRing.base = new PIXI.Point();
-        activatedRing.base.copyFrom(ring.base);
+          const activatedRing: Ring = new PIXI.Sprite(
+            that._entityConfig.app.loader.resources[
+              "images/hud_gauge_ring.png"
+            ].texture
+          );
 
-        this._rings.removeChild(ring);
-        this._rings.addChild(activatedRing);
+          activatedRing.index = this.index;
+          activatedRing.anchor.set(0.5);
+          activatedRing.scale.set(0);
+          activatedRing.position.copyFrom(this.base);
+          activatedRing.base = new PIXI.Point();
+          activatedRing.base.copyFrom(this.base);
 
-        this.level.options.gaugeRings[activatedRing.index](
-          this.level,
-          activatedRing
-        );
-        this.level.emitLevelEvent("ringReached", activatedRing);
-        this._activateChildEntity(
-          anim.tweenShaking(activatedRing, 2000, 10, 0)
-        );
-      });
+          that._rings.removeChild(this);
+          that._rings.addChild(activatedRing);
+
+          that.level.options.gaugeRings[activatedRing.index](
+            that.level,
+            activatedRing
+          );
+          that.level.emitLevelEvent("ringReached", activatedRing);
+          that._activateChildEntity(
+            anim.tweenShaking(activatedRing, 2000, 10, 0)
+          );
+        }.bind(ring)
+      );
 
       this._rings.addChild(ring);
     }
 
-    this._text = crisprUtil.makeText("", { fill: 0x000000, fontSize: 40 });
-    this._text.position.set(110, 110);
+    this._text = crisprUtil.makeText("", { fill: "#ffffff", fontSize: 40 });
+    this._text.position.set(115, 75);
 
     this._container.addChild(this._background);
     this._container.addChild(this._bar);
     this._container.addChild(this._rings);
     this._container.addChild(this._text);
 
-    this._rings.position.x = 200;
+    this._rings.position.x = 195;
 
     this._entityConfig.container.addChild(this._container);
 
