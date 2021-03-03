@@ -280,7 +280,7 @@ export class Level extends entity.CompositeEntity {
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
-  public goButton: hud.GoButton;
+  public goButton: hud.ActionButton;
   public zenMovesIndicator: hud.ZenMovesIndicator;
 
   // game
@@ -424,7 +424,7 @@ export class Level extends entity.CompositeEntity {
   private _initButton() {
     if (this.options.disableButton) return;
 
-    this.goButton = new hud.GoButton();
+    this.goButton = new hud.ActionButton();
     this._activateChildEntity(this.goButton, this.config);
   }
 

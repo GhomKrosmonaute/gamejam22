@@ -267,10 +267,11 @@ export class Gauge extends entity.CompositeEntity {
   }
 }
 
-export class GoButton extends entity.CompositeEntity {
+export class ActionButton extends entity.CompositeEntity {
   public shaker: anim.ShakesManager;
   public container: PIXI.Container;
   public sprite: PIXI.Sprite;
+  public disabledSprite: PIXI.Sprite;
   public text: PIXI.Text;
 
   get level(): level.Level {
@@ -282,17 +283,27 @@ export class GoButton extends entity.CompositeEntity {
     this.shaker = new anim.ShakesManager(this.container);
     this._activateChildEntity(this.shaker);
 
-    this.sprite = new PIXI.Sprite(
+    this.disabledSprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
-        "images/hud_skip_button.png"
+        "images/hud_action_button_disabled.png"
       ].texture
     );
-    this.sprite.position.set(
-      this._entityConfig.app.view.width * 0.785,
-      this._entityConfig.app.view.height * 0.887
+
+    this.disabledSprite.anchor.set(0.5);
+    this.disabledSprite.position.set(
+      this._entityConfig.app.view.width - 150,
+      this._entityConfig.app.view.height - 150
     );
-    this.sprite.interactive = true;
-    this.sprite.buttonMode = true;
+
+    this.sprite = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources[
+        "images/hud_action_button.png"
+      ].texture
+    );
+
+    this.sprite.anchor.set(0.5);
+    this.sprite.position.copyFrom(this.disabledSprite.position);
+
     this._on(this.sprite, "pointerup", () => {
       const go = this.press();
       if (go) this._activateChildEntity(go);
@@ -305,6 +316,7 @@ export class GoButton extends entity.CompositeEntity {
     // this.text.position.set(this.sprite.width / 2, this.sprite.height / 2);
     // this.sprite.addChild(this.text);
 
+    this._entityConfig.container.addChild(this.disabledSprite);
     this._entityConfig.container.addChild(this.sprite);
   }
 
@@ -312,6 +324,8 @@ export class GoButton extends entity.CompositeEntity {
     const disabled = this.level.isDisablingAnimationInProgress;
     this.sprite.buttonMode = !disabled;
     this.sprite.interactive = !disabled;
+    this.sprite.visible = !disabled;
+    this.disabledSprite.visible = disabled;
     // this.text.style.fill = !disabled ? "#000000" : "#4e535d";
   }
 
