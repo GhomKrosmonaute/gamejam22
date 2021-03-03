@@ -272,6 +272,7 @@ export class ActionButton extends entity.CompositeEntity {
   public container: PIXI.Container;
   public sprite: PIXI.Sprite;
   public disabledSprite: PIXI.Sprite;
+  public missingScissorsSprite: PIXI.Sprite;
   public text: PIXI.Text;
 
   get level(): level.Level {
@@ -282,6 +283,20 @@ export class ActionButton extends entity.CompositeEntity {
     this.container = new PIXI.Container();
     this.shaker = new anim.ShakesManager(this.container);
     this._activateChildEntity(this.shaker);
+
+    this.missingScissorsSprite = new PIXI.Sprite(
+      this._entityConfig.app.loader.resources[
+        "images/hud_missing_scissors.png"
+      ].texture
+    );
+
+    this.missingScissorsSprite.anchor.set(0.5);
+    this.missingScissorsSprite.scale.set(0.6);
+    this.missingScissorsSprite.visible = false;
+    this.missingScissorsSprite.position.set(
+      this._entityConfig.app.view.width - 367,
+      this._entityConfig.app.view.height - 150
+    );
 
     this.disabledSprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
@@ -308,7 +323,9 @@ export class ActionButton extends entity.CompositeEntity {
       const go = this.press();
       if (go) this._activateChildEntity(go);
     });
+
     this.container.addChild(this.sprite);
+    this.container.addChild(this.disabledSprite);
 
     // this.text = crisprUtil.makeText("GO", {
     //   fill: 0x000000,
@@ -316,8 +333,8 @@ export class ActionButton extends entity.CompositeEntity {
     // this.text.position.set(this.sprite.width / 2, this.sprite.height / 2);
     // this.sprite.addChild(this.text);
 
-    this._entityConfig.container.addChild(this.disabledSprite);
-    this._entityConfig.container.addChild(this.sprite);
+    this._entityConfig.container.addChild(this.missingScissorsSprite);
+    this._entityConfig.container.addChild(this.container);
   }
 
   protected _update() {
@@ -329,9 +346,13 @@ export class ActionButton extends entity.CompositeEntity {
     // this.text.style.fill = !disabled ? "#000000" : "#4e535d";
   }
 
-  protected _teardown() {}
+  protected _teardown() {
+    this._entityConfig.container.removeChild(this.missingScissorsSprite);
+    this._entityConfig.container.removeChild(this.container);
+  }
 
   public setText(text: string) {
+    this.missingScissorsSprite.visible = text === "MISSING\nSCISSORS";
     // this.text.style.fontSize = text.length > 6 ? 50 : 70;
     // this.text.text = text;
   }
