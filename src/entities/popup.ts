@@ -25,7 +25,7 @@ export function makeCross(radius: number): PIXI.Graphics {
 export interface PopupOptions {
   id: string;
   logo: string;
-  logoSize: number;
+  logoScale: number;
   coolDown: number;
   from: PIXI.Point;
   minimizeOnSetup: boolean;
@@ -45,7 +45,7 @@ export const defaultPopupOptions: PopupOptions = {
   id: null,
   coolDown: null,
   logo: "",
-  logoSize: 150,
+  logoScale: 0.7,
   from: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
   minimizeOnSetup: false,
   minimizeOnClose: false,
@@ -83,7 +83,7 @@ export abstract class Popup extends entity.CompositeEntity {
   public background?: PIXI.Graphics;
   public bodyBackground?: PIXI.Sprite;
   public bodyBackgroundBis?: PIXI.Sprite;
-  public logo?: PIXI.Text;
+  public logo?: PIXI.Sprite;
 
   public minimized: boolean;
 
@@ -158,9 +158,13 @@ export abstract class Popup extends entity.CompositeEntity {
 
           // unicode logo
           if (this.options.logo) {
-            this.logo = crisprUtil.makeText(this.options.logo, {
-              fontSize: this.options.logoSize,
-            });
+            if (this.options.logo === "default")
+              this.options.logo = "images/icon.png";
+            this.logo = new PIXI.Sprite(
+              this._entityConfig.app.loader.resources[this.options.logo].texture
+            );
+            this.logo.anchor.set(0.5);
+            this.logo.scale.set(this.options.logoScale);
             this.logo.position.set(this.center.x, 100);
             this.body.addChild(this.logo);
           }
@@ -366,7 +370,7 @@ export abstract class Popup extends entity.CompositeEntity {
       this._container.zIndex = 1;
       this.body.children.forEach((child) => (child.visible = false));
       this.background.visible = false;
-      this.logo.visible = true;
+      if (this.logo) this.logo.visible = true;
 
       this.bodyBackground.visible = true;
       this.bodyBackground.buttonMode = true;
@@ -420,10 +424,10 @@ export abstract class Popup extends entity.CompositeEntity {
               interpolate: tween.interpolation.point,
             }),
             new tween.Tween({
-              from: this.options.logoSize,
-              to: this.options.logoSize * 0.75,
+              from: this.options.logoScale,
+              to: this.options.logoScale * 0.75,
               easing: easing.easeOutBack,
-              onUpdate: (value) => (this.logo.style.fontSize = value),
+              onUpdate: (value) => this.logo.scale.set(value),
               duration: this.options.animationDuration,
             })
           );
@@ -435,7 +439,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
         if (this.logo) {
           this.logo.position.set(75, 25);
-          this.logo.style.fontSize = this.options.logoSize * 0.75;
+          this.logo.scale.set(this.options.logoScale * 0.75);
         }
 
         this.emit("minimized");
@@ -489,10 +493,10 @@ export abstract class Popup extends entity.CompositeEntity {
             interpolate: tween.interpolation.point,
           }),
           new tween.Tween({
-            from: this.logo.style.fontSize,
-            to: this.options.logoSize,
+            from: this.logo.scale.x,
+            to: this.options.logoScale,
             easing: easing.easeOutBack,
-            onUpdate: (value) => (this.logo.style.fontSize = value),
+            onUpdate: (value) => this.logo.scale.set(value),
             duration: this.options.animationDuration,
           })
         );
@@ -718,7 +722,6 @@ export class TutorialPopup extends Popup {
       withBackground: true,
       closeOnBackgroundClick: true,
       adjustHeight: true,
-      logo: "🧬",
       ...(_options.popupOptions ?? {}),
     });
   }

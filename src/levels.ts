@@ -144,7 +144,7 @@ export const levels = {
                   id: "popup ring 1",
                   from: ring.position,
                   coolDown: 2000,
-                  logo: "🥶",
+                  logo: "images/icon_freeze.png",
                 },
               }),
             ])
@@ -172,7 +172,7 @@ export const levels = {
                   "It's a time bomb, crunch the sequences before they hit the grid!\n\nReach 400 pts!",
                 popupOptions: {
                   id: "intro popup",
-                  logo: "😱",
+                  logo: "images/icon_timed.png",
                   minimizeOnClose: false,
                   coolDown: 2000,
                 },
@@ -379,7 +379,7 @@ export const levels = {
                           "The scissors have to be somewhere in the middle of the sequence,  not at the beginning or end.",
                         image: "images/scissors.json",
                         popupOptions: {
-                          logo: "✂️",
+                          logo: "images/icon_scissors.png",
                           coolDown: 2000,
                         },
                       }),
@@ -414,6 +414,7 @@ export const levels = {
                                 "Sometimes you’ll get stuck, and you can’t make a matching sequence.\n\nIn that case, press the skip button.",
                               popupOptions: {
                                 coolDown: 2000,
+                                logo: "default",
                               },
                             }),
                           }),
@@ -438,7 +439,7 @@ export const levels = {
                                     image: "images/infection_red.png",
                                     popupOptions: {
                                       id: "popup step 4.1",
-                                      logo: "🦠",
+                                      logo: "images/icon_infection.png",
                                       coolDown: 2000,
                                     },
                                   })
@@ -460,7 +461,7 @@ export const levels = {
                               popupOptions: {
                                 minimizeOnClose: false,
                                 id: "popup step 4.2",
-                                logo: "💉",
+                                logo: "images/icon_heal.png",
                                 coolDown: 2000,
                               },
                             }),

@@ -68,6 +68,13 @@ const graphicalAssets = [
   "images/popup_background.png",
   "images/popup_background_bis.png",
 
+  "images/icon.png",
+  "images/icon_freeze.png",
+  "images/icon_heal.png",
+  "images/icon_infection.png",
+  "images/icon_scissors.png",
+  "images/icon_timed.png",
+
   "images/reward_stars_0.png",
   "images/reward_stars_1.png",
   "images/reward_stars_2.png",
