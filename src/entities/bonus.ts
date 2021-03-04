@@ -30,6 +30,7 @@ export abstract class Bonus extends entity.CompositeEntity {
     super.setup(frameInfo, entityConfig);
     this._activateChildEntity(this.shakes);
     this.shakes.setShake("root", 3);
+    this.level.bonusesManager.disablingAnimation = false;
   }
 
   get highlight(): boolean {
@@ -75,6 +76,7 @@ export abstract class Bonus extends entity.CompositeEntity {
     if (!aborted) this.level.bonusesManager.wasBonusUsed = true;
     this._transition = entity.makeTransition();
     this.isUpdateDisabled = false;
+    this.level.bonusesManager.disablingAnimation = false;
   }
 
   abort() {
@@ -312,6 +314,7 @@ export class BonusesManager extends entity.CompositeEntity {
   public selected: Bonus;
   public shakeAmount = 3;
   public wasBonusUsed = false;
+  public disablingAnimation = false;
   private bonusBackground: PIXI.Sprite;
 
   constructor(private initialBonuses: InitialBonuses) {
@@ -336,6 +339,7 @@ export class BonusesManager extends entity.CompositeEntity {
 
     this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
       if (bonus instanceof Bonus) {
+        this.disablingAnimation = true;
         bonus.count--;
         bonus.sprite.filters = [];
         bonus.sprite.position.copyFrom(bonus.position);
@@ -346,6 +350,9 @@ export class BonusesManager extends entity.CompositeEntity {
             to: 1,
             duration: 20,
             onUpdate: (value) => bonus.sprite.scale.set(value),
+            onTeardown: () => {
+              this.disablingAnimation = false;
+            },
           })
         );
       }
@@ -353,6 +360,7 @@ export class BonusesManager extends entity.CompositeEntity {
 
     this._on(this, "activatedChildEntity", (bonus: entity.EntityBase) => {
       if (bonus instanceof Bonus) {
+        this.disablingAnimation = true;
         bonus.level.path.remove();
         this._activateChildEntity(
           new tween.Tween({
@@ -360,6 +368,9 @@ export class BonusesManager extends entity.CompositeEntity {
             to: 1.2,
             duration: 20,
             onUpdate: (value) => bonus.sprite.scale.set(value),
+            onTeardown: () => {
+              this.disablingAnimation = false;
+            },
           })
         );
       }
@@ -371,7 +382,9 @@ export class BonusesManager extends entity.CompositeEntity {
   _update() {
     const disable = this.level.isDisablingAnimationInProgress;
     for (const bonus of this.bonuses) {
-      const bonusDisable = (disable || !bonus.count) && !bonus.highlight;
+      const bonusDisable =
+        this.disablingAnimation ||
+        ((disable || !bonus.count) && !bonus.highlight);
       bonus.sprite.buttonMode = !bonusDisable;
       bonus.sprite.tint = bonusDisable ? 0x9f9f9f : 0xffffff;
     }
@@ -416,6 +429,8 @@ export class BonusesManager extends entity.CompositeEntity {
   }
 
   add(bonus: Bonus, count = 1): this {
+    if (this.disablingAnimation) return;
+
     if (this.bonuses.has(bonus)) {
       bonus.count += count;
       return;
@@ -446,6 +461,8 @@ export class BonusesManager extends entity.CompositeEntity {
     this.bonuses.add(bonus);
 
     this._on(bonus.sprite, "pointerup", () => {
+      if (this.disablingAnimation) return;
+
       this.selection(bonus);
     });
 
@@ -453,7 +470,9 @@ export class BonusesManager extends entity.CompositeEntity {
   }
 
   selection(bonus: Bonus) {
-    console.log("coucou");
+    if (this.disablingAnimation) return;
+
+    this.disablingAnimation = true;
 
     if (bonus.isSetup) {
       this.selected = null;
@@ -469,7 +488,10 @@ export class BonusesManager extends entity.CompositeEntity {
     //   console.warn("bonus already selected:", this.selected, "target bonus:", bonus)
     // }
 
-    if (bonus.count <= 0 || this.level.isDisablingAnimationInProgress) return;
+    if (bonus.count <= 0 || this.level.isDisablingAnimationInProgress) {
+      this.disablingAnimation = false;
+      return;
+    }
 
     this.selected = bonus;
 
