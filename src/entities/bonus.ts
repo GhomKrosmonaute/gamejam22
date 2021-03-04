@@ -59,9 +59,10 @@ export abstract class Bonus extends entity.CompositeEntity {
     if (this._count > 0) {
       const text = crispUtil.makeText(String(this._count), {
         fontSize: 60,
+        fontStyle: "bold",
         fill: "#000000",
       });
-      text.position.set(100, -50);
+      text.position.set(75, -85);
       this.sprite.addChild(text);
     }
   }
@@ -419,8 +420,6 @@ export class BonusesManager extends entity.CompositeEntity {
       bonus.count += count;
       return;
     }
-
-    console.log(this.bonusBackground.width);
 
     const position = new PIXI.Point(
       (this.bonusBackground.width / 3) * (this.bonuses.size + 1) -

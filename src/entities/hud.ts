@@ -102,10 +102,10 @@ export class Gauge extends entity.CompositeEntity {
         timeBetween: options.timeBetween ?? 150,
         items: this._rings.children as Ring[],
         callback: () => options.callback?.(),
-        onStep: (ring, index) => {
+        onStep: (ring) => {
           return anim.bubble(ring, 1.2, 300, {
             onTop: () => {
-              options?.forEach?.(ring, index);
+              options?.forEach?.(ring, ring.index);
             },
           });
         },
@@ -192,13 +192,13 @@ export class Gauge extends entity.CompositeEntity {
 
           activatedRing.index = this.index;
           activatedRing.anchor.set(0.5);
-          activatedRing.scale.set(0);
+          activatedRing.scale.set(1);
           activatedRing.position.copyFrom(this.base);
           activatedRing.base = new PIXI.Point();
           activatedRing.base.copyFrom(this.base);
 
           that._rings.removeChild(this);
-          that._rings.addChild(activatedRing);
+          that._rings.addChildAt(activatedRing, this.index);
 
           that.level.options.gaugeRings[activatedRing.index](
             that.level,
