@@ -387,14 +387,14 @@ export abstract class Popup extends entity.CompositeEntity {
             duration: this.options.animationDuration,
             from: this.width,
             to: 50,
-            easing: easing.easeOutBack,
+            easing: easing.easeInOutQuad,
             onUpdate: (value) => (this.width = value),
           }),
           new tween.Tween({
             duration: this.options.animationDuration,
             from: this.height,
             to: 50,
-            easing: easing.easeOutBack,
+            easing: easing.easeInOutQuad,
             onUpdate: (value) => (this.height = value),
           }),
           new tween.Tween({
@@ -404,7 +404,7 @@ export abstract class Popup extends entity.CompositeEntity {
             from: this._container.position.clone(),
             to: new PIXI.Point(crisprUtil.width - 100, 325 + minimizedY),
             interpolate: tween.interpolation.point,
-            easing: easing.easeOutBack,
+            easing: easing.easeInOutQuad,
             onTeardown: () => {
               this.emit("minimized");
               this.level.emitLevelEvent("minimizedPopup", this);
@@ -420,13 +420,13 @@ export abstract class Popup extends entity.CompositeEntity {
               duration: this.options.animationDuration,
               from: this.logo.position.clone(),
               to: new PIXI.Point(75, 25),
-              easing: easing.easeOutBack,
+              easing: easing.easeInOutQuad,
               interpolate: tween.interpolation.point,
             }),
             new tween.Tween({
               from: this.options.logoScale,
               to: this.options.logoScale * 0.75,
-              easing: easing.easeOutBack,
+              easing: easing.easeInOutQuad,
               onUpdate: (value) => this.logo.scale.set(value),
               duration: this.options.animationDuration,
             })
@@ -456,14 +456,14 @@ export abstract class Popup extends entity.CompositeEntity {
           duration: this.options.animationDuration,
           from: 50,
           to: this.options.width,
-          easing: easing.easeOutBack,
+          easing: easing.easeInOutQuad,
           onUpdate: (value) => (this.width = value - 100),
         }),
         new tween.Tween({
           duration: this.options.animationDuration,
           from: 50,
           to: this._artificialHeight,
-          easing: easing.easeOutBack,
+          easing: easing.easeInOutQuad,
           onUpdate: (value) => (this.height = value),
         }),
         new tween.Tween({
@@ -473,7 +473,7 @@ export abstract class Popup extends entity.CompositeEntity {
           from: new PIXI.Point(crisprUtil.width - 100, 325 + minimizedY),
           to: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
           interpolate: tween.interpolation.point,
-          easing: easing.easeOutBack,
+          easing: easing.easeInOutQuad,
           onTeardown: () => {
             this.body.children.forEach((child) => (child.visible = true));
             this.background.visible = true;
@@ -488,14 +488,14 @@ export abstract class Popup extends entity.CompositeEntity {
             property: "position",
             duration: this.options.animationDuration,
             from: this.logo.position.clone(),
-            easing: easing.easeOutBack,
+            easing: easing.easeInOutQuad,
             to: new PIXI.Point(this.options.width / 2, 100),
             interpolate: tween.interpolation.point,
           }),
           new tween.Tween({
             from: this.logo.scale.x,
             to: this.options.logoScale,
-            easing: easing.easeOutBack,
+            easing: easing.easeInOutQuad,
             onUpdate: (value) => this.logo.scale.set(value),
             duration: this.options.animationDuration,
           })
@@ -727,6 +727,8 @@ export class TutorialPopup extends Popup {
   }
 
   onSetup() {
+    //if(this._options.image === this.options.logo)
+
     this.text = crisprUtil.makeText(this._options.title, {
       fontSize: 150,
       fill: 0xffffff,

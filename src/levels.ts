@@ -227,6 +227,7 @@ export const levels = {
                   id: "popup ring 1",
                   from: ring.position,
                   coolDown: 2000,
+                  logo: "images/bonus_swap.png",
                 },
               }),
             ])
