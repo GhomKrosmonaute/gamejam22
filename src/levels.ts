@@ -415,7 +415,7 @@ export const levels = {
                                 "Sometimes you’ll get stuck, and you can’t make a matching sequence.\n\nIn that case, press the skip button.",
                               popupOptions: {
                                 coolDown: 2000,
-                                logo: "default",
+                                logo: "images/hud_action_button.png",
                               },
                             }),
                           }),
@@ -462,7 +462,6 @@ export const levels = {
                               popupOptions: {
                                 minimizeOnClose: false,
                                 id: "popup step 4.2",
-                                logo: "images/icon_heal.png",
                                 coolDown: 2000,
                               },
                             }),

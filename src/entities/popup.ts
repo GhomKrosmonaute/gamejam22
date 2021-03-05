@@ -68,21 +68,28 @@ export const defaultPopupOptions: PopupOptions = {
 export abstract class Popup extends entity.CompositeEntity {
   static minimized: Set<Popup> = new Set();
 
+  static cleanUpMinimized() {
+    for (const popup of [...Popup.minimized]) {
+      popup._teardown();
+    }
+    Popup.minimized.clear();
+  }
+
   protected abstract onSetup(): any;
 
   public _container: PIXI.Container;
-
   private _setupAt: number;
   private _width: number;
+
   private _height: number;
 
   private _artificialHeight: number;
-
   public cross?: PIXI.Graphics;
   public body: PIXI.Container;
   public background?: PIXI.Graphics;
   public bodyBackground?: PIXI.Sprite;
   public bodyBackgroundBis?: PIXI.Sprite;
+
   public logo?: PIXI.Sprite;
 
   public minimized: boolean;
@@ -247,6 +254,7 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   _teardown() {
+    if (!this._container) return;
     this.level.disablingAnimation(this.id, false);
     this.body.removeChildren();
     this._container.removeChildren();
@@ -609,6 +617,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
 
 export class FailedLevelPopup extends EndOfLevelPopup {
   onSetup() {
+    Popup.cleanUpMinimized();
     // add title
     this.setTitle("Failed");
     this.addCheckRows();
@@ -617,6 +626,8 @@ export class FailedLevelPopup extends EndOfLevelPopup {
 
 export class TerminatedLevelPopup extends EndOfLevelPopup {
   onSetup() {
+    Popup.cleanUpMinimized();
+
     this.level.finished = true;
 
     const results = this.level.checkAndReturnsResults();
