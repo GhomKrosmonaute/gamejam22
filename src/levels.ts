@@ -222,12 +222,12 @@ export const levels = {
               new popup.TutorialPopup({
                 title: "The Swap bonus",
                 content: "Can swap two nucleotides",
-                image: "images/bonus_swap.png",
                 popupOptions: {
                   id: "popup ring 1",
                   from: ring.position,
                   coolDown: 2000,
                   logo: "images/bonus_swap.png",
+                  logoScale: 1.3,
                 },
               }),
             ])
@@ -437,7 +437,6 @@ export const levels = {
                                     title: "Infection",
                                     content:
                                       "When you skip, parts of your grid will get infected.\n\nIf the entire grid gets infected, it’s game over.",
-                                    image: "images/infection_red.png",
                                     popupOptions: {
                                       id: "popup step 4.1",
                                       logo: "images/icon_infection.png",

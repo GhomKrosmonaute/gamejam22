@@ -172,7 +172,7 @@ export abstract class Popup extends entity.CompositeEntity {
             );
             this.logo.anchor.set(0.5);
             this.logo.scale.set(this.options.logoScale);
-            this.logo.position.set(this.center.x, 100);
+            this.logo.position.set(this.center.x, 50);
             this.body.addChild(this.logo);
           }
 
@@ -497,7 +497,7 @@ export abstract class Popup extends entity.CompositeEntity {
             duration: this.options.animationDuration,
             from: this.logo.position.clone(),
             easing: easing.easeInOutQuad,
-            to: new PIXI.Point(this.options.width / 2, 100),
+            to: new PIXI.Point(this.options.width / 2, 50),
             interpolate: tween.interpolation.point,
           }),
           new tween.Tween({
@@ -549,7 +549,7 @@ export abstract class ChecksPopup extends Popup {
 
       const row = new PIXI.Container();
 
-      const pixiText = crisprUtil.makeText(text, {
+      const pixiText = crisprUtil.makeText(text + ".", {
         fill: check ? "#ffda6b" : "#ffffff",
         fontSize: 60,
         fontStyle: "italic bold",
@@ -565,7 +565,10 @@ export abstract class ChecksPopup extends Popup {
         ].texture
       );
 
-      icon.position.set(this.width - 140, 5);
+      icon.position.set(
+        this.width - 140 + (check ? 0 : 30),
+        5 + (check ? 0 : 30)
+      );
 
       row.addChild(icon);
 

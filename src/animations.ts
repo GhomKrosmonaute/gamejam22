@@ -188,18 +188,19 @@ export function bubble(
 export function down(
   obj: PIXI.DisplayObject,
   duration: number,
+  defaultScale: number,
   callback?: AnimationCallback
 ) {
   const onUpdate = (value: number) => obj.scale.set(value);
   return new entity.EntitySequence([
     new tween.Tween({
-      from: 1,
-      to: 1.2,
+      from: defaultScale,
+      to: defaultScale * 1.2,
       duration: duration * 0.65,
       onUpdate,
     }),
     new tween.Tween({
-      from: 1.2,
+      from: defaultScale * 1.2,
       to: 0,
       duration: duration * 0.35,
       onUpdate,

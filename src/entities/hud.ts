@@ -516,7 +516,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
   }
 
   private updateText() {
-    this.text.text = `Rest ${this._count} moves`;
+    this.text.text = `${this._count} moves remaining`;
   }
 
   private resetText() {

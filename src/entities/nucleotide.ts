@@ -141,10 +141,18 @@ export class Nucleotide extends entity.CompositeEntity {
         if (this.infected) {
           this.infectionSprite.scale.set(0.9);
         } else {
-          this.sprite.scale.set(0.9);
+          if (this.type === "scissors") {
+            this.sprite.scale.set(0.5);
+          } else {
+            this.sprite.scale.set(0.9);
+          }
         }
       } else {
-        this.sprite.scale.set(1.1);
+        if (this.type === "scissors") {
+          this.sprite.scale.set(0.6);
+        } else {
+          this.sprite.scale.set(1.1);
+        }
       }
 
       this._highlightSprite = new PIXI.Sprite(
@@ -164,7 +172,11 @@ export class Nucleotide extends entity.CompositeEntity {
         if (this.infected) {
           this.infectionSprite.scale.set(1);
         } else {
-          this.sprite.scale.set(1);
+          if (this.type === "scissors") {
+            this.sprite.scale.set(0.5);
+          } else {
+            this.sprite.scale.set(1);
+          }
         }
       } else {
         //this.sprite.scale.set(1.1);
@@ -426,6 +438,7 @@ export class Nucleotide extends entity.CompositeEntity {
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources["images/scissors.json"]
       );
+      animatedSprite.sprite.scale.set(0.5);
       animatedSprite.sprite.animationSpeed = 25 / 60;
       // Start on a random frame
       animatedSprite.sprite.gotoAndPlay(
