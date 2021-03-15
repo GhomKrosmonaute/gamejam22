@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 
 import * as booyah from "booyah/src/booyah";
 import * as audio from "booyah/src/audio";
+import * as entity from "booyah/src/entity";
 
 import * as minimap from "./scenes/minimap";
 
@@ -19,6 +20,8 @@ const gameStates = {
 const graphicalAssets = [
   "images/titlescreen_background.png",
   "images/titlescreen_menu_button.png",
+  //"images/titlescreen_play_button.png",
+  "images/titlescreen_title.png",
 
   "images/map_background.png",
   "images/particles_background.png",
@@ -27,6 +30,7 @@ const graphicalAssets = [
   "images/membrane.png",
   "images/hole.png",
 
+  "images/menu_home_button.png",
   "images/menu_music_range_full.png",
   "images/menu_music_range_middle.png",
   "images/menu_music_range_disabled.png",
@@ -61,7 +65,7 @@ const graphicalAssets = [
   "images/hud_action_button.png",
   "images/hud_action_button_disabled.png",
   "images/hud_missing_scissors.png",
-  //"images/hud_menu_button.png",
+  "images/hud_menu_button.png",
   "images/hud_gauge_background.png",
   "images/hud_gauge_bar.png",
   "images/hud_gauge_ring.png",
@@ -159,12 +163,15 @@ const fxAssets = [
 
 const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen"];
 
-const entityInstallers: any = [
+const entityInstallers: ((
+  rootConfig: entity.EntityConfig,
+  rootEntity: entity.Entity
+) => unknown)[] = [
   audio.installJukebox,
   audio.installFxMachine,
-  booyah.makeInstallMenu({
-    menuButtonPosition: new PIXI.Point(crisprUtil.width, 0),
-  }),
+  // booyah.makeInstallMenu({
+  //   menuButtonPosition: new PIXI.Point(crisprUtil.width - 111, 106),
+  // }),
 ];
 
 booyah.go({
@@ -172,11 +179,19 @@ booyah.go({
   entityInstallers,
   screenSize: new PIXI.Point(crisprUtil.width, crisprUtil.height),
   graphicalAssets,
-  fxAssets,
   musicAssets,
   fontAssets,
+  fxAssets,
   splashScreen: "images/titlescreen_background.png",
   graphics: {
-    menu: "images/hud_menu_button.png",
+    //menu: "images/hud_menu_button.png",
+    play: "images/titlescreen_play_button.png",
+  },
+  loader: {
+    position: {
+      x: crisprUtil.width / 2,
+      y: crisprUtil.height * 0.7,
+    },
+    scale: 3,
   },
 });

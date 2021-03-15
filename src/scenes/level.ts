@@ -18,6 +18,7 @@ import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
+import * as menu from "../entities/menu";
 import * as hud from "../entities/hud";
 
 export type LevelVariant = "turn" | "fall" | "zen";
@@ -282,6 +283,7 @@ export class Level extends entity.CompositeEntity {
   public grid: grid.Grid;
   public goButton: hud.ActionButton;
   public zenMovesIndicator: hud.ZenMovesIndicator;
+  public menu: menu.Menu;
 
   // game
   public score: number;
@@ -361,6 +363,20 @@ export class Level extends entity.CompositeEntity {
 
   get cursor(): PIXI.Point {
     return this.grid.cursor;
+  }
+
+  private _initMenu() {
+    this.menu = new menu.Menu();
+    this._activateChildEntity(
+      this.menu,
+      entity.extendConfig({
+        container: this._entityConfig.container,
+      })
+    );
+  }
+
+  private _disableMenu() {
+    this._deactivateChildEntity(this.menu);
   }
 
   private _initHooks() {
@@ -594,6 +610,7 @@ export class Level extends entity.CompositeEntity {
     this._initBonuses();
     this._initButton();
     this._initGauge();
+    this._initMenu();
 
     this._activateChildEntity(
       new entity.EntitySequence([
@@ -728,6 +745,12 @@ export class Level extends entity.CompositeEntity {
       this.options.hooks = options.hooks.slice(0);
 
       this._initHooks();
+    }
+
+    // Menu
+    {
+      this._disableMenu();
+      this._initMenu();
     }
 
     this.refresh();

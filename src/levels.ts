@@ -378,7 +378,6 @@ export const levels = {
                         content:
                           "To destroy the virus DNA, you’ll need to include the CRISPR scissors in your sequence.\n\n" +
                           "The scissors have to be somewhere in the middle of the sequence,  not at the beginning or end.",
-                        image: "images/scissors.json",
                         popupOptions: {
                           logo: "images/icon_scissors.png",
                           coolDown: 2000,

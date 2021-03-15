@@ -9,11 +9,13 @@ import * as levels from "../levels";
 import * as level from "./level";
 
 import * as popup from "../entities/popup";
+import * as menu from "../entities/menu";
 
 import * as anim from "../animations";
 import * as crisprUtil from "../crisprUtil";
 
 export class Minimap extends entity.CompositeEntity {
+  private menu: menu.Menu;
   private background: PIXI.Sprite;
   private container: PIXI.Container;
   private buttons: PIXI.Container;
@@ -28,6 +30,8 @@ export class Minimap extends entity.CompositeEntity {
     this.links = new PIXI.Graphics();
     this.container = new PIXI.Container();
     this.buttons = new PIXI.Container();
+
+    this.menu = new menu.Menu();
 
     this.background = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
@@ -184,6 +188,13 @@ export class Minimap extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this.container);
     this._entityConfig.minimap = this;
+
+    this._activateChildEntity(
+      this.menu,
+      entity.extendConfig({
+        container: this.container,
+      })
+    );
   }
 
   protected _update() {
