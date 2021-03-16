@@ -12,7 +12,7 @@ import * as popup from "../entities/popup";
 import * as menu from "../entities/menu";
 
 import * as anim from "../animations";
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 
 export class Minimap extends entity.CompositeEntity {
   private menu: menu.Menu;
@@ -33,24 +33,16 @@ export class Minimap extends entity.CompositeEntity {
 
     this.menu = new menu.Menu();
 
-    this.background = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/cellule_background.png"
-      ].texture
-    );
+    this.background = crispr.sprite(this, "images/cellule_background.png");
     this.background.angle = -90;
     this.background.anchor.set(1, 0);
-    this.background.width = crisprUtil.height;
-    this.background.height = crisprUtil.width;
+    this.background.width = crispr.height;
+    this.background.height = crispr.width;
     this.container.addChild(this.background);
 
-    this.particles = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/cellule_2.png"].texture
-    );
+    this.particles = crispr.sprite(this, "images/cellule_2.png");
 
-    this.particlesBis = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/cellule_1.png"].texture
-    );
+    this.particlesBis = crispr.sprite(this, "images/cellule_1.png");
 
     {
       const options = anim.makeFloatingOptions({
@@ -80,30 +72,28 @@ export class Minimap extends entity.CompositeEntity {
     for (const levelName in levels.levels) {
       // make a button
       const position = new PIXI.Point(
-        crisprUtil.approximate(crisprUtil.width * 0.5, 50),
-        crisprUtil.proportion(
+        crispr.approximate(crispr.width * 0.5, 50),
+        crispr.proportion(
           levels.levelNames.indexOf(levelName),
           -0.5,
           4 - 0.5,
           200,
-          crisprUtil.height - 200
+          crispr.height - 200
         )
       );
 
-      const levelSprite = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources["images/cellule.png"].texture
-      );
+      const levelSprite = crispr.sprite(this, "images/cellule.png");
       levelSprite.anchor.set(0.5);
       levelSprite.scale.set(0.55 + Math.random() * 0.15);
       levelSprite.position.copyFrom(position);
       levelSprite.interactive = true;
       levelSprite.buttonMode = true;
 
-      const text = crisprUtil.makeText(levelName, {
+      const text = crispr.makeText(levelName, {
         fill: 0xffffff,
       });
 
-      if (!crisprUtil.debug) {
+      if (!crispr.debug) {
         const levelIndex = levels.levelNames.indexOf(levelName);
         if (levelIndex < levels.levelNames.length - 1) {
           console.log("index", levelIndex, levelName);
@@ -129,9 +119,9 @@ export class Minimap extends entity.CompositeEntity {
             to: 1,
             duration: 500,
             onUpdate: (value) => {
-              levelSprite.scale.set(crisprUtil.proportion(value, 0, 1, 1, 10));
+              levelSprite.scale.set(crispr.proportion(value, 0, 1, 1, 10));
               (levelSprite
-                .filters[0] as PIXI.filters.AlphaFilter).alpha = crisprUtil.proportion(
+                .filters[0] as PIXI.filters.AlphaFilter).alpha = crispr.proportion(
                 value,
                 0,
                 1,
@@ -172,8 +162,8 @@ export class Minimap extends entity.CompositeEntity {
 
     this.scrollBox = new scroll.Scrollbox({
       content: this.buttons,
-      boxWidth: crisprUtil.width - 10,
-      boxHeight: crisprUtil.height,
+      boxWidth: crispr.width - 10,
+      boxHeight: crispr.height,
       scrollbarSize: 25,
       contentMarginY: 500,
     });

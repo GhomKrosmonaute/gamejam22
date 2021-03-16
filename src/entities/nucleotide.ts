@@ -9,6 +9,7 @@ import * as easing from "booyah/src/easing";
 import * as level from "../scenes/level";
 
 import * as anim from "../animations";
+import * as crispr from "../crispr";
 
 export type NucleotideState = "missing" | "present" | "infected" | "inactive";
 export type NucleotideType = "scissors" | "bonus" | "normal";
@@ -278,9 +279,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this.colorName = null;
 
       this._spriteEntity = new entity.DisplayObjectEntity(
-        new PIXI.Sprite(
-          this._entityConfig.app.loader.resources["images/hole.png"].texture
-        )
+        crispr.sprite(this, "images/hole.png")
       );
       this.sprite.anchor.set(0.5);
 

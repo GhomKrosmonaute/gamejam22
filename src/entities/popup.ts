@@ -6,7 +6,7 @@ import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
 
 import * as anim from "../animations";
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 
 import * as level from "../scenes/level";
 
@@ -46,15 +46,15 @@ export const defaultPopupOptions: PopupOptions = {
   coolDown: null,
   logo: "",
   logoScale: 0.7,
-  from: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
+  from: new PIXI.Point(crispr.width / 2, crispr.height / 2),
   minimizeOnSetup: false,
   minimizeOnClose: false,
   withBackground: false,
   withClosureCross: true,
   closeOnBackgroundClick: false,
   closeOnBodyClick: false,
-  width: crisprUtil.width * 0.8, // 864
-  height: crisprUtil.height * 0.7, // 1344
+  width: crispr.width * 0.8, // 864
+  height: crispr.height * 0.7, // 1344
   adjustHeight: true,
   animationDuration: 600,
   onClose: () => null,
@@ -137,15 +137,13 @@ export abstract class Popup extends entity.CompositeEntity {
         new entity.FunctionCallEntity(() => {
           // background of body
           if (this.options.withBackground) {
-            this.bodyBackgroundBis = new PIXI.Sprite(
-              this._entityConfig.app.loader.resources[
-                "images/popup_background_bis.png"
-              ].texture
+            this.bodyBackgroundBis = crispr.sprite(
+              this,
+              "images/popup_background_bis.png"
             );
-            this.bodyBackground = new PIXI.Sprite(
-              this._entityConfig.app.loader.resources[
-                "images/popup_background.png"
-              ].texture
+            this.bodyBackground = crispr.sprite(
+              this,
+              "images/popup_background.png"
             );
 
             this._entityConfig.container.addChild(this.bodyBackgroundBis);
@@ -193,16 +191,13 @@ export abstract class Popup extends entity.CompositeEntity {
                   obj: this._container,
                   property: "position",
                   from: this.options.from,
-                  to: new PIXI.Point(
-                    crisprUtil.width / 2,
-                    crisprUtil.height / 2
-                  ),
+                  to: new PIXI.Point(crispr.width / 2, crispr.height / 2),
                   easing: easing.easeOutBack,
                   interpolate: tween.interpolation.point,
                 }),
                 new entity.EntitySequence([
                   new entity.WaitingEntity(
-                    crisprUtil.debug ? 0 : this.options.coolDown ?? 0
+                    crispr.debug ? 0 : this.options.coolDown ?? 0
                   ),
                   new entity.FunctionCallEntity(() => {
                     // use transparent background as closure button
@@ -211,10 +206,10 @@ export abstract class Popup extends entity.CompositeEntity {
                       this.background
                         .beginFill(0x000000, 0.00001)
                         .drawRect(
-                          crisprUtil.width * -0.5,
-                          crisprUtil.height * -0.5,
-                          crisprUtil.width,
-                          crisprUtil.height
+                          crispr.width * -0.5,
+                          crispr.height * -0.5,
+                          crispr.width,
+                          crispr.height
                         )
                         .endFill();
 
@@ -331,7 +326,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
   defaultClosure = () => {
     if (
-      !crisprUtil.debug &&
+      !crispr.debug &&
       this.options.coolDown &&
       Date.now() < this._setupAt + this.options.coolDown
     )
@@ -354,7 +349,7 @@ export abstract class Popup extends entity.CompositeEntity {
           duration: this.options.animationDuration,
           obj: this._container,
           property: "position",
-          from: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
+          from: new PIXI.Point(crispr.width / 2, crispr.height / 2),
           to: this.options.from,
           easing: easing.easeOutBack,
           interpolate: tween.interpolation.point,
@@ -410,7 +405,7 @@ export abstract class Popup extends entity.CompositeEntity {
             property: "position",
             duration: this.options.animationDuration,
             from: this._container.position.clone(),
-            to: new PIXI.Point(crisprUtil.width - 100, 325 + minimizedY),
+            to: new PIXI.Point(crispr.width - 100, 325 + minimizedY),
             interpolate: tween.interpolation.point,
             easing: easing.easeInOutQuad,
             onTeardown: () => {
@@ -443,7 +438,7 @@ export abstract class Popup extends entity.CompositeEntity {
       } else {
         this.width = 50;
         this.height = 50;
-        this._container.position.set(crisprUtil.width - 100, 325 + minimizedY);
+        this._container.position.set(crispr.width - 100, 325 + minimizedY);
 
         if (this.logo) {
           this.logo.position.set(75, 25);
@@ -478,8 +473,8 @@ export abstract class Popup extends entity.CompositeEntity {
           obj: this._container,
           property: "position",
           duration: this.options.animationDuration,
-          from: new PIXI.Point(crisprUtil.width - 100, 325 + minimizedY),
-          to: new PIXI.Point(crisprUtil.width / 2, crisprUtil.height / 2),
+          from: new PIXI.Point(crispr.width - 100, 325 + minimizedY),
+          to: new PIXI.Point(crispr.width / 2, crispr.height / 2),
           interpolate: tween.interpolation.point,
           easing: easing.easeInOutQuad,
           onTeardown: () => {
@@ -549,7 +544,7 @@ export abstract class ChecksPopup extends Popup {
 
       const row = new PIXI.Container();
 
-      const pixiText = crisprUtil.makeText(text + ".", {
+      const pixiText = crispr.makeText(text + ".", {
         fill: check ? "#ffda6b" : "#ffffff",
         fontSize: 60,
         fontStyle: "italic bold",
@@ -608,7 +603,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
       .join(" ")
       .toUpperCase();
 
-    this.title = crisprUtil.makeText(dotted, {
+    this.title = crispr.makeText(dotted, {
       ...this.titleConfig,
       ...config,
     });
@@ -664,8 +659,8 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
 
     // add score
     if (!this.level.options.disableScore) {
-      const score = crisprUtil.makeText(
-        `Score: ${this.level.score} pts (${crisprUtil.proportion(
+      const score = crispr.makeText(
+        `Score: ${this.level.score} pts (${crispr.proportion(
           this.level.score,
           0,
           this.level.options.maxScore,
@@ -694,7 +689,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
           duration: 1000,
           onUpdate: (value) =>
             (score.text = `Score: ${Math.floor(value)} pts (${Math.floor(
-              crisprUtil.proportion(
+              crispr.proportion(
                 value,
                 0,
                 this.level.options.maxScore,
@@ -743,14 +738,14 @@ export class TutorialPopup extends Popup {
   onSetup() {
     //if(this._options.image === this.options.logo)
 
-    this.text = crisprUtil.makeText(this._options.title, {
+    this.text = crispr.makeText(this._options.title, {
       fontSize: 150,
       fill: 0xffffff,
       wordWrapWidth: this.width * 0.9,
       wordWrap: true,
     });
 
-    this.content = crisprUtil.makeText(this._options.content, {
+    this.content = crispr.makeText(this._options.content, {
       fill: 0xffffff,
       wordWrapWidth: this.width * 0.9,
       wordWrap: true,
@@ -808,7 +803,7 @@ export class StatePopup extends ChecksPopup {
   }
 
   onSetup() {
-    const text = crisprUtil.makeText(this.level.name, {
+    const text = crispr.makeText(this.level.name, {
       fontSize: 150,
       fill: 0xffffff,
     });
@@ -816,7 +811,7 @@ export class StatePopup extends ChecksPopup {
     text.position.x = this.center.x;
     text.position.y = 100;
 
-    const score = crisprUtil.makeText(
+    const score = crispr.makeText(
       `Score: ${Math.floor(this.level.score)} / ${
         this.level.options.maxScore
       } pts`,

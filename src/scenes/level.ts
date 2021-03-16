@@ -4,7 +4,7 @@ import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as util from "booyah/src/util";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 import * as levels from "../levels";
 import * as anim from "../animations";
 
@@ -94,8 +94,8 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   sequenceLength: null,
   sequences: null,
   scissorCount: 6,
-  nucleotideRadius: crisprUtil.width / 13.44,
-  sequenceNucleotideRadius: crisprUtil.width * 0.04,
+  nucleotideRadius: crispr.width / 13.44,
+  sequenceNucleotideRadius: crispr.width * 0.04,
   gridShape: "full",
   forceMatching: false,
   hooks: [],
@@ -176,13 +176,13 @@ export class Hook<
       this.options.event,
       this.listener.bind(this)
     );
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("hook setup:", this.options.id);
     }
   }
 
   protected _teardown() {
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("hook teardown:", this.options.id);
     }
   }
@@ -202,7 +202,7 @@ export class Hook<
       const delay = this.options.delay ?? 0;
 
       if (this.options.reset) {
-        if (crisprUtil.debug) {
+        if (crispr.debug) {
           console.log("hook reset:", this.options.id);
         }
 
@@ -238,7 +238,7 @@ export class Hook<
           ])
         );
       } else if (this.options.entity) {
-        if (crisprUtil.debug) {
+        if (crispr.debug) {
           console.log("hook activate:", this.options.id, this.options.entity);
         }
 
@@ -255,7 +255,7 @@ export class Hook<
           ])
         );
       } else {
-        if (crisprUtil.debug) {
+        if (crispr.debug) {
           console.error("hook called but not triggered:", this.options.id);
         }
       }
@@ -380,7 +380,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initHooks() {
-    if (crisprUtil.debug)
+    if (crispr.debug)
       console.log(
         "hooks to init",
         this.options.hooks.map((h) => h.options.id)
@@ -391,27 +391,15 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initBackground() {
-    const background = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/background.jpg"].texture
-    );
-    const particles = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/particles_background.png"
-      ].texture
-    );
+    const background = crispr.sprite(this, "images/background.jpg");
+    const particles = crispr.sprite(this, "images/particles_background.png");
     this.container.addChild(background);
     this.container.addChild(particles);
   }
 
   private _initForeground() {
-    const particles = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/particles_foreground.png"
-      ].texture
-    );
-    const membrane = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/membrane.png"].texture
-    );
+    const particles = crispr.sprite(this, "images/particles_foreground.png");
+    const membrane = crispr.sprite(this, "images/membrane.png");
     membrane.position.set(0, 300);
     this.container.addChild(particles);
     this.container.addChild(membrane);
@@ -732,7 +720,7 @@ export class Level extends entity.CompositeEntity {
 
     // Hooks
     {
-      if (crisprUtil.debug) {
+      if (crispr.debug) {
         console.log(
           "hooks to deactivate",
           this.options.hooks.map((h) => h.options.id)
@@ -758,7 +746,7 @@ export class Level extends entity.CompositeEntity {
     this.emitLevelEvent("init");
     this.isInit = true;
 
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("--> DONE", "level.reset()");
     }
   }
@@ -766,7 +754,7 @@ export class Level extends entity.CompositeEntity {
   disablingAnimation(name: string, state: boolean) {
     const oldLength = this.disablingAnimations.size;
     this.disablingAnimations[state ? "add" : "delete"](name);
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       const newLength = this.disablingAnimations.size;
       if (oldLength !== newLength) {
         console.log("updated disabling animations:", newLength, [

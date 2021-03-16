@@ -4,7 +4,7 @@ import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 import * as geom from "booyah/src/geom";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 
 const hairCount = 40;
 const hairMinScale = 0.3;
@@ -60,7 +60,7 @@ export class Hair extends entity.CompositeEntity {
     this.sprite.scale.set(this.scale);
     this.sprite.anchor.set(0.5, 1);
 
-    crisprUtil.positionAlongMembrane(this.sprite, this.angle);
+    crispr.positionAlongMembrane(this.sprite, this.angle);
 
     this._entityConfig.container.addChild(this.sprite);
 

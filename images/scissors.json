@@ -78,7 +78,7 @@
 "meta": {
 	"app": "https://www.codeandweb.com/texturepacker",
 	"version": "1.0",
-	"image": "icon_scissors_animation.png",
+	"image": "scissors.png",
 	"format": "RGBA8888",
 	"size": {"w":879,"h":951},
 	"scale": "1",

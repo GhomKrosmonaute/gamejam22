@@ -7,7 +7,7 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 import * as popup from "./entities/popup";
 import * as level from "./scenes/level";
-import * as crisp from "./crisprUtil";
+import * as crisp from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {

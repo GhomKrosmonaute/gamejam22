@@ -4,7 +4,7 @@ import * as booyah from "booyah/src/booyah";
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 
 export class Menu extends entity.CompositeEntity {
   private opened: boolean;
@@ -34,74 +34,48 @@ export class Menu extends entity.CompositeEntity {
     this.container.visible = false;
 
     {
-      this.menuButton = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/hud_menu_button.png"
-        ].texture
-      );
+      this.menuButton = crispr.sprite(this, "images/hud_menu_button.png");
       this.menuButton.anchor.set(1, 0);
-      this.menuButton.position.set(crisprUtil.width, 0);
+      this.menuButton.position.set(crispr.width, 0);
       this.menuButton.buttonMode = true;
       this.menuButton.interactive = true;
       this._on(this.menuButton, "pointerup", this.open.bind(this));
     }
 
     {
-      this.background = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/popup_background_bis.png"
-        ].texture
-      );
+      this.background = crispr.sprite(this, "images/popup_background_bis.png");
       this.background.interactive = true;
       this.container.addChild(this.background);
     }
 
     {
-      this.popupBackground = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/menu_background.png"
-        ].texture
-      );
+      this.popupBackground = crispr.sprite(this, "images/menu_background.png");
       this.popupBackground.anchor.set(0.5);
-      this.popupBackground.position.set(
-        crisprUtil.width / 2,
-        crisprUtil.height / 2
-      );
+      this.popupBackground.position.set(crispr.width / 2, crispr.height / 2);
       this.container.addChild(this.popupBackground);
     }
 
     {
-      this.playCuriousLogo = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/menu_playcurious_logo.png"
-        ].texture
+      this.playCuriousLogo = crispr.sprite(
+        this,
+        "images/menu_playcurious_logo.png"
       );
       this.playCuriousLogo.anchor.set(0.5);
-      this.playCuriousLogo.position.set(
-        crisprUtil.width / 2,
-        crisprUtil.height * 0.85
-      );
+      this.playCuriousLogo.position.set(crispr.width / 2, crispr.height * 0.85);
       this.container.addChild(this.playCuriousLogo);
     }
 
     {
-      this.creditButton = crisprUtil.makeText("credits", {
+      this.creditButton = crispr.makeText("credits", {
         fontSize: 75,
         fill: "#ffda6b",
       });
-      this.creditButton.position.set(
-        crisprUtil.width / 2,
-        crisprUtil.height * 0.74
-      );
+      this.creditButton.position.set(crispr.width / 2, crispr.height * 0.74);
       this.container.addChild(this.creditButton);
     }
 
     if (this._entityConfig.level) {
-      this.homeButton = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/menu_home_button.png"
-        ].texture
-      );
+      this.homeButton = crispr.sprite(this, "images/menu_home_button.png");
       this.homeButton.buttonMode = true;
       this.homeButton.interactive = true;
       this._on(this.homeButton, "pointerup", () => {
@@ -112,28 +86,24 @@ export class Menu extends entity.CompositeEntity {
     }
 
     {
-      this.backButton = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/menu_back_button.png"
-        ].texture
-      );
+      this.backButton = crispr.sprite(this, "images/menu_back_button.png");
       this.backButton.buttonMode = true;
       this.backButton.interactive = true;
       this.backButton.anchor.set(1, 0);
-      this.backButton.position.set(crisprUtil.width, 0);
+      this.backButton.position.set(crispr.width, 0);
       this._on(this.backButton, "pointerup", this.close.bind(this));
       this.container.addChild(this.backButton);
     }
 
     {
-      this.title = crisprUtil.makeText("M.E.N.U", {
+      this.title = crispr.makeText("M.E.N.U", {
         fontSize: 150,
         fill: "#ffda6b",
         fontStyle: "italic bold",
         fontFamily: "Alien League",
       });
       this.title.anchor.set(0.5);
-      this.title.position.set(crisprUtil.width / 2, crisprUtil.height / 6);
+      this.title.position.set(crispr.width / 2, crispr.height / 6);
       this.container.addChild(this.title);
     }
 

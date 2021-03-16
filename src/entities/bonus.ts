@@ -8,8 +8,8 @@ import * as level from "../scenes/level";
 import * as nucleotide from "./nucleotide";
 import * as sequence from "./sequence";
 import * as anim from "../animations";
-import * as crispUtil from "../crisprUtil";
-import * as crisprUtil from "../crisprUtil";
+import * as crispUtil from "../crispr";
+import * as crispr from "../crispr";
 
 export abstract class Bonus extends entity.CompositeEntity {
   public isUpdateDisabled = false;
@@ -330,10 +330,9 @@ export class BonusesManager extends entity.CompositeEntity {
     this.container.position.set(30, crispUtil.height - 230);
     this._entityConfig.container.addChild(this.container);
 
-    this.bonusBackground = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/hud_bonus_background.png"
-      ].texture
+    this.bonusBackground = crispr.sprite(
+      this,
+      "images/hud_bonus_background.png"
     );
     this.container.addChild(this.bonusBackground);
 
@@ -396,7 +395,7 @@ export class BonusesManager extends entity.CompositeEntity {
 
   reset() {
     this.bonuses.forEach(this.remove.bind(this));
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("--> DONE", "bonusManager.reset()");
     }
   }

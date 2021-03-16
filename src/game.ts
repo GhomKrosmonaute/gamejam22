@@ -6,7 +6,7 @@ import * as entity from "booyah/src/entity";
 
 import * as minimap from "./scenes/minimap";
 
-import * as crisprUtil from "./crisprUtil";
+import * as crispr from "./crispr";
 import * as levels from "./levels";
 
 const main = new minimap.Minimap();
@@ -60,6 +60,8 @@ const graphicalAssets = [
 
   "images/nucleotide_glow.png",
   "images/nucleotide_bright.png",
+
+  "images/particle.png",
 
   "images/hud_bonus_background.png",
   "images/hud_action_button.png",
@@ -170,14 +172,14 @@ const entityInstallers: ((
   audio.installJukebox,
   audio.installFxMachine,
   // booyah.makeInstallMenu({
-  //   menuButtonPosition: new PIXI.Point(crisprUtil.width - 111, 106),
+  //   menuButtonPosition: new PIXI.Point(crispr.width - 111, 106),
   // }),
 ];
 
 booyah.go({
   states: gameStates,
   entityInstallers,
-  screenSize: new PIXI.Point(crisprUtil.width, crisprUtil.height),
+  screenSize: new PIXI.Point(crispr.width, crispr.height),
   graphicalAssets,
   musicAssets,
   fontAssets,
@@ -189,8 +191,8 @@ booyah.go({
   },
   loader: {
     position: {
-      x: crisprUtil.width / 2,
-      y: crisprUtil.height * 0.7,
+      x: crispr.width / 2,
+      y: crispr.height * 0.7,
     },
     scale: 3,
   },

@@ -6,7 +6,7 @@ import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 import * as anim from "../animations";
 
 import * as nucleotide from "./nucleotide";
@@ -55,7 +55,7 @@ export class SequenceAdjustment extends entity.CompositeEntity {
     const range = this.getRange();
     if (this.level.options.variant === "fall") return range.top;
     if (this.level.sequenceManager.sequences.size < 2) return range.middle;
-    return crisprUtil.proportion(
+    return crispr.proportion(
       [...this.level.sequenceManager.sequences].indexOf(sequence),
       0,
       this.level.sequenceManager.sequences.size,
@@ -64,8 +64,8 @@ export class SequenceAdjustment extends entity.CompositeEntity {
     );
   }
 
-  getRange(): crisprUtil.Range {
-    const range: crisprUtil.Range = {
+  getRange(): crispr.Range {
+    const range: crispr.Range = {
       top: 0,
       middle: 0,
       bottom: 0,
@@ -73,16 +73,16 @@ export class SequenceAdjustment extends entity.CompositeEntity {
 
     switch (this.level.options.variant) {
       case "turn":
-        range.top = crisprUtil.height * 0.25;
-        range.bottom = crisprUtil.height * 0.42;
+        range.top = crispr.height * 0.25;
+        range.bottom = crispr.height * 0.42;
         break;
       case "fall":
-        range.top = crisprUtil.height * 0.22;
-        range.bottom = crisprUtil.height * 0.46;
+        range.top = crispr.height * 0.22;
+        range.bottom = crispr.height * 0.46;
         break;
       case "zen":
-        range.top = crisprUtil.height * 0.3;
-        range.bottom = crisprUtil.height * 0.3;
+        range.top = crispr.height * 0.3;
+        range.bottom = crispr.height * 0.3;
         break;
     }
 
@@ -122,7 +122,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
     this.generateFirstSequences();
 
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("--> DONE", "sequenceManager.reset()");
     }
   }
@@ -161,9 +161,9 @@ export class SequenceManager extends entity.CompositeEntity {
 
     switch (this.level.options.variant) {
       case "turn":
-        return crisprUtil.random(4, 7);
+        return crispr.random(4, 7);
       case "fall":
-        return crisprUtil.random(3, 5);
+        return crispr.random(3, 5);
       case "zen":
         return 13;
     }
@@ -178,7 +178,7 @@ export class SequenceManager extends entity.CompositeEntity {
     const sequence = new Sequence(
       colors,
       new PIXI.Point(
-        crisprUtil.width / 2 - (colors.length * nucleotideWidth * 0.8) / 2,
+        crispr.width / 2 - (colors.length * nucleotideWidth * 0.8) / 2,
         this.adjustment.getRange().top
       )
     );
@@ -202,7 +202,7 @@ export class SequenceManager extends entity.CompositeEntity {
     const sequence = new Sequence(
       length,
       new PIXI.Point(
-        crisprUtil.width / 2 - (length * nucleotideWidth * 0.8) / 2,
+        crispr.width / 2 - (length * nucleotideWidth * 0.8) / 2,
         this.adjustment.getRange().top
       )
     );
@@ -247,7 +247,7 @@ export class SequenceManager extends entity.CompositeEntity {
     if (removedSequences.length > 0 || partialCrunch) {
       this.level.path.crunchCountBeforeSequenceDown++;
 
-      if (crisprUtil.debug) {
+      if (crispr.debug) {
         console.log(
           "updated",
           "crunchCountBeforeSequenceDown",
@@ -457,23 +457,23 @@ export class Sequence extends entity.CompositeEntity {
       const position = new PIXI.Point();
 
       if (this.level.options.variant === "zen") {
-        crisprUtil.positionAlongMembrane(
+        crispr.positionAlongMembrane(
           position,
-          crisprUtil.proportion(
+          crispr.proportion(
             i,
             0,
             this.baseLength - 1,
-            crisprUtil.proportion(this.baseLength, 0, 14, 0, virus.rightEdge),
-            crisprUtil.proportion(this.baseLength, 0, 14, 0, virus.leftEdge)
+            crispr.proportion(this.baseLength, 0, 14, 0, virus.rightEdge),
+            crispr.proportion(this.baseLength, 0, 14, 0, virus.leftEdge)
           ),
           1000,
           1000
         );
 
-        position.x -= crisprUtil.proportion(this.baseLength, 7, 14, 300, 50);
+        position.x -= crispr.proportion(this.baseLength, 7, 14, 300, 50);
       } else {
         position.x = i * width * 0.8;
-        position.y = crisprUtil.approximate(0, height * 0.05);
+        position.y = crispr.approximate(0, height * 0.05);
       }
 
       const n = new nucleotide.Nucleotide(
@@ -485,7 +485,7 @@ export class Sequence extends entity.CompositeEntity {
       );
 
       if (this.virus) {
-        crisprUtil.positionAlongMembrane(n.position, this.virus.angle);
+        crispr.positionAlongMembrane(n.position, this.virus.angle);
         n.position.x -= this.container.x;
         n.position.y -= this.level.sequenceManager.adjustment.getHeight(this);
       }
@@ -516,7 +516,7 @@ export class Sequence extends entity.CompositeEntity {
           onStep: (n, index) => {
             const position = new PIXI.Point(
               index * width * 0.8,
-              crisprUtil.approximate(0, height * 0.05)
+              crispr.approximate(0, height * 0.05)
             );
             return anim.move(
               n.position,
@@ -563,7 +563,7 @@ export class Sequence extends entity.CompositeEntity {
         this.level.sequenceWasCrunched = true;
         this.level.crunchedSequenceCount++;
 
-        if (crisprUtil.debug) {
+        if (crispr.debug) {
           console.log(
             "updated",
             "crunchedSequenceCount",
@@ -578,7 +578,7 @@ export class Sequence extends entity.CompositeEntity {
         if (isLong && fully && shots === 1) {
           this.level.oneShotLongSequence = true;
 
-          if (crisprUtil.debug) {
+          if (crispr.debug) {
             console.log(
               "updated",
               "oneShotLongSequence",
@@ -615,7 +615,7 @@ export class Sequence extends entity.CompositeEntity {
             context.push(
               anim.textFade(
                 this.container,
-                crisprUtil.makeText(
+                crispr.makeText(
                   `${score >= 0 ? "+" : "-"} ${String(score).replace("-", "")}`,
                   {
                     fill: score < 0 ? "#d70000" : "#ffffff",

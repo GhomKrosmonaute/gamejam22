@@ -5,7 +5,7 @@ import * as tween from "booyah/src/tween";
 
 import * as popup from "./popup";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 import * as anim from "../animations";
 
 import * as level from "../scenes/level";
@@ -17,6 +17,14 @@ import * as level from "../scenes/level";
 export type Ring = PIXI.Sprite & { base?: PIXI.Point; index?: number };
 
 export class Gauge extends entity.CompositeEntity {
+  private _particles = new PIXI.ParticleContainer(
+    3,
+    {
+      vertices: true,
+      position: true,
+    },
+    5
+  );
   private _container = new PIXI.Container();
   private _rings = new PIXI.Container();
   private _text: PIXI.Text;
@@ -71,7 +79,7 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   getBarWidth(): number {
-    return crisprUtil.proportion(
+    return crispr.proportion(
       this._value,
       0,
       this._maxValue,
@@ -114,7 +122,6 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   _setup() {
-    // todo: set clean position
     this._container.position.set(100, 50);
 
     // add popup
@@ -133,39 +140,33 @@ export class Gauge extends entity.CompositeEntity {
 
     // assign sprites
     {
-      this._background = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/hud_gauge_background.png"
-        ].texture
-      );
+      this._background = crispr.sprite(this, "images/hud_gauge_background.png");
 
-      this._bar = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/hud_gauge_bar.png"
-        ].texture
-      );
+      this._bar = crispr.sprite(this, "images/hud_gauge_bar.png");
 
       this._bar.position.set(195, 57);
       this._barBaseWidth = this._bar.width;
     }
 
+    // particles
+    {
+      for (let i = 0; i < 4; i++) {
+        const particle = crispr.sprite(this, "images/particle.png");
+        particle.anchor.set(0.5);
+        particle.position.y = this._background.height / 2 + (i - 1) * 10;
+        this._particles.addChild(particle);
+      }
+    }
+
     // place rings
     for (let i = 0; i < this._ringCount; i++) {
-      const ring: Ring = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/hud_gauge_ring_disabled.png"
-        ].texture
+      const ring: Ring = crispr.sprite(
+        this,
+        "images/hud_gauge_ring_disabled.png"
       );
 
       const position = new PIXI.Point(
-        crisprUtil.proportion(
-          i,
-          -1,
-          this._ringCount,
-          0,
-          this._barBaseWidth,
-          true
-        ),
+        crispr.proportion(i, -1, this._ringCount, 0, this._barBaseWidth, true),
         ring.height * 0.5
       );
 
@@ -214,11 +215,12 @@ export class Gauge extends entity.CompositeEntity {
       this._rings.addChild(ring);
     }
 
-    this._text = crisprUtil.makeText("", { fill: "#ffffff", fontSize: 40 });
+    this._text = crispr.makeText("", { fill: "#ffffff", fontSize: 40 });
     this._text.position.set(115, 75);
 
     this._container.addChild(this._background);
     this._container.addChild(this._bar);
+    this._container.addChild(this._particles);
     this._container.addChild(this._rings);
     this._container.addChild(this._text);
 
@@ -260,6 +262,26 @@ export class Gauge extends entity.CompositeEntity {
         }
       });
     }
+
+    if (this.getBarWidth() > 100) {
+      this._particles.visible = true;
+
+      const vector = Math.cos(Date.now() / 120);
+      const invertVector = Math.sin(Date.now() / 80);
+      const vectorFast = Math.cos(Date.now() / 50);
+
+      this._particles.children.forEach((particle, index) => {
+        const even = index % 2 === 0;
+        particle.scale.set(0.15 + vectorFast * 0.05);
+        particle.position.x =
+          (index - 1) * 10 +
+          this.getBarWidth() +
+          this._bar.position.x +
+          (even ? vector : invertVector) * 15;
+      });
+    } else {
+      this._particles.visible = false;
+    }
   }
 
   _teardown() {
@@ -284,10 +306,9 @@ export class ActionButton extends entity.CompositeEntity {
     this.shaker = new anim.ShakesManager(this.container);
     this._activateChildEntity(this.shaker);
 
-    this.missingScissorsSprite = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/hud_missing_scissors.png"
-      ].texture
+    this.missingScissorsSprite = crispr.sprite(
+      this,
+      "images/hud_missing_scissors.png"
     );
 
     this.missingScissorsSprite.anchor.set(0.5);
@@ -298,10 +319,9 @@ export class ActionButton extends entity.CompositeEntity {
       this._entityConfig.app.view.height - 150
     );
 
-    this.disabledSprite = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/hud_action_button_disabled.png"
-      ].texture
+    this.disabledSprite = crispr.sprite(
+      this,
+      "images/hud_action_button_disabled.png"
     );
 
     this.disabledSprite.anchor.set(0.5);
@@ -310,11 +330,7 @@ export class ActionButton extends entity.CompositeEntity {
       this._entityConfig.app.view.height - 150
     );
 
-    this.sprite = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/hud_action_button.png"
-      ].texture
-    );
+    this.sprite = crispr.sprite(this, "images/hud_action_button.png");
 
     this.sprite.anchor.set(0.5);
     this.sprite.position.copyFrom(this.disabledSprite.position);
@@ -327,7 +343,7 @@ export class ActionButton extends entity.CompositeEntity {
     this.container.addChild(this.sprite);
     this.container.addChild(this.disabledSprite);
 
-    // this.text = crisprUtil.makeText("GO", {
+    // this.text = crispr.makeText("GO", {
     //   fill: 0x000000,
     // });
     // this.text.position.set(this.sprite.width / 2, this.sprite.height / 2);
@@ -427,7 +443,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
   private _count: number;
   private text: PIXI.Text;
   private animation: entity.Entity;
-  private position = new PIXI.Point(50, crisprUtil.height - 100);
+  private position = new PIXI.Point(50, crispr.height - 100);
 
   get level(): level.Level {
     return this._entityConfig.level;
@@ -444,7 +460,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
 
   protected _setup() {
     this._count = 0;
-    this.text = crisprUtil.makeText("", {
+    this.text = crispr.makeText("", {
       align: "right",
       fontSize: 100,
       stroke: 0xffffff,

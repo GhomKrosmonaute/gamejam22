@@ -164,3 +164,7 @@ export function leveled<T extends Function>(
   });
   return true;
 }
+
+export function sprite(ctx: entity.EntityBase, path: string): PIXI.Sprite {
+  return new PIXI.Sprite(ctx.entityConfig.app.loader.resources[path].texture);
+}
