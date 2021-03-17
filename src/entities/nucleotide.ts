@@ -438,7 +438,7 @@ export class Nucleotide extends entity.CompositeEntity {
         this._entityConfig.app.loader.resources["images/scissors.json"]
       );
       animatedSprite.sprite.scale.set(0.5);
-      animatedSprite.sprite.animationSpeed = 25 / 60;
+      animatedSprite.sprite.animationSpeed = 30 / 60;
       // Start on a random frame
       animatedSprite.sprite.gotoAndPlay(
         _.random(animatedSprite.sprite.totalFrames)

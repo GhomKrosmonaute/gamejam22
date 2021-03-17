@@ -273,11 +273,13 @@ export class Gauge extends entity.CompositeEntity {
       this._particles.children.forEach((particle, index) => {
         const even = index % 2 === 0;
         particle.scale.set(0.15 + vectorFast * 0.05);
-        particle.position.x =
+        particle.position.x = Math.min(
           (index - 1) * 10 +
-          this.getBarWidth() +
-          this._bar.position.x +
-          (even ? vector : invertVector) * 15;
+            this.getBarWidth() +
+            this._bar.position.x +
+            (even ? vector : invertVector) * 15,
+          this._background.position.x + this._background.width - 125
+        );
       });
     } else {
       this._particles.visible = false;
