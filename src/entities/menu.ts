@@ -113,7 +113,7 @@ export class Menu extends entity.CompositeEntity {
           on: "images/menu_fullscreen_button.png",
           off: "images/menu_fullscreen_button_disabled.png",
         },
-        "off"
+        util.inFullscreen() ? "on" : "off"
       );
       this.fullscreenSwitcher.container.position.set(-200, -200);
       this.fullscreenSwitcher.onStateChange((state) => {
@@ -129,7 +129,7 @@ export class Menu extends entity.CompositeEntity {
           on: "images/menu_subtitles_button.png",
           off: "images/menu_subtitles_button_disabled.png",
         },
-        "off"
+        this._entityConfig.playOptions.getOption("showSubtitles") ? "on" : "off"
       );
       this.subTitleSwitcher.container.position.set(200, -200);
       this.subTitleSwitcher.onStateChange((state) => {
@@ -147,7 +147,7 @@ export class Menu extends entity.CompositeEntity {
           "0.5": "images/menu_music_range_middle.png",
           "1": "images/menu_music_range_full.png",
         },
-        "1"
+        this._entityConfig.playOptions.getOption("musicOn") ? "1" : "0"
       );
       this.musicVolumeSwitcher.container.position.y += 200;
       this.musicVolumeSwitcher.onStateChange((state) => {
@@ -162,7 +162,7 @@ export class Menu extends entity.CompositeEntity {
           "0.5": "images/menu_sound_range_middle.png",
           "1": "images/menu_sound_range_full.png",
         },
-        "1"
+        this._entityConfig.playOptions.getOption("fxOn") ? "1" : "0"
       );
       this.soundVolumeSwitcher.onStateChange((state) => {
         this._entityConfig.playOptions.setOption("fxOn", state !== "0");
@@ -232,13 +232,13 @@ export class SpriteSwitcher<
   private currentState?: keyof States;
   public container = new PIXI.Container();
 
-  constructor(private states: States, private firstState?: keyof States) {
+  constructor(private states: States, private initialState?: keyof States) {
     super();
   }
 
   _setup() {
     this._entityConfig.container.addChild(this.container);
-    this.switch(this.firstState ?? Object.keys(this.states)[0]);
+    this.switch(this.initialState ?? Object.keys(this.states)[0]);
   }
 
   _teardown() {
