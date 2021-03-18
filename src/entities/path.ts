@@ -218,7 +218,7 @@ export class Path extends entity.CompositeEntity {
             anim.down(
               item.infected ? item.infectionSprite : item.sprite,
               500,
-              item.type === "scissors" ? 0.5 : 1,
+              1,
               () => {
                 item.once("stateChanged", finish);
                 item.state = "missing";

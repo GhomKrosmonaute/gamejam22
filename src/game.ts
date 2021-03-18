@@ -109,6 +109,7 @@ const graphicalAssets = [
   "images/nucleotide_green.json",
   "images/nucleotide_yellow.json",
   "images/scissors.json",
+  "images/scissors_mini.json",
   "images/hair.json",
   "images/path_arrow.json",
   // Mini Nob
