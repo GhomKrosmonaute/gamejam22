@@ -28,7 +28,12 @@ const graphicalAssets = [
   "images/particles_foreground.png",
   "images/background.jpg",
   "images/membrane.png",
-  "images/hole.png",
+
+  "images/minimap_background.png",
+  "images/minimap_layer_1.png",
+  "images/minimap_layer_2.png",
+  "images/minimap_level.png",
+  "images/minimap_level_disabled.png",
 
   "images/menu_home_button.png",
   "images/menu_music_range_full.png",
@@ -52,6 +57,8 @@ const graphicalAssets = [
   "images/bonus_swap_disabled.png",
   "images/bonus_heal_disabled.png",
   "images/bonus_time_disabled.png",
+
+  "images/hole.png",
 
   "images/infection_red.png",
   "images/infection_blue.png",

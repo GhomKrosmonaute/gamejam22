@@ -11,8 +11,8 @@ import * as crisp from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
-  "MV Mod": () =>
-    new level.Level("MV Mod", (context) => ({
+  Boss: () =>
+    new level.Level("Boss", (context) => ({
       virus: "big",
       variant: "fall",
       dropSpeed: 1,
@@ -82,8 +82,8 @@ export const levels = {
 
   // todo: intermediary levels with medium virus
 
-  "Zen mode": () =>
-    new level.Level("Zen mode", {
+  Zen: () =>
+    new level.Level("Zen", {
       variant: "zen",
       maxScore: 1000,
       forceMatching: true,
@@ -120,8 +120,8 @@ export const levels = {
       ],
     }),
 
-  "Time challenge": () =>
-    new level.Level("Time challenge", (context) => ({
+  Chrono: () =>
+    new level.Level("Chrono", (context) => ({
       variant: "fall",
       gridShape: "medium",
       forceMatching: true,
@@ -203,8 +203,8 @@ export const levels = {
       ],
     })),
 
-  "Turn mode": () =>
-    new level.Level("Turn mode", (context) => ({
+  Classic: () =>
+    new level.Level("Classic", (context) => ({
       variant: "turn",
       maxScore: 400,
       minStarNeeded: 1,
