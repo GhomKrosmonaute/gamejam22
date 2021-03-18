@@ -405,7 +405,7 @@ export abstract class Popup extends entity.CompositeEntity {
             property: "position",
             duration: this.options.animationDuration,
             from: this._container.position.clone(),
-            to: new PIXI.Point(crispr.width - 100, 325 + minimizedY),
+            to: new PIXI.Point(crispr.width - 100, 600 + minimizedY),
             interpolate: tween.interpolation.point,
             easing: easing.easeInOutQuad,
             onTeardown: () => {
@@ -438,7 +438,7 @@ export abstract class Popup extends entity.CompositeEntity {
       } else {
         this.width = 50;
         this.height = 50;
-        this._container.position.set(crispr.width - 100, 325 + minimizedY);
+        this._container.position.set(crispr.width - 100, 600 + minimizedY);
 
         if (this.logo) {
           this.logo.position.set(75, 25);
@@ -473,7 +473,7 @@ export abstract class Popup extends entity.CompositeEntity {
           obj: this._container,
           property: "position",
           duration: this.options.animationDuration,
-          from: new PIXI.Point(crispr.width - 100, 325 + minimizedY),
+          from: new PIXI.Point(crispr.width - 100, 600 + minimizedY),
           to: new PIXI.Point(crispr.width / 2, crispr.height / 2),
           interpolate: tween.interpolation.point,
           easing: easing.easeInOutQuad,
