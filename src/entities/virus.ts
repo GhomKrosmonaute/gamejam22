@@ -5,7 +5,7 @@ import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 
 import * as level from "../scenes/level";
 
@@ -45,8 +45,8 @@ export class Virus extends entity.CompositeEntity {
 
   get randomAngle(): number {
     return this.angle < 0
-      ? crisprUtil.random(-2, rightEdge * 0.5)
-      : crisprUtil.random(2, leftEdge * 0.5);
+      ? crispr.random(-2, rightEdge * 0.5)
+      : crispr.random(2, leftEdge * 0.5);
   }
 
   get angle(): number {
@@ -54,7 +54,7 @@ export class Virus extends entity.CompositeEntity {
   }
 
   set angle(value) {
-    crisprUtil.positionAlongMembrane(this._container, value);
+    crispr.positionAlongMembrane(this._container, value);
     this.refreshRoundedPosition();
   }
 
@@ -67,14 +67,14 @@ export class Virus extends entity.CompositeEntity {
       this._container.position.copyFrom(point);
       this._position.copyFrom(point);
     } else {
-      crisprUtil.positionAlongMembrane(this._container, this.angle);
+      crispr.positionAlongMembrane(this._container, this.angle);
       this._position.copyFrom(point);
       this.refreshRoundedPosition();
     }
   }
 
   public angleTooClose(angle: number): boolean {
-    return crisprUtil.dist(angle, this.angle) < 10;
+    return crispr.dist(angle, this.angle) < 10;
   }
 
   protected _setup() {
@@ -114,6 +114,8 @@ export class Virus extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("walk", true);
         if (angle > this.angle) this._animation.sprite.scale.x *= -1;
+
+        this._entityConfig.fxMachine.play("virus_move");
       }),
       new tween.Tween({
         duration: this.type === "big" ? 2500 : 1000,
@@ -150,9 +152,9 @@ export class Virus extends entity.CompositeEntity {
         ? this.moveToAngle(this.angle < 0 ? rightEdge : leftEdge)
         : this.moveToPosition({
             x:
-              this._position.x < crisprUtil.width / 2
-                ? crisprUtil.width * -0.5
-                : crisprUtil.width * 1.5,
+              this._position.x < crispr.width / 2
+                ? crispr.width * -0.5
+                : crispr.width * 1.5,
             y: this._position.y,
           }),
       new entity.FunctionCallEntity(() => {
@@ -166,6 +168,8 @@ export class Virus extends entity.CompositeEntity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("dead", false);
+
+        this._entityConfig.fxMachine.play("virus_death");
       }),
       new entity.WaitForEvent(this, "terminatedAnimation"),
       new entity.FunctionCallEntity(() => {
@@ -182,6 +186,16 @@ export class Virus extends entity.CompositeEntity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.setAnimatedSprite("sting", false);
+      }),
+      // Slight wait before playing sound.
+      // TODO: make this sound longer?
+      new entity.FunctionalEntity({
+        requestTransition: () =>
+          this._animation.sprite.currentFrame >=
+          this._animation.sprite.totalFrames * 0.25,
+      }),
+      new entity.FunctionCallEntity(() => {
+        this._entityConfig.fxMachine.play("virus_sting");
       }),
       new entity.FunctionalEntity({
         requestTransition: () =>

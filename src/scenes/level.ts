@@ -4,7 +4,7 @@ import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as util from "booyah/src/util";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 import * as levels from "../levels";
 import * as anim from "../animations";
 
@@ -18,6 +18,7 @@ import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
+import * as menu from "../entities/menu";
 import * as hud from "../entities/hud";
 
 export type LevelVariant = "turn" | "fall" | "zen";
@@ -60,6 +61,7 @@ export interface LevelOptions {
   hooks: Hook[];
   initialBonuses: bonuses.InitialBonuses;
   checks: { [text: string]: (level: Level) => boolean };
+  music: string;
 
   // reset options
   resetScore: boolean;
@@ -92,8 +94,8 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   sequenceLength: null,
   sequences: null,
   scissorCount: 6,
-  nucleotideRadius: crisprUtil.width / 13.44,
-  sequenceNucleotideRadius: crisprUtil.width * 0.04,
+  nucleotideRadius: crispr.width / 13.44,
+  sequenceNucleotideRadius: crispr.width * 0.04,
   gridShape: "full",
   forceMatching: false,
   hooks: [],
@@ -104,6 +106,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
     "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
     "Max score reached": (level) => level.score >= level.options.maxScore,
   },
+  music: null,
 
   // reset options
   resetScore: true,
@@ -173,13 +176,13 @@ export class Hook<
       this.options.event,
       this.listener.bind(this)
     );
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("hook setup:", this.options.id);
     }
   }
 
   protected _teardown() {
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("hook teardown:", this.options.id);
     }
   }
@@ -199,7 +202,7 @@ export class Hook<
       const delay = this.options.delay ?? 0;
 
       if (this.options.reset) {
-        if (crisprUtil.debug) {
+        if (crispr.debug) {
           console.log("hook reset:", this.options.id);
         }
 
@@ -235,7 +238,7 @@ export class Hook<
           ])
         );
       } else if (this.options.entity) {
-        if (crisprUtil.debug) {
+        if (crispr.debug) {
           console.log("hook activate:", this.options.id, this.options.entity);
         }
 
@@ -252,7 +255,7 @@ export class Hook<
           ])
         );
       } else {
-        if (crisprUtil.debug) {
+        if (crispr.debug) {
           console.error("hook called but not triggered:", this.options.id);
         }
       }
@@ -278,8 +281,9 @@ export class Level extends entity.CompositeEntity {
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
-  public goButton: hud.GoButton;
+  public goButton: hud.ActionButton;
   public zenMovesIndicator: hud.ZenMovesIndicator;
+  public menu: menu.Menu;
 
   // game
   public score: number;
@@ -287,6 +291,7 @@ export class Level extends entity.CompositeEntity {
   public someVirusHasEscaped = false;
   public crunchCount = 0;
   public failed = false;
+  public finished = false;
   public sequenceWasCrunched = false;
   public scissorsWasIncludes = false;
   public oneShotLongSequence = false;
@@ -360,8 +365,22 @@ export class Level extends entity.CompositeEntity {
     return this.grid.cursor;
   }
 
+  private _initMenu() {
+    this.menu = new menu.Menu();
+    this._activateChildEntity(
+      this.menu,
+      entity.extendConfig({
+        container: this._entityConfig.container,
+      })
+    );
+  }
+
+  private _disableMenu() {
+    this._deactivateChildEntity(this.menu);
+  }
+
   private _initHooks() {
-    if (crisprUtil.debug)
+    if (crispr.debug)
       console.log(
         "hooks to init",
         this.options.hooks.map((h) => h.options.id)
@@ -372,27 +391,15 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initBackground() {
-    const background = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/background.jpg"].texture
-    );
-    const particles = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/particles_background.png"
-      ].texture
-    );
+    const background = crispr.sprite(this, "images/background.jpg");
+    const particles = crispr.sprite(this, "images/particles_background.png");
     this.container.addChild(background);
     this.container.addChild(particles);
   }
 
   private _initForeground() {
-    const particles = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/particles_foreground.png"
-      ].texture
-    );
-    const membrane = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/membrane.png"].texture
-    );
+    const particles = crispr.sprite(this, "images/particles_foreground.png");
+    const membrane = crispr.sprite(this, "images/membrane.png");
     membrane.position.set(0, 300);
     this.container.addChild(particles);
     this.container.addChild(membrane);
@@ -421,7 +428,7 @@ export class Level extends entity.CompositeEntity {
   private _initButton() {
     if (this.options.disableButton) return;
 
-    this.goButton = new hud.GoButton();
+    this.goButton = new hud.ActionButton();
     this._activateChildEntity(this.goButton, this.config);
   }
 
@@ -485,6 +492,31 @@ export class Level extends entity.CompositeEntity {
     this.options.disablingAnimations.forEach((id) => {
       this.disablingAnimation(id, true);
     });
+  }
+
+  private _initMusic() {
+    let music: string;
+
+    if (this.options.music) {
+      music = this.options.music;
+    } else {
+      switch (this.options.variant) {
+        case "turn": {
+          music = "turn_by_turn";
+          break;
+        }
+        case "fall": {
+          music = "time_challenge";
+          break;
+        }
+        case "zen": {
+          music = "zen";
+          break;
+        }
+      }
+    }
+
+    this._entityConfig.jukebox.changeMusic(music);
   }
 
   _setup() {
@@ -551,6 +583,7 @@ export class Level extends entity.CompositeEntity {
     });
 
     this._initDisablingAnimations();
+    this._initMusic();
     this._initBackground();
     this._initForeground();
     this._initHooks();
@@ -565,6 +598,7 @@ export class Level extends entity.CompositeEntity {
     this._initBonuses();
     this._initButton();
     this._initGauge();
+    this._initMenu();
 
     this._activateChildEntity(
       new entity.EntitySequence([
@@ -686,7 +720,7 @@ export class Level extends entity.CompositeEntity {
 
     // Hooks
     {
-      if (crisprUtil.debug) {
+      if (crispr.debug) {
         console.log(
           "hooks to deactivate",
           this.options.hooks.map((h) => h.options.id)
@@ -701,12 +735,18 @@ export class Level extends entity.CompositeEntity {
       this._initHooks();
     }
 
+    // Menu
+    {
+      this._disableMenu();
+      this._initMenu();
+    }
+
     this.refresh();
 
     this.emitLevelEvent("init");
     this.isInit = true;
 
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("--> DONE", "level.reset()");
     }
   }
@@ -714,7 +754,7 @@ export class Level extends entity.CompositeEntity {
   disablingAnimation(name: string, state: boolean) {
     const oldLength = this.disablingAnimations.size;
     this.disablingAnimations[state ? "add" : "delete"](name);
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       const newLength = this.disablingAnimations.size;
       if (oldLength !== newLength) {
         console.log("updated disabling animations:", newLength, [
@@ -729,7 +769,7 @@ export class Level extends entity.CompositeEntity {
     }
   }
 
-  removeHalfScore(): entity.Entity {
+  removeHalfScore(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.ParallelEntity([
         new tween.Tween({
@@ -760,7 +800,10 @@ export class Level extends entity.CompositeEntity {
   }
 
   gameOverByFail() {
+    if (this.finished || this.failed) return;
+
     this.failed = true;
+
     if (this.options.retryOnFail) {
       this._activateChildEntity(new popup.FailedLevelPopup(), this.config);
     } else {
@@ -830,7 +873,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   get isDisablingAnimationInProgress(): boolean {
-    return this.disablingAnimations.size > 0;
+    return this.disablingAnimations.size > 0 || this.finished || this.failed;
   }
 
   public checkGameOverByInfection(): boolean {

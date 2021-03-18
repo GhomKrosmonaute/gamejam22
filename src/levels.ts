@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+
 import { OutlineFilter } from "@pixi/filter-outline";
 
 import * as entity from "booyah/src/entity";
@@ -6,20 +7,25 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 import * as popup from "./entities/popup";
 import * as level from "./scenes/level";
-import * as crisp from "./crisprUtil";
+import * as crisp from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
-  "MV Mod": () =>
-    new level.Level("MV Mod", (context) => ({
+  Boss: () =>
+    new level.Level("Boss", (context) => ({
       virus: "big",
       variant: "fall",
-      dropSpeed: 1.2,
+      dropSpeed: 1,
       gridShape: "medium",
       sequenceLength: 7,
       forceMatching: true,
       maxScore: 1000,
       scissorCount: 3,
+      gaugeRings: [
+        (context) => (context.options.dropSpeed = 1.2),
+        (context) => context.bonusesManager.add(context.timeBonus),
+        (context) => (context.options.dropSpeed = 1.3),
+      ],
       hooks: [
         new level.Hook({
           id: "intro animation",
@@ -66,13 +72,18 @@ export const levels = {
             context.activate(anim.title(context.container, "Go!"));
           }),
         }),
+        new level.Hook({
+          id: "outro",
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
+        }),
       ],
     })),
 
   // todo: intermediary levels with medium virus
 
-  "Zen mode": () =>
-    new level.Level("Zen mode", {
+  Zen: () =>
+    new level.Level("Zen", {
       variant: "zen",
       maxScore: 1000,
       forceMatching: true,
@@ -109,8 +120,8 @@ export const levels = {
       ],
     }),
 
-  "Time challenge": () =>
-    new level.Level("Time challenge", (context) => ({
+  Chrono: () =>
+    new level.Level("Chrono", (context) => ({
       variant: "fall",
       gridShape: "medium",
       forceMatching: true,
@@ -133,7 +144,7 @@ export const levels = {
                   id: "popup ring 1",
                   from: ring.position,
                   coolDown: 2000,
-                  logo: "🥶",
+                  logo: "images/icon_freeze.png",
                 },
               }),
             ])
@@ -161,7 +172,7 @@ export const levels = {
                   "It's a time bomb, crunch the sequences before they hit the grid!\n\nReach 400 pts!",
                 popupOptions: {
                   id: "intro popup",
-                  logo: "😱",
+                  logo: "images/icon_timed.png",
                   minimizeOnClose: false,
                   coolDown: 2000,
                 },
@@ -192,11 +203,14 @@ export const levels = {
       ],
     })),
 
-  "Turn mode": () =>
-    new level.Level("Turn mode", (context) => ({
+  Classic: () =>
+    new level.Level("Classic", (context) => ({
       variant: "turn",
-      maxScore: 300,
+      maxScore: 400,
       minStarNeeded: 1,
+      forceMatching: true,
+      gridShape: "medium",
+      scissorCount: 3,
       gaugeRings: [
         (context, ring) =>
           context.activate(
@@ -208,11 +222,12 @@ export const levels = {
               new popup.TutorialPopup({
                 title: "The Swap bonus",
                 content: "Can swap two nucleotides",
-                image: "images/bonus_swap.png",
                 popupOptions: {
                   id: "popup ring 1",
                   from: ring.position,
                   coolDown: 2000,
+                  logo: "images/bonus_swap.png",
+                  logoScale: 1.3,
                 },
               }),
             ])
@@ -363,9 +378,8 @@ export const levels = {
                         content:
                           "To destroy the virus DNA, you’ll need to include the CRISPR scissors in your sequence.\n\n" +
                           "The scissors have to be somewhere in the middle of the sequence,  not at the beginning or end.",
-                        image: "images/scissors.json",
                         popupOptions: {
-                          logo: "✂️",
+                          logo: "images/icon_scissors.png",
                           coolDown: 2000,
                         },
                       }),
@@ -400,6 +414,7 @@ export const levels = {
                                 "Sometimes you’ll get stuck, and you can’t make a matching sequence.\n\nIn that case, press the skip button.",
                               popupOptions: {
                                 coolDown: 2000,
+                                logo: "images/hud_action_button.png",
                               },
                             }),
                           }),
@@ -421,10 +436,9 @@ export const levels = {
                                     title: "Infection",
                                     content:
                                       "When you skip, parts of your grid will get infected.\n\nIf the entire grid gets infected, it’s game over.",
-                                    image: "images/infection_red.png",
                                     popupOptions: {
                                       id: "popup step 4.1",
-                                      logo: "🦠",
+                                      logo: "images/icon_infection.png",
                                       coolDown: 2000,
                                     },
                                   })
@@ -446,7 +460,6 @@ export const levels = {
                               popupOptions: {
                                 minimizeOnClose: false,
                                 id: "popup step 4.2",
-                                logo: "💉",
                                 coolDown: 2000,
                               },
                             }),

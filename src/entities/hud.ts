@@ -5,7 +5,7 @@ import * as tween from "booyah/src/tween";
 
 import * as popup from "./popup";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 import * as anim from "../animations";
 
 import * as level from "../scenes/level";
@@ -17,6 +17,14 @@ import * as level from "../scenes/level";
 export type Ring = PIXI.Sprite & { base?: PIXI.Point; index?: number };
 
 export class Gauge extends entity.CompositeEntity {
+  private _particles = new PIXI.ParticleContainer(
+    3,
+    {
+      vertices: true,
+      position: true,
+    },
+    5
+  );
   private _container = new PIXI.Container();
   private _rings = new PIXI.Container();
   private _text: PIXI.Text;
@@ -53,11 +61,7 @@ export class Gauge extends entity.CompositeEntity {
 
     this._value = value;
     this._bar.width = this.getBarWidth();
-    this._bar.position.set(this.getBarPosition(), 0);
-    this._text.text =
-      new Intl.NumberFormat("en", { maximumSignificantDigits: 2 }).format(
-        Math.floor(this._value)
-      ) + " pts";
+    this._text.text = Math.floor(this._value) + " pts";
     if (!this._triggered) {
       this._triggered = true;
       this._activateChildEntity(
@@ -75,7 +79,7 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   getBarWidth(): number {
-    return crisprUtil.proportion(
+    return crispr.proportion(
       this._value,
       0,
       this._maxValue,
@@ -85,12 +89,12 @@ export class Gauge extends entity.CompositeEntity {
     );
   }
 
-  getBarPosition(): number {
-    return crisprUtil.proportion(this._value, 0, this._maxValue, 200, 0, true);
+  get baseXOfBar(): number {
+    return this._bar.x;
   }
 
   get reachedScorePosition(): number {
-    return this.getBarPosition() + this.getBarWidth();
+    return this.baseXOfBar + this.getBarWidth();
   }
 
   bubbleRings(options?: {
@@ -106,10 +110,10 @@ export class Gauge extends entity.CompositeEntity {
         timeBetween: options.timeBetween ?? 150,
         items: this._rings.children as Ring[],
         callback: () => options.callback?.(),
-        onStep: (ring, index) => {
+        onStep: (ring) => {
           return anim.bubble(ring, 1.2, 300, {
             onTop: () => {
-              options?.forEach?.(ring, index);
+              options?.forEach?.(ring, ring.index);
             },
           });
         },
@@ -118,8 +122,7 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   _setup() {
-    // todo: set clean position
-    this._container.position.set(-30, -25);
+    this._container.position.set(100, 50);
 
     // add popup
     this._statePopup = new popup.StatePopup();
@@ -137,61 +140,91 @@ export class Gauge extends entity.CompositeEntity {
 
     // assign sprites
     {
-      this._background = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/hud_gauge_background.png"
-        ].texture
-      );
+      this._background = crispr.sprite(this, "images/hud_gauge_background.png");
 
-      this._bar = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/hud_gauge_bar.png"
-        ].texture
-      );
+      this._bar = crispr.sprite(this, "images/hud_gauge_bar.png");
 
+      this._bar.position.set(195, 57);
       this._barBaseWidth = this._bar.width;
+    }
+
+    // particles
+    {
+      for (let i = 0; i < 4; i++) {
+        const particle = crispr.sprite(this, "images/particle.png");
+        particle.anchor.set(0.5);
+        particle.position.y = this._background.height / 2 + (i - 1) * 10;
+        this._particles.addChild(particle);
+      }
     }
 
     // place rings
     for (let i = 0; i < this._ringCount; i++) {
-      const ring: Ring = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          "images/hud_gauge_ring.png"
-        ].texture
+      const ring: Ring = crispr.sprite(
+        this,
+        "images/hud_gauge_ring_disabled.png"
       );
 
-      ring.index = i;
-
       const position = new PIXI.Point(
-        crisprUtil.proportion(i, -1, this._ringCount, 0, 450, true),
+        crispr.proportion(i, -1, this._ringCount, 0, this._barBaseWidth, true),
         ring.height * 0.5
       );
 
+      ring.index = i;
       ring.anchor.set(0.5);
       ring.scale.set(0);
       ring.position.copyFrom(position);
       ring.base = new PIXI.Point();
       ring.base.copyFrom(position);
 
-      this._once(ring, "reached", () => {
-        this.level.options.gaugeRings[ring.index](this.level, ring);
-        ring.tint = 0x6bffff;
-        this.level.emitLevelEvent("ringReached", ring);
-        this._activateChildEntity(anim.tweenShaking(ring, 2000, 10, 0));
-      });
+      const that = this;
+
+      this._once(
+        ring,
+        "reached",
+        function (this: Ring) {
+          that._entityConfig.fxMachine.play("score_ring");
+
+          const activatedRing: Ring = new PIXI.Sprite(
+            that._entityConfig.app.loader.resources[
+              "images/hud_gauge_ring.png"
+            ].texture
+          );
+
+          activatedRing.index = this.index;
+          activatedRing.anchor.set(0.5);
+          activatedRing.scale.set(1);
+          activatedRing.position.copyFrom(this.base);
+          activatedRing.base = new PIXI.Point();
+          activatedRing.base.copyFrom(this.base);
+
+          that._rings.removeChild(this);
+          that._rings.addChildAt(activatedRing, this.index);
+
+          that.level.options.gaugeRings[activatedRing.index](
+            that.level,
+            activatedRing
+          );
+          that.level.emitLevelEvent("ringReached", activatedRing);
+          that._activateChildEntity(
+            anim.tweenShaking(activatedRing, 2000, 10, 0)
+          );
+        }.bind(ring)
+      );
 
       this._rings.addChild(ring);
     }
 
-    this._text = crisprUtil.makeText("", { fill: 0x000000, fontSize: 40 });
-    this._text.position.set(110, 110);
+    this._text = crispr.makeText("", { fill: "#ffffff", fontSize: 40 });
+    this._text.position.set(115, 75);
 
     this._container.addChild(this._background);
     this._container.addChild(this._bar);
+    this._container.addChild(this._particles);
     this._container.addChild(this._rings);
     this._container.addChild(this._text);
 
-    this._rings.position.x = 200;
+    this._rings.position.x = this.baseXOfBar;
 
     this._entityConfig.container.addChild(this._container);
 
@@ -210,7 +243,7 @@ export class Gauge extends entity.CompositeEntity {
       this.bubbleRings({
         timeBetween: 100,
         forEach: (ring: Ring) => {
-          ring.tint = 0x007784;
+          //todo: anim ?
         },
       });
     });
@@ -223,14 +256,33 @@ export class Gauge extends entity.CompositeEntity {
   _update() {
     if (this._value < this._maxValue) {
       const reachedScorePosition = this.reachedScorePosition;
-      this._rings.children.forEach((ring: Ring, i) => {
-        if (
-          reachedScorePosition >=
-          ring.base.x + 200 + (ring.width / 2) * (i / 2)
-        ) {
+      this._rings.children.forEach((ring: Ring) => {
+        if (reachedScorePosition >= this.baseXOfBar + ring.base.x) {
           ring.emit("reached");
         }
       });
+    }
+
+    if (this.getBarWidth() > 100) {
+      this._particles.visible = true;
+
+      const vector = Math.cos(Date.now() / 120);
+      const invertVector = Math.sin(Date.now() / 80);
+      const vectorFast = Math.cos(Date.now() / 50);
+
+      this._particles.children.forEach((particle, index) => {
+        const even = index % 2 === 0;
+        particle.scale.set(0.15 + vectorFast * 0.05);
+        particle.position.x = Math.min(
+          (index - 1) * 10 +
+            this.getBarWidth() +
+            this._bar.position.x +
+            (even ? vector : invertVector) * 15,
+          this._background.position.x + this._background.width - 125
+        );
+      });
+    } else {
+      this._particles.visible = false;
     }
   }
 
@@ -239,10 +291,12 @@ export class Gauge extends entity.CompositeEntity {
   }
 }
 
-export class GoButton extends entity.CompositeEntity {
+export class ActionButton extends entity.CompositeEntity {
   public shaker: anim.ShakesManager;
   public container: PIXI.Container;
   public sprite: PIXI.Sprite;
+  public disabledSprite: PIXI.Sprite;
+  public missingScissorsSprite: PIXI.Sprite;
   public text: PIXI.Text;
 
   get level(): level.Level {
@@ -254,44 +308,71 @@ export class GoButton extends entity.CompositeEntity {
     this.shaker = new anim.ShakesManager(this.container);
     this._activateChildEntity(this.shaker);
 
-    this.sprite = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/hud_go_button.png"
-      ].texture
+    this.missingScissorsSprite = crispr.sprite(
+      this,
+      "images/hud_missing_scissors.png"
     );
-    this.sprite.position.set(
-      this._entityConfig.app.view.width * 0.785,
-      this._entityConfig.app.view.height * 0.887
+
+    this.missingScissorsSprite.anchor.set(0.5);
+    this.missingScissorsSprite.scale.set(0.6);
+    this.missingScissorsSprite.visible = false;
+    this.missingScissorsSprite.position.set(
+      this._entityConfig.app.view.width - 367,
+      this._entityConfig.app.view.height - 150
     );
-    this.sprite.interactive = true;
-    this.sprite.buttonMode = true;
+
+    this.disabledSprite = crispr.sprite(
+      this,
+      "images/hud_action_button_disabled.png"
+    );
+
+    this.disabledSprite.anchor.set(0.5);
+    this.disabledSprite.position.set(
+      this._entityConfig.app.view.width - 150,
+      this._entityConfig.app.view.height - 150
+    );
+
+    this.sprite = crispr.sprite(this, "images/hud_action_button.png");
+
+    this.sprite.anchor.set(0.5);
+    this.sprite.position.copyFrom(this.disabledSprite.position);
+
     this._on(this.sprite, "pointerup", () => {
       const go = this.press();
       if (go) this._activateChildEntity(go);
     });
+
     this.container.addChild(this.sprite);
+    this.container.addChild(this.disabledSprite);
 
-    this.text = crisprUtil.makeText("GO", {
-      fill: 0x000000,
-    });
-    this.text.position.set(this.sprite.width / 2, this.sprite.height / 2);
-    this.sprite.addChild(this.text);
+    // this.text = crispr.makeText("GO", {
+    //   fill: 0x000000,
+    // });
+    // this.text.position.set(this.sprite.width / 2, this.sprite.height / 2);
+    // this.sprite.addChild(this.text);
 
-    this._entityConfig.container.addChild(this.sprite);
+    this._entityConfig.container.addChild(this.missingScissorsSprite);
+    this._entityConfig.container.addChild(this.container);
   }
 
   protected _update() {
     const disabled = this.level.isDisablingAnimationInProgress;
     this.sprite.buttonMode = !disabled;
     this.sprite.interactive = !disabled;
-    this.text.style.fill = !disabled ? "#000000" : "#4e535d";
+    this.sprite.visible = !disabled;
+    this.disabledSprite.visible = disabled;
+    // this.text.style.fill = !disabled ? "#000000" : "#4e535d";
   }
 
-  protected _teardown() {}
+  protected _teardown() {
+    this._entityConfig.container.removeChild(this.missingScissorsSprite);
+    this._entityConfig.container.removeChild(this.container);
+  }
 
   public setText(text: string) {
-    this.text.style.fontSize = text.length > 6 ? 50 : 70;
-    this.text.text = text;
+    this.missingScissorsSprite.visible = text === "MISSING\nSCISSORS";
+    // this.text.style.fontSize = text.length > 6 ? 50 : 70;
+    // this.text.text = text;
   }
 
   private press(): entity.Entity {
@@ -309,6 +390,8 @@ export class GoButton extends entity.CompositeEntity {
 
     const context: entity.Entity[] = [
       new entity.FunctionCallEntity(() => {
+        this._entityConfig.fxMachine.play("skip");
+
         this.level.disablingAnimation("goButton.press", true);
       }),
     ];
@@ -317,21 +400,10 @@ export class GoButton extends entity.CompositeEntity {
       case "turn":
         // ? has holes
         //    : => fill holes
-        //    ! => regenerate some nucleotides
         if (this.level.grid.containsHoles()) {
           context.push(this.level.fillHoles(), this.level.infect());
         } else {
           context.push(
-            new entity.FunctionCallEntity(() => {
-              this.level.grid.regenerate(
-                Math.ceil(this.level.grid.nucleotides.length / 2),
-                (n) => n.state === "present" && n.type !== "scissors"
-              );
-            }),
-
-            // todo: replace waiting entity by this.level.grid.regenerate():SequenceEntity
-            new entity.WaitingEntity(1200),
-
             this.level.sequenceManager.dropSequences(1),
             this.level.infect()
           );
@@ -373,7 +445,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
   private _count: number;
   private text: PIXI.Text;
   private animation: entity.Entity;
-  private position = new PIXI.Point(50, crisprUtil.height - 100);
+  private position = new PIXI.Point(50, crispr.height - 100);
 
   get level(): level.Level {
     return this._entityConfig.level;
@@ -390,7 +462,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
 
   protected _setup() {
     this._count = 0;
-    this.text = crisprUtil.makeText("", {
+    this.text = crispr.makeText("", {
       align: "right",
       fontSize: 100,
       stroke: 0xffffff,
@@ -462,7 +534,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
   }
 
   private updateText() {
-    this.text.text = `Rest ${this._count} moves`;
+    this.text.text = `${this._count} moves remaining`;
   }
 
   private resetText() {

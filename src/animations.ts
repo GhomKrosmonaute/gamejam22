@@ -7,7 +7,7 @@ import * as easing from "booyah/src/easing";
 import * as nucleotide from "./entities/nucleotide";
 import * as virus from "./entities/virus";
 
-import * as crisprUtil from "./crisprUtil";
+import * as crispr from "./crispr";
 
 const FLOATING_SPEED = 0.0005;
 const FLOATING_AMPLITUDE = 0.06;
@@ -188,18 +188,19 @@ export function bubble(
 export function down(
   obj: PIXI.DisplayObject,
   duration: number,
+  defaultScale: number,
   callback?: AnimationCallback
 ) {
   const onUpdate = (value: number) => obj.scale.set(value);
   return new entity.EntitySequence([
     new tween.Tween({
-      from: 1,
-      to: 1.2,
+      from: defaultScale,
+      to: defaultScale * 1.2,
       duration: duration * 0.65,
       onUpdate,
     }),
     new tween.Tween({
-      from: 1.2,
+      from: defaultScale * 1.2,
       to: 0,
       duration: duration * 0.35,
       onUpdate,
@@ -289,14 +290,14 @@ export function title(
   text: string,
   duration = 2500
 ): entity.EntitySequence {
-  let pixiText = crisprUtil.makeText(text, {
+  let pixiText = crispr.makeText(text, {
     fontSize: 100,
     fill: 0xffffff,
     stroke: 0x000000,
     strokeThickness: 20,
   });
   pixiText.scale.set(0);
-  pixiText.position.set(crisprUtil.width / 2, crisprUtil.height / 2);
+  pixiText.position.set(crispr.width / 2, crispr.height / 2);
 
   return new entity.EntitySequence([
     new entity.FunctionCallEntity(() => {
@@ -485,7 +486,7 @@ export function floatingPoint({
   shift,
 }: FloatingOptions): PIXI.Point {
   const target = new PIXI.Point();
-  crisprUtil.forAxes((axe) => {
+  crispr.forAxes((axe) => {
     target[axe] = active[axe]
       ? floatingValue(anchor[axe], speed[axe], amplitude[axe], shift[axe])
       : anchor[axe];
@@ -507,7 +508,7 @@ export function floatingValue(
 export function shakingPoint({ anchor, amount }: ShakingOptions): PIXI.Point {
   const target = new PIXI.Point();
   const angle = Math.random() * 2 * Math.PI;
-  crisprUtil.forAxes((axe) => {
+  crispr.forAxes((axe) => {
     target[axe] =
       anchor[axe] + amount * Math[axe === "x" ? "cos" : "sin"](angle);
   });

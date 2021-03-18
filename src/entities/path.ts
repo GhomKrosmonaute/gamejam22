@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
 
@@ -101,7 +102,10 @@ export class Path extends entity.CompositeEntity {
 
       // Otherwise, start path anew
       this.items = this.items.length > 0 ? [] : [n];
+
+      this._playNote();
     }
+
     return true;
   }
 
@@ -137,6 +141,7 @@ export class Path extends entity.CompositeEntity {
 
     // Add to the path
     this.items.push(n);
+    this._playNote();
 
     this.emit("updated");
     return true;
@@ -199,6 +204,8 @@ export class Path extends entity.CompositeEntity {
           this.level.disablingAnimation("path.crunch", false);
         },
         onStep: (item, i, src, finish) => {
+          this._playExplosion();
+
           const score = item.infected ? 15 : 10;
           const fill = item.infected ? item.fullColorName : "#ffeccc";
           const stroke = item.infected ? "#ffc200" : "black";
@@ -211,10 +218,11 @@ export class Path extends entity.CompositeEntity {
             anim.down(
               item.infected ? item.infectionSprite : item.sprite,
               500,
-              function () {
-                this.once("stateChanged", finish);
-                this.state = "missing";
-              }.bind(item)
+              1,
+              () => {
+                item.once("stateChanged", finish);
+                item.state = "missing";
+              }
             )
           );
 
@@ -244,5 +252,35 @@ export class Path extends entity.CompositeEntity {
 
   toString(reverse = false) {
     return (reverse ? this.nucleotides.reverse() : this.nucleotides).join(",");
+  }
+
+  private _playNote(): void {
+    if (this.items.length === 0) return;
+
+    // There are in fact two sounds, the first is the note, and the 2nd depends on the length
+
+    // Pick a number between 1 and 8
+    const n = Math.min(8, this.items.length);
+    this._entityConfig.fxMachine.play(`note_${n}`);
+
+    const lastNucleotide = this.items[this.items.length - 1];
+    let sound: string;
+    if (lastNucleotide.type === "scissors") {
+      sound = "tile_scissors";
+    } else if (lastNucleotide.colorName === "r") {
+      sound = "tile_red";
+    } else if (lastNucleotide.colorName === "g") {
+      sound = "tile_green";
+    } else if (lastNucleotide.colorName === "b") {
+      sound = "tile_blue";
+    } else if (lastNucleotide.colorName === "y") {
+      sound = "tile_yellow";
+    }
+    this._entityConfig.fxMachine.play(sound);
+  }
+
+  private _playExplosion(): void {
+    const r = _.random(1, 3);
+    this._entityConfig.fxMachine.play(`explode_${r}`);
   }
 }
