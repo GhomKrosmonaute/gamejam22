@@ -34,6 +34,11 @@ const graphicalAssets = [
   "images/minimap_layer_2.png",
   "images/minimap_level.png",
   "images/minimap_level_disabled.png",
+  "images/minimap_virus_0.png",
+  "images/minimap_virus_1.png",
+  "images/minimap_virus_2.png",
+  "images/minimap_virus_3.png",
+  "images/minimap_virus_4.png",
 
   "images/menu_home_button.png",
   "images/menu_music_range_full.png",

@@ -156,6 +156,15 @@ export class Minimap extends entity.CompositeEntity {
         text.position.y = -50;
 
         levelSprite.addChild(stars);
+      } else {
+        const viruses = crispr.sprite(
+          this,
+          `images/minimap_virus_${Math.floor(Math.random() * 5)}.png`
+        );
+
+        viruses.anchor.set(0.5);
+
+        levelSprite.addChild(viruses);
       }
 
       const shaking = new anim.ShakesManager(levelSprite);
