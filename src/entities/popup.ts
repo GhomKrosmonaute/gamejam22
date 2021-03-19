@@ -4,6 +4,7 @@ import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
+import * as booyah from "booyah/src/booyah";
 
 import * as anim from "../animations";
 import * as crispr from "../crispr";
@@ -161,7 +162,7 @@ export abstract class Popup extends entity.CompositeEntity {
             this.button(this.cross, this.defaultClosure);
           }
 
-          // unicode logo
+          // logo
           if (this.options.logo) {
             if (this.options.logo === "default")
               this.options.logo = "images/icon.png";
@@ -184,62 +185,67 @@ export abstract class Popup extends entity.CompositeEntity {
             this._playSound();
 
             this._activateChildEntity(
-              new entity.ParallelEntity([
-                anim.popup(this._container, 700),
-                new tween.Tween({
-                  duration: this.options.animationDuration,
-                  obj: this._container,
-                  property: "position",
-                  from: this.options.from,
-                  to: new PIXI.Point(crispr.width / 2, crispr.height / 2),
-                  easing: easing.easeOutBack,
-                  interpolate: tween.interpolation.point,
-                }),
-                new entity.EntitySequence([
-                  new entity.WaitingEntity(
-                    crispr.debug ? 0 : this.options.coolDown ?? 0
-                  ),
-                  new entity.FunctionCallEntity(() => {
-                    // use transparent background as closure button
-                    if (this.options.closeOnBackgroundClick) {
-                      this.background = new PIXI.Graphics();
-                      this.background
-                        .beginFill(0x000000, 0.00001)
-                        .drawRect(
-                          crispr.width * -0.5,
-                          crispr.height * -0.5,
-                          crispr.width,
-                          crispr.height
-                        )
-                        .endFill();
-
-                      this.button(this.background, this.defaultClosure);
-
-                      this._container.addChildAt(this.background, 0);
-                    }
-
-                    // close on body click
-                    if (this.options.closeOnBodyClick) {
-                      this.button(this.body, this.defaultClosure);
-                    }
-
-                    if (this.options.withClosureCross) {
-                      this.cross.scale.set(0);
-                      this.cross.visible = true;
-                      this._activateChildEntity(
-                        new tween.Tween({
-                          from: 0,
-                          to: 1,
-                          duration: 300,
-                          easing: easing.easeOutBack,
-                          onUpdate: (value) => {
-                            this.cross.scale.set(value);
-                          },
-                        })
-                      );
-                    }
+              new entity.EntitySequence([
+                new entity.ParallelEntity([
+                  anim.popup(this._container, 700),
+                  new tween.Tween({
+                    duration: this.options.animationDuration,
+                    obj: this._container,
+                    property: "position",
+                    from: this.options.from,
+                    to: new PIXI.Point(crispr.width / 2, crispr.height / 2),
+                    easing: easing.easeOutBack,
+                    interpolate: tween.interpolation.point,
                   }),
+                  new entity.EntitySequence([
+                    new entity.WaitingEntity(
+                      crispr.debug ? 0 : this.options.coolDown ?? 0
+                    ),
+                    new entity.FunctionCallEntity(() => {
+                      // use transparent background as closure button
+                      if (this.options.closeOnBackgroundClick) {
+                        this.background = new PIXI.Graphics();
+                        this.background
+                          .beginFill(0x000000, 0.00001)
+                          .drawRect(
+                            crispr.width * -0.5,
+                            crispr.height * -0.5,
+                            crispr.width,
+                            crispr.height
+                          )
+                          .endFill();
+
+                        this.button(this.background, this.defaultClosure);
+
+                        this._container.addChildAt(this.background, 0);
+                      }
+
+                      // close on body click
+                      if (this.options.closeOnBodyClick) {
+                        this.button(this.body, this.defaultClosure);
+                      }
+
+                      if (this.options.withClosureCross) {
+                        this.cross.scale.set(0);
+                        this.cross.visible = true;
+                        this._activateChildEntity(
+                          new tween.Tween({
+                            from: 0,
+                            to: 1,
+                            duration: 300,
+                            easing: easing.easeOutBack,
+                            onUpdate: (value) => {
+                              this.cross.scale.set(value);
+                            },
+                          })
+                        );
+                      }
+                    }),
+                  ]),
                 ]),
+                new entity.FunctionCallEntity(() => {
+                  booyah.changeGameState("paused");
+                }),
               ])
             );
           }
@@ -331,11 +337,13 @@ export abstract class Popup extends entity.CompositeEntity {
       Date.now() < this._setupAt + this.options.coolDown
     )
       return;
+    booyah.changeGameState("playing");
     if (this.options.minimizeOnClose) this.minimize();
     else this.close();
   };
 
   close() {
+    booyah.changeGameState("playing");
     this._activateChildEntity(
       new entity.ParallelEntity([
         anim.sink(this._container, 150, () => {
