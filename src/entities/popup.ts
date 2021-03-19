@@ -597,7 +597,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
       withBackground: true,
       withClosureCross: false,
       closeOnBackgroundClick: true,
-      onClose: (popup) => popup.level.exit(),
+      onClose: (popup) => popup.level.exit(true),
     });
   }
 
@@ -622,6 +622,11 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
 }
 
 export class FailedLevelPopup extends EndOfLevelPopup {
+  constructor() {
+    super();
+    this.options.onClose = (popup) => popup.level.exit();
+  }
+
   onSetup() {
     Popup.cleanUpMinimized();
     // add title

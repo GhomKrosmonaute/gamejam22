@@ -839,8 +839,8 @@ export class Level extends entity.CompositeEntity {
     };
   }
 
-  exit() {
-    this.minimap.saveResults(this);
+  exit(save: boolean = false) {
+    if (save) this.minimap.saveResults(this);
     this._transition = entity.makeTransition();
   }
 
