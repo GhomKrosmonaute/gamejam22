@@ -6,7 +6,23 @@ import * as util from "booyah/src/util";
 
 import * as crispr from "../crispr";
 
+interface Settings {
+  fx: boolean;
+  music: boolean;
+  subTitles: boolean;
+  fullscreen: boolean;
+}
+
+const defaultSettings: Settings = {
+  fx: true,
+  music: true,
+  subTitles: false,
+  fullscreen: util.inFullscreen(),
+};
+
 export class Menu extends entity.CompositeEntity {
+  private settings: Settings;
+
   private opened: boolean;
   private container: PIXI.Container;
 
@@ -28,7 +44,16 @@ export class Menu extends entity.CompositeEntity {
     Record<"0" | "0.5" | "1", string>
   >;
 
+  private saveSettings() {
+    localStorage.setItem("settings", JSON.stringify(this.settings));
+  }
+
   _setup() {
+    const raw =
+      localStorage.getItem("settings") || JSON.stringify(defaultSettings);
+
+    this.settings = JSON.parse(raw);
+
     this.container = new PIXI.Container();
 
     this.container.visible = false;
@@ -113,13 +138,15 @@ export class Menu extends entity.CompositeEntity {
           on: "images/menu_fullscreen_button.png",
           off: "images/menu_fullscreen_button_disabled.png",
         },
-        util.inFullscreen() ? "on" : "off"
+        this.settings.fullscreen ? "on" : "off"
       );
       this.fullscreenSwitcher.container.position.set(-200, -200);
       this.fullscreenSwitcher.onStateChange((state) => {
         if (state === "on")
           util.requestFullscreen(document.getElementById("game-parent"));
         else if (util.inFullscreen()) util.exitFullscreen();
+        this.settings.fullscreen = state === "on";
+        this.saveSettings();
       });
     }
 
@@ -129,7 +156,7 @@ export class Menu extends entity.CompositeEntity {
           on: "images/menu_subtitles_button.png",
           off: "images/menu_subtitles_button_disabled.png",
         },
-        this._entityConfig.playOptions.getOption("showSubtitles") ? "on" : "off"
+        this.settings.subTitles ? "on" : "off"
       );
       this.subTitleSwitcher.container.position.set(200, -200);
       this.subTitleSwitcher.onStateChange((state) => {
@@ -137,6 +164,8 @@ export class Menu extends entity.CompositeEntity {
           "showSubtitles",
           state === "on"
         );
+        this.settings.subTitles = state === "on";
+        this.saveSettings();
       });
     }
 
@@ -147,11 +176,13 @@ export class Menu extends entity.CompositeEntity {
           "0.5": "images/menu_music_range_middle.png",
           "1": "images/menu_music_range_full.png",
         },
-        this._entityConfig.playOptions.getOption("musicOn") ? "1" : "0"
+        this.settings.music ? "1" : "0"
       );
       this.musicVolumeSwitcher.container.position.y += 200;
       this.musicVolumeSwitcher.onStateChange((state) => {
         this._entityConfig.playOptions.setOption("musicOn", state !== "0");
+        this.settings.music = state !== "0";
+        this.saveSettings();
       });
     }
 
@@ -162,10 +193,12 @@ export class Menu extends entity.CompositeEntity {
           "0.5": "images/menu_sound_range_middle.png",
           "1": "images/menu_sound_range_full.png",
         },
-        this._entityConfig.playOptions.getOption("fxOn") ? "1" : "0"
+        this.settings.fx ? "1" : "0"
       );
       this.soundVolumeSwitcher.onStateChange((state) => {
         this._entityConfig.playOptions.setOption("fxOn", state !== "0");
+        this.settings.fx = state !== "0";
+        this.saveSettings();
       });
     }
 
