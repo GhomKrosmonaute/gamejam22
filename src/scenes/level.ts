@@ -21,7 +21,26 @@ import * as hair from "../entities/hair";
 import * as menu from "../entities/menu";
 import * as hud from "../entities/hud";
 
-export type LevelVariant = "turn" | "fall" | "zen";
+export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
+
+export interface ILevelVariant {
+  onActionButtonPressed?: (level: Level) => entity.Entity;
+  onSequenceManagerCrunched?: (
+    manager: sequence.SequenceManager
+  ) => entity.Entity;
+  onSequenceManagerMatchPath?: (
+    level: Level,
+    path: path.Path
+  ) => "no match" | "missing scissors" | true;
+  sequenceCountLimit?: crispr.Scrapper<
+    number,
+    [level: Level, manager: sequence.SequenceManager]
+  >;
+  sequenceLength?: crispr.Scrapper<
+    number,
+    [level: Level, sequence: sequence.SequenceManager]
+  >;
+}
 
 export const baseDropSpeed = 0.001;
 
@@ -320,6 +339,10 @@ export class Level extends entity.CompositeEntity {
 
     // @ts-ignore
     window.level = this;
+  }
+
+  get variant(): LevelVariant {
+    return this.options.variant;
   }
 
   activate(entity: entity.Entity) {

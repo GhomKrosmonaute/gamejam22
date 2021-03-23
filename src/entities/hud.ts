@@ -376,6 +376,10 @@ export class ActionButton extends entity.CompositeEntity {
   }
 
   private press(): entity.Entity {
+    if (typeof this.level.options.variant === "object") {
+      return this.level.options.variant.onActionButtonPressed?.(this.level);
+    }
+
     if (this.level.isDisablingAnimationInProgress) {
       return anim.tweenShaking(this.sprite, 300, 6);
     }
