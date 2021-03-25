@@ -64,6 +64,7 @@ const graphicalAssets = [
   "images/bonus_time_disabled.png",
 
   "images/hole.png",
+  "images/bubble.png",
 
   "images/infection_red.png",
   "images/infection_blue.png",
@@ -87,6 +88,7 @@ const graphicalAssets = [
 
   "images/popup_background.png",
   "images/popup_background_bis.png",
+  "images/popup_background_rounded.png",
 
   "images/icon.png",
   "images/icon_freeze.png",

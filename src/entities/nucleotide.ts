@@ -442,6 +442,11 @@ export class Nucleotide extends entity.CompositeEntity {
       animatedSprite.sprite.animationSpeed = 0;
       // Start on a random frame
       animatedSprite.sprite.gotoAndStop(0);
+
+      const bubble = crispr.sprite(this, "images/bubble.png");
+      bubble.anchor.set(0.5);
+
+      animatedSprite.sprite.addChild(bubble);
     } else {
       throw new Error("Unhandled type");
     }

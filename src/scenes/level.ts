@@ -21,7 +21,26 @@ import * as hair from "../entities/hair";
 import * as menu from "../entities/menu";
 import * as hud from "../entities/hud";
 
-export type LevelVariant = "turn" | "fall" | "zen";
+export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
+
+export interface ILevelVariant {
+  onActionButtonPressed?: (level: Level) => entity.Entity;
+  onSequenceManagerCrunched?: (
+    manager: sequence.SequenceManager
+  ) => entity.Entity;
+  onSequenceManagerMatchPath?: (
+    level: Level,
+    path: path.Path
+  ) => "no match" | "missing scissors" | true;
+  sequenceCountLimit?: crispr.Scrapper<
+    number,
+    [level: Level, manager: sequence.SequenceManager]
+  >;
+  sequenceLength?: crispr.Scrapper<
+    number,
+    [level: Level, sequence: sequence.SequenceManager]
+  >;
+}
 
 export const baseDropSpeed = 0.001;
 
@@ -53,6 +72,7 @@ export interface LevelOptions {
   sequenceLength: number | null;
   scissorCount: number;
   nucleotideRadius: number;
+  sequenceRounded: boolean;
   sequenceNucleotideRadius: number;
   gridShape: grid.GridShape;
   presetScissors: grid.GridPreset | null;
@@ -96,6 +116,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   scissorCount: 6,
   nucleotideRadius: crispr.width / 13.44,
   sequenceNucleotideRadius: crispr.width * 0.04,
+  sequenceRounded: false,
   gridShape: "full",
   forceMatching: false,
   hooks: [],
@@ -320,6 +341,10 @@ export class Level extends entity.CompositeEntity {
 
     // @ts-ignore
     window.level = this;
+  }
+
+  get variant(): LevelVariant {
+    return this.options.variant;
   }
 
   activate(entity: entity.Entity) {
@@ -839,8 +864,8 @@ export class Level extends entity.CompositeEntity {
     };
   }
 
-  exit() {
-    this.minimap.saveResults(this);
+  exit(save: boolean = false) {
+    if (save) this.minimap.saveResults(this);
     this._transition = entity.makeTransition();
   }
 
@@ -936,7 +961,7 @@ export class Level extends entity.CompositeEntity {
     return new entity.EntitySequence(context);
   }
 
-  public setGoButtonText(text: string) {
+  public setGoButtonText(text: path.PathState) {
     if (!this.options.disableButton) this.goButton.setText(text);
   }
 
@@ -944,8 +969,8 @@ export class Level extends entity.CompositeEntity {
     if (this.path.items.length > 0) {
       const match = this.sequenceManager.matchesSequence(this.path);
       if (match === true) {
-        if (this.options.variant === "zen") this.setGoButtonText("CRUNCH");
-        else this.setGoButtonText("MATCH");
+        if (this.options.variant === "zen") this.setGoButtonText("crunch");
+        else this.setGoButtonText("matching");
       } else {
         this.setGoButtonText(match);
       }

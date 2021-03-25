@@ -11,6 +11,29 @@ import * as crisp from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
+  NewBoss: () =>
+    new level.Level("NewBoss", (context) => ({
+      virus: "big",
+      variant: "turn",
+      sequenceLength: 15,
+      sequenceRounded: true,
+      scissorCount: 3,
+      gridShape: "medium",
+      forceMatching: false,
+      maxScore: 5000,
+      checks: {
+        "Middle score reached": (ctx) => ctx.score >= ctx.options.maxScore / 2,
+        "Max score reached": (ctx) => ctx.score >= ctx.options.maxScore,
+      },
+      hooks: [
+        new level.Hook({
+          id: "win condition",
+          once: true,
+          entity: new popup.TerminatedLevelPopup(),
+          event: "sequenceDown",
+        }),
+      ],
+    })),
   Boss: () =>
     new level.Level("Boss", (context) => ({
       virus: "big",
