@@ -22,8 +22,7 @@ export const levels = {
       forceMatching: false,
       maxScore: 5000,
       checks: {
-        "Middle score reached": (ctx) =>
-          ctx.score >= ctx.options.maxScore / 2,
+        "Middle score reached": (ctx) => ctx.score >= ctx.options.maxScore / 2,
         "Max score reached": (ctx) => ctx.score >= ctx.options.maxScore,
       },
       hooks: [

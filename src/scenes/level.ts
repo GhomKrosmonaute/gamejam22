@@ -961,7 +961,7 @@ export class Level extends entity.CompositeEntity {
     return new entity.EntitySequence(context);
   }
 
-  public setGoButtonText(text: string) {
+  public setGoButtonText(text: path.PathState) {
     if (!this.options.disableButton) this.goButton.setText(text);
   }
 
@@ -969,8 +969,8 @@ export class Level extends entity.CompositeEntity {
     if (this.path.items.length > 0) {
       const match = this.sequenceManager.matchesSequence(this.path);
       if (match === true) {
-        if (this.options.variant === "zen") this.setGoButtonText("CRUNCH");
-        else this.setGoButtonText("MATCH");
+        if (this.options.variant === "zen") this.setGoButtonText("crunch");
+        else this.setGoButtonText("matching");
       } else {
         this.setGoButtonText(match);
       }

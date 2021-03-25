@@ -350,7 +350,7 @@ export class SequenceManager extends entity.CompositeEntity {
     );
   }
 
-  matchesSequence(_path: path.Path): "no match" | "missing scissors" | true {
+  matchesSequence(_path: path.Path): path.PathState {
     // TODO: perhaps this should only work if one and only one sequence matches?
     if (
       typeof this.level.variant === "object" &&
@@ -482,7 +482,10 @@ export class Sequence extends entity.CompositeEntity {
     for (let i = 0; i < this.baseLength; i++) {
       const position = new PIXI.Point();
 
-      if (this.level.options.variant === "zen" || this.level.options.sequenceRounded) {
+      if (
+        this.level.options.variant === "zen" ||
+        this.level.options.sequenceRounded
+      ) {
         crispr.positionAlongMembrane(
           position,
           crispr.proportion(

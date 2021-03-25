@@ -4,6 +4,7 @@ import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 
 import * as popup from "./popup";
+import * as path from "./path";
 
 import * as crispr from "../crispr";
 import * as anim from "../animations";
@@ -369,8 +370,8 @@ export class ActionButton extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this.container);
   }
 
-  public setText(text: string) {
-    this.missingScissorsSprite.visible = text === "MISSING\nSCISSORS";
+  public setText(text: path.PathState) {
+    this.missingScissorsSprite.visible = text === "missing scissors";
     // this.text.style.fontSize = text.length > 6 ? 50 : 70;
     // this.text.text = text;
   }
