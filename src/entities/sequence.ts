@@ -482,15 +482,15 @@ export class Sequence extends entity.CompositeEntity {
     for (let i = 0; i < this.baseLength; i++) {
       const position = new PIXI.Point();
 
-      if (this.level.options.variant === "zen") {
+      if (this.level.options.variant === "zen" || this.level.options.sequenceRounded) {
         crispr.positionAlongMembrane(
           position,
           crispr.proportion(
             i,
             0,
             this.baseLength - 1,
-            crispr.proportion(this.baseLength, 0, 14, 0, virus.rightEdge),
-            crispr.proportion(this.baseLength, 0, 14, 0, virus.leftEdge)
+            crispr.proportion(this.baseLength, 0, 15, 0, virus.rightEdge),
+            crispr.proportion(this.baseLength, 0, 15, 0, virus.leftEdge)
           ),
           1000,
           1000

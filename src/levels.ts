@@ -14,16 +14,17 @@ export const levels = {
   NewBoss: () =>
     new level.Level("NewBoss", (context) => ({
       virus: "big",
-      variant: "zen",
+      variant: "turn",
       sequenceLength: 15,
+      sequenceRounded: true,
       scissorCount: 3,
       gridShape: "medium",
       forceMatching: false,
       maxScore: 5000,
       checks: {
-        "Middle score reached": (level) =>
-          level.score >= level.options.maxScore / 2,
-        "Max score reached": (level) => level.score >= level.options.maxScore,
+        "Middle score reached": (ctx) =>
+          ctx.score >= ctx.options.maxScore / 2,
+        "Max score reached": (ctx) => ctx.score >= ctx.options.maxScore,
       },
       hooks: [
         new level.Hook({

@@ -72,6 +72,7 @@ export interface LevelOptions {
   sequenceLength: number | null;
   scissorCount: number;
   nucleotideRadius: number;
+  sequenceRounded: boolean;
   sequenceNucleotideRadius: number;
   gridShape: grid.GridShape;
   presetScissors: grid.GridPreset | null;
@@ -115,6 +116,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   scissorCount: 6,
   nucleotideRadius: crispr.width / 13.44,
   sequenceNucleotideRadius: crispr.width * 0.04,
+  sequenceRounded: false,
   gridShape: "full",
   forceMatching: false,
   hooks: [],
