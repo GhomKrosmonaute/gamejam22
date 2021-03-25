@@ -90,6 +90,7 @@ export abstract class Popup extends entity.CompositeEntity {
   public background?: PIXI.Graphics;
   public bodyBackground?: PIXI.Sprite;
   public bodyBackgroundBis?: PIXI.Sprite;
+  public minimizedBackground?: PIXI.Sprite;
 
   public logo?: PIXI.Sprite;
 
@@ -152,6 +153,20 @@ export abstract class Popup extends entity.CompositeEntity {
 
             this.bodyBackground.width = this.width;
             this.bodyBackground.position.y = -50;
+          }
+
+          if (this.options.minimizeOnClose) {
+            this.minimizedBackground = crispr.sprite(
+              this,
+              "images/popup_background_rounded.png"
+            );
+            this.minimizedBackground.anchor.set(0.5);
+            this.minimizedBackground.position.set(0, -50);
+            this.minimizedBackground.scale.set(1.1);
+            this.minimizedBackground.visible = false;
+            this.minimizedBackground.buttonMode = true;
+            this.minimizedBackground.interactive = true;
+            this._container.addChildAt(this.minimizedBackground, 0);
           }
 
           // closure cross
@@ -379,16 +394,16 @@ export abstract class Popup extends entity.CompositeEntity {
 
     if (this.minimized) {
       this._container.zIndex = 1;
+
       this.body.children.forEach((child) => (child.visible = false));
+
       this.background.visible = false;
+
       if (this.logo) this.logo.visible = true;
 
-      this.bodyBackground.visible = true;
-      this.bodyBackground.buttonMode = true;
-      this.bodyBackground.interactive = true;
       this.bodyBackgroundBis.visible = false;
 
-      this._once(this.bodyBackground, "pointerup", () => {
+      this._once(this.minimizedBackground, "pointerup", () => {
         this.minimize();
       });
 
@@ -417,6 +432,8 @@ export abstract class Popup extends entity.CompositeEntity {
             interpolate: tween.interpolation.point,
             easing: easing.easeInOutQuad,
             onTeardown: () => {
+              this.minimizedBackground.visible = true;
+
               this.emit("minimized");
               this.level.emitLevelEvent("minimizedPopup", this);
             },
@@ -458,6 +475,7 @@ export abstract class Popup extends entity.CompositeEntity {
       }
     } else {
       this._container.zIndex = 10;
+      this.minimizedBackground.visible = false;
       this.bodyBackground.buttonMode = false;
       this.bodyBackground.interactive = false;
       this.bodyBackgroundBis.visible = true;

@@ -88,6 +88,7 @@ const graphicalAssets = [
 
   "images/popup_background.png",
   "images/popup_background_bis.png",
+  "images/popup_background_rounded.png",
 
   "images/icon.png",
   "images/icon_freeze.png",
