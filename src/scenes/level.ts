@@ -296,6 +296,7 @@ export class Level extends entity.CompositeEntity {
   public triggeredHooks: Set<string> = new Set();
   public fallingStopped = false;
   public container = new PIXI.Container();
+  public backgroundLayers: PIXI.Sprite[];
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;
@@ -416,10 +417,28 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initBackground() {
-    const background = crispr.sprite(this, "images/background.jpg");
-    const particles = crispr.sprite(this, "images/particles_background.png");
-    this.container.addChild(background);
-    this.container.addChild(particles);
+    this.backgroundLayers = [];
+    [
+      "background.png",
+      "background_layer_1.png",
+      "background_layer_2.png",
+      //"background_layer_3-eclaircir.png",
+      //"background_layer_4-lumiere_tamisee.png",
+      "background_cell.png",
+      "particles_background.png",
+    ].forEach((filename) => {
+      const sprite = crispr.sprite(this, "images/" + filename);
+
+      if (filename.includes("background_layer"))
+        this.backgroundLayers.push(sprite);
+
+      if (filename.includes("3")) sprite.blendMode = PIXI.BLEND_MODES.LIGHTEN;
+
+      if (filename.includes("4"))
+        sprite.blendMode = PIXI.BLEND_MODES.SOFT_LIGHT;
+
+      this.container.addChild(sprite);
+    });
   }
 
   private _initForeground() {
@@ -643,6 +662,12 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update() {
+    if (this.backgroundLayers) {
+      this.backgroundLayers.forEach((layer, i) => {
+        layer.position.y = Math.cos(Date.now() / 6000) * ((i + 1) * 2) * -10;
+      });
+    }
+
     if (this.failed) return;
     if (!this.sequenceManager || !this.sequenceManager.isSetup) return;
     if (this.options.variant !== "fall") return;

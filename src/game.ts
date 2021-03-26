@@ -26,7 +26,12 @@ const graphicalAssets = [
   "images/map_background.png",
   "images/particles_background.png",
   "images/particles_foreground.png",
-  "images/background.jpg",
+  "images/background.png",
+  "images/background_cell.png",
+  "images/background_layer_1.png",
+  "images/background_layer_2.png",
+  "images/background_layer_3-eclaircir.png",
+  "images/background_layer_4-lumiere_tamisee.png",
   "images/membrane.png",
 
   "images/minimap_background.png",
