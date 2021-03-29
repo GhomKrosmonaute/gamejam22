@@ -210,7 +210,7 @@ booyah.go({
     //menu: "images/hud_menu_button.png",
     play: "images/titlescreen_play_button.png",
   },
-  loader: {
+  loadingGauge: {
     position: {
       x: crispr.width / 2,
       y: crispr.height * 0.7,
