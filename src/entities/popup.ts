@@ -263,7 +263,8 @@ export abstract class Popup extends entity.CompositeEntity {
                   ]),
                 ]),
                 new entity.FunctionCallEntity(() => {
-                  booyah.changeGameState("paused");
+                  // booyah.changeGameState("paused");
+                  this.level.disablingAnimation(this.id, true);
                 }),
               ])
             );
@@ -362,7 +363,9 @@ export abstract class Popup extends entity.CompositeEntity {
   };
 
   close() {
-    booyah.changeGameState("playing");
+    // booyah.changeGameState("playing");
+    this.level.disablingAnimation(this.id, false);
+
     this._activateChildEntity(
       new entity.ParallelEntity([
         anim.sink(this._container, 150, () => {
@@ -386,7 +389,7 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   minimize(options?: { animated?: boolean }) {
-    booyah.changeGameState("playing");
+    // booyah.changeGameState("playing");
 
     const animated = options?.animated ?? true;
 
@@ -512,7 +515,8 @@ export abstract class Popup extends entity.CompositeEntity {
           onTeardown: () => {
             this.body.children.forEach((child) => (child.visible = true));
             this.background.visible = true;
-            booyah.changeGameState("paused");
+            // booyah.changeGameState("paused");
+            this.level.disablingAnimation(this.id, true);
           },
         })
       );

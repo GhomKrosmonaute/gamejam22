@@ -48,20 +48,14 @@ export const levels = {
         (context) => {
           context.options.dropSpeed = 1.2;
           context.activate(
-            anim.title(
-              context.container,
-              "The speed of the fall has increased by 20%"
-            )
+            anim.title(context.container, "Speed 120%", 2000, (t) => t, 2)
           );
         },
         (context) => context.bonusesManager.add(context.timeBonus),
         (context) => {
           context.options.dropSpeed = 1.3;
           context.activate(
-            anim.title(
-              context.container,
-              "The speed of the fall has increased by 30%"
-            )
+            anim.title(context.container, "Speed 130%", 2000, (t) => t, 2)
           );
         },
       ],

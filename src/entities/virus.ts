@@ -83,7 +83,7 @@ export class Virus extends entity.CompositeEntity {
       this.angle = this.randomStartAngle;
     }
 
-    this._entityConfig.container.addChildAt(this._container, 13);
+    this._entityConfig.container.addChildAt(this._container, 14);
   }
 
   protected _teardown() {

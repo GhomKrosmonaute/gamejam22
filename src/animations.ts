@@ -288,9 +288,11 @@ export function move(
 export function title(
   container: PIXI.Container,
   text: string,
-  duration = 2500
+  duration = 2500,
+  easingFn: (t: number) => number = easing.easeOutQuint,
+  maxScale = 20
 ): entity.EntitySequence {
-  let pixiText = crispr.makeText(text, {
+  const pixiText = crispr.makeText(text, {
     fontSize: 100,
     fill: 0xffffff,
     stroke: 0x000000,
@@ -305,12 +307,12 @@ export function title(
     }),
     new tween.Tween({
       duration,
-      from: 1,
-      to: 0,
-      easing: easing.easeOutQuint,
+      from: 0,
+      to: maxScale,
+      easing: easingFn,
       onUpdate: (value) => {
-        pixiText.scale.set((1 - value) * 20);
-        pixiText.alpha = value;
+        pixiText.scale.set(value);
+        pixiText.alpha = crispr.proportion(value, 0, maxScale, 1, 0);
       },
     }),
     new entity.FunctionCallEntity(() => {
