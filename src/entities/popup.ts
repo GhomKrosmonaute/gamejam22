@@ -197,11 +197,15 @@ export abstract class Popup extends entity.CompositeEntity {
           if (this.options.minimizeOnSetup) {
             this.minimize({ animated: false });
           } else {
-            this._playSound();
-
             this._activateChildEntity(
               new entity.EntitySequence([
                 new entity.ParallelEntity([
+                  new entity.EntitySequence([
+                    new entity.WaitingEntity(0),
+                    new entity.FunctionCallEntity(() => {
+                      this._playSound();
+                    }),
+                  ]),
                   anim.popup(this._container, 700),
                   new tween.Tween({
                     duration: this.options.animationDuration,
@@ -390,7 +394,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
     this.level.disablingAnimation(this.id, !this.minimized);
 
-    const minimizedY = 170 * [...Popup.minimized].indexOf(this);
+    const minimizedY = 190 * [...Popup.minimized].indexOf(this);
 
     const context: entity.Entity[] = [];
 

@@ -593,7 +593,7 @@ export class VirusSequence extends entity.EntitySequence {
   }
 
   _setup() {
-    this._activateChildEntity(this.v, entity.extendConfig({}));
+    this._activateChildEntity(this.v);
     super._setup();
   }
 }

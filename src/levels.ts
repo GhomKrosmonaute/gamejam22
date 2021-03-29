@@ -45,9 +45,25 @@ export const levels = {
       maxScore: 1000,
       scissorCount: 3,
       gaugeRings: [
-        (context) => (context.options.dropSpeed = 1.2),
+        (context) => {
+          context.options.dropSpeed = 1.2;
+          context.activate(
+            anim.title(
+              context.container,
+              "The speed of the fall has increased by 20%"
+            )
+          );
+        },
         (context) => context.bonusesManager.add(context.timeBonus),
-        (context) => (context.options.dropSpeed = 1.3),
+        (context) => {
+          context.options.dropSpeed = 1.3;
+          context.activate(
+            anim.title(
+              context.container,
+              "The speed of the fall has increased by 30%"
+            )
+          );
+        },
       ],
       hooks: [
         new level.Hook({
