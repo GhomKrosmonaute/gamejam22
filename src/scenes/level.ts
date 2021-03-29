@@ -665,7 +665,9 @@ export class Level extends entity.CompositeEntity {
     if (this.backgroundLayers) {
       this.backgroundLayers.forEach((layer, i) => {
         layer.position.y =
-          Math.cos(frameInfo.timeSinceStart / 3000 + i * 1000) * ((i + 1) * 2) * -10;
+          Math.cos(frameInfo.timeSinceStart / 3000 + i * 1000) *
+          ((i + 1) * 2) *
+          -10;
       });
     }
 

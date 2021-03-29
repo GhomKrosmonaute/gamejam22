@@ -493,7 +493,13 @@ export function floatingPoint({
   const target = new PIXI.Point();
   crispr.forAxes((axe) => {
     target[axe] = active[axe]
-      ? floatingValue(anchor[axe], speed[axe], amplitude[axe], shift[axe], timePast)
+      ? floatingValue(
+          anchor[axe],
+          speed[axe],
+          amplitude[axe],
+          shift[axe],
+          timePast
+        )
       : anchor[axe];
   });
   return target;

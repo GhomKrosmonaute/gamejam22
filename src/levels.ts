@@ -51,7 +51,12 @@ export const levels = {
             anim.title(context.container, "Speed 120%", 2000, (t) => t, 2)
           );
         },
-        (context) => context.bonusesManager.add(context.timeBonus),
+        (context) =>
+          context.bonusesManager.add(
+            context.timeBonus,
+            1,
+            new PIXI.Point(500, -2000)
+          ),
         (context) => {
           context.options.dropSpeed = 1.3;
           context.activate(
@@ -161,12 +166,21 @@ export const levels = {
       scissorCount: 3,
       maxScore: 400,
       gaugeRings: [
-        (context) => context.bonusesManager.add(context.swapBonus),
+        (context) =>
+          context.bonusesManager.add(
+            context.swapBonus,
+            1,
+            new PIXI.Point(200, -2000)
+          ),
         (context, ring) =>
           context.activate(
             new entity.EntitySequence([
               new entity.FunctionCallEntity(() => {
-                context.bonusesManager.add(context.timeBonus);
+                context.bonusesManager.add(
+                  context.timeBonus,
+                  1,
+                  new PIXI.Point(500, -2000)
+                );
                 context.timeBonus.highlight = true;
               }),
               new popup.TutorialPopup({
@@ -249,7 +263,11 @@ export const levels = {
           context.activate(
             new entity.EntitySequence([
               new entity.FunctionCallEntity(() => {
-                context.bonusesManager.add(context.swapBonus);
+                context.bonusesManager.add(
+                  context.swapBonus,
+                  1,
+                  new PIXI.Point(500, -2000)
+                );
                 context.swapBonus.highlight = true;
               }),
               new popup.TutorialPopup({

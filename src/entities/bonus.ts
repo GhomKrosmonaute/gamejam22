@@ -427,7 +427,7 @@ export class BonusesManager extends entity.CompositeEntity {
     return this;
   }
 
-  add(bonus: Bonus, count = 1): this {
+  add(bonus: Bonus, count = 1, fromPosition?: PIXI.Point): this {
     if (this.disablingAnimation) return;
 
     if (this.bonuses.has(bonus)) {
@@ -446,6 +446,7 @@ export class BonusesManager extends entity.CompositeEntity {
         `images/bonus_${bonus.name}.png`
       ].texture
     );
+
     sprite.anchor.set(0.5);
     sprite.interactive = true;
     sprite.position.copyFrom(position);
@@ -464,6 +465,31 @@ export class BonusesManager extends entity.CompositeEntity {
 
       this.selection(bonus);
     });
+
+    if (fromPosition) {
+      sprite.position.copyFrom(fromPosition);
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          new entity.FunctionCallEntity(() => {
+            this.level.disablingAnimation("bonus", true);
+          }),
+          new entity.WaitingEntity(1000),
+          new entity.ParallelEntity([
+            anim.move(
+              sprite.position,
+              fromPosition,
+              position,
+              1000,
+              easing.easeOutQuart
+            ),
+            anim.bubble(sprite, 3, 1000),
+          ]),
+          new entity.FunctionCallEntity(() => {
+            this.level.disablingAnimation("bonus", false);
+          }),
+        ])
+      );
+    }
 
     return this;
   }

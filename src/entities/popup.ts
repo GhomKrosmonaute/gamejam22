@@ -137,6 +137,21 @@ export abstract class Popup extends entity.CompositeEntity {
           },
         }),
         new entity.FunctionCallEntity(() => {
+          // background of minimized
+          if (this.options.minimizeOnClose) {
+            this.minimizedBackground = crispr.sprite(
+              this,
+              "images/popup_background_rounded.png"
+            );
+            this.minimizedBackground.anchor.set(0.5);
+            this.minimizedBackground.position.set(0, -50);
+            this.minimizedBackground.scale.set(1.1);
+            this.minimizedBackground.visible = false;
+            this.minimizedBackground.buttonMode = true;
+            this.minimizedBackground.interactive = true;
+            this._container.addChildAt(this.minimizedBackground, 0);
+          }
+
           // background of body
           if (this.options.withBackground) {
             this.bodyBackgroundBis = crispr.sprite(
@@ -153,20 +168,6 @@ export abstract class Popup extends entity.CompositeEntity {
 
             this.bodyBackground.width = this.width;
             this.bodyBackground.position.y = -50;
-          }
-
-          if (this.options.minimizeOnClose) {
-            this.minimizedBackground = crispr.sprite(
-              this,
-              "images/popup_background_rounded.png"
-            );
-            this.minimizedBackground.anchor.set(0.5);
-            this.minimizedBackground.position.set(0, -50);
-            this.minimizedBackground.scale.set(1.1);
-            this.minimizedBackground.visible = false;
-            this.minimizedBackground.buttonMode = true;
-            this.minimizedBackground.interactive = true;
-            this._container.addChildAt(this.minimizedBackground, 0);
           }
 
           // closure cross
@@ -484,10 +485,13 @@ export abstract class Popup extends entity.CompositeEntity {
       }
     } else {
       this._container.zIndex = 10;
+
       this.minimizedBackground.visible = false;
-      this.bodyBackground.buttonMode = false;
       this.bodyBackground.interactive = false;
+      this.bodyBackground.buttonMode = false;
       this.bodyBackgroundBis.visible = true;
+
+      // this._entityConfig.container.addChild(this.bodyBackgroundBis)
 
       context.push(
         new tween.Tween({
