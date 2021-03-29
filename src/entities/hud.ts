@@ -30,6 +30,7 @@ export class Gauge extends entity.CompositeEntity {
   private _rings = new PIXI.Container();
   private _text: PIXI.Text;
   private _bar: PIXI.Sprite;
+  //private _wave: PIXI.TilingSprite;
   private _background: PIXI.Sprite;
   private _barBaseWidth: number;
   private _triggered = false;
@@ -63,6 +64,7 @@ export class Gauge extends entity.CompositeEntity {
     this._value = value;
     this._bar.width = this.getBarWidth();
     this._text.text = Math.floor(this._value) + " pts";
+    //if (this._wave) this._wave.x = this.reachedScoreXPosition;
     if (!this._triggered) {
       this._triggered = true;
       this._activateChildEntity(
@@ -94,7 +96,7 @@ export class Gauge extends entity.CompositeEntity {
     return this._bar.x;
   }
 
-  get reachedScorePosition(): number {
+  get reachedScoreXPosition(): number {
     return this.baseXOfBar + this.getBarWidth();
   }
 
@@ -148,6 +150,18 @@ export class Gauge extends entity.CompositeEntity {
       this._bar.position.set(195, 57);
       this._barBaseWidth = this._bar.width;
     }
+
+    // // init wave
+    // {
+    //   this._wave = new PIXI.TilingSprite(
+    //     PIXI.Texture.from("images/hud_wave.png"),
+    //     50,
+    //     this._bar.height
+    //   );
+    //   this._wave.anchor.set(0.5);
+    //   this._wave.position.y = this._bar.y + this._bar.height / 2;
+    //   this._container.addChild(this._wave);
+    // }
 
     // particles
     {
@@ -261,8 +275,12 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   _update(frameInfo: entity.FrameInfo) {
+    // if (this._wave) {
+    //   this._wave.tilePosition.y = Math.cos(frameInfo.playTime / 120);
+    // }
+
     if (this._value < this._maxValue) {
-      const reachedScorePosition = this.reachedScorePosition;
+      const reachedScorePosition = this.reachedScoreXPosition;
       this._rings.children.forEach((ring: Ring) => {
         if (reachedScorePosition >= this.baseXOfBar + ring.base.x) {
           ring.emit("reached");
