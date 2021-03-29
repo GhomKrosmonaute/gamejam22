@@ -176,7 +176,23 @@ export class Menu extends entity.CompositeEntity {
           "0.5": "images/menu_music_range_middle.png",
           "1": "images/menu_music_range_full.png",
         },
-        this.settings.music ? "1" : "0"
+        this.settings.music ? "1" : "0",
+        function (event) {
+          const cursor = event.data.getLocalPosition(this.currentSprite);
+          if (
+            cursor.x + this.currentSprite.width / 2 <
+            this.currentSprite.width * 0.4
+          ) {
+            this.switch("0");
+          } else if (
+            cursor.x + this.currentSprite.width / 2 <
+            this.currentSprite.width * 0.75
+          ) {
+            this.switch("0.5");
+          } else {
+            this.switch("1");
+          }
+        }
       );
       this.musicVolumeSwitcher.container.position.y += 200;
       this.musicVolumeSwitcher.onStateChange((state) => {
@@ -193,7 +209,23 @@ export class Menu extends entity.CompositeEntity {
           "0.5": "images/menu_sound_range_middle.png",
           "1": "images/menu_sound_range_full.png",
         },
-        this.settings.fx ? "1" : "0"
+        this.settings.fx ? "1" : "0",
+        function (event) {
+          const cursor = event.data.getLocalPosition(this.currentSprite);
+          if (
+            cursor.x + this.currentSprite.width / 2 <
+            this.currentSprite.width * 0.4
+          ) {
+            this.switch("0");
+          } else if (
+            cursor.x + this.currentSprite.width / 2 <
+            this.currentSprite.width * 0.75
+          ) {
+            this.switch("0.5");
+          } else {
+            this.switch("1");
+          }
+        }
       );
       this.soundVolumeSwitcher.onStateChange((state) => {
         this._entityConfig.playOptions.setOption("fxOn", state !== "0");
@@ -261,11 +293,18 @@ export class Menu extends entity.CompositeEntity {
 export class SpriteSwitcher<
   States extends Record<string, string> = Record<"on" | "off", string>
 > extends entity.EntityBase {
-  private currentSprite?: PIXI.Sprite;
-  private currentState?: keyof States;
+  public currentSprite?: PIXI.Sprite;
+  public currentState?: keyof States;
   public container = new PIXI.Container();
 
-  constructor(private states: States, private initialState?: keyof States) {
+  constructor(
+    private states: States,
+    private initialState?: keyof States,
+    private stateController?: (
+      this: SpriteSwitcher<States>,
+      event: PIXI.InteractionEvent
+    ) => unknown
+  ) {
     super();
   }
 
@@ -293,7 +332,11 @@ export class SpriteSwitcher<
     this.currentSprite.buttonMode = true;
     this.currentSprite.interactive = true;
     this.currentSprite.anchor.set(0.5);
-    this._once(this.currentSprite, "pointerup", this.next.bind(this));
+    this._once(
+      this.currentSprite,
+      "pointerup",
+      this.stateController?.bind(this) ?? this.next.bind(this)
+    );
     this.container.addChild(this.currentSprite);
     this.emit("newState", stateName);
   }
