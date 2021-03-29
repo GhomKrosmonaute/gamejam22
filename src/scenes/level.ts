@@ -661,11 +661,11 @@ export class Level extends entity.CompositeEntity {
     );
   }
 
-  _update() {
+  _update(frameInfo: entity.FrameInfo) {
     if (this.backgroundLayers) {
       this.backgroundLayers.forEach((layer, i) => {
         layer.position.y =
-          Math.cos(Date.now() / 3000 + i * 1000) * ((i + 1) * 2) * -10;
+          Math.cos(frameInfo.timeSinceStart / 3000 + i * 1000) * ((i + 1) * 2) * -10;
       });
     }
 

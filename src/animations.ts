@@ -447,6 +447,7 @@ export interface FloatingOptions {
   speed: PIXI.Point;
   amplitude: PIXI.Point;
   shift: PIXI.Point;
+  timePast: number;
 }
 
 export interface ShakingOptions {
@@ -466,6 +467,7 @@ export function makeFloatingOptions(
     speed: new PIXI.Point(),
     amplitude: new PIXI.Point(),
     shift: new PIXI.Point(Math.random() * 10, Math.random() * 10),
+    timePast: Date.now(),
     ...(options ?? {}),
   };
 }
@@ -486,11 +488,12 @@ export function floatingPoint({
   speed,
   amplitude,
   shift,
+  timePast,
 }: FloatingOptions): PIXI.Point {
   const target = new PIXI.Point();
   crispr.forAxes((axe) => {
     target[axe] = active[axe]
-      ? floatingValue(anchor[axe], speed[axe], amplitude[axe], shift[axe])
+      ? floatingValue(anchor[axe], speed[axe], amplitude[axe], shift[axe], timePast)
       : anchor[axe];
   });
   return target;
@@ -500,9 +503,10 @@ export function floatingValue(
   anchor = 0,
   speed = 1,
   amplitude = 1,
-  shift = 0
+  shift = 0,
+  timePast = Date.now()
 ): number {
-  const cos = Math.cos(shift + Date.now() * (speed * FLOATING_SPEED));
+  const cos = Math.cos(shift + timePast * (speed * FLOATING_SPEED));
   const add = cos * (amplitude * FLOATING_AMPLITUDE);
   return anchor + add * 200;
 }
