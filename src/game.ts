@@ -83,6 +83,7 @@ const graphicalAssets = [
 
   "images/hud_bonus_background.png",
   "images/hud_action_button.png",
+  "images/hud_action_button_crunch.png",
   "images/hud_action_button_disabled.png",
   "images/hud_missing_scissors.png",
   "images/hud_menu_button.png",

@@ -333,7 +333,11 @@ export class ActionButton extends entity.CompositeEntity {
       this._entityConfig.app.view.height - 150
     );
 
-    this.sprite = crispr.sprite(this, "images/hud_action_button.png");
+    if (this.level.variant === "zen") {
+      this.sprite = crispr.sprite(this, "images/hud_action_button_crunch.png");
+    } else {
+      this.sprite = crispr.sprite(this, "images/hud_action_button.png");
+    }
 
     this.sprite.anchor.set(0.5);
     this.sprite.position.copyFrom(this.disabledSprite.position);
