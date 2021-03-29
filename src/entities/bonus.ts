@@ -185,7 +185,7 @@ export class SwapBonus extends Bonus {
     });
   }
 
-  protected _update() {
+  protected _update(frameInfo: entity.FrameInfo) {
     if (this.isUpdateDisabled) return;
 
     const mouse: PIXI.Point = this.level.cursor;

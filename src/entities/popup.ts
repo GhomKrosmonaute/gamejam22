@@ -197,11 +197,15 @@ export abstract class Popup extends entity.CompositeEntity {
           if (this.options.minimizeOnSetup) {
             this.minimize({ animated: false });
           } else {
-            this._playSound();
-
             this._activateChildEntity(
               new entity.EntitySequence([
                 new entity.ParallelEntity([
+                  new entity.EntitySequence([
+                    new entity.WaitingEntity(0),
+                    new entity.FunctionCallEntity(() => {
+                      this._playSound();
+                    }),
+                  ]),
                   anim.popup(this._container, 700),
                   new tween.Tween({
                     duration: this.options.animationDuration,
@@ -259,7 +263,8 @@ export abstract class Popup extends entity.CompositeEntity {
                   ]),
                 ]),
                 new entity.FunctionCallEntity(() => {
-                  booyah.changeGameState("paused");
+                  // booyah.changeGameState("paused");
+                  this.level.disablingAnimation(this.id, true);
                 }),
               ])
             );
@@ -358,7 +363,9 @@ export abstract class Popup extends entity.CompositeEntity {
   };
 
   close() {
-    booyah.changeGameState("playing");
+    // booyah.changeGameState("playing");
+    this.level.disablingAnimation(this.id, false);
+
     this._activateChildEntity(
       new entity.ParallelEntity([
         anim.sink(this._container, 150, () => {
@@ -382,7 +389,7 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   minimize(options?: { animated?: boolean }) {
-    booyah.changeGameState("playing");
+    // booyah.changeGameState("playing");
 
     const animated = options?.animated ?? true;
 
@@ -390,7 +397,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
     this.level.disablingAnimation(this.id, !this.minimized);
 
-    const minimizedY = 170 * [...Popup.minimized].indexOf(this);
+    const minimizedY = 190 * [...Popup.minimized].indexOf(this);
 
     const context: entity.Entity[] = [];
 
@@ -508,7 +515,8 @@ export abstract class Popup extends entity.CompositeEntity {
           onTeardown: () => {
             this.body.children.forEach((child) => (child.visible = true));
             this.background.visible = true;
-            booyah.changeGameState("paused");
+            // booyah.changeGameState("paused");
+            this.level.disablingAnimation(this.id, true);
           },
         })
       );

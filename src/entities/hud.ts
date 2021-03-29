@@ -254,7 +254,7 @@ export class Gauge extends entity.CompositeEntity {
     this.setValue(0);
   }
 
-  _update() {
+  _update(frameInfo: entity.FrameInfo) {
     if (this._value < this._maxValue) {
       const reachedScorePosition = this.reachedScorePosition;
       this._rings.children.forEach((ring: Ring) => {
@@ -267,9 +267,9 @@ export class Gauge extends entity.CompositeEntity {
     if (this.getBarWidth() > 100) {
       this._particles.visible = true;
 
-      const vector = Math.cos(Date.now() / 120);
-      const invertVector = Math.sin(Date.now() / 80);
-      const vectorFast = Math.cos(Date.now() / 50);
+      const vector = Math.cos(frameInfo.timeSinceStart / 120);
+      const invertVector = Math.sin(frameInfo.timeSinceStart / 80);
+      const vectorFast = Math.cos(frameInfo.timeSinceStart / 50);
 
       this._particles.children.forEach((particle, index) => {
         const even = index % 2 === 0;

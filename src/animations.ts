@@ -288,9 +288,11 @@ export function move(
 export function title(
   container: PIXI.Container,
   text: string,
-  duration = 2500
+  duration = 2500,
+  easingFn: (t: number) => number = easing.easeOutQuint,
+  maxScale = 20
 ): entity.EntitySequence {
-  let pixiText = crispr.makeText(text, {
+  const pixiText = crispr.makeText(text, {
     fontSize: 100,
     fill: 0xffffff,
     stroke: 0x000000,
@@ -305,12 +307,12 @@ export function title(
     }),
     new tween.Tween({
       duration,
-      from: 1,
-      to: 0,
-      easing: easing.easeOutQuint,
+      from: 0,
+      to: maxScale,
+      easing: easingFn,
       onUpdate: (value) => {
-        pixiText.scale.set((1 - value) * 20);
-        pixiText.alpha = value;
+        pixiText.scale.set(value);
+        pixiText.alpha = crispr.proportion(value, 0, maxScale, 1, 0);
       },
     }),
     new entity.FunctionCallEntity(() => {
@@ -445,6 +447,7 @@ export interface FloatingOptions {
   speed: PIXI.Point;
   amplitude: PIXI.Point;
   shift: PIXI.Point;
+  timePast: number;
 }
 
 export interface ShakingOptions {
@@ -464,6 +467,7 @@ export function makeFloatingOptions(
     speed: new PIXI.Point(),
     amplitude: new PIXI.Point(),
     shift: new PIXI.Point(Math.random() * 10, Math.random() * 10),
+    timePast: Date.now(),
     ...(options ?? {}),
   };
 }
@@ -484,11 +488,12 @@ export function floatingPoint({
   speed,
   amplitude,
   shift,
+  timePast,
 }: FloatingOptions): PIXI.Point {
   const target = new PIXI.Point();
   crispr.forAxes((axe) => {
     target[axe] = active[axe]
-      ? floatingValue(anchor[axe], speed[axe], amplitude[axe], shift[axe])
+      ? floatingValue(anchor[axe], speed[axe], amplitude[axe], shift[axe], timePast)
       : anchor[axe];
   });
   return target;
@@ -498,9 +503,10 @@ export function floatingValue(
   anchor = 0,
   speed = 1,
   amplitude = 1,
-  shift = 0
+  shift = 0,
+  timePast = Date.now()
 ): number {
-  const cos = Math.cos(shift + Date.now() * (speed * FLOATING_SPEED));
+  const cos = Math.cos(shift + timePast * (speed * FLOATING_SPEED));
   const add = cos * (amplitude * FLOATING_AMPLITUDE);
   return anchor + add * 200;
 }
@@ -593,7 +599,7 @@ export class VirusSequence extends entity.EntitySequence {
   }
 
   _setup() {
-    this._activateChildEntity(this.v, entity.extendConfig({}));
+    this._activateChildEntity(this.v);
     super._setup();
   }
 }
