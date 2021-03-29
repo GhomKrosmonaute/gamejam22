@@ -85,7 +85,7 @@ export class Virus extends entity.CompositeEntity {
 
     this._entityConfig.container.addChildAt(
       this._container,
-      Math.min(14, this._entityConfig.container.children.length - 1)
+      Math.min(15, this._entityConfig.container.children.length - 1)
     );
   }
 
