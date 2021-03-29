@@ -352,7 +352,7 @@ export abstract class Popup extends entity.CompositeEntity {
       Date.now() < this._setupAt + this.options.coolDown
     )
       return;
-    booyah.changeGameState("playing");
+
     if (this.options.minimizeOnClose) this.minimize();
     else this.close();
   };
@@ -382,6 +382,8 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   minimize(options?: { animated?: boolean }) {
+    booyah.changeGameState("playing");
+
     const animated = options?.animated ?? true;
 
     this.minimized = !this.minimized;
@@ -506,6 +508,7 @@ export abstract class Popup extends entity.CompositeEntity {
           onTeardown: () => {
             this.body.children.forEach((child) => (child.visible = true));
             this.background.visible = true;
+            booyah.changeGameState("paused");
           },
         })
       );
