@@ -403,6 +403,10 @@ export abstract class Popup extends entity.CompositeEntity {
     const context: entity.Entity[] = [];
 
     if (this.minimized) {
+      Popup.minimized.forEach((popup) => {
+        popup._container.visible = true;
+      });
+
       this._container.zIndex = 1;
 
       this.body.children.forEach((child) => (child.visible = false));
@@ -491,7 +495,9 @@ export abstract class Popup extends entity.CompositeEntity {
       this.bodyBackground.buttonMode = false;
       this.bodyBackgroundBis.visible = true;
 
-      // this._entityConfig.container.addChild(this.bodyBackgroundBis)
+      Popup.minimized.forEach((popup) => {
+        if (popup.minimized) popup._container.visible = false;
+      });
 
       context.push(
         new tween.Tween({
