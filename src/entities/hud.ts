@@ -216,8 +216,14 @@ export class Gauge extends entity.CompositeEntity {
       this._rings.addChild(ring);
     }
 
-    this._text = crispr.makeText("", { fill: "#ffffff", fontSize: 40 });
-    this._text.position.set(115, 75);
+    this._text = crispr.makeText("", {
+      fill: "#ffda6b",
+      fontSize: 50,
+      fontStyle: "italic bold",
+      fontFamily: "Alien League",
+    });
+
+    this._text.position.set(100, 75);
 
     this._container.addChild(this._background);
     this._container.addChild(this._bar);
@@ -267,9 +273,9 @@ export class Gauge extends entity.CompositeEntity {
     if (this.getBarWidth() > 100) {
       this._particles.visible = true;
 
-      const vector = Math.cos(frameInfo.timeSinceStart / 120);
-      const invertVector = Math.sin(frameInfo.timeSinceStart / 80);
-      const vectorFast = Math.cos(frameInfo.timeSinceStart / 50);
+      const vector = Math.cos(frameInfo.playTime / 120);
+      const invertVector = Math.sin(frameInfo.playTime / 80);
+      const vectorFast = Math.cos(frameInfo.playTime / 50);
 
       this._particles.children.forEach((particle, index) => {
         const even = index % 2 === 0;
@@ -473,9 +479,12 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
     this._count = 0;
     this.text = crispr.makeText("", {
       align: "right",
-      fontSize: 100,
-      stroke: 0xffffff,
-      strokeThickness: 10,
+      fontSize: 80,
+      stroke: "#000000",
+      strokeThickness: 5,
+      fill: "#ffda6b",
+      fontStyle: "bold italic",
+      fontFamily: "Alien League",
     });
     this.resetText();
     this.updateText();
@@ -522,7 +531,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
           anim.tweenShaking(this.text, 600, 10, 0),
           new entity.EntitySequence([
             new tween.Tween({
-              from: 0xffffff,
+              from: 0xffda6b,
               to: 0xff0000,
               duration: 300,
               onUpdate: (value) => (this.text.tint = value),
@@ -531,7 +540,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
             }),
             new tween.Tween({
               from: 0xff0000,
-              to: 0xffffff,
+              to: 0xffda6b,
               duration: 300,
               onUpdate: (value) => (this.text.tint = value),
               interpolate: tween.interpolation.color,
