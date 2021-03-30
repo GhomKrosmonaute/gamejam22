@@ -265,7 +265,6 @@ export abstract class Popup extends entity.CompositeEntity {
                 ]),
                 new entity.FunctionCallEntity(() => {
                   // booyah.changeGameState("paused");
-                  this.level.disablingAnimation(this.id, true);
                 }),
               ])
             );
