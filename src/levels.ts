@@ -58,7 +58,7 @@ export const levels = {
                   v.rounded = false;
                   v.angle = 0;
                   v.position = { x: crisp.width / 2, y: crisp.height * 2 };
-                  v.filters = [new OutlineFilter(20, 0x000000)];
+                  v.filters = [new OutlineFilter(20, 0x000000) as any];
                 }),
               (v) => v.stingIn(),
               (v) =>

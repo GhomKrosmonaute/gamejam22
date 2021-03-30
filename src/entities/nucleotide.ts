@@ -52,9 +52,7 @@ export class Nucleotide extends entity.CompositeEntity {
   private _spriteEntity:
     | entity.AnimatedSpriteEntity
     | entity.DisplayObjectEntity<PIXI.Sprite> = null;
-  private _infectionSpriteEntity: entity.DisplayObjectEntity<
-    PIXI.Sprite
-  > = null;
+  private _infectionSpriteEntity: entity.DisplayObjectEntity<PIXI.Sprite> = null;
   private _highlightSprite: PIXI.Sprite = null;
   private _pathArrowEntity: entity.AnimatedSpriteEntity;
   private _radius: number;
