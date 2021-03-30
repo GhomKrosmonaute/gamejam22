@@ -187,7 +187,10 @@ export abstract class Popup extends entity.CompositeEntity {
             );
             this.logo.anchor.set(0.5);
             this.logo.scale.set(this.options.logoScale);
-            this.logo.position.set(this.center.x, 50);
+            this.logo.position.set(
+              this.center.x,
+              50 + (this.logo.height * this.options.logoScale) / 2
+            );
             this.body.addChild(this.logo);
           }
 
@@ -538,7 +541,10 @@ export abstract class Popup extends entity.CompositeEntity {
             duration: this.options.animationDuration,
             from: this.logo.position.clone(),
             easing: easing.easeInOutQuad,
-            to: new PIXI.Point(this.options.width / 2, 50),
+            to: new PIXI.Point(
+              this.options.width / 2,
+              50 + (this.logo.height * this.options.logoScale) / 2
+            ),
             interpolate: tween.interpolation.point,
           }),
           new tween.Tween({

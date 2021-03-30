@@ -142,10 +142,7 @@ const graphicalAssets = [
   "images/big_bob_dead.json",
 ];
 
-const fontAssets = [
-  "Alien League",
-  "Geosans Light",
-];
+const fontAssets = ["Alien League", "Geosans Light"];
 
 const fxAssets = [
   "notification",
