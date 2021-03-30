@@ -1,5 +1,4 @@
 import * as PIXI from "pixi.js";
-import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
 
@@ -213,6 +212,7 @@ export class Path extends entity.CompositeEntity {
         },
         onStep: (item, i, src, finish) => {
           this._playExplosion();
+          this.level.screenShake(30, 1.05, 50);
 
           const score = item.infected ? 15 : 10;
           const fill = item.infected ? item.fullColorName : "#ffeccc";
@@ -288,7 +288,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   private _playExplosion(): void {
-    const r = _.random(1, 3);
+    const r = 1 + Math.floor(Math.random() * 3);
     this._entityConfig.fxMachine.play(`explode_${r}`);
   }
 }

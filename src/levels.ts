@@ -61,6 +61,10 @@ export const levels = {
                   v.filters = [new OutlineFilter(20, 0x000000) as any];
                 }),
               (v) => v.stingIn(),
+              () =>
+                new entity.FunctionCallEntity(() => {
+                  context.screenShake(100, 1.3, 1500);
+                }),
               (v) =>
                 new tween.Tween({
                   duration: 500,
