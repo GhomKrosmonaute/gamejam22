@@ -212,7 +212,7 @@ export class Path extends entity.CompositeEntity {
         },
         onStep: (item, i, src, finish) => {
           this._playExplosion();
-          this.level.screenShake(30, 1.05, 50);
+          this.level.screenShake(10, 1.02, 50);
 
           const score = item.infected ? 15 : 10;
           const fill = item.infected ? item.fullColorName : "#ffeccc";

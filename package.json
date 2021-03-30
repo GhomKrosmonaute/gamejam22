@@ -4,7 +4,6 @@
   "description": "Just another Booyah game",
   "main": "",
   "dependencies": {
-    "underscore": "^1.12.1",
     "booyah": "play-curious/booyah#crispr-crunch",
     "csv-parse": "^4.4.1",
     "del": "^4.1.0",
@@ -20,7 +19,8 @@
     "gulp-useref": "^3.1.5",
     "pixi-filters": "^4.0.0",
     "pixi.js": "5.3.9",
-    "pump": "^3.0.0"
+    "pump": "^3.0.0",
+    "underscore": "~1.10"
   },
   "scripts": {
     "format": "prettier --write ./src",
