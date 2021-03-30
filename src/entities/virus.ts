@@ -5,7 +5,7 @@ import * as util from "booyah/src/util";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 
 import * as level from "../scenes/level";
 
@@ -45,8 +45,8 @@ export class Virus extends entity.CompositeEntity {
 
   get randomAngle(): number {
     return this.angle < 0
-      ? crisprUtil.random(-2, rightEdge * 0.5)
-      : crisprUtil.random(2, leftEdge * 0.5);
+      ? crispr.random(-2, rightEdge * 0.5)
+      : crispr.random(2, leftEdge * 0.5);
   }
 
   get angle(): number {
@@ -54,7 +54,7 @@ export class Virus extends entity.CompositeEntity {
   }
 
   set angle(value) {
-    crisprUtil.positionAlongMembrane(this._container, value);
+    crispr.positionAlongMembrane(this._container, value);
     this.refreshRoundedPosition();
   }
 
@@ -67,14 +67,14 @@ export class Virus extends entity.CompositeEntity {
       this._container.position.copyFrom(point);
       this._position.copyFrom(point);
     } else {
-      crisprUtil.positionAlongMembrane(this._container, this.angle);
+      crispr.positionAlongMembrane(this._container, this.angle);
       this._position.copyFrom(point);
       this.refreshRoundedPosition();
     }
   }
 
   public angleTooClose(angle: number): boolean {
-    return crisprUtil.dist(angle, this.angle) < 10;
+    return crispr.dist(angle, this.angle) < 10;
   }
 
   protected _setup() {
@@ -83,7 +83,10 @@ export class Virus extends entity.CompositeEntity {
       this.angle = this.randomStartAngle;
     }
 
-    this._entityConfig.container.addChild(this._container);
+    this._entityConfig.container.addChildAt(
+      this._container,
+      Math.min(15, this._entityConfig.container.children.length - 1)
+    );
   }
 
   protected _teardown() {
@@ -152,9 +155,9 @@ export class Virus extends entity.CompositeEntity {
         ? this.moveToAngle(this.angle < 0 ? rightEdge : leftEdge)
         : this.moveToPosition({
             x:
-              this._position.x < crisprUtil.width / 2
-                ? crisprUtil.width * -0.5
-                : crisprUtil.width * 1.5,
+              this._position.x < crispr.width / 2
+                ? crispr.width * -0.5
+                : crispr.width * 1.5,
             y: this._position.y,
           }),
       new entity.FunctionCallEntity(() => {

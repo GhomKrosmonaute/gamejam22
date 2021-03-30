@@ -9,6 +9,14 @@ import * as level from "../scenes/level";
 
 import * as anim from "../animations";
 
+export type PathState =
+  | "no match"
+  | "missing scissors"
+  | true
+  | "crunch"
+  | "matching"
+  | "SKIP";
+
 /**
  * Represent the user path to validate sequences
  * Emits:
@@ -218,6 +226,7 @@ export class Path extends entity.CompositeEntity {
             anim.down(
               item.infected ? item.infectionSprite : item.sprite,
               500,
+              1,
               () => {
                 item.once("stateChanged", finish);
                 item.state = "missing";

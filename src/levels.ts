@@ -1,4 +1,5 @@
 import * as PIXI from "pixi.js";
+
 import { OutlineFilter } from "@pixi/filter-outline";
 
 import * as entity from "booyah/src/entity";
@@ -6,15 +7,14 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 import * as popup from "./entities/popup";
 import * as level from "./scenes/level";
-import * as crisp from "./crisprUtil";
+import * as crisp from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
-  "MV Mod": () =>
-    new level.Level("MV Mod", (context) => ({
+  Boss: () =>
+    new level.Level("Boss", (context) => ({
       virus: "big",
       variant: "fall",
-
       dropSpeed: 1,
       gridShape: "medium",
       sequenceLength: 7,
@@ -22,9 +22,24 @@ export const levels = {
       maxScore: 1000,
       scissorCount: 3,
       gaugeRings: [
-        (context) => (context.options.dropSpeed = 1.2),
-        (context) => context.bonusesManager.add(context.timeBonus),
-        (context) => (context.options.dropSpeed = 1.3),
+        (context) => {
+          context.options.dropSpeed = 1.2;
+          context.activate(
+            anim.title(context.container, "Speed 120%", 2000, (t) => t, 2)
+          );
+        },
+        (context) =>
+          context.bonusesManager.add(
+            context.timeBonus,
+            1,
+            new PIXI.Point(500, -2000)
+          ),
+        (context) => {
+          context.options.dropSpeed = 1.3;
+          context.activate(
+            anim.title(context.container, "Speed 130%", 2000, (t) => t, 2)
+          );
+        },
       ],
       hooks: [
         new level.Hook({
@@ -43,7 +58,7 @@ export const levels = {
                   v.rounded = false;
                   v.angle = 0;
                   v.position = { x: crisp.width / 2, y: crisp.height * 2 };
-                  v.filters = [new OutlineFilter(20, 0x000000)];
+                  v.filters = [new OutlineFilter(20, 0x000000) as any];
                 }),
               (v) => v.stingIn(),
               (v) =>
@@ -120,20 +135,29 @@ export const levels = {
       ],
     }),
 
-  "Time challenge": () =>
-    new level.Level("Time challenge", (context) => ({
+  Chrono: () =>
+    new level.Level("Chrono", (context) => ({
       variant: "fall",
       gridShape: "medium",
       forceMatching: true,
       scissorCount: 3,
       maxScore: 400,
       gaugeRings: [
-        (context) => context.bonusesManager.add(context.swapBonus),
+        (context) =>
+          context.bonusesManager.add(
+            context.swapBonus,
+            1,
+            new PIXI.Point(200, -2000)
+          ),
         (context, ring) =>
           context.activate(
             new entity.EntitySequence([
               new entity.FunctionCallEntity(() => {
-                context.bonusesManager.add(context.timeBonus);
+                context.bonusesManager.add(
+                  context.timeBonus,
+                  1,
+                  new PIXI.Point(500, -2000)
+                );
                 context.timeBonus.highlight = true;
               }),
               new popup.TutorialPopup({
@@ -145,7 +169,7 @@ export const levels = {
                   id: "popup ring 1",
                   from: ring.position,
                   coolDown: 2000,
-                  logo: "🥶",
+                  logo: "images/icon_freeze.png",
                 },
               }),
             ])
@@ -173,7 +197,7 @@ export const levels = {
                   "Crunch the sequences before they hit the grid!\n\nReach 400 points to continue",
                 popupOptions: {
                   id: "intro popup",
-                  logo: "😱",
+                  logo: "images/icon_timed.png",
                   minimizeOnClose: false,
                   coolDown: 2000,
                 },
@@ -204,10 +228,10 @@ export const levels = {
       ],
     })),
 
-  "Turn by turn": () =>
-    new level.Level("Turn by turn", (context) => ({
+  Classic: () =>
+    new level.Level("Classic", (context) => ({
       variant: "turn",
-      maxScore: 300,
+      maxScore: 400,
       minStarNeeded: 1,
       forceMatching: true,
       gridShape: "medium",
@@ -217,17 +241,22 @@ export const levels = {
           context.activate(
             new entity.EntitySequence([
               new entity.FunctionCallEntity(() => {
-                context.bonusesManager.add(context.swapBonus);
+                context.bonusesManager.add(
+                  context.swapBonus,
+                  1,
+                  new PIXI.Point(500, -2000)
+                );
                 context.swapBonus.highlight = true;
               }),
               new popup.TutorialPopup({
-                title: "Swap",
-                content: "Click the swap bonus to switch two nucleotides",
-                image: "images/bonus_swap.png",
+                title: "The Swap bonus",
+                content: "Can swap two nucleotides",
                 popupOptions: {
                   id: "popup ring 1",
                   from: ring.position,
                   coolDown: 2000,
+                  logo: "images/bonus_swap.png",
+                  logoScale: 1.3,
                 },
               }),
             ])
@@ -379,9 +408,8 @@ export const levels = {
                         content:
                           "To destroy the virus DNA, you’ll need to include the CRISPR scissors in your sequence.\n\n" +
                           "The scissors have to be somewhere in the middle of the sequence,  not at the beginning or end.",
-                        image: "images/scissors.json",
                         popupOptions: {
-                          logo: "✂️",
+                          logo: "images/icon_scissors.png",
                           coolDown: 2000,
                         },
                       }),
@@ -416,6 +444,7 @@ export const levels = {
                                 "Sometimes you’ll get stuck, and you can’t make a matching sequence.\n\nIn that case, press the skip button.",
                               popupOptions: {
                                 coolDown: 2000,
+                                logo: "images/hud_action_button.png",
                               },
                             }),
                           }),
@@ -437,10 +466,9 @@ export const levels = {
                                     title: "Infection",
                                     content:
                                       "When you skip, parts of your grid will get infected.\n\nIf the entire grid gets infected, it’s game over.",
-                                    image: "images/infection_red.png",
                                     popupOptions: {
                                       id: "popup step 4.1",
-                                      logo: "🦠",
+                                      logo: "images/icon_infection.png",
                                       coolDown: 2000,
                                     },
                                   })
@@ -463,7 +491,6 @@ export const levels = {
                               popupOptions: {
                                 minimizeOnClose: false,
                                 id: "popup step 4.2",
-                                logo: "💉",
                                 coolDown: 2000,
                               },
                             }),

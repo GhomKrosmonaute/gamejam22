@@ -3,7 +3,7 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 import * as anim from "../animations";
 
 import * as nucleotide from "./nucleotide";
@@ -56,8 +56,8 @@ export class Grid extends entity.CompositeEntity {
   public container: PIXI.Graphics;
   public allNucleotides: nucleotide.Nucleotide[] = [];
   public nucleotideContainer: PIXI.Container;
-  public x = crisprUtil.width * 0.09;
-  public y = crisprUtil.height * 0.4;
+  public x = crispr.width * 0.09;
+  public y = crispr.height * 0.4;
   public isPointerDown = false;
   public cursor = new PIXI.Point();
   public lastHovered: nucleotide.Nucleotide | null;
@@ -70,7 +70,7 @@ export class Grid extends entity.CompositeEntity {
     this.container = new PIXI.Graphics();
     this.container
       .beginFill(0x000000, 0.001)
-      .drawRect(0, 0, crisprUtil.width, crisprUtil.height)
+      .drawRect(0, 0, crispr.width, crispr.height)
       .endFill();
     this.container.interactive = true;
 
@@ -79,7 +79,7 @@ export class Grid extends entity.CompositeEntity {
     this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointermove", this._onPointerMove);
 
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       this._on(this, "drag", (n: nucleotide.Nucleotide) => {
         console.log(this.getGridPositionOf(n));
       });
@@ -219,7 +219,7 @@ export class Grid extends entity.CompositeEntity {
 
     this.generateShape();
 
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("--> DONE", "grid.reset()");
     }
   }
@@ -232,7 +232,7 @@ export class Grid extends entity.CompositeEntity {
 
     const bonus = this.level.options.disableBonuses
       ? null
-      : this.level.bonusesManager.selected;
+      : this.level.bonusesManager?.selected;
 
     if (!bonus || bonus.name === "time") {
       hovered = this.getHovered();
@@ -302,7 +302,7 @@ export class Grid extends entity.CompositeEntity {
       throw new Error("bad length request");
     }
 
-    let current = crisprUtil.random(normals);
+    let current = crispr.random(normals);
 
     while (colorNames.length < length) {
       alreadyPassed.push(current);
@@ -318,7 +318,7 @@ export class Grid extends entity.CompositeEntity {
         return null;
       }
 
-      current = crisprUtil.random(neighbors);
+      current = crispr.random(neighbors);
     }
 
     if (
@@ -401,7 +401,7 @@ export class Grid extends entity.CompositeEntity {
     radiusRatio: number = 1
   ): false | number {
     if (!this.cursor) return false;
-    const dist = crisprUtil.dist(
+    const dist = crispr.dist(
       n.position.x + this.x,
       n.position.y + this.y,
       this.cursor.x,

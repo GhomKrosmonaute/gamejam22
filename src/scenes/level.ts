@@ -4,7 +4,7 @@ import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as util from "booyah/src/util";
 
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 import * as levels from "../levels";
 import * as anim from "../animations";
 
@@ -18,9 +18,29 @@ import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
+import * as menu from "../entities/menu";
 import * as hud from "../entities/hud";
 
-export type LevelVariant = "turn" | "fall" | "zen";
+export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
+
+export interface ILevelVariant {
+  onActionButtonPressed?: (level: Level) => entity.Entity;
+  onSequenceManagerCrunched?: (
+    manager: sequence.SequenceManager
+  ) => entity.Entity;
+  onSequenceManagerMatchPath?: (
+    level: Level,
+    path: path.Path
+  ) => "no match" | "missing scissors" | true;
+  sequenceCountLimit?: crispr.Scrapper<
+    number,
+    [level: Level, manager: sequence.SequenceManager]
+  >;
+  sequenceLength?: crispr.Scrapper<
+    number,
+    [level: Level, sequence: sequence.SequenceManager]
+  >;
+}
 
 export const baseDropSpeed = 0.001;
 
@@ -52,6 +72,7 @@ export interface LevelOptions {
   sequenceLength: number | null;
   scissorCount: number;
   nucleotideRadius: number;
+  sequenceRounded: boolean;
   sequenceNucleotideRadius: number;
   gridShape: grid.GridShape;
   presetScissors: grid.GridPreset | null;
@@ -93,8 +114,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   sequenceLength: null,
   sequences: null,
   scissorCount: 6,
-  nucleotideRadius: crisprUtil.width / 13.44,
-  sequenceNucleotideRadius: crisprUtil.width * 0.04,
+  nucleotideRadius: crispr.width / 13.44,
+  sequenceNucleotideRadius: crispr.width * 0.04,
+  sequenceRounded: false,
   gridShape: "full",
   forceMatching: false,
   hooks: [],
@@ -175,13 +197,13 @@ export class Hook<
       this.options.event,
       this.listener.bind(this)
     );
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("hook setup:", this.options.id);
     }
   }
 
   protected _teardown() {
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("hook teardown:", this.options.id);
     }
   }
@@ -201,7 +223,7 @@ export class Hook<
       const delay = this.options.delay ?? 0;
 
       if (this.options.reset) {
-        if (crisprUtil.debug) {
+        if (crispr.debug) {
           console.log("hook reset:", this.options.id);
         }
 
@@ -237,7 +259,7 @@ export class Hook<
           ])
         );
       } else if (this.options.entity) {
-        if (crisprUtil.debug) {
+        if (crispr.debug) {
           console.log("hook activate:", this.options.id, this.options.entity);
         }
 
@@ -254,7 +276,7 @@ export class Hook<
           ])
         );
       } else {
-        if (crisprUtil.debug) {
+        if (crispr.debug) {
           console.error("hook called but not triggered:", this.options.id);
         }
       }
@@ -274,14 +296,16 @@ export class Level extends entity.CompositeEntity {
   public triggeredHooks: Set<string> = new Set();
   public fallingStopped = false;
   public container = new PIXI.Container();
+  public backgroundLayers: PIXI.Sprite[];
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
-  public goButton: hud.GoButton;
+  public goButton: hud.ActionButton;
   public zenMovesIndicator: hud.ZenMovesIndicator;
+  public menu: menu.Menu;
 
   // game
   public score: number;
@@ -289,6 +313,7 @@ export class Level extends entity.CompositeEntity {
   public someVirusHasEscaped = false;
   public crunchCount = 0;
   public failed = false;
+  public finished = false;
   public sequenceWasCrunched = false;
   public scissorsWasIncludes = false;
   public oneShotLongSequence = false;
@@ -317,6 +342,10 @@ export class Level extends entity.CompositeEntity {
 
     // @ts-ignore
     window.level = this;
+  }
+
+  get variant(): LevelVariant {
+    return this.options.variant;
   }
 
   activate(entity: entity.Entity) {
@@ -362,8 +391,22 @@ export class Level extends entity.CompositeEntity {
     return this.grid.cursor;
   }
 
+  private _initMenu() {
+    this.menu = new menu.Menu();
+    this._activateChildEntity(
+      this.menu,
+      entity.extendConfig({
+        container: this._entityConfig.container,
+      })
+    );
+  }
+
+  private _disableMenu() {
+    this._deactivateChildEntity(this.menu);
+  }
+
   private _initHooks() {
-    if (crisprUtil.debug)
+    if (crispr.debug)
       console.log(
         "hooks to init",
         this.options.hooks.map((h) => h.options.id)
@@ -374,27 +417,33 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initBackground() {
-    const background = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/background.jpg"].texture
-    );
-    const particles = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/particles_background.png"
-      ].texture
-    );
-    this.container.addChild(background);
-    this.container.addChild(particles);
+    this.backgroundLayers = [];
+    [
+      "background.png",
+      "background_layer_1.png",
+      "background_layer_2.png",
+      //"background_layer_3-eclaircir.png",
+      //"background_layer_4-lumiere_tamisee.png",
+      "background_cell.png",
+      "particles_background.png",
+    ].forEach((filename) => {
+      const sprite = crispr.sprite(this, "images/" + filename);
+
+      if (filename.includes("background_layer"))
+        this.backgroundLayers.push(sprite);
+
+      if (filename.includes("3")) sprite.blendMode = PIXI.BLEND_MODES.LIGHTEN;
+
+      if (filename.includes("4"))
+        sprite.blendMode = PIXI.BLEND_MODES.SOFT_LIGHT;
+
+      this.container.addChild(sprite);
+    });
   }
 
   private _initForeground() {
-    const particles = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/particles_foreground.png"
-      ].texture
-    );
-    const membrane = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/membrane.png"].texture
-    );
+    const particles = crispr.sprite(this, "images/particles_foreground.png");
+    const membrane = crispr.sprite(this, "images/membrane.png");
     membrane.position.set(0, 300);
     this.container.addChild(particles);
     this.container.addChild(membrane);
@@ -423,7 +472,7 @@ export class Level extends entity.CompositeEntity {
   private _initButton() {
     if (this.options.disableButton) return;
 
-    this.goButton = new hud.GoButton();
+    this.goButton = new hud.ActionButton();
     this._activateChildEntity(this.goButton, this.config);
   }
 
@@ -593,6 +642,7 @@ export class Level extends entity.CompositeEntity {
     this._initBonuses();
     this._initButton();
     this._initGauge();
+    this._initMenu();
 
     this._activateChildEntity(
       new entity.EntitySequence([
@@ -611,7 +661,14 @@ export class Level extends entity.CompositeEntity {
     );
   }
 
-  _update() {
+  _update(frameInfo: entity.FrameInfo) {
+    if (this.backgroundLayers) {
+      this.backgroundLayers.forEach((layer, i) => {
+        layer.position.y =
+          Math.cos(frameInfo.playTime / 3000 + i * 1000) * ((i + 1) * 2) * -10;
+      });
+    }
+
     if (this.failed) return;
     if (!this.sequenceManager || !this.sequenceManager.isSetup) return;
     if (this.options.variant !== "fall") return;
@@ -714,7 +771,7 @@ export class Level extends entity.CompositeEntity {
 
     // Hooks
     {
-      if (crisprUtil.debug) {
+      if (crispr.debug) {
         console.log(
           "hooks to deactivate",
           this.options.hooks.map((h) => h.options.id)
@@ -729,12 +786,18 @@ export class Level extends entity.CompositeEntity {
       this._initHooks();
     }
 
+    // Menu
+    {
+      this._disableMenu();
+      this._initMenu();
+    }
+
     this.refresh();
 
     this.emitLevelEvent("init");
     this.isInit = true;
 
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("--> DONE", "level.reset()");
     }
   }
@@ -742,7 +805,7 @@ export class Level extends entity.CompositeEntity {
   disablingAnimation(name: string, state: boolean) {
     const oldLength = this.disablingAnimations.size;
     this.disablingAnimations[state ? "add" : "delete"](name);
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       const newLength = this.disablingAnimations.size;
       if (oldLength !== newLength) {
         console.log("updated disabling animations:", newLength, [
@@ -757,7 +820,7 @@ export class Level extends entity.CompositeEntity {
     }
   }
 
-  removeHalfScore(): entity.Entity {
+  removeHalfScore(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.ParallelEntity([
         new tween.Tween({
@@ -788,7 +851,10 @@ export class Level extends entity.CompositeEntity {
   }
 
   gameOverByFail() {
+    if (this.finished || this.failed) return;
+
     this.failed = true;
+
     if (this.options.retryOnFail) {
       this._activateChildEntity(new popup.FailedLevelPopup(), this.config);
     } else {
@@ -824,8 +890,8 @@ export class Level extends entity.CompositeEntity {
     };
   }
 
-  exit() {
-    this.minimap.saveResults(this);
+  exit(save: boolean = false) {
+    if (save) this.minimap.saveResults(this);
     this._transition = entity.makeTransition();
   }
 
@@ -858,7 +924,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   get isDisablingAnimationInProgress(): boolean {
-    return this.disablingAnimations.size > 0;
+    return this.disablingAnimations.size > 0 || this.finished || this.failed;
   }
 
   public checkGameOverByInfection(): boolean {
@@ -921,7 +987,7 @@ export class Level extends entity.CompositeEntity {
     return new entity.EntitySequence(context);
   }
 
-  public setGoButtonText(text: string) {
+  public setGoButtonText(text: path.PathState) {
     if (!this.options.disableButton) this.goButton.setText(text);
   }
 
@@ -929,8 +995,8 @@ export class Level extends entity.CompositeEntity {
     if (this.path.items.length > 0) {
       const match = this.sequenceManager.matchesSequence(this.path);
       if (match === true) {
-        if (this.options.variant === "zen") this.setGoButtonText("CRUNCH");
-        else this.setGoButtonText("MATCH");
+        if (this.options.variant === "zen") this.setGoButtonText("crunch");
+        else this.setGoButtonText("matching");
       } else {
         this.setGoButtonText(match);
       }

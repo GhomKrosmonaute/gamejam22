@@ -8,9 +8,13 @@ import * as level from "./scenes/level";
 export const width = 1080;
 export const height = 1920;
 
-const debugParam = new URL(window.location.href).searchParams.get("debug");
-export const debug = debugParam
-  ? !/^(?:false|0|null)$/i.test(debugParam)
+const searchParams = new URL(window.location.href).searchParams;
+const _hasDebug = searchParams.has("debug");
+const _debugValue = searchParams.get("debug");
+export const debug = _hasDebug
+  ? _debugValue === ""
+    ? true
+    : !/^(?:false|0|null)$/i.test(_debugValue)
   : false;
 
 export function dist(a: number, b: number): number;
@@ -127,7 +131,7 @@ export function positionAlongMembrane(
 
 export function makeText(text: string = "", options?: Partial<PIXI.TextStyle>) {
   const defaultConfig = {
-    fontFamily: "Cardenio Modern Bold",
+    fontFamily: "Geosans Light",
     fontSize: 80,
     align: "center",
   };
@@ -163,4 +167,35 @@ export function leveled<T extends Function>(
     },
   });
   return true;
+}
+
+export function sprite(ctx: entity.EntityBase, path: string): PIXI.Sprite {
+  return new PIXI.Sprite(ctx.entityConfig.app.loader.resources[path].texture);
+}
+
+/**
+ * property or property accessor callback
+ */
+export type Scrapper<T extends any, O extends any[] = []> =
+  | T
+  | ((...params: O) => T);
+export function scrap<T extends any, O extends any[] = []>(
+  scrapper: Scrapper<T, O>,
+  ...params: O
+): T {
+  return typeof scrapper === "function"
+    ? scrapper.call(this, ...params)
+    : scrapper;
+}
+
+/**
+ * resolve range value
+ */
+export type RangeValue = number | [start: number, stop: number] | number[];
+export function resolveRange(range: RangeValue): number {
+  return typeof range === "number"
+    ? range
+    : range.length === 2
+    ? Math.floor(random(...(range as [number, number])))
+    : random(range);
 }

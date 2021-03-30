@@ -9,16 +9,18 @@ import * as levels from "../levels";
 import * as level from "./level";
 
 import * as popup from "../entities/popup";
+import * as menu from "../entities/menu";
 
 import * as anim from "../animations";
-import * as crisprUtil from "../crisprUtil";
+import * as crispr from "../crispr";
 
 export class Minimap extends entity.CompositeEntity {
+  private menu: menu.Menu;
   private background: PIXI.Sprite;
   private container: PIXI.Container;
   private buttons: PIXI.Container;
-  private particles: PIXI.Sprite;
-  private particlesBis: PIXI.Sprite;
+  private layer1: PIXI.Sprite;
+  private layer2: PIXI.Sprite;
   private links: PIXI.Graphics;
   private scrollBox: scroll.Scrollbox;
 
@@ -29,77 +31,72 @@ export class Minimap extends entity.CompositeEntity {
     this.container = new PIXI.Container();
     this.buttons = new PIXI.Container();
 
-    this.background = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/cellule_background.png"
-      ].texture
-    );
-    this.background.angle = -90;
-    this.background.anchor.set(1, 0);
-    this.background.width = crisprUtil.height;
-    this.background.height = crisprUtil.width;
+    this.menu = new menu.Menu();
+
+    this.background = crispr.sprite(this, "images/minimap_background.png");
     this.container.addChild(this.background);
 
-    this.particles = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/cellule_2.png"].texture
-    );
+    this.layer1 = crispr.sprite(this, "images/minimap_layer_1.png");
+    this.layer2 = crispr.sprite(this, "images/minimap_layer_2.png");
 
-    this.particlesBis = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources["images/cellule_1.png"].texture
-    );
+    // {
+    //   const options = anim.makeFloatingOptions({
+    //     active: { x: true, y: true },
+    //     amplitude: new PIXI.Point(0.5, 0.5),
+    //     speed: new PIXI.Point(Math.random(), Math.random()),
+    //   });
+    //   const shaking = new anim.ShakesManager(this.layer1);
+    //   shaking.setFloat("float", options);
+    //   this._activateChildEntity(shaking);
+    // }
+    // {
+    //   const options = anim.makeFloatingOptions({
+    //     active: { x: true, y: true },
+    //     amplitude: new PIXI.Point(2, 2),
+    //     speed: new PIXI.Point(Math.random(), Math.random()),
+    //   });
+    //   const shaking = new anim.ShakesManager(this.layer2);
+    //   shaking.setFloat("float", options);
+    //   this._activateChildEntity(shaking);
+    // }
 
-    {
-      const options = anim.makeFloatingOptions({
-        active: { x: true, y: true },
-        amplitude: new PIXI.Point(0.5, 0.5),
-        speed: new PIXI.Point(Math.random(), Math.random()),
-      });
-      const shaking = new anim.ShakesManager(this.particles);
-      shaking.setFloat("float", options);
-      this._activateChildEntity(shaking);
-    }
-    {
-      const options = anim.makeFloatingOptions({
-        active: { x: true, y: true },
-        amplitude: new PIXI.Point(2, 2),
-        speed: new PIXI.Point(Math.random(), Math.random()),
-      });
-      const shaking = new anim.ShakesManager(this.particlesBis);
-      shaking.setFloat("float", options);
-      this._activateChildEntity(shaking);
-    }
-
-    this.container.addChild(this.particles);
-    this.container.addChild(this.particlesBis);
+    this.container.addChild(this.layer1);
+    this.container.addChild(this.layer2);
     this.container.addChild(this.links);
 
     for (const levelName in levels.levels) {
+      const index = Object.keys(levels.levels).indexOf(levelName);
+
       // make a button
       const position = new PIXI.Point(
-        crisprUtil.approximate(crisprUtil.width * 0.5, 50),
-        crisprUtil.proportion(
+        crispr.approximate(
+          crispr.width * 0.5 + (index % 2 === 0 ? -100 : 100),
+          50
+        ),
+        crispr.proportion(
           levels.levelNames.indexOf(levelName),
           -0.5,
           4 - 0.5,
           200,
-          crisprUtil.height - 200
+          crispr.height - 200
         )
       );
 
-      const levelSprite = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources["images/cellule.png"].texture
-      );
+      const levelSprite = crispr.sprite(this, "images/minimap_level.png");
       levelSprite.anchor.set(0.5);
-      levelSprite.scale.set(0.55 + Math.random() * 0.15);
+      levelSprite.scale.set(0.9 + Math.random() * 0.2);
       levelSprite.position.copyFrom(position);
       levelSprite.interactive = true;
       levelSprite.buttonMode = true;
 
-      const text = crisprUtil.makeText(levelName, {
-        fill: 0xffffff,
+      const text = crispr.makeText(levelName, {
+        fontStyle: "bold",
+        fill: "#ffda6b",
       });
 
-      if (!crisprUtil.debug) {
+      levelSprite.addChild(text);
+
+      if (!crispr.debug) {
         const levelIndex = levels.levelNames.indexOf(levelName);
         if (levelIndex < levels.levelNames.length - 1) {
           console.log("index", levelIndex, levelName);
@@ -125,9 +122,9 @@ export class Minimap extends entity.CompositeEntity {
             to: 1,
             duration: 500,
             onUpdate: (value) => {
-              levelSprite.scale.set(crisprUtil.proportion(value, 0, 1, 1, 10));
+              levelSprite.scale.set(crispr.proportion(value, 0, 1, 1, 10));
               (levelSprite
-                .filters[0] as PIXI.filters.AlphaFilter).alpha = crisprUtil.proportion(
+                .filters[0] as PIXI.filters.AlphaFilter).alpha = crispr.proportion(
                 value,
                 0,
                 1,
@@ -147,10 +144,28 @@ export class Minimap extends entity.CompositeEntity {
       if (data) {
         const result: level.LevelResults = JSON.parse(data);
 
-        text.text += "\n" + "⭐".repeat(result.starCount);
-      }
+        const stars = crispr.sprite(
+          this,
+          `images/reward_stars_${result.starCount}.png`
+        );
 
-      levelSprite.addChild(text);
+        stars.anchor.set(0.5);
+        stars.scale.set(0.3);
+        stars.position.y = 50;
+
+        text.position.y = -50;
+
+        levelSprite.addChild(stars);
+      } else {
+        const viruses = crispr.sprite(
+          this,
+          `images/minimap_virus_${Math.floor(Math.random() * 5)}.png`
+        );
+
+        viruses.anchor.set(0.5);
+
+        levelSprite.addChild(viruses);
+      }
 
       const shaking = new anim.ShakesManager(levelSprite);
       shaking.setFloat(
@@ -168,8 +183,8 @@ export class Minimap extends entity.CompositeEntity {
 
     this.scrollBox = new scroll.Scrollbox({
       content: this.buttons,
-      boxWidth: crisprUtil.width - 10,
-      boxHeight: crisprUtil.height,
+      boxWidth: crispr.width - 10,
+      boxHeight: crispr.height,
       scrollbarSize: 25,
       contentMarginY: 500,
     });
@@ -184,14 +199,26 @@ export class Minimap extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this.container);
     this._entityConfig.minimap = this;
+
+    this._activateChildEntity(
+      this.menu,
+      entity.extendConfig({
+        container: this.container,
+      })
+    );
   }
 
   protected _update() {
     if (!this.isSetup) return;
 
-    this.links.position.copyFrom(this.scrollBox.currentScroll);
+    const scroll = this.scrollBox.currentScroll;
+
+    this.layer2.position.y = scroll.y / 5;
+    this.layer1.position.y = scroll.y / 10;
+
+    this.links.position.copyFrom(scroll);
     this.links.clear();
-    this.links.lineStyle(150, 0xffffff, 0.1);
+    this.links.lineStyle(50, 0x20e5e5, 0.2);
     this.buttons.children.forEach(
       (button: PIXI.Sprite, i: number, arr: PIXI.Sprite[]) => {
         if (i > 0) {
@@ -209,7 +236,7 @@ export class Minimap extends entity.CompositeEntity {
     this.buttons = null;
     this.container = null;
     this.background = null;
-    this.particles = null;
+    this.layer1 = null;
     this.links = null;
   }
 

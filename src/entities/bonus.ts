@@ -8,8 +8,8 @@ import * as level from "../scenes/level";
 import * as nucleotide from "./nucleotide";
 import * as sequence from "./sequence";
 import * as anim from "../animations";
-import * as crispUtil from "../crisprUtil";
-import * as crisprUtil from "../crisprUtil";
+import * as crispUtil from "../crispr";
+import * as crispr from "../crispr";
 
 export abstract class Bonus extends entity.CompositeEntity {
   public isUpdateDisabled = false;
@@ -30,6 +30,7 @@ export abstract class Bonus extends entity.CompositeEntity {
     super.setup(frameInfo, entityConfig);
     this._activateChildEntity(this.shakes);
     this.shakes.setShake("root", 3);
+    this.level.bonusesManager.disablingAnimation = false;
   }
 
   get highlight(): boolean {
@@ -38,7 +39,7 @@ export abstract class Bonus extends entity.CompositeEntity {
 
   set highlight(value: boolean) {
     this._highlight = value;
-    this.sprite.scale.set(value ? 0.7 : 0.5);
+    this.sprite.scale.set(value ? 1.2 : 1);
   }
 
   get level(): level.Level {
@@ -58,12 +59,11 @@ export abstract class Bonus extends entity.CompositeEntity {
 
     if (this._count > 0) {
       const text = crispUtil.makeText(String(this._count), {
-        fontSize: 120,
-        fill: 0xffffff,
-        strokeThickness: 40,
-        stroke: 0x444444,
+        fontSize: 60,
+        fontStyle: "bold",
+        fill: "#000000",
       });
-      text.position.set(-100, -100);
+      text.position.set(75, -85);
       this.sprite.addChild(text);
     }
   }
@@ -76,6 +76,7 @@ export abstract class Bonus extends entity.CompositeEntity {
     if (!aborted) this.level.bonusesManager.wasBonusUsed = true;
     this._transition = entity.makeTransition();
     this.isUpdateDisabled = false;
+    this.level.bonusesManager.disablingAnimation = false;
   }
 
   abort() {
@@ -184,7 +185,7 @@ export class SwapBonus extends Bonus {
     });
   }
 
-  protected _update() {
+  protected _update(frameInfo: entity.FrameInfo) {
     if (this.isUpdateDisabled) return;
 
     const mouse: PIXI.Point = this.level.cursor;
@@ -313,6 +314,7 @@ export class BonusesManager extends entity.CompositeEntity {
   public selected: Bonus;
   public shakeAmount = 3;
   public wasBonusUsed = false;
+  public disablingAnimation = false;
   private bonusBackground: PIXI.Sprite;
 
   constructor(private initialBonuses: InitialBonuses) {
@@ -325,29 +327,31 @@ export class BonusesManager extends entity.CompositeEntity {
 
   _setup() {
     this.container = new PIXI.Container();
-    this.container.position.set(0, crispUtil.height - 200);
+    this.container.position.set(30, crispUtil.height - 230);
     this._entityConfig.container.addChild(this.container);
 
-    this.bonusBackground = new PIXI.Sprite(
-      this._entityConfig.app.loader.resources[
-        "images/hud_bonus_background.png"
-      ].texture
+    this.bonusBackground = crispr.sprite(
+      this,
+      "images/hud_bonus_background.png"
     );
-    this.bonusBackground.scale.set(0.65);
     this.container.addChild(this.bonusBackground);
 
     this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
       if (bonus instanceof Bonus) {
+        this.disablingAnimation = true;
         bonus.count--;
         bonus.sprite.filters = [];
         bonus.sprite.position.copyFrom(bonus.position);
         this.selected = null;
         this._activateChildEntity(
           new tween.Tween({
-            from: 0.7,
-            to: 0.5,
+            from: 1.2,
+            to: 1,
             duration: 20,
             onUpdate: (value) => bonus.sprite.scale.set(value),
+            onTeardown: () => {
+              this.disablingAnimation = false;
+            },
           })
         );
       }
@@ -355,13 +359,17 @@ export class BonusesManager extends entity.CompositeEntity {
 
     this._on(this, "activatedChildEntity", (bonus: entity.EntityBase) => {
       if (bonus instanceof Bonus) {
+        this.disablingAnimation = true;
         bonus.level.path.remove();
         this._activateChildEntity(
           new tween.Tween({
-            from: 0.5,
-            to: 0.7,
+            from: 1,
+            to: 1.2,
             duration: 20,
             onUpdate: (value) => bonus.sprite.scale.set(value),
+            onTeardown: () => {
+              this.disablingAnimation = false;
+            },
           })
         );
       }
@@ -373,7 +381,9 @@ export class BonusesManager extends entity.CompositeEntity {
   _update() {
     const disable = this.level.isDisablingAnimationInProgress;
     for (const bonus of this.bonuses) {
-      const bonusDisable = (disable || !bonus.count) && !bonus.highlight;
+      const bonusDisable =
+        this.disablingAnimation ||
+        ((disable || !bonus.count) && !bonus.highlight);
       bonus.sprite.buttonMode = !bonusDisable;
       bonus.sprite.tint = bonusDisable ? 0x9f9f9f : 0xffffff;
     }
@@ -385,7 +395,7 @@ export class BonusesManager extends entity.CompositeEntity {
 
   reset() {
     this.bonuses.forEach(this.remove.bind(this));
-    if (crisprUtil.debug) {
+    if (crispr.debug) {
       console.log("--> DONE", "bonusManager.reset()");
     }
   }
@@ -417,19 +427,26 @@ export class BonusesManager extends entity.CompositeEntity {
     return this;
   }
 
-  add(bonus: Bonus, count = 1): this {
+  add(bonus: Bonus, count = 1, fromPosition?: PIXI.Point): this {
+    if (this.disablingAnimation) return;
+
     if (this.bonuses.has(bonus)) {
       bonus.count += count;
       return;
     }
-    const position = new PIXI.Point(100 + this.bonuses.size * 190, 100);
+
+    const position = new PIXI.Point(
+      (this.bonusBackground.width / 3) * (this.bonuses.size + 1) -
+        this.bonusBackground.width / 6,
+      this.bonusBackground.height / 2
+    );
 
     const sprite = new PIXI.Sprite(
       this._entityConfig.app.loader.resources[
         `images/bonus_${bonus.name}.png`
       ].texture
     );
-    sprite.scale.set(0.5);
+
     sprite.anchor.set(0.5);
     sprite.interactive = true;
     sprite.position.copyFrom(position);
@@ -444,14 +461,43 @@ export class BonusesManager extends entity.CompositeEntity {
     this.bonuses.add(bonus);
 
     this._on(bonus.sprite, "pointerup", () => {
+      if (this.disablingAnimation) return;
+
       this.selection(bonus);
     });
+
+    if (fromPosition) {
+      sprite.position.copyFrom(fromPosition);
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          new entity.FunctionCallEntity(() => {
+            this.level.disablingAnimation("bonus", true);
+          }),
+          new entity.WaitingEntity(1000),
+          new entity.ParallelEntity([
+            anim.move(
+              sprite.position,
+              fromPosition,
+              position,
+              1000,
+              easing.easeOutQuart
+            ),
+            anim.bubble(sprite, 3, 1000),
+          ]),
+          new entity.FunctionCallEntity(() => {
+            this.level.disablingAnimation("bonus", false);
+          }),
+        ])
+      );
+    }
 
     return this;
   }
 
   selection(bonus: Bonus) {
-    console.log("coucou");
+    if (this.disablingAnimation) return;
+
+    this.disablingAnimation = true;
 
     if (bonus.isSetup) {
       this.selected = null;
@@ -467,7 +513,10 @@ export class BonusesManager extends entity.CompositeEntity {
     //   console.warn("bonus already selected:", this.selected, "target bonus:", bonus)
     // }
 
-    if (bonus.count <= 0 || this.level.isDisablingAnimationInProgress) return;
+    if (bonus.count <= 0 || this.level.isDisablingAnimationInProgress) {
+      this.disablingAnimation = false;
+      return;
+    }
 
     this.selected = bonus;
 

@@ -1,5 +1,4 @@
 import * as PIXI from "pixi.js";
-import * as _ from "underscore";
 
 import * as entity from "booyah/src/entity";
 import * as util from "booyah/src/util";
@@ -9,6 +8,7 @@ import * as easing from "booyah/src/easing";
 import * as level from "../scenes/level";
 
 import * as anim from "../animations";
+import * as crispr from "../crispr";
 
 export type NucleotideState = "missing" | "present" | "infected" | "inactive";
 export type NucleotideType = "scissors" | "bonus" | "normal";
@@ -18,9 +18,6 @@ export const nucleotideTypes: NucleotideType[] = [
   "bonus",
   "normal",
 ];
-export function getRandomNucleotideType(): NucleotideType {
-  return nucleotideTypes[Math.floor(Math.random() * nucleotideTypes.length)];
-}
 
 // TODO: Use string enum here?
 export type ColorName = "b" | "r" | "g" | "y";
@@ -55,9 +52,7 @@ export class Nucleotide extends entity.CompositeEntity {
   private _spriteEntity:
     | entity.AnimatedSpriteEntity
     | entity.DisplayObjectEntity<PIXI.Sprite> = null;
-  private _infectionSpriteEntity: entity.DisplayObjectEntity<
-    PIXI.Sprite
-  > = null;
+  private _infectionSpriteEntity: entity.DisplayObjectEntity<PIXI.Sprite> = null;
   private _highlightSprite: PIXI.Sprite = null;
   private _pathArrowEntity: entity.AnimatedSpriteEntity;
   private _radius: number;
@@ -119,6 +114,23 @@ export class Nucleotide extends entity.CompositeEntity {
     this._container.position.copyFrom(this.position);
     this.pathArrow.position.copyFrom(this.position);
     this.shakes.anchor.copyFrom(this.position);
+
+    // coup coup
+    if (
+      this.type === "scissors" &&
+      this.sprite &&
+      this.sprite instanceof PIXI.AnimatedSprite
+    ) {
+      if (this.sprite.currentFrame >= this.sprite.totalFrames - 1) {
+        this.sprite.animationSpeed = 0;
+        this.sprite.gotoAndStop(0);
+      } else if (this.sprite.animationSpeed === 0) {
+        if (Math.random() < 0.005) {
+          this.sprite.animationSpeed = 30 / 60;
+          this.sprite.gotoAndPlay(0);
+        }
+      }
+    }
   }
 
   _teardown() {
@@ -266,9 +278,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this.colorName = null;
 
       this._spriteEntity = new entity.DisplayObjectEntity(
-        new PIXI.Sprite(
-          this._entityConfig.app.loader.resources["images/hole.png"].texture
-        )
+        crispr.sprite(this, "images/hole.png")
       );
       this.sprite.anchor.set(0.5);
 
@@ -419,18 +429,22 @@ export class Nucleotide extends entity.CompositeEntity {
       animatedSprite.sprite.animationSpeed = 25 / 60;
       // Start on a random frame
       animatedSprite.sprite.gotoAndPlay(
-        _.random(animatedSprite.sprite.totalFrames)
+        Math.floor(Math.random() * animatedSprite.sprite.totalFrames)
       );
     } else if (this.type === "scissors") {
       this.colorName = null;
       animatedSprite = util.makeAnimatedSprite(
-        this._entityConfig.app.loader.resources["images/scissors.json"]
+        this._entityConfig.app.loader.resources["images/scissors_mini.json"]
       );
-      animatedSprite.sprite.animationSpeed = 25 / 60;
+      animatedSprite.sprite.loop = false;
+      animatedSprite.sprite.animationSpeed = 0;
       // Start on a random frame
-      animatedSprite.sprite.gotoAndPlay(
-        _.random(animatedSprite.sprite.totalFrames)
-      );
+      animatedSprite.sprite.gotoAndStop(0);
+
+      const bubble = crispr.sprite(this, "images/bubble.png");
+      bubble.anchor.set(0.5);
+
+      animatedSprite.sprite.addChild(bubble);
     } else {
       throw new Error("Unhandled type");
     }
