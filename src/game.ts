@@ -143,8 +143,6 @@ const graphicalAssets = [
 ];
 
 const fontAssets = [
-  "Cardenio Modern Bold",
-  "Cardenio Modern Regular",
   "Alien League",
   "Geosans Light",
 ];
