@@ -18,7 +18,7 @@ import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
-import * as menu from "../entities/menu";
+import * as menu from "./menu";
 import * as hud from "../entities/hud";
 
 export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
@@ -411,7 +411,7 @@ export class Level extends entity.CompositeEntity {
     this._activateChildEntity(
       this.menu,
       entity.extendConfig({
-        container: this._entityConfig.container,
+        container: this._entityConfig.app.stage,
       })
     );
   }
@@ -696,10 +696,10 @@ export class Level extends entity.CompositeEntity {
 
       if (duration > this.screenShakeDuration) {
         this.disablingAnimation("level.screenShake", false);
-        this._entityConfig.app.stage.scale.set(1);
-        this._entityConfig.app.stage.position.set(0);
+        this.container.scale.set(1);
+        this.container.position.set(0);
       } else {
-        this._entityConfig.app.stage.scale.set(
+        this.container.scale.set(
           crispr.proportion(
             duration,
             0,
@@ -708,21 +708,21 @@ export class Level extends entity.CompositeEntity {
             1
           )
         );
-        this._entityConfig.app.stage.position.set(
+        this.container.position.set(
           (crispr.width / 2 - crispr.width / 2 / (1 / this.screenShakeZoom)) *
             DESC,
           (crispr.height / 2 - crispr.height / 2 / (1 / this.screenShakeZoom)) *
             DESC
         );
-        this._entityConfig.app.stage.position.x +=
+        this.container.position.x +=
           Math.sin(Date.now() / 15) * DESC * this.screenShakeAmplitude;
-        this._entityConfig.app.stage.position.y +=
+        this.container.position.y +=
           Math.sin(Date.now() / 19) * DESC * this.screenShakeAmplitude;
       }
     } else {
       this.disablingAnimation("level.screenShake", false);
-      this._entityConfig.app.stage.scale.set(1);
-      this._entityConfig.app.stage.position.set(0);
+      this.container.scale.set(1);
+      this.container.position.set(0);
     }
 
     if (this.backgroundLayers) {
