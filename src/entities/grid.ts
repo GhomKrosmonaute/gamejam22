@@ -658,6 +658,8 @@ export class Grid extends entity.CompositeEntity {
         onStep: (item) => {
           item.state = "infected";
 
+          this.level.screenShake(10, 1.02, 100);
+
           this._entityConfig.fxMachine.play("infection");
         },
         callback: () => {

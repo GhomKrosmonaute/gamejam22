@@ -4,7 +4,6 @@ import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
-import * as booyah from "booyah/src/booyah";
 
 import * as anim from "../animations";
 import * as crispr from "../crispr";
@@ -698,6 +697,8 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
       this.setTitle("Too bad");
       // todo: retry button
     }
+
+    this.level.screenShake(50, 1.1, 400);
 
     // add stars
     {
