@@ -11,7 +11,7 @@ import * as anim from "../animations";
 import * as crispr from "../crispr";
 
 export type NucleotideState = "missing" | "present" | "infected" | "inactive";
-export type NucleotideType = "scissors" | "bonus" | "normal";
+export type NucleotideType = "scissors" | "bonus" | "normal" | "portal";
 
 export const nucleotideTypes: NucleotideType[] = [
   "scissors",
@@ -115,7 +115,7 @@ export class Nucleotide extends entity.CompositeEntity {
     this.pathArrow.position.copyFrom(this.position);
     this.shakes.anchor.copyFrom(this.position);
 
-    // coup coup
+    // coup' coup' !
     if (
       this.type === "scissors" &&
       this.sprite &&
@@ -419,7 +419,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
   private _createAnimatedSprite(): entity.AnimatedSpriteEntity {
     let animatedSprite: entity.AnimatedSpriteEntity;
-    if (this.type === "normal") {
+    if (this.type === "normal" || this.type === "portal") {
       if (!this.colorName) this.generateColor();
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources[
@@ -431,6 +431,11 @@ export class Nucleotide extends entity.CompositeEntity {
       animatedSprite.sprite.gotoAndPlay(
         Math.floor(Math.random() * animatedSprite.sprite.totalFrames)
       );
+      if (this.type === "portal") {
+        const portal = crispr.sprite(this, "images/bubble.png");
+        portal.anchor.set(0.5);
+        animatedSprite.sprite.addChild(portal);
+      }
     } else if (this.type === "scissors") {
       this.colorName = null;
       animatedSprite = util.makeAnimatedSprite(

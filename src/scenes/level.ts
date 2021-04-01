@@ -71,6 +71,7 @@ export interface LevelOptions {
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
   sequenceLength: number | null;
   scissorCount: number;
+  portalsCount: number;
   nucleotideRadius: number;
   sequenceRounded: boolean;
   sequenceNucleotideRadius: number;
@@ -114,6 +115,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   sequenceLength: null,
   sequences: null,
   scissorCount: 6,
+  portalsCount: 2,
   nucleotideRadius: crispr.width / 13.44,
   sequenceNucleotideRadius: crispr.width * 0.04,
   sequenceRounded: false,

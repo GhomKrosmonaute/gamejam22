@@ -206,6 +206,7 @@ export class Grid extends entity.CompositeEntity {
     }
 
     // finalize
+    this.addPortals();
     this.addScissors(this.nucleotides);
     this.nucleotides.forEach((n) => (n.state = "present"));
   }
@@ -269,13 +270,21 @@ export class Grid extends entity.CompositeEntity {
     return this.allNucleotides.filter((n) => n !== undefined);
   }
 
+  addPortals() {
+    this.nucleotides
+      .sort((a, b) => (Math.random() > 0.5 ? -1 : 1))
+      .slice(0, this.level.options.portalsCount)
+      .forEach((n) => {
+        n.type = "portal";
+      });
+  }
+
   /** Does nothing in "long" mode **/
   addScissors(among: nucleotide.Nucleotide[]) {
-    const safe = this.nucleotides;
-    if (safe.length === 0) return;
+    if (among.length === 0) return;
 
     while (
-      safe.filter((n) => n.type === "scissors").length <
+      among.filter((n) => n.type === "scissors").length <
       this.level.options.scissorCount
     ) {
       let randomIndex;
