@@ -448,6 +448,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
       const bubble = crispr.sprite(this, "images/bubble.png");
       bubble.anchor.set(0.5);
+      bubble.scale.set(1.1);
 
       animatedSprite.sprite.addChild(bubble);
     } else {

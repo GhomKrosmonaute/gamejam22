@@ -274,25 +274,21 @@ export class Grid extends entity.CompositeEntity {
     const safe = this.nucleotides;
     if (safe.length === 0) return;
 
-    while (
-      safe.filter((n) => n.type === "portal").length <
-      this.level.options.portalsCount
-    ) {
+    while (this.getPortals().length < this.level.options.portalsCount) {
       let randomIndex;
       do {
         randomIndex = Math.floor(Math.random() * among.length);
-      } while (among[randomIndex].type === "portal");
+      } while (among[randomIndex].type !== "normal");
       among[randomIndex].type = "portal";
     }
   }
 
   /** Does nothing in "long" mode **/
   addScissors(among: nucleotide.Nucleotide[]) {
-    const safe = this.nucleotides;
-    if (safe.length === 0) return;
+    if (this.nucleotides.length === 0) return;
 
     while (
-      safe.filter((n) => n.type === "scissors").length <
+      this.nucleotides.filter((n) => n.type === "scissors").length <
       this.level.options.scissorCount
     ) {
       let randomIndex;

@@ -210,6 +210,8 @@ export class Path extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("path.crunch", true);
 
+        this.items.forEach((n) => (n.type = "normal"));
+
         if (this.correctlyContainsScissors()) {
           this.level.scissorsWasIncludes = true;
         }
