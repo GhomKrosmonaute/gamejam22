@@ -7,15 +7,15 @@ import * as util from "booyah/src/util";
 import * as crispr from "../crispr";
 
 interface Settings {
-  fx: boolean;
-  music: boolean;
+  fx: number;
+  music: number;
   subTitles: boolean;
   fullscreen: boolean;
 }
 
 const defaultSettings: Settings = {
-  fx: true,
-  music: true,
+  fx: 1,
+  music: 1,
   subTitles: false,
   fullscreen: util.inFullscreen(),
 };
@@ -197,7 +197,9 @@ export class Menu extends entity.CompositeEntity {
       this.musicVolumeSwitcher.container.position.y += 200;
       this.musicVolumeSwitcher.onStateChange((state) => {
         this._entityConfig.playOptions.setOption("musicOn", state !== "0");
-        this.settings.music = state !== "0";
+        const volume = Number(state);
+        this.settings.music = volume;
+        this._entityConfig.jukebox.changeVolume(volume);
         this.saveSettings();
       });
     }
@@ -229,7 +231,10 @@ export class Menu extends entity.CompositeEntity {
       );
       this.soundVolumeSwitcher.onStateChange((state) => {
         this._entityConfig.playOptions.setOption("fxOn", state !== "0");
-        this.settings.fx = state !== "0";
+        const volume = Number(state);
+        this.settings.fx = volume;
+        this._entityConfig.fxMachine.changeVolume(volume);
+        this._entityConfig.fxMachine.play("note_8");
         this.saveSettings();
       });
     }
