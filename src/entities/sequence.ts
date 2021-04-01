@@ -625,6 +625,8 @@ export class Sequence extends entity.CompositeEntity {
         onStep: (n, i, all) => {
           n.shakes.removeShake("highlight");
 
+          this._playNote(i);
+
           const baseShift = Math.round(Math.random() * 50) + 50;
           const context: entity.Entity[] = [];
 
@@ -777,5 +779,12 @@ export class Sequence extends entity.CompositeEntity {
 
   toString(): string {
     return this.nucleotides.map((n) => n.toString()).join("");
+  }
+
+  private _playNote(index: number) {
+    const n = Math.round(
+      crispr.proportion(index, 0, this.nucleotides.length, 1, 9)
+    );
+    this._entityConfig.fxMachine.play(`note_${Math.min(8, n)}`);
   }
 }
