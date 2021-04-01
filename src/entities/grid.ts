@@ -272,7 +272,7 @@ export class Grid extends entity.CompositeEntity {
 
   addPortals() {
     this.nucleotides
-      .sort((a, b) => (Math.random() > 0.5 ? -1 : 1))
+      .sort(() => (Math.random() > 0.5 ? -1 : 1))
       .slice(0, this.level.options.portalsCount)
       .forEach((n) => {
         n.type = "portal";

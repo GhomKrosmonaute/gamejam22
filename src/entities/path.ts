@@ -7,6 +7,7 @@ import * as nucleotide from "./nucleotide";
 import * as level from "../scenes/level";
 
 import * as anim from "../animations";
+import * as crispr from "../crispr";
 
 export type PathState =
   | "no match"
@@ -238,12 +239,11 @@ export class Path extends entity.CompositeEntity {
             this._activateChildEntity(
               anim.textFade(
                 this.level.grid.nucleotideContainer,
-                new PIXI.Text(`+ ${score}`, {
+                crispr.makeText(`+ ${score}`, {
                   fill,
                   stroke,
                   strokeThickness: 10,
                   fontSize: 90 + score * 4,
-                  fontFamily: "Cardenio Modern Bold",
                   dropShadow: true,
                   dropShadowBlur: 10,
                 }),
