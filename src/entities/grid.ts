@@ -206,7 +206,7 @@ export class Grid extends entity.CompositeEntity {
     }
 
     // finalize
-    this.addPortals();
+    this.addPortals(this.nucleotides);
     this.addScissors(this.nucleotides);
     this.nucleotides.forEach((n) => (n.state = "present"));
   }
@@ -270,21 +270,29 @@ export class Grid extends entity.CompositeEntity {
     return this.allNucleotides.filter((n) => n !== undefined);
   }
 
-  addPortals() {
-    this.nucleotides
-      .sort(() => (Math.random() > 0.5 ? -1 : 1))
-      .slice(0, this.level.options.portalsCount)
-      .forEach((n) => {
-        n.type = "portal";
-      });
+  addPortals(among: nucleotide.Nucleotide[]) {
+    const safe = this.nucleotides;
+    if (safe.length === 0) return;
+
+    while (
+      safe.filter((n) => n.type === "portal").length <
+      this.level.options.portalsCount
+    ) {
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * among.length);
+      } while (among[randomIndex].type === "portal");
+      among[randomIndex].type = "portal";
+    }
   }
 
   /** Does nothing in "long" mode **/
   addScissors(among: nucleotide.Nucleotide[]) {
-    if (among.length === 0) return;
+    const safe = this.nucleotides;
+    if (safe.length === 0) return;
 
     while (
-      among.filter((n) => n.type === "scissors").length <
+      safe.filter((n) => n.type === "scissors").length <
       this.level.options.scissorCount
     ) {
       let randomIndex;
@@ -430,6 +438,7 @@ export class Grid extends entity.CompositeEntity {
       }
     }
 
+    this.addPortals(oldHoles);
     this.addScissors(oldHoles);
     // this.refresh();
   }
@@ -454,6 +463,7 @@ export class Grid extends entity.CompositeEntity {
     for (const nucleotide of holes) {
       this.generateNucleotide(nucleotide);
     }
+    this.addPortals(holes);
     this.addScissors(holes);
 
     holes.forEach((n) => (n.state = "present"));
@@ -623,6 +633,7 @@ export class Grid extends entity.CompositeEntity {
       this.generateNucleotide(n);
     });
 
+    this.addPortals(nucleotides);
     this.addScissors(nucleotides);
 
     nucleotides.forEach((n) => (n.state = "present"));

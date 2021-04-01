@@ -70,6 +70,10 @@ export class Path extends entity.CompositeEntity {
     return this.items.filter((n) => n.type === "scissors");
   }
 
+  get portals(): nucleotide.Nucleotide[] {
+    return this.items.filter((n) => n.type === "portal");
+  }
+
   get maxLength(): number {
     return Math.max(
       ...[...this.level.sequenceManager.sequences].map((s) => s.baseLength)
@@ -144,8 +148,18 @@ export class Path extends entity.CompositeEntity {
       } else return false;
     }
 
-    // If the nucleotide is not a neighbor of the last one, stop
-    if (this.level.grid.getNeighborIndex(n, this.last) === -1) return false;
+    // If the nucleotide is not a neighbor of the last one
+    if (this.level.grid.getNeighborIndex(n, this.last) === -1) {
+      // If the last one or the current one are not portals
+      if (n.type !== "portal" || this.last.type !== "portal") return false;
+    } else {
+      if (
+        n.type !== "portal" &&
+        this.last.type === "portal" &&
+        this.portals.length % 2 !== 0
+      )
+        return false;
+    }
 
     // Add to the path
     this.items.push(n);
