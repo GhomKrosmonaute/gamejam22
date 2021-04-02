@@ -130,6 +130,7 @@ const graphicalAssets = [
   "images/mini_bob_sting.json",
   "images/mini_bob_walk.json",
   "images/mini_bob_dead.json",
+  "images/mini_bob_swim.json",
   // Medium Bob
   "images/medium_bob_idle.json",
   "images/medium_bob_sting.json",
