@@ -103,6 +103,7 @@ export const levels = {
       maxScore: 1000,
       forceMatching: true,
       disableBonuses: true,
+      portalsCount: 4,
       zenMoves: 10,
       scissorCount: 0,
       checks: {
