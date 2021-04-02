@@ -204,7 +204,11 @@ export class Path extends entity.CompositeEntity {
     }
 
     // highlight portals
-    if (this.last.type === "portal" && this.portals.length % 2 !== 0) {
+    if (
+      this.last &&
+      this.last.type === "portal" &&
+      this.portals.length % 2 !== 0
+    ) {
       this.level.grid.nucleotides.forEach((n) => {
         if (n.type === "portal" && n !== this.last) {
           n.isHighlighted = true;

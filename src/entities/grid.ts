@@ -278,7 +278,7 @@ export class Grid extends entity.CompositeEntity {
       let randomIndex;
       do {
         randomIndex = Math.floor(Math.random() * among.length);
-      } while (among[randomIndex].type !== "normal");
+      } while (!among[randomIndex] || among[randomIndex].type !== "normal");
       among[randomIndex].type = "portal";
     }
   }
@@ -294,7 +294,7 @@ export class Grid extends entity.CompositeEntity {
       let randomIndex;
       do {
         randomIndex = Math.floor(Math.random() * among.length);
-      } while (among[randomIndex].type === "scissors");
+      } while (!among[randomIndex] || among[randomIndex].type === "scissors");
       among[randomIndex].type = "scissors";
     }
   }

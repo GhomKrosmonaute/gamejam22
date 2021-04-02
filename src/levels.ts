@@ -21,6 +21,7 @@ export const levels = {
       forceMatching: true,
       maxScore: 1000,
       scissorCount: 3,
+      portalsCount: 4,
       gaugeRings: [
         (context) => {
           context.options.dropSpeed = 1.2;
