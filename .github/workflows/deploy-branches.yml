@@ -1,0 +1,35 @@
+# inside .github/workflows/action.yml
+name: Deploy branch to DigitalOcean
+on:
+  push:
+    branches-ignore:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Build dist
+        run: yarn dist
+
+      - name: Get branch name
+        uses: nelonoel/branch-name@v1.0.1
+
+      - name: Upload to DigitalOcean
+        uses: BetaHuhn/do-spaces-action@master
+        with:
+          source: ./dist/
+          space_name: ${{ secrets.BRANCHES_SPACE_NAME }}
+          space_region: ${{ secrets.SPACE_REGION }}
+          access_key: ${{ secrets.SPACE_ACCESS_KEY_ID }}
+          secret_key: ${{ secrets.SPACE_SECRET_ACCESS_KEY }}
+          out_dir: ${{ BRANCH_NAME }}
