@@ -32,4 +32,4 @@ jobs:
           space_region: ${{ secrets.SPACE_REGION }}
           access_key: ${{ secrets.SPACE_ACCESS_KEY_ID }}
           secret_key: ${{ secrets.SPACE_SECRET_ACCESS_KEY }}
-          out_dir: ${{ BRANCH_NAME }}
+          out_dir: ${{ env.BRANCH_NAME }}
