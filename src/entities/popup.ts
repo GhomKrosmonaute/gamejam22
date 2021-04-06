@@ -4,7 +4,6 @@ import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
-import * as booyah from "booyah/src/booyah";
 
 import * as anim from "../animations";
 import * as crispr from "../crispr";
@@ -187,7 +186,10 @@ export abstract class Popup extends entity.CompositeEntity {
             );
             this.logo.anchor.set(0.5);
             this.logo.scale.set(this.options.logoScale);
-            this.logo.position.set(this.center.x, 50);
+            this.logo.position.set(
+              this.center.x,
+              50 + (this.logo.height * this.options.logoScale) / 2
+            );
             this.body.addChild(this.logo);
           }
 
@@ -265,7 +267,6 @@ export abstract class Popup extends entity.CompositeEntity {
                 ]),
                 new entity.FunctionCallEntity(() => {
                   // booyah.changeGameState("paused");
-                  this.level.disablingAnimation(this.id, true);
                 }),
               ])
             );
@@ -539,7 +540,10 @@ export abstract class Popup extends entity.CompositeEntity {
             duration: this.options.animationDuration,
             from: this.logo.position.clone(),
             easing: easing.easeInOutQuad,
-            to: new PIXI.Point(this.options.width / 2, 50),
+            to: new PIXI.Point(
+              this.options.width / 2,
+              50 + (this.logo.height * this.options.logoScale) / 2
+            ),
             interpolate: tween.interpolation.point,
           }),
           new tween.Tween({
@@ -693,6 +697,8 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
       this.setTitle("Too bad");
       // todo: retry button
     }
+
+    this.level.screenShake(50, 1.1, 400);
 
     // add stars
     {

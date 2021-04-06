@@ -18,7 +18,7 @@ import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
-import * as menu from "../entities/menu";
+import * as menu from "./menu";
 import * as hud from "../entities/hud";
 
 export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
@@ -307,6 +307,13 @@ export class Level extends entity.CompositeEntity {
   public zenMovesIndicator: hud.ZenMovesIndicator;
   public menu: menu.Menu;
 
+  // screen shake
+  public screenShakeAmplitude: number;
+  public screenShakeDuration: number;
+  public screenShakeZoom: number;
+  public screenShakeStart: number;
+  //public screenShakeComponents: (PIXI.Sprite | PIXI.AnimatedSprite | PIXI.Container)[]
+
   // game
   public score: number;
   public wasInfected = false;
@@ -391,12 +398,20 @@ export class Level extends entity.CompositeEntity {
     return this.grid.cursor;
   }
 
+  private _initScreenShake() {
+    this.screenShake(0, 0, 0);
+    // this.screenShakeComponents = [
+    //   ...this.backgroundLayers,
+    //   this.grid.container
+    // ]
+  }
+
   private _initMenu() {
     this.menu = new menu.Menu();
     this._activateChildEntity(
       this.menu,
       entity.extendConfig({
-        container: this._entityConfig.container,
+        container: this._entityConfig.app.stage,
       })
     );
   }
@@ -613,6 +628,7 @@ export class Level extends entity.CompositeEntity {
     });
 
     this.onLevelEvent("fallingDown", () => {
+      this.screenShake(100, 1.2, 500);
       this._activateChildEntity(
         new entity.EntitySequence([
           new entity.FunctionCallEntity(() => {
@@ -626,6 +642,7 @@ export class Level extends entity.CompositeEntity {
       );
     });
 
+    this._initScreenShake();
     this._initDisablingAnimations();
     this._initMusic();
     this._initBackground();
@@ -662,6 +679,52 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update(frameInfo: entity.FrameInfo) {
+    if (
+      this.screenShakeDuration &&
+      this.screenShakeStart &&
+      this.screenShakeAmplitude &&
+      this.screenShakeZoom
+    ) {
+      const duration = Date.now() - this.screenShakeStart;
+      const DESC = crispr.proportion(
+        duration,
+        0,
+        this.screenShakeDuration,
+        1,
+        0
+      );
+
+      if (duration > this.screenShakeDuration) {
+        this.disablingAnimation("level.screenShake", false);
+        this.container.scale.set(1);
+        this.container.position.set(0);
+      } else {
+        this.container.scale.set(
+          crispr.proportion(
+            duration,
+            0,
+            this.screenShakeDuration,
+            this.screenShakeZoom,
+            1
+          )
+        );
+        this.container.position.set(
+          (crispr.width / 2 - crispr.width / 2 / (1 / this.screenShakeZoom)) *
+            DESC,
+          (crispr.height / 2 - crispr.height / 2 / (1 / this.screenShakeZoom)) *
+            DESC
+        );
+        this.container.position.x +=
+          Math.sin(Date.now() / 15) * DESC * this.screenShakeAmplitude;
+        this.container.position.y +=
+          Math.sin(Date.now() / 19) * DESC * this.screenShakeAmplitude;
+      }
+    } else {
+      this.disablingAnimation("level.screenShake", false);
+      this.container.scale.set(1);
+      this.container.position.set(0);
+    }
+
     if (this.backgroundLayers) {
       this.backgroundLayers.forEach((layer, i) => {
         layer.position.y =
@@ -723,6 +786,7 @@ export class Level extends entity.CompositeEntity {
       });
     }
 
+    this._initScreenShake();
     this._initDisablingAnimations();
 
     // manage components switches
@@ -818,6 +882,14 @@ export class Level extends entity.CompositeEntity {
         );
       }
     }
+  }
+
+  screenShake(amplitude: number, zoom: number, duration: number) {
+    this.disablingAnimation("level.screenShake", true);
+    this.screenShakeAmplitude = amplitude;
+    this.screenShakeDuration = duration;
+    this.screenShakeZoom = zoom;
+    this.screenShakeStart = Date.now();
   }
 
   removeHalfScore(): entity.EntitySequence {

@@ -9,7 +9,7 @@ import * as levels from "../levels";
 import * as level from "./level";
 
 import * as popup from "../entities/popup";
-import * as menu from "../entities/menu";
+import * as menu from "./menu";
 
 import * as anim from "../animations";
 import * as crispr from "../crispr";

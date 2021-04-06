@@ -131,6 +131,7 @@ const graphicalAssets = [
   "images/mini_bob_sting.json",
   "images/mini_bob_walk.json",
   "images/mini_bob_dead.json",
+  "images/mini_bob_swim.json",
   // Medium Bob
   "images/medium_bob_idle.json",
   "images/medium_bob_sting.json",
@@ -143,12 +144,7 @@ const graphicalAssets = [
   "images/big_bob_dead.json",
 ];
 
-const fontAssets = [
-  "Cardenio Modern Bold",
-  "Cardenio Modern Regular",
-  "Alien League",
-  "Geosans Light",
-];
+const fontAssets = ["Alien League", "Geosans Light"];
 
 const fxAssets = [
   "notification",

@@ -58,7 +58,7 @@ export const levels = {
                   v.rounded = false;
                   v.angle = 0;
                   v.position = { x: crisp.width / 2, y: crisp.height * 2 };
-                  v.filters = [new OutlineFilter(20, 0x000000)];
+                  v.filters = [new OutlineFilter(20, 0x000000) as any];
                 }),
               (v) => v.stingIn(),
               (v) =>
@@ -118,9 +118,9 @@ export const levels = {
           event: "setup",
           once: true,
           entity: new popup.TutorialPopup({
-            title: "Zen mode",
+            title: "Zen",
             content:
-              "On this variant, have fun making very long DNA sequences.\n\nReach 1000 pts!",
+              "No viruses, no scissors. You can even start in the middle.\n\nChill out and enjoy making long DNA sequences.\n\nYou have 10 moves to rack up 1000 points and continue",
             popupOptions: {
               minimizeOnClose: false,
               coolDown: 2000,
@@ -161,8 +161,9 @@ export const levels = {
                 context.timeBonus.highlight = true;
               }),
               new popup.TutorialPopup({
-                title: "The Time bonus",
-                content: "Can freeze the game for 5 seconds!",
+                title: "Freeze",
+                content:
+                  "Click the freeze bonus to stop the clock for 5 seconds",
                 image: "images/bonus_time.png",
                 popupOptions: {
                   id: "popup ring 1",
@@ -191,9 +192,9 @@ export const levels = {
             context.disablingAnimation("preventVirus", true);
             context.activate(
               new popup.TutorialPopup({
-                title: "Oh no!",
+                title: "Time attack!",
                 content:
-                  "It's a time bomb, crunch the sequences before they hit the grid!\n\nReach 400 pts!",
+                  "Crunch the sequences before they hit the grid!\n\nReach 400 points to continue",
                 popupOptions: {
                   id: "intro popup",
                   logo: "images/icon_timed.png",
@@ -275,8 +276,9 @@ export const levels = {
           event: "init",
           once: true,
           entity: new popup.TutorialPopup({
-            title: "Enjoy!",
-            content: "Let's try the turn-by-turn variant.\n\nReach 300 pts!",
+            title: "Turn by turn",
+            content:
+              "Now you know the basics, try with some longer sequences.\n\nReach 300 points to continue!",
             popupOptions: {
               minimizeOnClose: false,
               coolDown: 2000,
@@ -482,8 +484,9 @@ export const levels = {
                               p.id === "popup step 4.1" &&
                               context.disablingAnimations.has("tutorial"),
                             entity: new popup.TutorialPopup({
-                              title: "Clean up infections!",
-                              content: "Using the infected DNA in a sequence.",
+                              title: "Clean up!",
+                              content:
+                                "Use the infected DNA in a sequence to clean the infection",
                               image: "images/infection_red.png",
                               popupOptions: {
                                 minimizeOnClose: false,
