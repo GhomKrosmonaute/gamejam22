@@ -419,7 +419,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
   private _createAnimatedSprite(): entity.AnimatedSpriteEntity {
     let animatedSprite: entity.AnimatedSpriteEntity;
-    if (this.type === "normal" || this.type === "portal") {
+    if (this.type === "normal") {
       if (!this.colorName) this.generateColor();
       animatedSprite = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources[
@@ -431,11 +431,15 @@ export class Nucleotide extends entity.CompositeEntity {
       animatedSprite.sprite.gotoAndPlay(
         Math.floor(Math.random() * animatedSprite.sprite.totalFrames)
       );
-      if (this.type === "portal") {
-        const portal = crispr.sprite(this, "images/bubble.png");
-        portal.anchor.set(0.5);
-        animatedSprite.sprite.addChild(portal);
-      }
+    } else if (this.type === "portal") {
+      animatedSprite = util.makeAnimatedSprite(
+        this._entityConfig.app.loader.resources["images/portal.json"]
+      );
+      animatedSprite.sprite.animationSpeed = 20 / 60;
+      // Start on a random frame
+      animatedSprite.sprite.gotoAndPlay(
+        Math.floor(Math.random() * animatedSprite.sprite.totalFrames)
+      );
     } else if (this.type === "scissors") {
       this.colorName = null;
       animatedSprite = util.makeAnimatedSprite(
