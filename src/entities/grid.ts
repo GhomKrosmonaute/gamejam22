@@ -321,7 +321,7 @@ export class Grid extends entity.CompositeEntity {
 
     while (colorNames.length < length) {
       alreadyPassed.push(current);
-      if (current.type === "normal" || current.type === "portal") {
+      if (current.type === "normal") {
         colorNames.push(current.colorName);
       }
 
