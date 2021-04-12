@@ -30,7 +30,7 @@ export class Gauge extends entity.CompositeEntity {
   private _rings = new PIXI.Container();
   private _text: PIXI.Text;
   private _bar: PIXI.Sprite;
-  //private _wave: PIXI.TilingSprite;
+  private _wave: PIXI.TilingSprite;
   private _background: PIXI.Sprite;
   private _barBaseWidth: number;
   private _triggered = false;
@@ -64,7 +64,7 @@ export class Gauge extends entity.CompositeEntity {
     this._value = value;
     this._bar.width = this.getBarWidth();
     this._text.text = Math.floor(this._value) + " pts";
-    //if (this._wave) this._wave.x = this.reachedScoreXPosition;
+    if (this._wave) this._wave.x = this.reachedScoreXPosition;
     if (!this._triggered) {
       this._triggered = true;
       this._activateChildEntity(
@@ -151,17 +151,16 @@ export class Gauge extends entity.CompositeEntity {
       this._barBaseWidth = this._bar.width;
     }
 
-    // // init wave
-    // {
-    //   this._wave = new PIXI.TilingSprite(
-    //     PIXI.Texture.from("images/hud_wave.png"),
-    //     50,
-    //     this._bar.height
-    //   );
-    //   this._wave.anchor.set(0.5);
-    //   this._wave.position.y = this._bar.y + this._bar.height / 2;
-    //   this._container.addChild(this._wave);
-    // }
+    // init wave
+    {
+      this._wave = new PIXI.TilingSprite(
+        this._entityConfig.app.loader.resources["images/hud_wave.png"].texture,
+        50,
+        this._bar.height
+      );
+      this._wave.anchor.set(0.5);
+      this._wave.position.y = this._bar.y + this._bar.height / 2;
+    }
 
     // particles
     {
@@ -241,6 +240,7 @@ export class Gauge extends entity.CompositeEntity {
 
     this._container.addChild(this._background);
     this._container.addChild(this._bar);
+    this._container.addChild(this._wave);
     this._container.addChild(this._particles);
     this._container.addChild(this._rings);
     this._container.addChild(this._text);
@@ -275,10 +275,6 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   _update(frameInfo: entity.FrameInfo) {
-    // if (this._wave) {
-    //   this._wave.tilePosition.y = Math.cos(frameInfo.playTime / 120);
-    // }
-
     if (this._value < this._maxValue) {
       const reachedScorePosition = this.reachedScoreXPosition;
       this._rings.children.forEach((ring: Ring) => {
@@ -289,6 +285,11 @@ export class Gauge extends entity.CompositeEntity {
     }
 
     if (this.getBarWidth() > 100) {
+      if (this._wave) {
+        this._wave.visible = true;
+        this._wave.tilePosition.y = Math.cos(frameInfo.playTime / 70) * 10;
+      }
+
       this._particles.visible = true;
 
       const vector = Math.cos(frameInfo.playTime / 120);
@@ -308,6 +309,7 @@ export class Gauge extends entity.CompositeEntity {
       });
     } else {
       this._particles.visible = false;
+      if (this._wave) this._wave.visible = false;
     }
   }
 
