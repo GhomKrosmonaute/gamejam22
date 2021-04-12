@@ -63,7 +63,7 @@ export class Path extends entity.CompositeEntity {
 
   /** only nucleotides */
   get nucleotides(): nucleotide.Nucleotide[] {
-    return this.items.filter((n) => /^(?:scissors|portal)$/.test(n.type));
+    return this.items.filter((n) => !/^(?:scissors|portal)$/.test(n.type));
   }
 
   get scissors(): nucleotide.Nucleotide[] {

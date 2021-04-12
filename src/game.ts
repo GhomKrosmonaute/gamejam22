@@ -121,6 +121,7 @@ const graphicalAssets = [
   "images/nucleotide_blue.json",
   "images/nucleotide_green.json",
   "images/nucleotide_yellow.json",
+  "images/portal.json",
   "images/scissors.json",
   "images/scissors_mini.json",
   "images/hair.json",

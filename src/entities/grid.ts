@@ -274,12 +274,17 @@ export class Grid extends entity.CompositeEntity {
     const safe = this.nucleotides;
     if (safe.length === 0) return;
 
-    while (this.getPortals().length < this.level.options.portalsCount) {
-      let randomIndex;
-      do {
-        randomIndex = Math.floor(Math.random() * among.length);
-      } while (!among[randomIndex] || among[randomIndex].type !== "normal");
-      among[randomIndex].type = "portal";
+    const normals = among.filter((n) => n.type === "normal");
+    const neededPortalCount =
+      this.level.options.portalsCount - this.getPortals().length;
+
+    if (normals.length <= neededPortalCount) {
+      normals.forEach((n) => (n.type = "portal"));
+    } else {
+      const shuffled = _.shuffle(normals);
+      for (let i = 0; i < neededPortalCount; i++) {
+        shuffled[i].type = "portal";
+      }
     }
   }
 
