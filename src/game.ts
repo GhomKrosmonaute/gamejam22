@@ -91,6 +91,7 @@ const graphicalAssets = [
   "images/hud_gauge_bar.png",
   "images/hud_gauge_ring.png",
   "images/hud_gauge_ring_disabled.png",
+  "images/hud_wave.png",
 
   "images/popup_background.png",
   "images/popup_background_bis.png",

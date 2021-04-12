@@ -18,8 +18,9 @@ import * as virus from "../entities/virus";
 import * as grid from "../entities/grid";
 import * as path from "../entities/path";
 import * as hair from "../entities/hair";
-import * as menu from "./menu";
 import * as hud from "../entities/hud";
+
+import * as menu from "../scenes/menu";
 
 export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
 
