@@ -876,9 +876,9 @@ export class Level extends entity.CompositeEntity {
         console.log("updated disabling animations:", newLength, [
           ...this.disablingAnimations,
         ]);
-      } else {
+      } else if(state){
         console.warn(
-          `Warning: useless ${state ? "start" : "end"} of disablingAnimation:`,
+          `Warning: useless start of disablingAnimation:`,
           name
         );
       }

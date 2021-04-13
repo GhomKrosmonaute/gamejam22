@@ -122,12 +122,12 @@ export class Nucleotide extends entity.CompositeEntity {
       this.sprite instanceof PIXI.AnimatedSprite
     ) {
       if (this.sprite.currentFrame >= this.sprite.totalFrames - 1) {
+        this.sprite.gotoAndPlay(0);
         this.sprite.animationSpeed = 0;
-        this.sprite.gotoAndStop(0);
       } else if (this.sprite.animationSpeed === 0) {
         if (Math.random() < 0.005) {
-          this.sprite.animationSpeed = 30 / 60;
           this.sprite.gotoAndPlay(0);
+          this.sprite.animationSpeed = 30 / 60;
         }
       }
     }
