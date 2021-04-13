@@ -11,9 +11,14 @@ import * as crisp from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
-  "Four Islands": () =>
-    new level.Level("Four Islands", (context) => ({
-      gridShape: "fourIslands"
+  "Little\nBridge": () =>
+    new level.Level("Little\nBridge", (context) => ({
+      gridShape: "littleBridge",
+    })),
+
+  "Four\nIslands": () =>
+    new level.Level("Four\nIslands", (context) => ({
+      gridShape: "fourIslands",
     })),
 
   Boss: () =>
