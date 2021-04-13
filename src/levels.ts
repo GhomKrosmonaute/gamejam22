@@ -14,16 +14,20 @@ export const levels = {
   "Bow\nTie": () =>
     new level.Level("Bow\nTie", (context) => ({
       gridShape: "bowTie",
+      forceMatching: true
     })),
 
   "Little\nBridge": () =>
     new level.Level("Little\nBridge", (context) => ({
       gridShape: "littleBridge",
+      forceMatching: true
     })),
 
   "Four\nIslands": () =>
     new level.Level("Four\nIslands", (context) => ({
       gridShape: "fourIslands",
+      forceMatching: true,
+      sequenceLength: 4
     })),
 
   Boss: () =>
