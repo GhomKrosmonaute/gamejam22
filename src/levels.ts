@@ -11,23 +11,29 @@ import * as crisp from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
+  Hole: () =>
+    new level.Level("Hole", (context) => ({
+      gridShape: "hole",
+      forceMatching: true,
+    })),
+
   "Bow\nTie": () =>
     new level.Level("Bow\nTie", (context) => ({
       gridShape: "bowTie",
-      forceMatching: true
+      forceMatching: true,
     })),
 
   "Little\nBridge": () =>
     new level.Level("Little\nBridge", (context) => ({
       gridShape: "littleBridge",
-      forceMatching: true
+      forceMatching: true,
     })),
 
   "Four\nIslands": () =>
     new level.Level("Four\nIslands", (context) => ({
       gridShape: "fourIslands",
       forceMatching: true,
-      sequenceLength: 4
+      sequenceLength: 4,
     })),
 
   Boss: () =>

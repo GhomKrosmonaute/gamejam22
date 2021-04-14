@@ -53,6 +53,10 @@ export const gridShapes = {
     (y === 4 && x > 1 && x < 5) ||
     (y === 1 && x > 0 && x < 6) ||
     (x === 3 && y === 2),
+  hole: (x: number, y: number) =>
+    (x > 1 && x < 5 && y > 1 && y < 5 && !(y === 4 && (x === 2 || x === 4))) ||
+    (y === 0 && (x < 2 || x > 4)) ||
+    (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5)),
 };
 
 export type GridShape =
