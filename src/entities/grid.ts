@@ -27,16 +27,10 @@ export type GridPreset<T = true> = ((T | null)[] | null)[];
 
 export type GridArrowShape = (x: number, y: number) => boolean;
 
-export type GridShape =
-  | "mini"
-  | "medium"
-  | "full"
-  | GridPreset<nucleotide.ColorName>
-  | GridArrowShape;
-
-export const gridShapes: { [k: string]: GridArrowShape } = {
-  mini: (x, y) => x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0),
-  medium: (x, y) =>
+export const gridShapes = {
+  mini: (x: number, y: number) =>
+    x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0),
+  medium: (x: number, y: number) =>
     x < 1 ||
     x > 5 ||
     y < 1 ||
@@ -44,7 +38,32 @@ export const gridShapes: { [k: string]: GridArrowShape } = {
     (x === 1 && y === 1) ||
     (x === 5 && y === 1) ||
     (x !== 3 && x > 0 && x < 6 && y === 5),
+  fourIslands: (x: number, y: number) =>
+    (x > 2 || y < 4 || y > 6) &&
+    (x < 4 || y < 4 || y > 6) &&
+    (x > 2 || y > 2 || (y === 2 && (x === 0 || x === 2))) &&
+    (x < 4 || y > 2 || (y === 2 && (x === 4 || x === 6))),
+  littleBridge: (x: number, y: number) =>
+    (x > 2 || y < 1 || y > 5 || (y === 5 && (x === 0 || x === 2))) &&
+    (x !== 3 || y !== 3) &&
+    (x < 4 || y < 1 || y > 5 || (y === 5 && (x === 4 || x === 6))),
+  bowTie: (x: number, y: number) =>
+    y < 1 ||
+    y > 4 ||
+    (y === 4 && x > 1 && x < 5) ||
+    (y === 1 && x > 0 && x < 6) ||
+    (x === 3 && y === 2),
+  hole: (x: number, y: number) =>
+    (x > 1 && x < 5 && y > 1 && y < 5 && !(y === 4 && (x === 2 || x === 4))) ||
+    (y === 0 && (x < 2 || x > 4)) ||
+    (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5)),
 };
+
+export type GridShape =
+  | "full"
+  | keyof typeof gridShapes
+  | GridPreset<nucleotide.ColorName>
+  | GridArrowShape;
 
 /** Represent the game nucleotides grid
  *
