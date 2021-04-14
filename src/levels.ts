@@ -15,18 +15,40 @@ export const levels = {
     new level.Level("Hole", (context) => ({
       gridShape: "hole",
       forceMatching: true,
+      hooks: [
+        new level.Hook({
+          id: "outro",
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
+        }),
+      ]
     })),
 
   "Bow\nTie": () =>
     new level.Level("Bow\nTie", (context) => ({
       gridShape: "bowTie",
       forceMatching: true,
+      hooks: [
+        new level.Hook({
+          id: "outro",
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
+        }),
+      ]
     })),
 
   "Little\nBridge": () =>
     new level.Level("Little\nBridge", (context) => ({
       gridShape: "littleBridge",
       forceMatching: true,
+      portalsCount: 2,
+      hooks: [
+        new level.Hook({
+          id: "outro",
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
+        }),
+      ]
     })),
 
   "Four\nIslands": () =>
@@ -34,6 +56,14 @@ export const levels = {
       gridShape: "fourIslands",
       forceMatching: true,
       sequenceLength: 4,
+      portalsCount: 4,
+      hooks: [
+        new level.Hook({
+          id: "outro",
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
+        }),
+      ]
     })),
 
   Boss: () =>
