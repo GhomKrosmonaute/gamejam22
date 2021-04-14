@@ -64,7 +64,12 @@ export class Gauge extends entity.CompositeEntity {
     this._value = value;
     this._bar.width = this.getBarWidth();
     this._text.text = Math.floor(this._value) + " pts";
-    if (this._wave) this._wave.x = this.reachedScoreXPosition;
+
+    if (this._wave) this._wave.x = Math.min(
+      this.reachedScoreXPosition,
+      this._background.position.x + this._background.width - 125
+    );
+
     if (!this._triggered) {
       this._triggered = true;
       this._activateChildEntity(
