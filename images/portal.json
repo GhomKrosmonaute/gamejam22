@@ -1,0 +1,53 @@
+{
+  "frames": {
+    "hole0.png": {
+      "frame": { "x": 0, "y": 0, "w": 151, "h": 142 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 151, "h": 142 },
+      "sourceSize": { "w": 151, "h": 142 }
+    },
+    "hole1.png": {
+      "frame": { "x": 151, "y": 0, "w": 151, "h": 142 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 151, "h": 142 },
+      "sourceSize": { "w": 151, "h": 142 }
+    },
+    "hole2.png": {
+      "frame": { "x": 0, "y": 142, "w": 151, "h": 142 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 151, "h": 142 },
+      "sourceSize": { "w": 151, "h": 142 }
+    },
+    "hole3.png": {
+      "frame": { "x": 151, "y": 142, "w": 151, "h": 142 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 151, "h": 142 },
+      "sourceSize": { "w": 151, "h": 142 }
+    },
+    "hole4.png": {
+      "frame": { "x": 0, "y": 284, "w": 151, "h": 142 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 151, "h": 142 },
+      "sourceSize": { "w": 151, "h": 142 }
+    },
+    "hole5.png": {
+      "frame": { "x": 151, "y": 284, "w": 151, "h": 142 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 151, "h": 142 },
+      "sourceSize": { "w": 151, "h": 142 }
+    }
+  },
+  "meta": {
+    "app": "https://github.com/piskelapp/piskel/",
+    "version": "1.0",
+    "image": "portal.png",
+    "format": "RGBA8888",
+    "size": { "w": 302, "h": 426 }
+  }
+}

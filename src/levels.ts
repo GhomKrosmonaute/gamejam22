@@ -46,6 +46,7 @@ export const levels = {
       forceMatching: true,
       maxScore: 1000,
       scissorCount: 3,
+      portalsCount: 4,
       gaugeRings: [
         (context) => {
           context.options.dropSpeed = 1.2;
@@ -128,6 +129,7 @@ export const levels = {
       maxScore: 1000,
       forceMatching: true,
       disableBonuses: true,
+      portalsCount: 4,
       zenMoves: 10,
       scissorCount: 0,
       checks: {
@@ -159,6 +161,63 @@ export const levels = {
         }),
       ],
     }),
+
+  "Chrono\nPortal": () =>
+    new level.Level("Chrono\nPortal", (context) => ({
+      variant: "fall",
+      gridShape: "medium",
+      forceMatching: true,
+      scissorCount: 3,
+      portalsCount: 2,
+      maxScore: 400,
+      gaugeRings: [
+        (context) =>
+          context.bonusesManager.add(
+            context.swapBonus,
+            1,
+            new PIXI.Point(200, -2000)
+          ),
+        (context, ring) =>
+          context.activate(
+            new entity.EntitySequence([
+              new entity.FunctionCallEntity(() => {
+                context.bonusesManager.add(
+                  context.timeBonus,
+                  1,
+                  new PIXI.Point(500, -2000)
+                );
+                context.timeBonus.highlight = true;
+              }),
+              new popup.TutorialPopup({
+                title: "Freeze",
+                content:
+                  "Click the freeze bonus to stop the clock for 5 seconds",
+                image: "images/bonus_time.png",
+                popupOptions: {
+                  id: "popup ring 1",
+                  from: ring.position,
+                  coolDown: 2000,
+                  logo: "images/icon_freeze.png",
+                },
+              }),
+            ])
+          ),
+      ],
+      hooks: [
+        new level.Hook({
+          id: "outro",
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
+        }),
+        new level.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            context.activate(anim.title(context.container, "Go!"));
+          }),
+        }),
+      ],
+    })),
 
   Chrono: () =>
     new level.Level("Chrono", (context) => ({

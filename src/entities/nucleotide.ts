@@ -11,7 +11,7 @@ import * as anim from "../animations";
 import * as crispr from "../crispr";
 
 export type NucleotideState = "missing" | "present" | "infected" | "inactive";
-export type NucleotideType = "scissors" | "bonus" | "normal";
+export type NucleotideType = "scissors" | "bonus" | "normal" | "portal";
 
 export const nucleotideTypes: NucleotideType[] = [
   "scissors",
@@ -115,7 +115,7 @@ export class Nucleotide extends entity.CompositeEntity {
     this.pathArrow.position.copyFrom(this.position);
     this.shakes.anchor.copyFrom(this.position);
 
-    // coup coup
+    // coup' coup' !
     if (
       this.type === "scissors" &&
       this.sprite &&
@@ -431,6 +431,15 @@ export class Nucleotide extends entity.CompositeEntity {
       animatedSprite.sprite.gotoAndPlay(
         Math.floor(Math.random() * animatedSprite.sprite.totalFrames)
       );
+    } else if (this.type === "portal") {
+      animatedSprite = util.makeAnimatedSprite(
+        this._entityConfig.app.loader.resources["images/portal.json"]
+      );
+      animatedSprite.sprite.animationSpeed = 20 / 60;
+      // Start on a random frame
+      animatedSprite.sprite.gotoAndPlay(
+        Math.floor(Math.random() * animatedSprite.sprite.totalFrames)
+      );
     } else if (this.type === "scissors") {
       this.colorName = null;
       animatedSprite = util.makeAnimatedSprite(
@@ -443,6 +452,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
       const bubble = crispr.sprite(this, "images/bubble.png");
       bubble.anchor.set(0.5);
+      bubble.scale.set(1.1);
 
       animatedSprite.sprite.addChild(bubble);
     } else {

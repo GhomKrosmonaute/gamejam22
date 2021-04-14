@@ -7,6 +7,7 @@ import * as nucleotide from "./nucleotide";
 import * as level from "../scenes/level";
 
 import * as anim from "../animations";
+import * as crispr from "../crispr";
 
 export type PathState =
   | "no match"
@@ -62,11 +63,15 @@ export class Path extends entity.CompositeEntity {
 
   /** only nucleotides */
   get nucleotides(): nucleotide.Nucleotide[] {
-    return this.items.filter((n) => n.type !== "scissors");
+    return this.items.filter((n) => !/^(?:scissors|portal)$/.test(n.type));
   }
 
   get scissors(): nucleotide.Nucleotide[] {
     return this.items.filter((n) => n.type === "scissors");
+  }
+
+  get portals(): nucleotide.Nucleotide[] {
+    return this.items.filter((n) => n.type === "portal");
   }
 
   get maxLength(): number {
@@ -143,8 +148,18 @@ export class Path extends entity.CompositeEntity {
       } else return false;
     }
 
-    // If the nucleotide is not a neighbor of the last one, stop
-    if (this.level.grid.getNeighborIndex(n, this.last) === -1) return false;
+    // If the nucleotide is not a neighbor of the last one
+    if (this.level.grid.getNeighborIndex(n, this.last) === -1) {
+      // If the last one or the current one are not portals
+      if (n.type !== "portal" || this.last.type !== "portal") return false;
+    } else {
+      if (
+        n.type !== "portal" &&
+        this.last.type === "portal" &&
+        this.portals.length % 2 !== 0
+      )
+        return false;
+    }
 
     // Add to the path
     this.items.push(n);
@@ -187,6 +202,19 @@ export class Path extends entity.CompositeEntity {
         n.pathArrow.visible = false;
       }
     }
+
+    // highlight portals
+    if (
+      this.last &&
+      this.last.type === "portal" &&
+      this.portals.length % 2 !== 0
+    ) {
+      this.level.grid.nucleotides.forEach((n) => {
+        if (n.type === "portal" && n !== this.last) {
+          n.isHighlighted = true;
+        }
+      });
+    }
   }
 
   crunch() {
@@ -194,6 +222,8 @@ export class Path extends entity.CompositeEntity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("path.crunch", true);
+
+        this.items.forEach((n) => (n.type = "normal"));
 
         if (this.correctlyContainsScissors()) {
           this.level.scissorsWasIncludes = true;
@@ -238,12 +268,11 @@ export class Path extends entity.CompositeEntity {
             this._activateChildEntity(
               anim.textFade(
                 this.level.grid.nucleotideContainer,
-                new PIXI.Text(`+ ${score}`, {
+                crispr.makeText(`+ ${score}`, {
                   fill,
                   stroke,
                   strokeThickness: 10,
                   fontSize: 90 + score * 4,
-                  fontFamily: "Cardenio Modern Bold",
                   dropShadow: true,
                   dropShadowBlur: 10,
                 }),

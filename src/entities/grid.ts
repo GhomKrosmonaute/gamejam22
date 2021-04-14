@@ -225,6 +225,7 @@ export class Grid extends entity.CompositeEntity {
     }
 
     // finalize
+    this.addPortals(this.nucleotides);
     this.addScissors(this.nucleotides);
     this.nucleotides.forEach((n) => (n.state = "present"));
   }
@@ -288,19 +289,36 @@ export class Grid extends entity.CompositeEntity {
     return this.allNucleotides.filter((n) => n !== undefined);
   }
 
-  /** Does nothing in "long" mode **/
-  addScissors(among: nucleotide.Nucleotide[]) {
+  addPortals(among: nucleotide.Nucleotide[]) {
     const safe = this.nucleotides;
     if (safe.length === 0) return;
 
+    const normals = among.filter((n) => n.type === "normal");
+    const neededPortalCount =
+      this.level.options.portalsCount - this.getPortals().length;
+
+    if (normals.length <= neededPortalCount) {
+      normals.forEach((n) => (n.type = "portal"));
+    } else {
+      const shuffled = _.shuffle(normals);
+      for (let i = 0; i < neededPortalCount; i++) {
+        shuffled[i].type = "portal";
+      }
+    }
+  }
+
+  /** Does nothing in "long" mode **/
+  addScissors(among: nucleotide.Nucleotide[]) {
+    if (this.nucleotides.length === 0) return;
+
     while (
-      safe.filter((n) => n.type === "scissors").length <
+      this.nucleotides.filter((n) => n.type === "scissors").length <
       this.level.options.scissorCount
     ) {
       let randomIndex;
       do {
         randomIndex = Math.floor(Math.random() * among.length);
-      } while (among[randomIndex].type === "scissors");
+      } while (!among[randomIndex] || among[randomIndex].type === "scissors");
       among[randomIndex].type = "scissors";
     }
   }
@@ -317,6 +335,8 @@ export class Grid extends entity.CompositeEntity {
 
     const normals = this.nucleotides.filter((n) => n.type === "normal");
 
+    let portalsCount = 0;
+
     if (normals.length < length) {
       throw new Error("bad length request");
     }
@@ -329,15 +349,29 @@ export class Grid extends entity.CompositeEntity {
         colorNames.push(current.colorName);
       }
 
-      const neighbors = this.getNeighbors(current).filter((n) => {
-        return !!n && !alreadyPassed.includes(n);
-      });
+      let nextPossibilities: nucleotide.Nucleotide[] = [];
 
-      if (neighbors.length === 0) {
+      if (current.type === "portal") {
+        if (portalsCount % 2 === 0) {
+          nextPossibilities = this.getNeighbors(current).filter((n) => {
+            return !!n && !alreadyPassed.includes(n);
+          });
+        } else {
+          nextPossibilities = this.getPortals().filter((n) => {
+            return !!n && !alreadyPassed.includes(n);
+          });
+        }
+      } else {
+        nextPossibilities = this.getNeighbors(current).filter((n) => {
+          return !!n && !alreadyPassed.includes(n);
+        });
+      }
+
+      if (nextPossibilities.length === 0) {
         return null;
       }
 
-      current = crispr.random(neighbors);
+      current = crispr.random(nextPossibilities);
     }
 
     if (
@@ -440,6 +474,7 @@ export class Grid extends entity.CompositeEntity {
       }
     }
 
+    this.addPortals(oldHoles);
     this.addScissors(oldHoles);
     // this.refresh();
   }
@@ -464,6 +499,7 @@ export class Grid extends entity.CompositeEntity {
     for (const nucleotide of holes) {
       this.generateNucleotide(nucleotide);
     }
+    this.addPortals(holes);
     this.addScissors(holes);
 
     holes.forEach((n) => (n.state = "present"));
@@ -528,6 +564,10 @@ export class Grid extends entity.CompositeEntity {
     for (const neighborIndex of NeighborIndexes)
       neighbors.push(this.getNeighbor(n, neighborIndex));
     return neighbors;
+  }
+
+  getPortals(): nucleotide.Nucleotide[] {
+    return this.nucleotides.filter((n) => n.type === "portal");
   }
 
   getNeighborsInLine(
@@ -633,6 +673,7 @@ export class Grid extends entity.CompositeEntity {
       this.generateNucleotide(n);
     });
 
+    this.addPortals(nucleotides);
     this.addScissors(nucleotides);
 
     nucleotides.forEach((n) => (n.state = "present"));
