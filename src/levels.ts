@@ -62,7 +62,7 @@ export const levels = {
       gridShape: "fourIslands",
       forceMatching: true,
       maxScore: 500,
-      sequenceLength: 4,
+      sequenceLength: 6,
       portalsCount: 4,
       hooks: [
         new level.Hook({

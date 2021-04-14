@@ -329,13 +329,11 @@ export class Grid extends entity.CompositeEntity {
     return position.x % 2 === 0;
   }
 
-  getRandomPath(length: number): nucleotide.ColorName[] | null {
+  _getRandomPath(length: number): nucleotide.ColorName[] | null {
     const alreadyPassed: nucleotide.Nucleotide[] = [];
     const colorNames: nucleotide.ColorName[] = [];
 
     const normals = this.nucleotides.filter((n) => n.type === "normal");
-
-    let portalsCount = 0;
 
     if (normals.length < length) {
       throw new Error("bad length request");
@@ -352,7 +350,7 @@ export class Grid extends entity.CompositeEntity {
       let nextPossibilities: nucleotide.Nucleotide[] = [];
 
       if (current.type === "portal") {
-        if (portalsCount % 2 === 0) {
+        if (alreadyPassed.filter((n) => n.type === "portal").length % 2 === 0) {
           nextPossibilities = this.getNeighbors(current).filter((n) => {
             return !!n && !alreadyPassed.includes(n);
           });
@@ -382,6 +380,83 @@ export class Grid extends entity.CompositeEntity {
     }
 
     return colorNames;
+  }
+
+  getForcedMatchingPath(length: number): nucleotide.ColorName[] {
+    let output: nucleotide.ColorName[] = null;
+
+    while (output === null) {
+      const passed: {
+        colors: nucleotide.ColorName[];
+        nucleotides: nucleotide.Nucleotide[];
+      } = {
+        colors: [],
+        nucleotides: [],
+      };
+
+      let current: nucleotide.Nucleotide;
+      const addAndFocus = (n: nucleotide.Nucleotide) => {
+        current = n;
+        passed.nucleotides.push(n);
+        if (current.type === "normal") passed.colors.push(n.colorName);
+      };
+
+      // get all color-based nucleotides
+      const normals = this.nucleotides.filter((n) => n.type === "normal");
+
+      // if request is impossible, throw error
+      if (normals.length < length) throw new Error("bad length request");
+
+      // chose an entry point
+      addAndFocus(crispr.random(normals));
+
+      // while path is not full
+      while (true) {
+        // get possible next nucleotides
+        let nextList: nucleotide.Nucleotide[] = [];
+
+        if (current.type === "portal") {
+          if (
+            passed.nucleotides.filter((n) => n.type === "portal").length % 2 ===
+            0
+          ) {
+            nextList = this.getNeighbors(current).filter((n) => {
+              return !!n && !passed.nucleotides.includes(n);
+            });
+          } else {
+            nextList = this.getPortals().filter((n) => {
+              return !!n && !passed.nucleotides.includes(n);
+            });
+          }
+        } else {
+          nextList = this.getNeighbors(current).filter((n) => {
+            return !!n && !passed.nucleotides.includes(n);
+          });
+        }
+
+        // if path is locked, break and retry
+        if (nextList.length === 0) {
+          if (passed.colors.length < 3) {
+            length--;
+            break;
+          } else {
+            output = passed.colors;
+            break;
+          }
+        }
+
+        // continue path
+        addAndFocus(crispr.random(nextList));
+
+        // if path is full, return it
+        if (passed.colors.length === length) {
+          output = passed.colors;
+          break;
+        }
+      }
+    }
+
+    return output;
   }
 
   getNucleotideFromGridPosition(

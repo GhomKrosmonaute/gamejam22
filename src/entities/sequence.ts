@@ -473,9 +473,9 @@ export class Sequence extends entity.CompositeEntity {
     if (Array.isArray(this.base)) {
       forcedSequence = this.base.slice(0);
     } else if (this.level.options.forceMatching) {
-      forcedSequence = this.level.grid.getRandomPath(this.baseLength);
+      forcedSequence = this.level.grid.getForcedMatchingPath(this.baseLength);
       while (!forcedSequence) {
-        forcedSequence = this.level.grid.getRandomPath(this.baseLength);
+        forcedSequence = this.level.grid.getForcedMatchingPath(this.baseLength);
       }
     }
 
