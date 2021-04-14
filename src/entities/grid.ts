@@ -225,8 +225,17 @@ export class Grid extends entity.CompositeEntity {
     }
 
     // finalize
-    this.addPortals(this.nucleotides);
-    this.addScissors(this.nucleotides);
+    this.addSpecifics(
+      this.nucleotides,
+      this.level.options.portalsCount,
+      "portal"
+    );
+    (() =>
+      this.addSpecifics(
+        this.nucleotides,
+        this.level.options.scissorCount,
+        "scissors"
+      ))();
     this.nucleotides.forEach((n) => (n.state = "present"));
   }
 
@@ -289,37 +298,25 @@ export class Grid extends entity.CompositeEntity {
     return this.allNucleotides.filter((n) => n !== undefined);
   }
 
-  addPortals(among: nucleotide.Nucleotide[]) {
+  addSpecifics(
+    among: nucleotide.Nucleotide[],
+    count: number,
+    type: nucleotide.NucleotideType
+  ) {
     const safe = this.nucleotides;
     if (safe.length === 0) return;
 
     const normals = among.filter((n) => n.type === "normal");
-    const neededPortalCount =
-      this.level.options.portalsCount - this.getPortals().length;
+    const neededCount = count - safe.filter((n) => n.type === type).length;
 
-    if (normals.length <= neededPortalCount) {
-      normals.forEach((n) => (n.type = "portal"));
+    // si le nombre de normaux est insuffisant (presque jamais)
+    if (normals.length <= neededCount) {
+      // change tous les normaux en specifics
+      normals.forEach((n) => (n.type = type));
     } else {
-      const shuffled = _.shuffle(normals);
-      for (let i = 0; i < neededPortalCount; i++) {
-        shuffled[i].type = "portal";
-      }
-    }
-  }
-
-  /** Does nothing in "long" mode **/
-  addScissors(among: nucleotide.Nucleotide[]) {
-    if (this.nucleotides.length === 0) return;
-
-    while (
-      this.nucleotides.filter((n) => n.type === "scissors").length <
-      this.level.options.scissorCount
-    ) {
-      let randomIndex;
-      do {
-        randomIndex = Math.floor(Math.random() * among.length);
-      } while (!among[randomIndex] || among[randomIndex].type === "scissors");
-      among[randomIndex].type = "scissors";
+      _.shuffle(normals)
+        .slice(0, neededCount)
+        .forEach((n) => (n.type = type));
     }
   }
 
@@ -549,8 +546,13 @@ export class Grid extends entity.CompositeEntity {
       }
     }
 
-    this.addPortals(oldHoles);
-    this.addScissors(oldHoles);
+    this.addSpecifics(oldHoles, this.level.options.portalsCount, "portal");
+    (() =>
+      this.addSpecifics(
+        oldHoles,
+        this.level.options.scissorCount,
+        "scissors"
+      ))();
     // this.refresh();
   }
 
@@ -574,8 +576,9 @@ export class Grid extends entity.CompositeEntity {
     for (const nucleotide of holes) {
       this.generateNucleotide(nucleotide);
     }
-    this.addPortals(holes);
-    this.addScissors(holes);
+    this.addSpecifics(holes, this.level.options.portalsCount, "portal");
+    (() =>
+      this.addSpecifics(holes, this.level.options.scissorCount, "scissors"))();
 
     holes.forEach((n) => (n.state = "present"));
 
@@ -748,8 +751,13 @@ export class Grid extends entity.CompositeEntity {
       this.generateNucleotide(n);
     });
 
-    this.addPortals(nucleotides);
-    this.addScissors(nucleotides);
+    this.addSpecifics(nucleotides, this.level.options.portalsCount, "portal");
+    (() =>
+      this.addSpecifics(
+        nucleotides,
+        this.level.options.scissorCount,
+        "scissors"
+      ))();
 
     nucleotides.forEach((n) => (n.state = "present"));
   }
