@@ -14,6 +14,21 @@ import * as crisp from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
+  Hive: () =>
+    new level.Level("Hive", (context) => ({
+      gridShape: "hive",
+      forceMatching: true,
+      portalsCount: 4,
+      maxScore: 500,
+      hooks: [
+        new level.Hook({
+          id: "outro",
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
+        }),
+      ],
+    })),
+
   Hole: () =>
     new level.Level("Hole", (context) => ({
       gridShape: "hole",

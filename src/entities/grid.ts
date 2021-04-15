@@ -57,6 +57,7 @@ export const gridShapes = {
     (x > 1 && x < 5 && y > 1 && y < 5 && !(y === 4 && (x === 2 || x === 4))) ||
     (y === 0 && (x < 2 || x > 4)) ||
     (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5)),
+  hive: (x: number, y: number) => x % 2 !== 0 && y % 2 === 0,
 };
 
 export type GridShape =

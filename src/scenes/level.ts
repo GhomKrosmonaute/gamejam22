@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
 
 import * as crispr from "../crispr";
@@ -64,6 +65,7 @@ export interface LevelOptions {
   displayTurnTitles: boolean;
   variant: LevelVariant;
   virus: virus.VirusType;
+  maxLife: number;
   maxScore: number;
   dropSpeed: number;
   baseGain: number;
@@ -107,6 +109,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   variant: "turn",
   virus: "mini",
   presetScissors: null,
+  maxLife: 5,
   dropSpeed: 1,
   maxScore: 1000,
   baseGain: 10,
@@ -299,6 +302,7 @@ export class Level extends entity.CompositeEntity {
   public triggeredHooks: Set<string> = new Set();
   public fallingStopped = false;
   public container = new PIXI.Container();
+  public backgroundCellDangerMask: PIXI.Sprite;
   public backgroundLayers: PIXI.Sprite[];
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
@@ -324,6 +328,7 @@ export class Level extends entity.CompositeEntity {
   public crunchCount = 0;
   public failed = false;
   public finished = false;
+  private _life: number;
   public sequenceWasCrunched = false;
   public scissorsWasIncludes = false;
   public oneShotLongSequence = false;
@@ -401,6 +406,10 @@ export class Level extends entity.CompositeEntity {
     return this.grid.cursor;
   }
 
+  private _initLife() {
+    this.life = this.options.maxLife;
+  }
+
   private _initScreenShake() {
     this.screenShake(0, 0, 0);
     // this.screenShakeComponents = [
@@ -443,6 +452,7 @@ export class Level extends entity.CompositeEntity {
       //"background_layer_3-eclaircir.png",
       //"background_layer_4-lumiere_tamisee.png",
       "background_cell.png",
+      "background_cell_danger.png",
       "particles_background.png",
     ].forEach((filename) => {
       const sprite = crispr.sprite(this, "images/" + filename);
@@ -454,6 +464,14 @@ export class Level extends entity.CompositeEntity {
 
       if (filename.includes("4"))
         sprite.blendMode = PIXI.BLEND_MODES.SOFT_LIGHT;
+
+      if (filename.includes("background_cell_danger.png")) {
+        this.backgroundCellDangerMask = crispr.sprite(
+          this,
+          "images/background_cell_danger_mask.png"
+        );
+        sprite.mask = this.backgroundCellDangerMask;
+      }
 
       this.container.addChild(sprite);
     });
@@ -645,6 +663,7 @@ export class Level extends entity.CompositeEntity {
       );
     });
 
+    this._initLife();
     this._initScreenShake();
     this._initDisablingAnimations();
     this._initMusic();
@@ -867,6 +886,22 @@ export class Level extends entity.CompositeEntity {
     if (crispr.debug) {
       console.log("--> DONE", "level.reset()");
     }
+  }
+
+  set life(life: number) {
+    this._life = life;
+    if (this.backgroundCellDangerMask)
+      this.backgroundCellDangerMask.position.y = crispr.proportion(
+        life,
+        this.options.maxLife,
+        0,
+        0,
+        -crispr.height
+      );
+  }
+
+  get life(): number {
+    return this._life;
   }
 
   disablingAnimation(name: string, state: boolean) {
@@ -1101,7 +1136,15 @@ export class Level extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.infect", true);
       }),
-      this.grid.infect(),
+      new tween.Tween({
+        from: this.life,
+        to: this.life - 1,
+        easing: easing.easeInOutQuad,
+        onUpdate: (value) => {
+          this.life = value;
+        },
+      }),
+      //this.grid.infect(),
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.infect", false);
       }),
