@@ -470,6 +470,9 @@ export class Level extends entity.CompositeEntity {
           this,
           "images/background_cell_danger_mask.png"
         );
+        this.container.addChild(this.backgroundCellDangerMask);
+        sprite.anchor.set(0, 1);
+        sprite.position.y = crispr.height;
         sprite.mask = this.backgroundCellDangerMask;
       }
 
@@ -894,9 +897,9 @@ export class Level extends entity.CompositeEntity {
       this.backgroundCellDangerMask.position.y = crispr.proportion(
         life,
         this.options.maxLife,
+        -1,
         0,
-        0,
-        -crispr.height
+        -1320
       );
   }
 
@@ -1140,8 +1143,14 @@ export class Level extends entity.CompositeEntity {
         from: this.life,
         to: this.life - 1,
         easing: easing.easeInOutQuad,
+        duration: 2500,
         onUpdate: (value) => {
           this.life = value;
+        },
+        onTeardown: () => {
+          if (this.life <= 0) {
+            this.activate(new popup.FailedLevelPopup());
+          }
         },
       }),
       //this.grid.infect(),
