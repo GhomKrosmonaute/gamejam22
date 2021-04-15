@@ -666,7 +666,6 @@ export class Level extends entity.CompositeEntity {
       );
     });
 
-    this._initLife();
     this._initScreenShake();
     this._initDisablingAnimations();
     this._initMusic();
@@ -677,6 +676,7 @@ export class Level extends entity.CompositeEntity {
     this.emitLevelEvent("init");
     this.isInit = true;
 
+    this._initLife();
     this._initZenMoves();
     this._initGrid();
     this._initPath();
@@ -893,14 +893,22 @@ export class Level extends entity.CompositeEntity {
 
   set life(life: number) {
     this._life = life;
-    if (this.backgroundCellDangerMask)
+    if (this.backgroundCellDangerMask) {
       this.backgroundCellDangerMask.position.y = crispr.proportion(
         life,
         this.options.maxLife,
-        -1,
         0,
+        100,
         -1320
       );
+      // this.backgroundCellDangerMask.height = crispr.proportion(
+      //   life,
+      //   this.options.maxLife,
+      //   -1,
+      //   3240,
+      //   5000
+      // )
+    }
   }
 
   get life(): number {
