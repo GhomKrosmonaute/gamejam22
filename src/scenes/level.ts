@@ -946,20 +946,10 @@ export class Level extends entity.CompositeEntity {
       crispr.proportion(life, this.options.maxLife, 0, 0, 5)
     );
     if (this.backgroundCellDangerMask) {
-      this.backgroundCellDangerMask.position.y = crispr.proportion(
-        life,
-        this.options.maxLife,
-        0,
-        100,
-        -1320
+      this.backgroundCellDangerMask.position.y = Math.max(
+        -1420,
+        crispr.proportion(life, this.options.maxLife, 1, 200, -1420)
       );
-      // this.backgroundCellDangerMask.height = crispr.proportion(
-      //   life,
-      //   this.options.maxLife,
-      //   -1,
-      //   3240,
-      //   5000
-      // )
     }
   }
 
