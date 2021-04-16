@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
 
 import * as crispr from "../crispr";
@@ -64,6 +65,7 @@ export interface LevelOptions {
   displayTurnTitles: boolean;
   variant: LevelVariant;
   virus: virus.VirusType;
+  maxLife: number;
   maxScore: number;
   dropSpeed: number;
   baseGain: number;
@@ -107,6 +109,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   variant: "turn",
   virus: "mini",
   presetScissors: null,
+  maxLife: 5,
   dropSpeed: 1,
   maxScore: 1000,
   baseGain: 10,
@@ -148,6 +151,7 @@ export type LevelEventParams<
 > = LevelEvents[EventName];
 
 export interface LevelEvents {
+  end: [];
   init: [];
   setup: [];
   canReset: [];
@@ -299,10 +303,14 @@ export class Level extends entity.CompositeEntity {
   public triggeredHooks: Set<string> = new Set();
   public fallingStopped = false;
   public container = new PIXI.Container();
+  public backgroundCellDangerMask: PIXI.Sprite;
   public backgroundLayers: PIXI.Sprite[];
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;
+  public swimmingViruses: virus.SwimmingVirus[] = [];
+  public swimmingVirusCount = 0;
+  public swimmingVirusesContainer = new PIXI.Container();
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
@@ -324,11 +332,13 @@ export class Level extends entity.CompositeEntity {
   public crunchCount = 0;
   public failed = false;
   public finished = false;
+  private _life: number;
   public sequenceWasCrunched = false;
   public scissorsWasIncludes = false;
   public oneShotLongSequence = false;
   public crunchedSequenceCount = 0;
   public isInit = false;
+  public isEnded = false;
 
   // bonuses
   public syringeBonus: bonuses.Bonus;
@@ -401,6 +411,10 @@ export class Level extends entity.CompositeEntity {
     return this.grid.cursor;
   }
 
+  private _initLife() {
+    this.life = this.options.maxLife;
+  }
+
   private _initScreenShake() {
     this.screenShake(0, 0, 0);
     // this.screenShakeComponents = [
@@ -443,7 +457,7 @@ export class Level extends entity.CompositeEntity {
       //"background_layer_3-eclaircir.png",
       //"background_layer_4-lumiere_tamisee.png",
       "background_cell.png",
-      "particles_background.png",
+      "background_cell_danger.png",
     ].forEach((filename) => {
       const sprite = crispr.sprite(this, "images/" + filename);
 
@@ -455,15 +469,26 @@ export class Level extends entity.CompositeEntity {
       if (filename.includes("4"))
         sprite.blendMode = PIXI.BLEND_MODES.SOFT_LIGHT;
 
+      if (filename.includes("background_cell_danger.png")) {
+        this.backgroundCellDangerMask = crispr.sprite(
+          this,
+          "images/background_cell_danger_mask.png"
+        );
+        this.container.addChild(this.backgroundCellDangerMask);
+        sprite.anchor.set(0, 1);
+        sprite.position.y = crispr.height;
+        sprite.mask = this.backgroundCellDangerMask;
+      }
+
       this.container.addChild(sprite);
     });
+
+    this.container.addChild(this.swimmingVirusesContainer);
   }
 
   private _initForeground() {
-    const particles = crispr.sprite(this, "images/particles_foreground.png");
     const membrane = crispr.sprite(this, "images/membrane.png");
     membrane.position.set(0, 300);
-    this.container.addChild(particles);
     this.container.addChild(membrane);
   }
 
@@ -637,12 +662,16 @@ export class Level extends entity.CompositeEntity {
           new entity.FunctionCallEntity(() => {
             this.path.remove();
           }),
-          this.infect(),
+          this.infect(true),
           new entity.FunctionCallEntity(() => {
             this.checkGameOverByInfection();
           }),
         ])
       );
+    });
+
+    this.onLevelEvent("end", () => {
+      this.isEnded = true;
     });
 
     this._initScreenShake();
@@ -655,6 +684,7 @@ export class Level extends entity.CompositeEntity {
     this.emitLevelEvent("init");
     this.isInit = true;
 
+    this._initLife();
     this._initZenMoves();
     this._initGrid();
     this._initPath();
@@ -682,6 +712,47 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update(frameInfo: entity.FrameInfo) {
+    if (this.isEnded) return;
+
+    // swimming viruses
+    {
+      while (this.swimmingViruses.length < this.swimmingVirusCount) {
+        const generated = virus.generateSwimmingVirus(
+          this,
+          this.backgroundCellDangerMask.y * -1
+        );
+
+        this._activateChildEntity(
+          generated.entity,
+          entity.extendConfig({
+            container: this.swimmingVirusesContainer,
+          })
+        );
+
+        this.swimmingViruses.push(generated);
+      }
+
+      while (this.swimmingViruses.length > this.swimmingVirusCount) {
+        const removed = this.swimmingViruses.shift();
+
+        this.deactivate(removed.entity);
+      }
+
+      this.swimmingViruses.forEach((v) => {
+        v.entity.sprite.x += v.speed;
+        if (
+          v.entity.sprite.x > crispr.width + 400 ||
+          v.entity.sprite.x < -400
+        ) {
+          virus.generateSwimmingVirus(
+            this,
+            this.backgroundCellDangerMask.y * -1,
+            v
+          );
+        }
+      });
+    }
+
     if (
       this.screenShakeDuration &&
       this.screenShakeStart &&
@@ -867,6 +938,23 @@ export class Level extends entity.CompositeEntity {
     if (crispr.debug) {
       console.log("--> DONE", "level.reset()");
     }
+  }
+
+  set life(life: number) {
+    this._life = life;
+    this.swimmingVirusCount = Math.round(
+      crispr.proportion(life, this.options.maxLife, 0, 0, 5)
+    );
+    if (this.backgroundCellDangerMask) {
+      this.backgroundCellDangerMask.position.y = Math.max(
+        -1420,
+        crispr.proportion(life, this.options.maxLife, 1, 200, -1420)
+      );
+    }
+  }
+
+  get life(): number {
+    return this._life;
   }
 
   disablingAnimation(name: string, state: boolean) {
@@ -1096,12 +1184,27 @@ export class Level extends entity.CompositeEntity {
     ]);
   }
 
-  public infect(): entity.Entity {
+  public infect(withSound = false): entity.Entity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.infect", true);
+        if (withSound) this._entityConfig.fxMachine.play("skip");
       }),
-      this.grid.infect(),
+      new tween.Tween({
+        from: this.life,
+        to: this.life - 1,
+        easing: easing.easeInOutQuad,
+        duration: 2500,
+        onUpdate: (value) => {
+          this.life = value;
+        },
+        onTeardown: () => {
+          if (this.life <= 0) {
+            this.activate(new popup.FailedLevelPopup());
+          }
+        },
+      }),
+      //this.grid.infect(),
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.infect", false);
       }),

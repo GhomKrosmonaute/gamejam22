@@ -14,6 +14,21 @@ import * as crisp from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
+  Hive: () =>
+    new level.Level("Hive", (context) => ({
+      gridShape: "hive",
+      forceMatching: true,
+      portalsCount: 4,
+      maxScore: 500,
+      hooks: [
+        new level.Hook({
+          id: "outro",
+          event: "maxScoreReached",
+          entity: new popup.TerminatedLevelPopup(),
+        }),
+      ],
+    })),
+
   Hole: () =>
     new level.Level("Hole", (context) => ({
       gridShape: "hole",
@@ -147,7 +162,8 @@ export const levels = {
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
-            context.activate(anim.title(context.container, "Go!"));
+            if (context.isEnded)
+              context.activate(anim.title(context.container, "Go!"));
           }),
         }),
         new level.Hook({
@@ -250,7 +266,8 @@ export const levels = {
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
-            context.activate(anim.title(context.container, "Go!"));
+            if (context.isEnded)
+              context.activate(anim.title(context.container, "Go!"));
           }),
         }),
       ],
@@ -343,7 +360,8 @@ export const levels = {
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
-            context.activate(anim.title(context.container, "Go!"));
+            if (context.isEnded)
+              context.activate(anim.title(context.container, "Go!"));
           }),
         }),
       ],

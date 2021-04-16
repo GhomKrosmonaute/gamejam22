@@ -43,9 +43,9 @@ export function middle(a: PIXI.Point, b: PIXI.Point): PIXI.Point {
 /** random between 0 and 1 */
 export function random(): number;
 /** random between 0 and X */
-export function random(min: number): number;
+export function random(max: number): number;
 /** random pick in array */
-export function random<T>(min: T[]): T;
+export function random<T>(list: T[]): T;
 /** random in range */
 export function random(min: number, max: number): number;
 /** polyvalent random util */

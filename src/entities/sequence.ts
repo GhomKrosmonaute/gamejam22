@@ -436,6 +436,7 @@ export class Sequence extends entity.CompositeEntity {
     const requestTransition = () =>
       this.virus.isSetup &&
       this.level.isInit &&
+      !this.level.isEnded &&
       !this.level.disablingAnimations.has("preventVirus") &&
       ![...this.level.disablingAnimations].some((name) =>
         name.startsWith("popup")

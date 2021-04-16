@@ -24,10 +24,10 @@ const graphicalAssets = [
   "images/titlescreen_title.png",
 
   "images/map_background.png",
-  "images/particles_background.png",
-  "images/particles_foreground.png",
   "images/background.png",
   "images/background_cell.png",
+  "images/background_cell_danger.png",
+  "images/background_cell_danger_mask.png",
   "images/background_layer_1.png",
   "images/background_layer_2.png",
   "images/background_layer_3-eclaircir.png",
