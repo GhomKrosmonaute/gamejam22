@@ -658,7 +658,7 @@ export class Level extends entity.CompositeEntity {
           new entity.FunctionCallEntity(() => {
             this.path.remove();
           }),
-          this.infect(),
+          this.infect(true),
           new entity.FunctionCallEntity(() => {
             this.checkGameOverByInfection();
           }),
@@ -1142,10 +1142,11 @@ export class Level extends entity.CompositeEntity {
     ]);
   }
 
-  public infect(): entity.Entity {
+  public infect(withSound = false): entity.Entity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.infect", true);
+        if (withSound) this._entityConfig.fxMachine.play("skip");
       }),
       new tween.Tween({
         from: this.life,
