@@ -41,8 +41,9 @@ export function generateSwimmingVirus(
   ref.entity.sprite.anchor.set(0.5);
   ref.entity.sprite.scale.set(scale);
   ref.entity.sprite.angle = toRight ? 90 : -90;
-  ref.entity.sprite.alpha = scale - 0.25;
+  ref.entity.sprite.alpha = (scale - 0.25) / 2;
   ref.entity.sprite.animationSpeed = 20 / 60;
+  ref.entity.sprite.tint = 0x241e1e;
   ref.entity.sprite.position.set(
     toRight ? -300 : crispr.width + 300,
     crispr.height - crispr.random(maxHeight)
