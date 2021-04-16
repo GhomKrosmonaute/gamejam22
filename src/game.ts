@@ -24,8 +24,6 @@ const graphicalAssets = [
   "images/titlescreen_title.png",
 
   "images/map_background.png",
-  "images/particles_background.png",
-  "images/particles_foreground.png",
   "images/background.png",
   "images/background_cell.png",
   "images/background_cell_danger.png",

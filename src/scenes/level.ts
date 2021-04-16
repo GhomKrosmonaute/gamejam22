@@ -308,6 +308,9 @@ export class Level extends entity.CompositeEntity {
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;
+  public swimmingViruses: virus.SwimmingVirus[] = [];
+  public swimmingVirusCount = 0;
+  public swimmingVirusesContainer = new PIXI.Container();
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
@@ -455,7 +458,6 @@ export class Level extends entity.CompositeEntity {
       //"background_layer_4-lumiere_tamisee.png",
       "background_cell.png",
       "background_cell_danger.png",
-      "particles_background.png",
     ].forEach((filename) => {
       const sprite = crispr.sprite(this, "images/" + filename);
 
@@ -480,13 +482,13 @@ export class Level extends entity.CompositeEntity {
 
       this.container.addChild(sprite);
     });
+
+    this.container.addChild(this.swimmingVirusesContainer);
   }
 
   private _initForeground() {
-    const particles = crispr.sprite(this, "images/particles_foreground.png");
     const membrane = crispr.sprite(this, "images/membrane.png");
     membrane.position.set(0, 300);
-    this.container.addChild(particles);
     this.container.addChild(membrane);
   }
 
@@ -712,6 +714,45 @@ export class Level extends entity.CompositeEntity {
   _update(frameInfo: entity.FrameInfo) {
     if (this.isEnded) return;
 
+    // swimming viruses
+    {
+      while (this.swimmingViruses.length < this.swimmingVirusCount) {
+        const generated = virus.generateSwimmingVirus(
+          this,
+          this.backgroundCellDangerMask.y * -1
+        );
+
+        this._activateChildEntity(
+          generated.entity,
+          entity.extendConfig({
+            container: this.swimmingVirusesContainer,
+          })
+        );
+
+        this.swimmingViruses.push(generated);
+      }
+
+      while (this.swimmingViruses.length > this.swimmingVirusCount) {
+        const removed = this.swimmingViruses.shift();
+
+        this.deactivate(removed.entity);
+      }
+
+      this.swimmingViruses.forEach((v) => {
+        v.entity.sprite.x += v.speed;
+        if (
+          v.entity.sprite.x > crispr.width + 400 ||
+          v.entity.sprite.x < -400
+        ) {
+          virus.generateSwimmingVirus(
+            this,
+            this.backgroundCellDangerMask.y * -1,
+            v
+          );
+        }
+      });
+    }
+
     if (
       this.screenShakeDuration &&
       this.screenShakeStart &&
@@ -901,6 +942,9 @@ export class Level extends entity.CompositeEntity {
 
   set life(life: number) {
     this._life = life;
+    this.swimmingVirusCount = Math.round(
+      crispr.proportion(life, this.options.maxLife, 0, 0, 5)
+    );
     if (this.backgroundCellDangerMask) {
       this.backgroundCellDangerMask.position.y = crispr.proportion(
         life,
