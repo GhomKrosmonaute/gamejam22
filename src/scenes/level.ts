@@ -151,6 +151,7 @@ export type LevelEventParams<
 > = LevelEvents[EventName];
 
 export interface LevelEvents {
+  end: [];
   init: [];
   setup: [];
   canReset: [];
@@ -334,6 +335,7 @@ export class Level extends entity.CompositeEntity {
   public oneShotLongSequence = false;
   public crunchedSequenceCount = 0;
   public isInit = false;
+  public isEnded = false;
 
   // bonuses
   public syringeBonus: bonuses.Bonus;
@@ -666,6 +668,10 @@ export class Level extends entity.CompositeEntity {
       );
     });
 
+    this.onLevelEvent("end", () => {
+      this.isEnded = true;
+    });
+
     this._initScreenShake();
     this._initDisablingAnimations();
     this._initMusic();
@@ -704,6 +710,8 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update(frameInfo: entity.FrameInfo) {
+    if (this.isEnded) return;
+
     if (
       this.screenShakeDuration &&
       this.screenShakeStart &&

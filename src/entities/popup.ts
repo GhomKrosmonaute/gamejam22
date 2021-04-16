@@ -63,6 +63,8 @@ export const defaultPopupOptions: PopupOptions = {
 /**
  * Emits:
  * - closed
+ * - opened
+ * - minimized
  * - backgroundLoaded( background: PIXI.Sprite )
  */
 export abstract class Popup extends entity.CompositeEntity {
@@ -266,6 +268,7 @@ export abstract class Popup extends entity.CompositeEntity {
                   ]),
                 ]),
                 new entity.FunctionCallEntity(() => {
+                  this.emit("opened");
                   // booyah.changeGameState("paused");
                 }),
               ])
@@ -278,6 +281,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
   _teardown() {
     if (!this._container) return;
+    this.emit("closed");
     this.level.disablingAnimation(this.id, false);
     this.body.removeChildren();
     this._container.removeChildren();
@@ -528,6 +532,7 @@ export abstract class Popup extends entity.CompositeEntity {
             this.background.visible = true;
             // booyah.changeGameState("paused");
             this.level.disablingAnimation(this.id, true);
+            this.emit("opened");
           },
         })
       );
@@ -641,6 +646,10 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
       withClosureCross: false,
       closeOnBackgroundClick: true,
       onClose: (popup) => popup.level.exit(true),
+    });
+
+    this._once(this, "opened", () => {
+      this.level.emitLevelEvent("end");
     });
   }
 

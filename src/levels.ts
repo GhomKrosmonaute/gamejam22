@@ -162,7 +162,8 @@ export const levels = {
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
-            context.activate(anim.title(context.container, "Go!"));
+            if (context.isEnded)
+              context.activate(anim.title(context.container, "Go!"));
           }),
         }),
         new level.Hook({
@@ -265,7 +266,8 @@ export const levels = {
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
-            context.activate(anim.title(context.container, "Go!"));
+            if (context.isEnded)
+              context.activate(anim.title(context.container, "Go!"));
           }),
         }),
       ],
@@ -358,7 +360,8 @@ export const levels = {
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
-            context.activate(anim.title(context.container, "Go!"));
+            if (context.isEnded)
+              context.activate(anim.title(context.container, "Go!"));
           }),
         }),
       ],
