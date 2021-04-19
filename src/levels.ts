@@ -77,7 +77,8 @@ export const levels = {
       gridShape: "fourIslands",
       forceMatching: true,
       maxScore: 500,
-      sequenceLength: 6,
+      scissorCount: 3,
+      sequenceLength: 5,
       portalsCount: 4,
       hooks: [
         new level.Hook({
@@ -395,6 +396,7 @@ export const levels = {
                   from: ring.position,
                   coolDown: 2000,
                   logo: "images/bonus_swap.png",
+                  logoPosition: { x: 0, y: -110 },
                   logoScale: 1.3,
                 },
               }),

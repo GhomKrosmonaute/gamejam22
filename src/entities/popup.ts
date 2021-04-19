@@ -26,6 +26,7 @@ export interface PopupOptions {
   id: string;
   logo: string;
   logoScale: number;
+  logoPosition: PIXI.IPointData;
   coolDown: number;
   from: PIXI.Point;
   minimizeOnSetup: boolean;
@@ -46,6 +47,7 @@ export const defaultPopupOptions: PopupOptions = {
   coolDown: null,
   logo: "",
   logoScale: 0.7,
+  logoPosition: new PIXI.Point(),
   from: new PIXI.Point(crispr.width / 2, crispr.height / 2),
   minimizeOnSetup: false,
   minimizeOnClose: false,
@@ -189,8 +191,10 @@ export abstract class Popup extends entity.CompositeEntity {
             this.logo.anchor.set(0.5);
             this.logo.scale.set(this.options.logoScale);
             this.logo.position.set(
-              this.center.x,
-              50 + (this.logo.height * this.options.logoScale) / 2
+              this.center.x + this.options.logoPosition.x,
+              50 +
+                (this.logo.height * this.options.logoScale) / 2 +
+                this.options.logoPosition.y
             );
             this.body.addChild(this.logo);
           }
@@ -546,8 +550,10 @@ export abstract class Popup extends entity.CompositeEntity {
             from: this.logo.position.clone(),
             easing: easing.easeInOutQuad,
             to: new PIXI.Point(
-              this.options.width / 2,
-              50 + (this.logo.height * this.options.logoScale) / 2
+              this.options.width / 2 + this.options.logoPosition.x,
+              50 +
+                (this.logo.height * this.options.logoScale) / 2 +
+                this.options.logoPosition.y
             ),
             interpolate: tween.interpolation.point,
           }),

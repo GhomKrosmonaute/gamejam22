@@ -160,9 +160,14 @@ export class Grid extends entity.CompositeEntity {
   highlightSolution(): entity.EntityBase {
     return anim.sequenced({
       items: this.solution,
-      timeBetween: 200,
-      onStep: (n) => {
-        this.level.path.startAt(n);
+      timeBetween: 100,
+      waitForAllSteps: true,
+      onStep: (n, i) => {
+        if (i === 0) this.level.path.startAt(n);
+        else this.level.path.add(n);
+      },
+      callback: () => {
+        this.level.activate(this.level.attemptCrunch());
       },
     });
   }
@@ -405,9 +410,15 @@ export class Grid extends entity.CompositeEntity {
           // continue path
           addAndFocus(crispr.random(nextList));
 
-          // if path is full, return it
+          // if path is full
           if (passed.colors.length >= length) {
-            output = passed;
+            if (
+              this.level.options.scissorCount === 0 ||
+              passed.nucleotides.filter((n) => n.type === "scissors").length > 0
+            ) {
+              // return it
+              output = passed;
+            }
             break;
           }
         }
