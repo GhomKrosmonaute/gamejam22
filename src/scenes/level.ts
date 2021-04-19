@@ -118,7 +118,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   gaugeRings: [],
   sequenceLength: null,
   sequences: null,
-  scissorCount: 6,
+  scissorCount: 0,
   portalsCount: 0,
   nucleotideRadius: crispr.width / 13.44,
   sequenceNucleotideRadius: crispr.width * 0.04,
@@ -157,9 +157,9 @@ export interface LevelEvents {
   canReset: [];
   infected: [];
   fallingDown: [];
-  virusLeaves: [virus.Virus];
-  closedPopup: [popup.Popup];
-  minimizedPopup: [popup.Popup];
+  virusLeaves: [virus: virus.Virus];
+  closedPopup: [popup: popup.Popup];
+  minimizedPopup: [popup: popup.Popup];
   pathCrunched: [];
   partialCrunched: [];
   cleanedInfection: [];
@@ -170,7 +170,7 @@ export interface LevelEvents {
   clickedBonus: [bonus: bonuses.Bonus];
   outOfZenMoves: [];
   maxScoreReached: [];
-  injectedSequence: [sequence.Sequence];
+  injectedSequence: [sequence: sequence.Sequence];
   clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
 }
 

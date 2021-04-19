@@ -77,7 +77,6 @@ export const levels = {
       gridShape: "fourIslands",
       forceMatching: true,
       maxScore: 500,
-      scissorCount: 3,
       sequenceLength: 5,
       portalsCount: 4,
       hooks: [
@@ -98,7 +97,6 @@ export const levels = {
       sequenceLength: 7,
       forceMatching: true,
       maxScore: 1000,
-      scissorCount: 3,
       portalsCount: 4,
       gaugeRings: [
         (context) => {
@@ -185,7 +183,6 @@ export const levels = {
       disableBonuses: true,
       portalsCount: 4,
       zenMoves: 10,
-      scissorCount: 0,
       checks: {
         "Reach 1000 pts": (context) =>
           context.score >= context.options.maxScore,
@@ -221,7 +218,6 @@ export const levels = {
       variant: "fall",
       gridShape: "medium",
       forceMatching: true,
-      scissorCount: 3,
       portalsCount: 2,
       maxScore: 400,
       gaugeRings: [
@@ -279,7 +275,6 @@ export const levels = {
       variant: "fall",
       gridShape: "medium",
       forceMatching: true,
-      scissorCount: 3,
       maxScore: 400,
       gaugeRings: [
         (context) =>
@@ -375,7 +370,6 @@ export const levels = {
       minStarNeeded: 1,
       forceMatching: true,
       gridShape: "medium",
-      scissorCount: 3,
       gaugeRings: [
         (context, ring) =>
           context.activate(
@@ -437,7 +431,6 @@ export const levels = {
   Tutorial: () =>
     new level.Level("Tutorial", {
       variant: "turn",
-      scissorCount: 0,
       gridShape: [],
       sequences: [["r", "g", "b"]],
       disableButton: true,
@@ -537,7 +530,6 @@ export const levels = {
                   resetGrid: true,
                   resetSequences: true,
                   forceMatching: true,
-                  scissorCount: 1,
                   sequenceLength: 4,
                   hooks: [
                     new level.Hook({
@@ -570,7 +562,6 @@ export const levels = {
                           [null, null, null, "y"],
                         ],
                         sequences: [["g", "r", "g", "r", "r"]],
-                        scissorCount: 3,
                         sequenceLength: 6,
                         forceMatching: true,
                         disableButton: false,
@@ -664,7 +655,6 @@ export const levels = {
                               resetScore: true,
                               resetSequences: true,
                               sequenceLength: 5,
-                              scissorCount: 3,
                               disableScore: false,
                               disableGauge: false,
                               forceMatching: true,

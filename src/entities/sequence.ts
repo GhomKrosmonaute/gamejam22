@@ -471,6 +471,8 @@ export class Sequence extends entity.CompositeEntity {
 
     let forcedSequence: nucleotide.ColorName[] = [];
 
+    this.level.grid.solution = [];
+
     if (Array.isArray(this.base)) {
       forcedSequence = this.base.slice(0);
     } else if (this.level.options.forceMatching) {
