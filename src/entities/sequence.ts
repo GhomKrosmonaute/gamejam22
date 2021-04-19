@@ -474,10 +474,11 @@ export class Sequence extends entity.CompositeEntity {
     if (Array.isArray(this.base)) {
       forcedSequence = this.base.slice(0);
     } else if (this.level.options.forceMatching) {
-      forcedSequence = this.level.grid.getForcedMatchingPath(this.baseLength);
-      while (!forcedSequence) {
-        forcedSequence = this.level.grid.getForcedMatchingPath(this.baseLength);
-      }
+      const forcedMatching = this.level.grid.getForcedMatchingPath(
+        this.baseLength
+      );
+      forcedSequence = forcedMatching.colors;
+      this.level.grid.solution = forcedMatching.nucleotides;
     }
 
     for (let i = 0; i < this.baseLength; i++) {

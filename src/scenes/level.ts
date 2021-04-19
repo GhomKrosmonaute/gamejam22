@@ -957,6 +957,10 @@ export class Level extends entity.CompositeEntity {
     return this._life;
   }
 
+  solution() {
+    this.activate(this.grid.highlightSolution());
+  }
+
   disablingAnimation(name: string, state: boolean) {
     const oldLength = this.disablingAnimations.size;
     this.disablingAnimations[state ? "add" : "delete"](name);

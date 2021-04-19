@@ -75,6 +75,7 @@ export type GridShape =
 export class Grid extends entity.CompositeEntity {
   public container: PIXI.Graphics;
   public allNucleotides: nucleotide.Nucleotide[] = [];
+  public solution: nucleotide.Nucleotide[] = [];
   public nucleotideContainer: PIXI.Container;
   public x = crispr.width * 0.09;
   public y = crispr.height * 0.4;
@@ -154,6 +155,16 @@ export class Grid extends entity.CompositeEntity {
       }
     }
     return shape;
+  }
+
+  highlightSolution(): entity.EntityBase {
+    return anim.sequenced({
+      items: this.solution,
+      timeBetween: 200,
+      onStep: (n) => {
+        this.level.path.startAt(n);
+      },
+    });
   }
 
   addNucleotide(x: number, y: number, color?: nucleotide.ColorName) {
@@ -327,61 +338,16 @@ export class Grid extends entity.CompositeEntity {
     return position.x % 2 === 0;
   }
 
-  _getRandomPath(length: number): nucleotide.ColorName[] | null {
-    const alreadyPassed: nucleotide.Nucleotide[] = [];
-    const colorNames: nucleotide.ColorName[] = [];
-
-    const normals = this.nucleotides.filter((n) => n.type === "normal");
-
-    if (normals.length < length) {
-      throw new Error("bad length request");
-    }
-
-    let current = crispr.random(normals);
-
-    while (colorNames.length < length) {
-      alreadyPassed.push(current);
-      if (current.type === "normal") {
-        colorNames.push(current.colorName);
-      }
-
-      let nextPossibilities: nucleotide.Nucleotide[] = [];
-
-      if (current.type === "portal") {
-        if (alreadyPassed.filter((n) => n.type === "portal").length % 2 === 0) {
-          nextPossibilities = this.getNeighbors(current).filter((n) => {
-            return !!n && !alreadyPassed.includes(n);
-          });
-        } else {
-          nextPossibilities = this.getPortals().filter((n) => {
-            return !!n && !alreadyPassed.includes(n);
-          });
-        }
-      } else {
-        nextPossibilities = this.getNeighbors(current).filter((n) => {
-          return !!n && !alreadyPassed.includes(n);
-        });
-      }
-
-      if (nextPossibilities.length === 0) {
-        return null;
-      }
-
-      current = crispr.random(nextPossibilities);
-    }
-
-    if (
-      this.level.options.scissorCount > 0 &&
-      !alreadyPassed.some((n) => n.type === "scissors")
-    ) {
-      return null;
-    }
-
-    return colorNames;
-  }
-
-  getForcedMatchingPath(length: number): nucleotide.ColorName[] {
-    let output: nucleotide.ColorName[] = null;
+  getForcedMatchingPath(
+    length: number
+  ): {
+    colors: nucleotide.ColorName[];
+    nucleotides: nucleotide.Nucleotide[];
+  } {
+    let output: {
+      colors: nucleotide.ColorName[];
+      nucleotides: nucleotide.Nucleotide[];
+    } = null;
 
     while (output === null) {
       const passed: {
@@ -434,22 +400,16 @@ export class Grid extends entity.CompositeEntity {
 
         // if path is locked, break and retry
         if (nextList.length === 0) {
-          if (passed.colors.length < 3) {
-            length--;
-            break;
-          } else {
-            output = passed.colors;
+          break;
+        } else {
+          // continue path
+          addAndFocus(crispr.random(nextList));
+
+          // if path is full, return it
+          if (passed.colors.length >= length) {
+            output = passed;
             break;
           }
-        }
-
-        // continue path
-        addAndFocus(crispr.random(nextList));
-
-        // if path is full, return it
-        if (passed.colors.length === length) {
-          output = passed.colors;
-          break;
         }
       }
     }
