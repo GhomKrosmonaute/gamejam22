@@ -9,15 +9,10 @@ import * as level from "../scenes/level";
 
 import * as anim from "../animations";
 import * as crispr from "../crispr";
+import { sprite } from "../crispr";
 
-export type NucleotideState = "missing" | "present" | "infected" | "inactive";
-export type NucleotideType = "scissors" | "bonus" | "normal" | "portal";
-
-export const nucleotideTypes: NucleotideType[] = [
-  "scissors",
-  "bonus",
-  "normal",
-];
+export type NucleotideState = "missing" | "present" | "inactive";
+export type NucleotideType = "clip" | "normal" | "portal";
 
 // TODO: Use string enum here?
 export type ColorName = "b" | "r" | "g" | "y";
@@ -117,7 +112,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
     // coup' coup' !
     if (
-      this.type === "scissors" &&
+      this.type === "clip" &&
       this.sprite &&
       this.sprite instanceof PIXI.AnimatedSprite
     ) {
@@ -150,11 +145,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this.shakes.setShake("highlight", 2);
 
       if (this.parent === "grid") {
-        if (this.infected) {
-          this.infectionSprite.scale.set(0.9);
-        } else {
-          this.sprite.scale.set(0.9);
-        }
+        this.sprite.scale.set(0.9);
       } else {
         this.sprite.scale.set(1.1);
       }
@@ -173,11 +164,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this.shakes.removeShake("highlight");
 
       if (this.parent === "grid") {
-        if (this.infected) {
-          this.infectionSprite.scale.set(1);
-        } else {
-          this.sprite.scale.set(1);
-        }
+        this.sprite.scale.set(1);
       } else {
         //this.sprite.scale.set(1.1);
       }
@@ -193,10 +180,6 @@ export class Nucleotide extends entity.CompositeEntity {
     return fullColorNames[this.colorName] || "white";
   }
 
-  get infected(): boolean {
-    return this._state === "infected";
-  }
-
   get spriteEntity():
     | entity.DisplayObjectEntity<PIXI.Sprite>
     | entity.AnimatedSpriteEntity {
@@ -207,10 +190,6 @@ export class Nucleotide extends entity.CompositeEntity {
     return this.spriteEntity instanceof entity.AnimatedSpriteEntity
       ? this.spriteEntity.sprite
       : this.spriteEntity.displayObject;
-  }
-
-  get infectionSprite(): PIXI.Sprite {
-    return this._infectionSpriteEntity.displayObject as PIXI.Sprite;
   }
 
   async bubble(duration: number, onTop?: (nucleotide: Nucleotide) => any) {
@@ -264,10 +243,6 @@ export class Nucleotide extends entity.CompositeEntity {
     }
 
     if (newState === "missing") {
-      if (this._state === "infected") {
-        this._deactivateChildEntity(this._infectionSpriteEntity);
-      }
-
       this._state = newState;
       this.shakes.removeShake("infection");
 
@@ -293,65 +268,6 @@ export class Nucleotide extends entity.CompositeEntity {
           this.emit("stateChanged", newState);
         })
       );
-    } else if (newState === "infected") {
-      // Freeze animation
-      (this.sprite as PIXI.AnimatedSprite).stop();
-
-      // Create mask
-      const mask = new PIXI.Graphics();
-      mask.beginFill(0x000001);
-      mask.drawCircle(0, 0, this.fullRadius);
-      mask.endFill();
-      // this._container.addChild(mask);
-
-      // Overlay infection
-      this._infectionSpriteEntity = new entity.DisplayObjectEntity(
-        new PIXI.Sprite(
-          this._entityConfig.app.loader.resources[
-            `images/infection_${this.fullColorName}.png`
-          ].texture
-        )
-      );
-      this.infectionSprite.anchor.set(0.5, 0.5);
-      this.infectionSprite.visible = false;
-      this._activateChildEntity(
-        this._infectionSpriteEntity,
-        entity.extendConfig({
-          container: this._container,
-        })
-      );
-
-      // Make infection "grow"
-
-      this._activateChildEntity(
-        new entity.EntitySequence([
-          anim.tweenShaking(this._container, 150, 10, 3),
-
-          new entity.FunctionCallEntity(() => {
-            this.shakes.setShake("infection", 1);
-
-            this._container.addChild(mask);
-            this.infectionSprite.mask = mask;
-            this.infectionSprite.visible = true;
-          }),
-
-          new tween.Tween({
-            from: 0,
-            to: 1,
-            easing: easing.easeOutCubic,
-            onUpdate: (value) => mask.scale.set(value),
-          }),
-
-          // Remove mask and infection
-          new entity.FunctionCallEntity(() => {
-            this.infectionSprite.mask = null;
-            this._container.removeChild(mask);
-
-            this._deactivateChildEntity(this._spriteEntity);
-            this.emit("stateChanged", newState);
-          }),
-        ])
-      );
     } else if (newState === "inactive") {
       // Freeze animation and grey it out
       const animation = this.sprite as PIXI.AnimatedSprite;
@@ -364,7 +280,7 @@ export class Nucleotide extends entity.CompositeEntity {
       if (this._spriteEntity) this._deactivateChildEntity(this._spriteEntity);
 
       // Create animated sprite
-      this._spriteEntity = this._createAnimatedSprite();
+      this.refreshSprite();
       this._activateChildEntity(
         this._spriteEntity,
         entity.extendConfig({
@@ -389,25 +305,6 @@ export class Nucleotide extends entity.CompositeEntity {
         },
       });
       this._activateChildEntity(radiusTween);
-    } else if (this._state === "infected") {
-      this.shakes.removeShake("infection");
-
-      if (this._infectionSpriteEntity)
-        this._deactivateChildEntity(this._infectionSpriteEntity);
-
-      // Create animated sprite
-      this._spriteEntity = this._createAnimatedSprite();
-      this._activateChildEntity(
-        this._spriteEntity,
-        entity.extendConfig({
-          container: this._container,
-        })
-      );
-      this._container.setChildIndex(this.sprite, 0);
-
-      this._activateChildEntity(this._refreshScale());
-
-      this.emit("stateChanged", newState);
     }
 
     this._state = newState;
@@ -417,52 +314,39 @@ export class Nucleotide extends entity.CompositeEntity {
     this.colorName = getRandomColorName();
   }
 
-  private _createAnimatedSprite(): entity.AnimatedSpriteEntity {
-    let animatedSprite: entity.AnimatedSpriteEntity;
+  private refreshSprite() {
     if (this.type === "normal") {
       if (!this.colorName) this.generateColor();
-      animatedSprite = util.makeAnimatedSprite(
+      const spriteEntity = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources[
           `images/nucleotide_${this.fullColorName}.json`
         ]
       );
-      animatedSprite.sprite.animationSpeed = 25 / 60;
+      spriteEntity.sprite.animationSpeed = 25 / 60;
       // Start on a random frame
-      animatedSprite.sprite.gotoAndPlay(
-        Math.floor(Math.random() * animatedSprite.sprite.totalFrames)
+      spriteEntity.sprite.gotoAndPlay(
+        Math.floor(Math.random() * spriteEntity.sprite.totalFrames)
       );
+      spriteEntity.sprite.anchor.set(0.5);
+      this._spriteEntity = spriteEntity;
     } else if (this.type === "portal") {
-      animatedSprite = util.makeAnimatedSprite(
+      const spriteEntity = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources["images/portal.json"]
       );
-      animatedSprite.sprite.animationSpeed = 20 / 60;
+      spriteEntity.sprite.animationSpeed = 20 / 60;
       // Start on a random frame
-      animatedSprite.sprite.gotoAndPlay(
-        Math.floor(Math.random() * animatedSprite.sprite.totalFrames)
+      spriteEntity.sprite.gotoAndPlay(
+        Math.floor(Math.random() * spriteEntity.sprite.totalFrames)
       );
-    } else if (this.type === "scissors") {
+      spriteEntity.sprite.anchor.set(0.5);
+    } else if (this.type === "clip") {
       this.colorName = null;
-      animatedSprite = util.makeAnimatedSprite(
-        this._entityConfig.app.loader.resources["images/scissors_mini.json"]
-      );
-      animatedSprite.sprite.loop = false;
-      animatedSprite.sprite.animationSpeed = 0;
-      // Start on a random frame
-      animatedSprite.sprite.gotoAndStop(0);
-
-      const bubble = crispr.sprite(this, "images/bubble.png");
-      bubble.anchor.set(0.5);
-      bubble.scale.set(1.1);
-
-      animatedSprite.sprite.addChild(bubble);
+      const sprite = crispr.sprite(this, "images/clip_bottom.png");
+      sprite.anchor.set(0.5);
+      this._spriteEntity = new entity.DisplayObjectEntity(sprite);
     } else {
       throw new Error("Unhandled type");
     }
-
-    animatedSprite.sprite.anchor.set(0.5);
-    //animatedSprite.interactive = true
-
-    return animatedSprite;
   }
 
   static getNucleotideDimensionsByRadius(radius: number) {

@@ -235,7 +235,7 @@ export class Grid extends entity.CompositeEntity {
               const n = this.getNucleotideFromGridPosition(
                 new PIXI.Point(x, y)
               );
-              n.type = "scissors";
+              n.type = "clip";
             }
           });
       });
@@ -251,7 +251,7 @@ export class Grid extends entity.CompositeEntity {
       this.addSpecifics(
         this.nucleotides,
         this.level.options.scissorCount,
-        "scissors"
+        "clip"
       ))();
     this.nucleotides.forEach((n) => (n.state = "present"));
   }
@@ -379,7 +379,7 @@ export class Grid extends entity.CompositeEntity {
 
       // chose an entry point
       addAndFocus(
-        crispr.random(this.nucleotides.filter((n) => n.type === "scissors"))
+        crispr.random(this.nucleotides.filter((n) => n.type === "clip"))
       );
 
       // while path is not full
@@ -417,7 +417,7 @@ export class Grid extends entity.CompositeEntity {
           if (passed.colors.length >= length) {
             if (
               this.level.options.scissorCount === 0 ||
-              passed.nucleotides.filter((n) => n.type === "scissors").length > 0
+              passed.nucleotides.filter((n) => n.type === "clip").length > 0
             ) {
               // return it
               output = passed;
@@ -523,11 +523,7 @@ export class Grid extends entity.CompositeEntity {
 
     this.addSpecifics(oldHoles, this.level.options.portalsCount, "portal");
     (() =>
-      this.addSpecifics(
-        oldHoles,
-        this.level.options.scissorCount,
-        "scissors"
-      ))();
+      this.addSpecifics(oldHoles, this.level.options.scissorCount, "clip"))();
     // this.refresh();
   }
 
@@ -552,8 +548,7 @@ export class Grid extends entity.CompositeEntity {
       this.generateNucleotide(nucleotide);
     }
     this.addSpecifics(holes, this.level.options.portalsCount, "portal");
-    (() =>
-      this.addSpecifics(holes, this.level.options.scissorCount, "scissors"))();
+    (() => this.addSpecifics(holes, this.level.options.scissorCount, "clip"))();
 
     holes.forEach((n) => (n.state = "present"));
 
@@ -731,7 +726,7 @@ export class Grid extends entity.CompositeEntity {
       this.addSpecifics(
         nucleotides,
         this.level.options.scissorCount,
-        "scissors"
+        "clip"
       ))();
 
     nucleotides.forEach((n) => (n.state = "present"));
@@ -740,50 +735,5 @@ export class Grid extends entity.CompositeEntity {
   generateNucleotide(nucleotide: nucleotide.Nucleotide) {
     nucleotide.type = "normal";
     nucleotide.generateColor();
-  }
-
-  isFullyInfected(): boolean {
-    return !this.nucleotides.some(
-      (n) => n.state === "present" && n.type === "normal"
-    );
-  }
-
-  /**
-   * Returns an entity sequence that infect a quart of grid nucleotides
-   */
-  infect(): entity.EntitySequence {
-    const count = Math.ceil(this.nucleotides.length / 4);
-
-    // @ts-ignore
-    const infected = _.chain(this.nucleotides)
-      .filter((n) => n.state === "present" && n.type === "normal")
-      .shuffle()
-      .take(count)
-      .value();
-
-    return new entity.EntitySequence([
-      new entity.FunctionCallEntity(() => {
-        this.level.disablingAnimation("grid.infect", true);
-
-        if (infected.length > 0) {
-          this.level.wasInfected = true;
-          this.level.emitLevelEvent("infected");
-        }
-      }),
-      anim.sequenced({
-        items: infected,
-        timeBetween: 100,
-        onStep: (item) => {
-          item.state = "infected";
-
-          this.level.screenShake(10, 1.02, 100);
-
-          this._entityConfig.fxMachine.play("infection");
-        },
-        callback: () => {
-          this.level.disablingAnimation("grid.infect", false);
-        },
-      }),
-    ]);
   }
 }

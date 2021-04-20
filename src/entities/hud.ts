@@ -473,7 +473,6 @@ export class ActionButton extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("goButton.press", false);
         this.level.refresh();
-        this.level.checkGameOverByInfection();
       })
     );
 

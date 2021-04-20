@@ -625,7 +625,7 @@ export class Level extends entity.CompositeEntity {
           this.minimap.saveResults(this);
           this._activateChildEntity(new popup.TerminatedLevelPopup());
         } else {
-          this.gameOverByFail();
+          this._activateChildEntity(new popup.FailedLevelPopup());
         }
       });
 
@@ -663,9 +663,6 @@ export class Level extends entity.CompositeEntity {
             this.path.remove();
           }),
           this.infect(true),
-          new entity.FunctionCallEntity(() => {
-            this.checkGameOverByInfection();
-          }),
         ])
       );
     });
@@ -1014,19 +1011,6 @@ export class Level extends entity.CompositeEntity {
     ]);
   }
 
-  gameOverByFail() {
-    if (this.finished || this.failed) return;
-
-    this.failed = true;
-
-    if (this.options.retryOnFail) {
-      this._activateChildEntity(new popup.FailedLevelPopup(), this.config);
-    } else {
-      this.minimap.saveResults(this);
-      this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
-    }
-  }
-
   checkAndReturnsResults(): LevelResults {
     const checks: { [text: string]: boolean } = {};
     let checkCount = 0;
@@ -1089,14 +1073,6 @@ export class Level extends entity.CompositeEntity {
 
   get isDisablingAnimationInProgress(): boolean {
     return this.disablingAnimations.size > 0 || this.finished || this.failed;
-  }
-
-  public checkGameOverByInfection(): boolean {
-    if (this.grid.isFullyInfected()) {
-      this.gameOverByFail();
-      return true;
-    }
-    return false;
   }
 
   // TODO: refactor this as a separate object, using the strategy pattern

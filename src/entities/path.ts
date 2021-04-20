@@ -67,7 +67,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   get scissors(): nucleotide.Nucleotide[] {
-    return this.items.filter((n) => n.type === "scissors");
+    return this.items.filter((n) => n.type === "clip");
   }
 
   get portals(): nucleotide.Nucleotide[] {
@@ -89,7 +89,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   correctlyContainsScissors(): boolean {
-    return this.scissors.length === 1 && this.first.type === "scissors";
+    return this.scissors.length === 1 && this.first.type === "clip";
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
@@ -121,7 +121,7 @@ export class Path extends entity.CompositeEntity {
     if (this.level.isDisablingAnimationInProgress) return false;
 
     // add scissors on first position
-    if (this.first && this.first.type !== "scissors") {
+    if (this.first && this.first.type !== "clip") {
       this.remove();
       return false;
     }
@@ -240,24 +240,17 @@ export class Path extends entity.CompositeEntity {
           this._playExplosion();
           this.level.screenShake(10, 1.02, 50);
 
-          const score = item.infected ? 15 : 10;
-          const fill = item.infected ? item.fullColorName : "#ffeccc";
-          const stroke = item.infected ? "#ffc200" : "black";
-
-          if (item.infected) infected = true;
+          const score = 10;
+          const fill = "#ffeccc";
+          const stroke = "black";
 
           this.level.addScore(score);
 
           this._activateChildEntity(
-            anim.down(
-              item.infected ? item.infectionSprite : item.sprite,
-              500,
-              1,
-              () => {
-                item.once("stateChanged", finish);
-                item.state = "missing";
-              }
-            )
+            anim.down(item.sprite, 500, 1, () => {
+              item.once("stateChanged", finish);
+              item.state = "missing";
+            })
           );
 
           if (!this.level.options.disableScore) {
@@ -298,7 +291,7 @@ export class Path extends entity.CompositeEntity {
 
     const lastNucleotide = this.items[this.items.length - 1];
     let sound: string;
-    if (lastNucleotide.type === "scissors") {
+    if (lastNucleotide.type === "clip") {
       sound = "tile_scissors";
     } else if (lastNucleotide.colorName === "r") {
       sound = "tile_red";

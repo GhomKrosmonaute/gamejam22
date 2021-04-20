@@ -70,11 +70,8 @@ const graphicalAssets = [
 
   "images/hole.png",
   "images/bubble.png",
-
-  "images/infection_red.png",
-  "images/infection_blue.png",
-  "images/infection_green.png",
-  "images/infection_yellow.png",
+  "images/clip_top.png",
+  "images/clip_bottom.png",
 
   "images/nucleotide_glow.png",
   "images/nucleotide_bright.png",
