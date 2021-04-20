@@ -89,11 +89,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   correctlyContainsScissors(): boolean {
-    return (
-      this.scissors.length > 0 &&
-      this.last.type !== "scissors" &&
-      this.first.type !== "scissors"
-    );
+    return this.scissors.length === 1 && this.first.type === "scissors";
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
@@ -124,8 +120,8 @@ export class Path extends entity.CompositeEntity {
   add(n: nucleotide.Nucleotide): boolean {
     if (this.level.isDisablingAnimationInProgress) return false;
 
-    // not add scissors on first position
-    if (this.first && this.first.type === "scissors") {
+    // add scissors on first position
+    if (this.first && this.first.type !== "scissors") {
       this.remove();
       return false;
     }

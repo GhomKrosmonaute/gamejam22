@@ -364,6 +364,7 @@ export class Grid extends entity.CompositeEntity {
       };
 
       let current: nucleotide.Nucleotide;
+
       const addAndFocus = (n: nucleotide.Nucleotide) => {
         current = n;
         passed.nucleotides.push(n);
@@ -377,7 +378,9 @@ export class Grid extends entity.CompositeEntity {
       if (normals.length < length) throw new Error("bad length request");
 
       // chose an entry point
-      addAndFocus(crispr.random(normals));
+      addAndFocus(
+        crispr.random(this.nucleotides.filter((n) => n.type === "scissors"))
+      );
 
       // while path is not full
       while (true) {
