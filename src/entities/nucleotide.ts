@@ -341,7 +341,10 @@ export class Nucleotide extends entity.CompositeEntity {
       spriteEntity.sprite.anchor.set(0.5);
     } else if (this.type === "clip") {
       this.colorName = null;
-      const sprite = crispr.sprite(this, "images/clip_bottom.png");
+      const sprite = crispr.sprite(
+        this,
+        `images/clip_${this.parent === "grid" ? "bottom" : "top"}.png`
+      );
       sprite.anchor.set(0.5);
       this._spriteEntity = new entity.DisplayObjectEntity(sprite);
     } else {

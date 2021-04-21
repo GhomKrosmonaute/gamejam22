@@ -483,7 +483,7 @@ export class Sequence extends entity.CompositeEntity {
       this.level.grid.solution = forcedMatching.nucleotides;
     }
 
-    for (let i = 0; i < this.baseLength; i++) {
+    for (let i = -1; i < this.baseLength; i++) {
       const position = new PIXI.Point();
 
       if (
@@ -513,9 +513,11 @@ export class Sequence extends entity.CompositeEntity {
         this.level.options.sequenceNucleotideRadius,
         "sequence",
         position,
-        Math.random(),
+        i === -1 ? 0 : Math.random(),
         forcedSequence[i]
       );
+
+      if (i === -1) n.type = "clip";
 
       if (this.virus) {
         crispr.positionAlongMembrane(n.position, this.virus.angle);
@@ -760,7 +762,7 @@ export class Sequence extends entity.CompositeEntity {
     let sequenceSignature = this.toString();
     let index = sequenceSignature.indexOf(signature);
     if (index !== -1) {
-      return util.subarray(this.nucleotides, index, signature.length);
+      return util.subarray(this.nucleotides.slice(1), index, signature.length);
     }
 
     // Try backwards
@@ -768,7 +770,7 @@ export class Sequence extends entity.CompositeEntity {
     index = sequenceSignature.indexOf(signature);
     if (index !== -1) {
       return util.subarray(
-        this.nucleotides,
+        this.nucleotides.slice(1),
         sequenceSignature.length - 1 - index,
         signature.length * -1
       );
