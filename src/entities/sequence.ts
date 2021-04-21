@@ -373,7 +373,7 @@ export class SequenceManager extends entity.CompositeEntity {
         return "no match";
       }
       if (
-        this.level.options.scissorCount > 0 &&
+        this.level.options.clipCount > 0 &&
         !_path.correctlyContainsScissors()
       ) {
         return "missing scissors";

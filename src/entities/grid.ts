@@ -250,7 +250,7 @@ export class Grid extends entity.CompositeEntity {
     (() =>
       this.addSpecifics(
         this.nucleotides,
-        this.level.options.scissorCount,
+        this.level.options.clipCount,
         "clip"
       ))();
     this.nucleotides.forEach((n) => (n.state = "present"));
@@ -393,7 +393,9 @@ export class Grid extends entity.CompositeEntity {
             0
           ) {
             nextList = this.getNeighbors(current).filter((n) => {
-              return !!n && !passed.nucleotides.includes(n);
+              return (
+                !!n && !passed.nucleotides.includes(n) && n.type !== "clip"
+              );
             });
           } else {
             nextList = this.getPortals().filter((n) => {
@@ -402,7 +404,7 @@ export class Grid extends entity.CompositeEntity {
           }
         } else {
           nextList = this.getNeighbors(current).filter((n) => {
-            return !!n && !passed.nucleotides.includes(n);
+            return !!n && !passed.nucleotides.includes(n) && n.type !== "clip";
           });
         }
 
@@ -416,7 +418,7 @@ export class Grid extends entity.CompositeEntity {
           // if path is full
           if (passed.colors.length >= length) {
             if (
-              this.level.options.scissorCount === 0 ||
+              this.level.options.clipCount === 0 ||
               passed.nucleotides.filter((n) => n.type === "clip").length > 0
             ) {
               // return it
@@ -522,8 +524,7 @@ export class Grid extends entity.CompositeEntity {
     }
 
     this.addSpecifics(oldHoles, this.level.options.portalsCount, "portal");
-    (() =>
-      this.addSpecifics(oldHoles, this.level.options.scissorCount, "clip"))();
+    (() => this.addSpecifics(oldHoles, this.level.options.clipCount, "clip"))();
     // this.refresh();
   }
 
@@ -548,7 +549,7 @@ export class Grid extends entity.CompositeEntity {
       this.generateNucleotide(nucleotide);
     }
     this.addSpecifics(holes, this.level.options.portalsCount, "portal");
-    (() => this.addSpecifics(holes, this.level.options.scissorCount, "clip"))();
+    (() => this.addSpecifics(holes, this.level.options.clipCount, "clip"))();
 
     holes.forEach((n) => (n.state = "present"));
 
@@ -723,11 +724,7 @@ export class Grid extends entity.CompositeEntity {
 
     this.addSpecifics(nucleotides, this.level.options.portalsCount, "portal");
     (() =>
-      this.addSpecifics(
-        nucleotides,
-        this.level.options.scissorCount,
-        "clip"
-      ))();
+      this.addSpecifics(nucleotides, this.level.options.clipCount, "clip"))();
 
     nucleotides.forEach((n) => (n.state = "present"));
   }
