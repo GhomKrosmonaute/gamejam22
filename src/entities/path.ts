@@ -1,6 +1,8 @@
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
+import * as easing from "booyah/src/easing";
+import * as tween from "booyah/src/tween";
 
 import * as nucleotide from "./nucleotide";
 
@@ -214,7 +216,6 @@ export class Path extends entity.CompositeEntity {
   }
 
   crunch() {
-    let infected = false;
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("path.crunch", true);
@@ -231,12 +232,9 @@ export class Path extends entity.CompositeEntity {
         waitForAllSteps: true,
         callback: () => {
           this.remove();
-          if (infected) {
-            this.level.emitLevelEvent("cleanedInfection");
-          }
           this.level.disablingAnimation("path.crunch", false);
         },
-        onStep: (item, i, src, finish) => {
+        onStep: (n, i, src, finish) => {
           this._playExplosion();
           this.level.screenShake(10, 1.02, 50);
 
@@ -246,12 +244,92 @@ export class Path extends entity.CompositeEntity {
 
           this.level.addScore(score);
 
-          this._activateChildEntity(
-            anim.down(item.sprite, 500, 1, () => {
-              item.once("stateChanged", finish);
-              item.state = "missing";
-            })
-          );
+          const originalPosition = n.position.clone();
+
+          const seq = [...this.level.sequenceManager.sequences][0];
+          const items = seq.nucleotides.slice();
+
+          if (n.type !== "normal") {
+            this._activateChildEntity(
+              new entity.EntitySequence([
+                () => anim.down(n.sprite, 500, 1),
+                () =>
+                  anim.move(
+                    n.position,
+                    n.position.clone(),
+                    originalPosition,
+                    1,
+                    easing.linear
+                  ),
+                new entity.FunctionCallEntity(() => {
+                  n.once("stateChanged", finish);
+                  n.state = "missing";
+                }),
+              ])
+            );
+          } else {
+            const index = this.nucleotides.indexOf(n);
+
+            this._activateChildEntity(
+              new entity.EntitySequence([
+                new entity.ParallelEntity([
+                  () =>
+                    anim.move(
+                      n.position,
+                      n.position.clone(),
+                      new PIXI.Point(
+                        items[index].position.x -
+                          this.level.grid.nucleotideContainer.x +
+                          seq.container.x,
+                        items[index].position.y -
+                          this.level.grid.nucleotideContainer.y +
+                          seq.container.y +
+                          60
+                      ),
+                      1000,
+                      easing.easeOutBounce
+                    ),
+                  () =>
+                    new tween.Tween({
+                      from: n._container.scale.x,
+                      to: items[index]._container.scale.x,
+                      easing: easing.easeOutBounce,
+                      duration: 1000,
+                      onUpdate: (value) => n._container.scale.set(value),
+                    }),
+                ]),
+                // () => anim.move(n.position, n.position.clone(), new PIXI.Point(
+                //   crispr.proportion(i, 0, src.length, 0, crispr.width) - this.level.grid.nucleotideContainer.x,
+                //   crispr.height / 2 + 100 - this.level.grid.nucleotideContainer.y
+                // ), 1000, easing.easeOutBounce),
+                // () => anim.move(n.position, n.position.clone(), new PIXI.Point(
+                //   crispr.proportion(i, 0, src.length, 0, crispr.width) - this.level.grid.nucleotideContainer.x,
+                //   crispr.height / 2 - this.level.grid.nucleotideContainer.y
+                // ), 250, easing.easeOutBounce),
+                () => anim.down(n.sprite, 500, 1),
+                () =>
+                  new tween.Tween({
+                    from: n._container.scale.x,
+                    to: 1,
+                    easing: easing.linear,
+                    duration: 1,
+                    onUpdate: (value) => n._container.scale.set(value),
+                  }),
+                () =>
+                  anim.move(
+                    n.position,
+                    n.position.clone(),
+                    originalPosition,
+                    1,
+                    easing.linear
+                  ),
+                new entity.FunctionCallEntity(() => {
+                  n.once("stateChanged", finish);
+                  n.state = "missing";
+                }),
+              ])
+            );
+          }
 
           if (!this.level.options.disableScore) {
             this._activateChildEntity(
@@ -266,7 +344,7 @@ export class Path extends entity.CompositeEntity {
                   dropShadowBlur: 10,
                 }),
                 500,
-                item.position.clone(),
+                n.position.clone(),
                 "up"
               )
             );

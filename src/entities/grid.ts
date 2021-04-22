@@ -157,19 +157,24 @@ export class Grid extends entity.CompositeEntity {
     return shape;
   }
 
-  highlightSolution(): entity.EntityBase {
-    return anim.sequenced({
-      items: this.solution,
-      timeBetween: 100,
-      waitForAllSteps: true,
-      onStep: (n, i) => {
-        if (i === 0) this.level.path.startAt(n);
-        else this.level.path.add(n);
-      },
-      callback: () => {
-        this.level.activate(this.level.attemptCrunch());
-      },
-    });
+  applySolution(): entity.EntityBase {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        this.level.path.remove();
+      }),
+      anim.sequenced({
+        items: this.solution,
+        timeBetween: 100,
+        waitForAllSteps: true,
+        onStep: (n, i) => {
+          if (i === 0) this.level.path.startAt(n);
+          else this.level.path.add(n);
+        },
+        callback: () => {
+          this.level.activate(this.level.attemptCrunch());
+        },
+      }),
+    ]);
   }
 
   addNucleotide(x: number, y: number, color?: nucleotide.ColorName) {

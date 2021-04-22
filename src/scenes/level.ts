@@ -955,7 +955,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   solution() {
-    this.activate(this.grid.highlightSolution());
+    this.activate(this.grid.applySolution());
   }
 
   disablingAnimation(name: string, state: boolean) {
