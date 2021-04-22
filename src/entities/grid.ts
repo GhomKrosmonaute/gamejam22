@@ -232,8 +232,8 @@ export class Grid extends entity.CompositeEntity {
     }
 
     // preset scissors
-    if (this.level.options.presetScissors) {
-      this.level.options.presetScissors.forEach((row, y) => {
+    if (this.level.options.presetClips) {
+      this.level.options.presetClips.forEach((row, y) => {
         if (row)
           row.forEach((col, x) => {
             if (col) {

@@ -79,7 +79,7 @@ export interface LevelOptions {
   sequenceRounded: boolean;
   sequenceNucleotideRadius: number;
   gridShape: grid.GridShape;
-  presetScissors: grid.GridPreset | null;
+  presetClips: grid.GridPreset | null;
   sequences: nucleotide.ColorName[][] | null;
   forceMatching: boolean;
   hooks: Hook[];
@@ -108,7 +108,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   displayTurnTitles: true,
   variant: "turn",
   virus: "mini",
-  presetScissors: null,
+  presetClips: null,
   maxLife: 5,
   dropSpeed: 1,
   maxScore: 1000,
@@ -894,7 +894,7 @@ export class Level extends entity.CompositeEntity {
     // grid rebuild
     if (options.resetGrid) {
       this.options.gridShape = options.gridShape;
-      this.options.presetScissors = options.presetScissors;
+      this.options.presetClips = options.presetClips;
       this.grid.reset();
     }
 

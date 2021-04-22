@@ -15,7 +15,7 @@ const gameStates = {
   start: main,
   default: main,
   ...levels.levels,
-}
+};
 
 const graphicalAssets = [
   "images/titlescreen_background.png",

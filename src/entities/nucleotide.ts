@@ -244,7 +244,6 @@ export class Nucleotide extends entity.CompositeEntity {
 
     if (newState === "missing") {
       this._state = newState;
-      this.shakes.removeShake("infection");
 
       if (this.children.includes(this._spriteEntity)) {
         this._deactivateChildEntity(this._spriteEntity);
@@ -339,6 +338,7 @@ export class Nucleotide extends entity.CompositeEntity {
         Math.floor(Math.random() * spriteEntity.sprite.totalFrames)
       );
       spriteEntity.sprite.anchor.set(0.5);
+      this._spriteEntity = spriteEntity;
     } else if (this.type === "clip") {
       this.colorName = null;
       const sprite = crispr.sprite(
