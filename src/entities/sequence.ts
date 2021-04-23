@@ -624,17 +624,21 @@ export class Sequence extends entity.CompositeEntity {
 
         this.level.path.crunchCountBeforeSequenceDown = 0;
       }),
+      new entity.FunctionalEntity({
+        requestTransition: () => {
+          return this.level.disablingAnimations.has("path.crunch.down");
+        },
+      }),
       anim.sequenced({
         items: this.nucleotides,
-        timeBetween: isLong ? 80 : 200,
+        timeBetween: 50,
         waitForAllSteps: true,
-        onStep: (n, i, all) => {
+        onStep: (n, index, all, finish) => {
           n.shakes.removeShake("highlight");
 
-          this._playNote(i);
+          this._playNote(index);
 
           const baseShift = Math.round(Math.random() * 50) + 50;
-          const context: entity.Entity[] = [];
 
           let score = this.level.options.baseGain;
 
@@ -649,7 +653,7 @@ export class Sequence extends entity.CompositeEntity {
           if (addScore) {
             this.level.addScore(score);
 
-            context.push(
+            this._activateChildEntity(
               anim.textFade(
                 this.container,
                 crispr.makeText(
@@ -671,21 +675,17 @@ export class Sequence extends entity.CompositeEntity {
             );
           }
 
-          context.push(
-            new entity.ParallelEntity([
-              new tween.Tween({
-                from: n.position.x,
-                to: n.position.x + (all.length / 2) * 25 - i * 25,
-                duration: 1000,
-                onUpdate: (value) => {
-                  n.position.x = value;
-                },
-              }),
-              anim.sink(n._container, 1000),
+          this._activateChildEntity(
+            new entity.EntitySequence([
+              // new tween.Tween({
+              //   from: n.position.y,
+              //   to: n.position.y + 30,
+              //   onUpdate: (v) => n.position.y = v,
+              //   duration: 250
+              // }),
+              anim.down(n.sprite, 500, 1, finish),
             ])
           );
-
-          return new entity.ParallelEntity(context);
         },
         callback: () => {
           const end = () => {

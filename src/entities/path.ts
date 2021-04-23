@@ -230,10 +230,6 @@ export class Path extends entity.CompositeEntity {
         items: this.items,
         timeBetween: 50,
         waitForAllSteps: true,
-        callback: () => {
-          this.remove();
-          this.level.disablingAnimation("path.crunch", false);
-        },
         onStep: (n, i, src, finish) => {
           this._playExplosion();
           this.level.screenShake(10, 1.02, 50);
@@ -253,14 +249,6 @@ export class Path extends entity.CompositeEntity {
             this._activateChildEntity(
               new entity.EntitySequence([
                 () => anim.down(n.sprite, 500, 1),
-                () =>
-                  anim.move(
-                    n.position,
-                    n.position.clone(),
-                    originalPosition,
-                    1,
-                    easing.linear
-                  ),
                 new entity.FunctionCallEntity(() => {
                   n.once("stateChanged", finish);
                   n.state = "missing";
@@ -298,14 +286,16 @@ export class Path extends entity.CompositeEntity {
                       onUpdate: (value) => n._container.scale.set(value),
                     }),
                 ]),
-                // () => anim.move(n.position, n.position.clone(), new PIXI.Point(
-                //   crispr.proportion(i, 0, src.length, 0, crispr.width) - this.level.grid.nucleotideContainer.x,
-                //   crispr.height / 2 + 100 - this.level.grid.nucleotideContainer.y
-                // ), 1000, easing.easeOutBounce),
-                // () => anim.move(n.position, n.position.clone(), new PIXI.Point(
-                //   crispr.proportion(i, 0, src.length, 0, crispr.width) - this.level.grid.nucleotideContainer.x,
-                //   crispr.height / 2 - this.level.grid.nucleotideContainer.y
-                // ), 250, easing.easeOutBounce),
+                new entity.FunctionCallEntity(() => {
+                  if (index === 0)
+                    this.level.disablingAnimation("path.crunch.down", true);
+                }),
+                // () => new tween.Tween({
+                //   from: n.position.y,
+                //   to: n.position.y - 30,
+                //   onUpdate: (v) => n.position.y = v,
+                //   duration: 250
+                // }),
                 () => anim.down(n.sprite, 500, 1),
                 () =>
                   new tween.Tween({
@@ -349,6 +339,11 @@ export class Path extends entity.CompositeEntity {
               )
             );
           }
+        },
+        callback: () => {
+          this.remove();
+          this.level.disablingAnimation("path.crunch", false);
+          this.level.disablingAnimation("path.crunch.down", false);
         },
       }),
     ]);
