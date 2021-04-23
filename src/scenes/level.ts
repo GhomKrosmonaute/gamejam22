@@ -326,19 +326,20 @@ export class Level extends entity.CompositeEntity {
   //public screenShakeComponents: (PIXI.Sprite | PIXI.AnimatedSprite | PIXI.Container)[]
 
   // game
+  private _life: number;
   public score: number;
   public wasInfected = false;
   public someVirusHasEscaped = false;
   public crunchCount = 0;
   public failed = false;
   public finished = false;
-  private _life: number;
   public sequenceWasCrunched = false;
   public scissorsWasIncludes = false;
   public oneShotLongSequence = false;
   public crunchedSequenceCount = 0;
   public isInit = false;
   public isEnded = false;
+  public crunchConfirmed = false;
 
   // bonuses
   public syringeBonus: bonuses.Bonus;
@@ -1090,7 +1091,30 @@ export class Level extends entity.CompositeEntity {
 
     this.disablingAnimation("level.attemptCrunch", true);
 
-    const context: entity.Entity[] = [this.path.crunch(), sequenceCrunch];
+    const context: entity.Entity[] = [
+      new entity.FunctionCallEntity(() => {
+        this.crunchConfirmed = false;
+        /** Pointer event catcher */
+        const pec = new PIXI.Graphics();
+        pec.position.set(0);
+        pec.interactive = true;
+        pec.buttonMode = true;
+        pec
+          .beginFill(0x000000, 0.01)
+          .drawRect(0, 0, crispr.width, crispr.height)
+          .endFill();
+        this.container.addChild(pec);
+        this._once(pec, "pointerup", () => {
+          this.crunchConfirmed = true;
+          this.container.removeChild(pec);
+        });
+      }),
+      new entity.FunctionalEntity({
+        requestTransition: () => this.crunchConfirmed,
+      }),
+      this.path.crunch(),
+      sequenceCrunch,
+    ];
 
     if (this.options.variant === "turn") {
       context.push(
