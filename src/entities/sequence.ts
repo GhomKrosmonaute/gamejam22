@@ -689,6 +689,7 @@ export class Sequence extends entity.CompositeEntity {
         },
         callback: () => {
           const end = () => {
+            this.level.disablingAnimation("path.crunch.down", false);
             this.level.disablingAnimation("sequence.down", false);
             this.level.emitLevelEvent("sequenceDown");
             this.level.sequenceManager.adjustment.adjust();
