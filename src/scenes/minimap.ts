@@ -17,12 +17,12 @@ import * as anim from "../animations";
 import * as crispr from "../crispr";
 
 export class Minimap extends entity.CompositeEntity {
-  static savedScroll = -9999999
-  static lastLevel: levels.LevelName = null
+  static savedScroll = -9999999;
+  static lastLevel: levels.LevelName = null;
 
   private menu: menu.Menu;
-  private background: PIXI.Sprite;
   private container: PIXI.Container;
+  private background: PIXI.Sprite;
   private buttons: PIXI.Container;
   private layer1: PIXI.Sprite;
   private layer2: PIXI.Sprite;
@@ -30,7 +30,7 @@ export class Minimap extends entity.CompositeEntity {
   private scrollBox: scroll.Scrollbox;
 
   protected _setup() {
-    this._entityConfig.jukebox.changeMusic("menu");
+    this._entityConfig.jukebox.play("menu");
 
     this.links = new PIXI.Graphics();
     this.container = new PIXI.Container();
@@ -86,18 +86,33 @@ export class Minimap extends entity.CompositeEntity {
       );
 
       const levelSprite = crispr.sprite(this, "images/minimap_level.png");
+
       levelSprite.anchor.set(0.5);
       levelSprite.scale.set(0.9 + Math.random() * 0.2);
       levelSprite.position.copyFrom(position);
       levelSprite.interactive = true;
       levelSprite.buttonMode = true;
 
-      if(levelName === Minimap.lastLevel) {
+      const preview = crispr.sprite(this, "images/test_preview.png");
+
+      const previewMask = crispr.sprite(
+        this,
+        "images/minimap_level_preview_mask.png"
+      );
+      previewMask.anchor.set(0.5);
+
+      preview.addChild(previewMask);
+      preview.mask = previewMask;
+      preview.anchor.set(0.5);
+
+      levelSprite.addChild(preview);
+
+      if (levelName === Minimap.lastLevel) {
         const circle = new PIXI.Graphics()
           .lineStyle(10, crispr.yellowNumber)
-          .drawCircle(0, 25, 165)
+          .drawCircle(0, 25, 165);
 
-        levelSprite.addChild(circle)
+        levelSprite.addChild(circle);
       }
 
       const text = crispr.makeText(levelName, {
@@ -139,8 +154,8 @@ export class Minimap extends entity.CompositeEntity {
       this._on(levelSprite, "pointerup", () => {
         this._entityConfig.fxMachine.play("validate");
 
-        Minimap.savedScroll = this.scrollBox.currentScroll.y
-        Minimap.lastLevel = levelName as levels.LevelName
+        Minimap.savedScroll = this.scrollBox.currentScroll.y;
+        Minimap.lastLevel = levelName as levels.LevelName;
 
         levelSprite.filters = [new PIXI.filters.AlphaFilter(1)];
 
@@ -177,9 +192,10 @@ export class Minimap extends entity.CompositeEntity {
           `images/reward_stars_${result.starCount}.png`
         );
 
-        stars.anchor.set(0.5);
         stars.scale.set(0.3);
-        stars.position.y = 50;
+        stars.anchor.set(even ? 0 : 1, 1);
+        stars.position.x = even ? 200 : -200;
+        stars.position.y = 100;
 
         //text.position.y = -50;
 
