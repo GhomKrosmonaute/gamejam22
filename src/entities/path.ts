@@ -289,21 +289,21 @@ export class Path extends entity.CompositeEntity {
         },
       }),
       new entity.FunctionCallEntity(() => {
-        this.crunchConfirmed = false;
-        /** Pointer event catcher */
-        const pec = new PIXI.Graphics();
-        pec.position.set(0);
-        pec.interactive = true;
-        pec.buttonMode = true;
-        pec
-          .beginFill(0x000000, 0.01)
-          .drawRect(0, 0, crispr.width, crispr.height)
-          .endFill();
-        this.level.container.addChild(pec);
-        this._once(pec, "pointerdown", () => {
-          this.crunchConfirmed = true;
-          this.level.container.removeChild(pec);
-        });
+        this.crunchConfirmed = true;
+        // /** Pointer event catcher */
+        // const pec = new PIXI.Graphics();
+        // pec.position.set(0);
+        // pec.interactive = true;
+        // pec.buttonMode = true;
+        // pec
+        //   .beginFill(0x000000, 0.01)
+        //   .drawRect(0, 0, crispr.width, crispr.height)
+        //   .endFill();
+        // this.level.container.addChild(pec);
+        // this._once(pec, "pointerdown", () => {
+        //   this.crunchConfirmed = true;
+        //   this.level.container.removeChild(pec);
+        // });
       }),
       new entity.WaitingEntity(1000),
       new entity.FunctionalEntity({
