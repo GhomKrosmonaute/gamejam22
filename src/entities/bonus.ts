@@ -284,6 +284,7 @@ export class SyringeBonus extends Bonus {
         new entity.EntitySequence([
           this.level.sequenceManager.removeSequence(
             !this.level.options.disableScore,
+            true,
             s
           ),
           new entity.FunctionCallEntity(() => {

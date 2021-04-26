@@ -281,7 +281,7 @@ export class SequenceManager extends entity.CompositeEntity {
           new entity.FunctionCallEntity(() => {
             this.emit("crunch", s);
           }),
-          this.removeSequence(!this.level.options.disableScore, s)
+          this.removeSequence(!this.level.options.disableScore, false, s)
         );
       }
     }
@@ -300,9 +300,13 @@ export class SequenceManager extends entity.CompositeEntity {
     return new entity.EntitySequence(context);
   }
 
-  removeSequence(addScore: boolean, s: Sequence): entity.ParallelEntity {
+  removeSequence(
+    addScore: boolean,
+    isNotCrunchResult = false,
+    s: Sequence
+  ): entity.ParallelEntity {
     return new entity.ParallelEntity([
-      s.down(addScore),
+      s.down(addScore, isNotCrunchResult),
       new entity.FunctionCallEntity(() => {
         this.adjustment.adjust();
       }),
@@ -330,7 +334,7 @@ export class SequenceManager extends entity.CompositeEntity {
     if (droppedSequences.length > 0) {
       droppedSequences.forEach((s) => {
         s.nucleotides.forEach((n) => (n.sprite.tint = 0x000000));
-        this._activateChildEntity(s.down(false));
+        this._activateChildEntity(s.down(false, true));
       });
     }
 
@@ -345,7 +349,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
     return new entity.ParallelEntity(
       droppedSequences.map((s) => {
-        return this.removeSequence(false, s);
+        return this.removeSequence(false, true, s);
       })
     );
   }
@@ -589,7 +593,7 @@ export class Sequence extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this.container);
   }
 
-  down(addScore: boolean) {
+  down(addScore: boolean, notACrunchResult = false) {
     let isLong: boolean, fully: boolean, shots: number;
 
     return new entity.EntitySequence([
@@ -626,7 +630,10 @@ export class Sequence extends entity.CompositeEntity {
       }),
       new entity.FunctionalEntity({
         requestTransition: () => {
-          return this.level.disablingAnimations.has("path.crunch.down");
+          return (
+            notACrunchResult ||
+            this.level.disablingAnimations.has("path.crunch.down")
+          );
         },
       }),
       anim.sequenced({
