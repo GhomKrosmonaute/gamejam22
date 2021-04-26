@@ -297,11 +297,12 @@ export class Path extends entity.CompositeEntity {
           .drawRect(0, 0, crispr.width, crispr.height)
           .endFill();
         this.level.container.addChild(pec);
-        this._once(pec, "pointerup", () => {
+        this._once(pec, "pointerdown", () => {
           this.crunchConfirmed = true;
           this.level.container.removeChild(pec);
         });
       }),
+      new entity.WaitingEntity(1000),
       new entity.FunctionalEntity({
         requestTransition: () => this.crunchConfirmed,
       }),
@@ -332,7 +333,6 @@ export class Path extends entity.CompositeEntity {
 
             this._activateChildEntity(
               new entity.EntitySequence([
-                new entity.WaitingEntity(1000),
                 new entity.FunctionCallEntity(() => {
                   if (index === 0)
                     this.level.disablingAnimation("path.crunch.down", true);
