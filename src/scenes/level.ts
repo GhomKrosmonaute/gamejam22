@@ -1090,7 +1090,9 @@ export class Level extends entity.CompositeEntity {
 
     this.disablingAnimation("level.attemptCrunch", true);
 
-    const context: entity.Entity[] = [new entity.ParallelEntity([this.path.crunch(), sequenceCrunch])];
+    const context: entity.Entity[] = [
+      new entity.ParallelEntity([this.path.crunch(), sequenceCrunch]),
+    ];
 
     if (this.options.variant === "turn") {
       context.push(

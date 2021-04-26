@@ -245,7 +245,7 @@ export class Path extends entity.CompositeEntity {
           const items = seq.nucleotides.slice();
 
           //n.isHighlighted = false;
-          n.sprite.scale.set(1)
+          n.sprite.scale.set(1);
           n.pathArrow.visible = false;
 
           if (n.type === "normal") {
