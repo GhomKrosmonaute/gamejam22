@@ -43,8 +43,8 @@ export const levels = {
       ],
     })),
 
-  "Bow\nTie": () =>
-    new level.Level("Bow\nTie", (context) => ({
+  "Bow Tie": () =>
+    new level.Level("Bow Tie", (context) => ({
       gridShape: "bowTie",
       forceMatching: true,
       maxScore: 500,

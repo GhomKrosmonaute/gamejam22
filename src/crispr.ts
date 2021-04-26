@@ -5,6 +5,8 @@ import * as entity from "booyah/src/entity";
 
 import * as level from "./scenes/level";
 
+import * as game from "./game";
+
 export const width = 1080;
 export const height = 1920;
 
@@ -129,7 +131,12 @@ export function positionAlongMembrane(
   }
 }
 
-export function makeText(text: string = "", options?: Partial<PIXI.TextStyle>) {
+export function makeText(
+  text: string = "",
+  options?: Partial<
+    PIXI.TextStyle & { fontFamily: game.FontFamily | string | string[] }
+  >
+) {
   const defaultConfig = {
     fontFamily: "Geosans Light",
     fontSize: 80,
@@ -199,3 +206,6 @@ export function resolveRange(range: RangeValue): number {
     ? Math.floor(random(...(range as [number, number])))
     : random(range);
 }
+
+export const yellow = "#ffda6b";
+export const yellowNumber = 0xffda6b;

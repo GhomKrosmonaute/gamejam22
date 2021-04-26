@@ -142,7 +142,17 @@ const graphicalAssets = [
   "images/big_bob_dead.json",
 ];
 
-const fontAssets = ["Alien League", "Geosans Light"];
+const fontAssets: FontFamily[] = [
+  "Alien League",
+  "Geosans Light",
+  "Waffle Crisp",
+  "Optimus",
+];
+export type FontFamily =
+  | "Alien League"
+  | "Geosans Light"
+  | "Waffle Crisp"
+  | "Optimus";
 
 const fxAssets = [
   "notification",

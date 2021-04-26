@@ -607,7 +607,7 @@ export abstract class ChecksPopup extends Popup {
       const row = new PIXI.Container();
 
       const pixiText = crispr.makeText(text + ".", {
-        fill: check ? "#ffda6b" : "#ffffff",
+        fill: check ? crispr.yellow : "#ffffff",
         fontSize: 60,
         fontStyle: "italic bold",
       });
@@ -640,7 +640,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
   protected title?: PIXI.Text;
   protected titleConfig: Partial<PIXI.TextStyle> = {
     fontSize: 150,
-    fill: "#ffda6b",
+    fill: crispr.yellow,
     fontStyle: "italic bold",
     fontFamily: "Alien League",
   };

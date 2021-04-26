@@ -236,7 +236,7 @@ export class Gauge extends entity.CompositeEntity {
     }
 
     this._text = crispr.makeText("", {
-      fill: "#ffda6b",
+      fill: crispr.yellow,
       fontSize: 50,
       fontStyle: "italic bold",
       fontFamily: "Alien League",
@@ -507,7 +507,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
       fontSize: 80,
       stroke: "#000000",
       strokeThickness: 5,
-      fill: "#ffda6b",
+      fill: crispr.yellow,
       fontStyle: "bold italic",
       fontFamily: "Alien League",
     });

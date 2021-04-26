@@ -26,6 +26,22 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: "Waffle Crisp";
+  src: url("fonts/waffle-crisp/waffle-crisp.woff")
+  format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Optimus";
+  src: url("fonts/optimus/optimus.woff")
+  format("woff");
+  font-weight: normal;
+  font-style: normal;
+}
+
 /* From https://css-tricks.com/a-couple-of-use-cases-for-calc/ */
 /* So 100% means 100% */
 * {

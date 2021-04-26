@@ -66,13 +66,11 @@ export class Minimap extends entity.CompositeEntity {
 
     for (const levelName in levels.levels) {
       const index = Object.keys(levels.levels).indexOf(levelName);
+      const even = index % 2 === 0;
 
       // make a button
       const position = new PIXI.Point(
-        crispr.approximate(
-          crispr.width * 0.5 + (index % 2 === 0 ? -100 : 100),
-          50
-        ),
+        crispr.approximate(crispr.width * 0.5 + (even ? -150 : 150), 50),
         crispr.proportion(
           levels.levelNames.indexOf(levelName),
           -0.5,
@@ -90,9 +88,22 @@ export class Minimap extends entity.CompositeEntity {
       levelSprite.buttonMode = true;
 
       const text = crispr.makeText(levelName, {
-        fontStyle: "bold",
-        fill: "#ffda6b",
+        fontFamily: "Optimus",
+        fill: crispr.yellow,
       });
+
+      text.scale.set(0.8);
+      text.anchor.set(even ? 0 : 1, 1);
+      text.position.x = even ? 200 : -200;
+
+      const line = new PIXI.Graphics()
+        .lineStyle(5, crispr.yellowNumber)
+        .moveTo(even ? 100 : -100, 0)
+        .lineTo(even ? -100 : 100, 0);
+
+      line.position.y = 10;
+
+      text.addChild(line);
 
       levelSprite.addChild(text);
 
@@ -153,7 +164,7 @@ export class Minimap extends entity.CompositeEntity {
         stars.scale.set(0.3);
         stars.position.y = 50;
 
-        text.position.y = -50;
+        //text.position.y = -50;
 
         levelSprite.addChild(stars);
       } else {

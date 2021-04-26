@@ -93,7 +93,7 @@ export class Menu extends entity.CompositeEntity {
     {
       this.creditButton = crispr.makeText("credits", {
         fontSize: 75,
-        fill: "#ffda6b",
+        fill: crispr.yellow,
       });
       this.creditButton.position.set(crispr.width / 2, crispr.height * 0.74);
       this.container.addChild(this.creditButton);
@@ -123,7 +123,7 @@ export class Menu extends entity.CompositeEntity {
     {
       this.title = crispr.makeText("M.E.N.U", {
         fontSize: 150,
-        fill: "#ffda6b",
+        fill: crispr.yellow,
         fontStyle: "italic bold",
         fontFamily: "Alien League",
       });
