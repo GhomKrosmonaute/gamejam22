@@ -186,7 +186,7 @@ const fxAssets = [
   "tile_green",
   "tile_yellow",
   "tile_blue",
-  "tile_scissors",
+  "tile_clips",
 ];
 
 const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen"];
