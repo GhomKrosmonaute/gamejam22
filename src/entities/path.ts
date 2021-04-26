@@ -29,6 +29,7 @@ export class Path extends entity.CompositeEntity {
   public items: nucleotide.Nucleotide[] = [];
   public container = new PIXI.Container();
   public isValidSequence = false;
+  public crunchConfirmed = false;
   public crunchCountBeforeSequenceDown = 0;
 
   protected _setup() {
@@ -216,6 +217,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   crunch() {
+    let originalPositions: PIXI.Point[] = [];
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("path.crunch", true);
@@ -235,27 +237,17 @@ export class Path extends entity.CompositeEntity {
           this.level.screenShake(10, 1.02, 50);
 
           const score = 10;
-          const fill = "#ffeccc";
-          const stroke = "black";
+          originalPositions.push(n.position.clone());
 
           this.level.addScore(score);
-
-          const originalPosition = n.position.clone();
 
           const seq = [...this.level.sequenceManager.sequences][0];
           const items = seq.nucleotides.slice();
 
-          if (n.type !== "normal") {
-            this._activateChildEntity(
-              new entity.EntitySequence([
-                () => anim.down(n.sprite, 500, 1),
-                new entity.FunctionCallEntity(() => {
-                  n.once("stateChanged", finish);
-                  n.state = "missing";
-                }),
-              ])
-            );
-          } else {
+          n.isHighlighted = false;
+          n.pathArrow.visible = false;
+
+          if (n.type === "normal") {
             const index = this.nucleotides.indexOf(n);
 
             this._activateChildEntity(
@@ -286,6 +278,60 @@ export class Path extends entity.CompositeEntity {
                       onUpdate: (value) => n._container.scale.set(value),
                     }),
                 ]),
+                new entity.FunctionCallEntity(() => finish()),
+              ])
+            );
+          }
+        },
+      }),
+      new entity.FunctionCallEntity(() => {
+        this.crunchConfirmed = false;
+        /** Pointer event catcher */
+        const pec = new PIXI.Graphics();
+        pec.position.set(0);
+        pec.interactive = true;
+        pec.buttonMode = true;
+        pec
+          .beginFill(0x000000, 0.01)
+          .drawRect(0, 0, crispr.width, crispr.height)
+          .endFill();
+        this.level.container.addChild(pec);
+        this._once(pec, "pointerup", () => {
+          this.crunchConfirmed = true;
+          this.level.container.removeChild(pec);
+        });
+      }),
+      new entity.FunctionalEntity({
+        requestTransition: () => this.crunchConfirmed,
+      }),
+      // down
+      anim.sequenced({
+        items: this.items,
+        timeBetween: 50,
+        waitForAllSteps: true,
+        onStep: (n, i, src, finish) => {
+          const score = 10;
+          const fill = "#ffeccc";
+          const stroke = "black";
+
+          this.level.addScore(score);
+
+          if (n.type !== "normal") {
+            this._activateChildEntity(
+              new entity.EntitySequence([
+                () => anim.down(n.sprite, 500, 1),
+                new entity.FunctionCallEntity(() => {
+                  n.once("stateChanged", finish);
+                  n.state = "missing";
+                }),
+              ])
+            );
+          } else {
+            const index = this.nucleotides.indexOf(n);
+
+            this._activateChildEntity(
+              new entity.EntitySequence([
+                new entity.WaitingEntity(1000),
                 new entity.FunctionCallEntity(() => {
                   if (index === 0)
                     this.level.disablingAnimation("path.crunch.down", true);
@@ -309,7 +355,7 @@ export class Path extends entity.CompositeEntity {
                   anim.move(
                     n.position,
                     n.position.clone(),
-                    originalPosition,
+                    originalPositions[i],
                     1,
                     easing.linear
                   ),
@@ -340,11 +386,11 @@ export class Path extends entity.CompositeEntity {
             );
           }
         },
-        callback: () => {
-          this.remove();
-          this.level.disablingAnimation("path.crunch", false);
-          this.level.disablingAnimation("path.crunch.down", false);
-        },
+      }),
+      new entity.FunctionCallEntity(() => {
+        this.remove();
+        this.level.disablingAnimation("path.crunch", false);
+        this.level.disablingAnimation("path.crunch.down", false);
       }),
     ]);
   }
