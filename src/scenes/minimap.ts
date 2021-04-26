@@ -15,6 +15,8 @@ import * as anim from "../animations";
 import * as crispr from "../crispr";
 
 export class Minimap extends entity.CompositeEntity {
+  static savedScroll = -9999999
+
   private menu: menu.Menu;
   private background: PIXI.Sprite;
   private container: PIXI.Container;
@@ -126,7 +128,10 @@ export class Minimap extends entity.CompositeEntity {
       this._on(levelSprite, "pointerup", () => {
         this._entityConfig.fxMachine.play("validate");
 
+        Minimap.savedScroll = this.scrollBox.currentScroll.y
+
         levelSprite.filters = [new PIXI.filters.AlphaFilter(1)];
+
         this._activateChildEntity(
           new tween.Tween({
             from: 0,
@@ -205,7 +210,7 @@ export class Minimap extends entity.CompositeEntity {
         container: this.container,
       })
     );
-    this.scrollBox.scrollTo(new PIXI.Point(0, -9999999));
+    this.scrollBox.scrollTo(new PIXI.Point(0, Minimap.savedScroll));
     this.scrollBox.refresh();
 
     this._entityConfig.container.addChild(this.container);

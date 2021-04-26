@@ -118,7 +118,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   gaugeRings: [],
   sequenceLength: null,
   sequences: null,
-  clipCount: 0,
+  clipCount: 4,
   portalsCount: 0,
   nucleotideRadius: crispr.width / 13.44,
   sequenceNucleotideRadius: crispr.width * 0.04,
