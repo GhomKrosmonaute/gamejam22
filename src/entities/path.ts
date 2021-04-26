@@ -236,15 +236,15 @@ export class Path extends entity.CompositeEntity {
           this._playExplosion();
           this.level.screenShake(10, 1.02, 50);
 
-          const score = 10;
+          //const score = 10;
           originalPositions.push(n.position.clone());
 
-          this.level.addScore(score);
+          //this.level.addScore(score);
 
           const seq = [...this.level.sequenceManager.sequences][0];
           const items = seq.nucleotides.slice();
 
-          n.isHighlighted = false;
+          //n.isHighlighted = false;
           n.pathArrow.visible = false;
 
           if (n.type === "normal") {
@@ -310,11 +310,11 @@ export class Path extends entity.CompositeEntity {
         timeBetween: 50,
         waitForAllSteps: true,
         onStep: (n, i, src, finish) => {
-          const score = 10;
+          //const score = 10;
           const fill = "#ffeccc";
           const stroke = "black";
 
-          this.level.addScore(score);
+          //this.level.addScore(score);
 
           if (n.type !== "normal") {
             this._activateChildEntity(
@@ -367,24 +367,24 @@ export class Path extends entity.CompositeEntity {
             );
           }
 
-          if (!this.level.options.disableScore) {
-            this._activateChildEntity(
-              anim.textFade(
-                this.level.grid.nucleotideContainer,
-                crispr.makeText(`+ ${score}`, {
-                  fill,
-                  stroke,
-                  strokeThickness: 10,
-                  fontSize: 90 + score * 4,
-                  dropShadow: true,
-                  dropShadowBlur: 10,
-                }),
-                500,
-                n.position.clone(),
-                "up"
-              )
-            );
-          }
+          // if (!this.level.options.disableScore) {
+          //   this._activateChildEntity(
+          //     anim.textFade(
+          //       this.level.grid.nucleotideContainer,
+          //       crispr.makeText(`+ ${score}`, {
+          //         fill,
+          //         stroke,
+          //         strokeThickness: 10,
+          //         fontSize: 90 + score * 4,
+          //         dropShadow: true,
+          //         dropShadowBlur: 10,
+          //       }),
+          //       500,
+          //       n.position.clone(),
+          //       "up"
+          //     )
+          //   );
+          // }
         },
       }),
       new entity.FunctionCallEntity(() => {
