@@ -13,7 +13,7 @@ import * as crispr from "../crispr";
 
 export type PathState =
   | "no match"
-  | "missing scissors"
+  | "missing clips"
   | true
   | "crunch"
   | "matching"
@@ -66,10 +66,10 @@ export class Path extends entity.CompositeEntity {
 
   /** only nucleotides */
   get nucleotides(): nucleotide.Nucleotide[] {
-    return this.items.filter((n) => !/^(?:scissors|portal)$/.test(n.type));
+    return this.items.filter((n) => !/^(?:clips|portal)$/.test(n.type));
   }
 
-  get scissors(): nucleotide.Nucleotide[] {
+  get clips(): nucleotide.Nucleotide[] {
     return this.items.filter((n) => n.type === "clip");
   }
 
@@ -91,8 +91,8 @@ export class Path extends entity.CompositeEntity {
     return this.items[this.items.length - 1];
   }
 
-  correctlyContainsScissors(): boolean {
-    return this.scissors.length === 1 && this.first.type === "clip";
+  correctlyContainsClips(): boolean {
+    return this.clips.length === 1 && this.first.type === "clip";
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
@@ -123,11 +123,14 @@ export class Path extends entity.CompositeEntity {
   add(n: nucleotide.Nucleotide): boolean {
     if (this.level.isDisablingAnimationInProgress) return false;
 
-    // add scissors on first position
+    // add clips on first position
     if (this.first && this.first.type !== "clip") {
       this.remove();
       return false;
     }
+
+    // Ignore clips
+    if (n.type === "clip") return false;
 
     // Ignore holes
     if (n.state === "missing") return false;
@@ -224,8 +227,8 @@ export class Path extends entity.CompositeEntity {
 
         this.items.forEach((n) => (n.type = "normal"));
 
-        if (this.correctlyContainsScissors()) {
-          this.level.scissorsWasIncludes = true;
+        if (this.correctlyContainsClips()) {
+          this.level.clipsWasIncludes = true;
         }
       }),
       anim.sequenced({
@@ -412,7 +415,7 @@ export class Path extends entity.CompositeEntity {
     const lastNucleotide = this.items[this.items.length - 1];
     let sound: string;
     if (lastNucleotide.type === "clip") {
-      sound = "tile_scissors";
+      sound = "tile_clips";
     } else if (lastNucleotide.colorName === "r") {
       sound = "tile_red";
     } else if (lastNucleotide.colorName === "g") {

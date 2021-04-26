@@ -407,7 +407,7 @@ export class ActionButton extends entity.CompositeEntity {
   }
 
   public setText(text: path.PathState) {
-    this.missingScissorsSprite.visible = text === "missing scissors";
+    this.missingScissorsSprite.visible = text === "missing clips";
     // this.text.style.fontSize = text.length > 6 ? 50 : 70;
     // this.text.text = text;
   }

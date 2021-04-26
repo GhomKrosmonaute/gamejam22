@@ -33,7 +33,7 @@ export interface ILevelVariant {
   onSequenceManagerMatchPath?: (
     level: Level,
     path: path.Path
-  ) => "no match" | "missing scissors" | true;
+  ) => "no match" | "missing clips" | true;
   sequenceCountLimit?: crispr.Scrapper<
     number,
     [level: Level, manager: sequence.SequenceManager]
@@ -334,7 +334,7 @@ export class Level extends entity.CompositeEntity {
   public failed = false;
   public finished = false;
   public sequenceWasCrunched = false;
-  public scissorsWasIncludes = false;
+  public clipsWasIncludes = false;
   public oneShotLongSequence = false;
   public crunchedSequenceCount = 0;
   public isInit = false;
