@@ -1,5 +1,7 @@
 import * as PIXI from "pixi.js";
 
+import { OutlineFilter } from "@pixi/filter-outline";
+
 import * as entity from "booyah/src/entity";
 import * as scroll from "booyah/src/scroll";
 import * as tween from "booyah/src/tween";
@@ -16,6 +18,7 @@ import * as crispr from "../crispr";
 
 export class Minimap extends entity.CompositeEntity {
   static savedScroll = -9999999
+  static lastLevel: levels.LevelName = null
 
   private menu: menu.Menu;
   private background: PIXI.Sprite;
@@ -66,7 +69,7 @@ export class Minimap extends entity.CompositeEntity {
     this.container.addChild(this.layer2);
     this.container.addChild(this.links);
 
-    for (const levelName in levels.levels) {
+    for (const levelName of Object.keys(levels.levels)) {
       const index = Object.keys(levels.levels).indexOf(levelName);
       const even = index % 2 === 0;
 
@@ -88,6 +91,14 @@ export class Minimap extends entity.CompositeEntity {
       levelSprite.position.copyFrom(position);
       levelSprite.interactive = true;
       levelSprite.buttonMode = true;
+
+      if(levelName === Minimap.lastLevel) {
+        const circle = new PIXI.Graphics()
+          .lineStyle(10, crispr.yellowNumber)
+          .drawCircle(0, 25, 165)
+
+        levelSprite.addChild(circle)
+      }
 
       const text = crispr.makeText(levelName, {
         fontFamily: "Optimus",
@@ -129,6 +140,7 @@ export class Minimap extends entity.CompositeEntity {
         this._entityConfig.fxMachine.play("validate");
 
         Minimap.savedScroll = this.scrollBox.currentScroll.y
+        Minimap.lastLevel = levelName as levels.LevelName
 
         levelSprite.filters = [new PIXI.filters.AlphaFilter(1)];
 
