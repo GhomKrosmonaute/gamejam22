@@ -78,7 +78,7 @@ export interface LevelOptions {
   nucleotideRadius: number;
   sequenceRounded: boolean;
   sequenceNucleotideRadius: number;
-  gridShape: grid.GridShape;
+  gridShape: grid.GridShape | string;
   presetClips: grid.GridPreset | null;
   sequences: nucleotide.ColorName[][] | null;
   forceMatching: boolean;
