@@ -172,7 +172,7 @@ export class Minimap extends entity.CompositeEntity {
         levelSprite.addChild(viruses);
       }
 
-      if (!isAccessible) {
+      if (!isAccessible && !crispr.debug) {
         text.visible = false;
 
         levelSprite.tint = 0xb0b0b0;

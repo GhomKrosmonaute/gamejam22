@@ -225,10 +225,9 @@ export class Path extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("path.crunch", true);
 
-        this.items.forEach((n) => (n.type = "normal"));
-
         if (this.correctlyContainsClips()) {
           this.level.clipsWasIncludes = true;
+          this.items[0].type = "normal";
         }
       }),
       anim.sequenced({
