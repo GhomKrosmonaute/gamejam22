@@ -1170,6 +1170,7 @@ export class Level extends entity.CompositeEntity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.infect", true);
+        this.wasInfected = true;
         if (withSound) this._entityConfig.fxMachine.play("skip");
       }),
       new tween.Tween({
