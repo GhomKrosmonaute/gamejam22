@@ -709,30 +709,30 @@ export class Grid extends entity.CompositeEntity {
   /**
    * Regenerate a certain number of nucleotides
    */
-  regenerate(n: number, filter: (n: nucleotide.Nucleotide) => boolean): void {
-    // todo: use changeState(): entity.Sequence instead of state accessor and returns it
-
-    // Pick a certain number of non-infected nucleotides
-    // @ts-ignore
-    const nucleotides: nucleotide.Nucleotide[] = _.chain(this.nucleotides)
-      // @ts-ignore
-      .filter(filter)
-      .shuffle()
-      .take(n)
-      .value();
-
-    // Make them disappear
-    nucleotides.forEach((n) => {
-      n.state = "missing";
-      this.generateNucleotide(n);
-    });
-
-    this.addSpecifics(nucleotides, this.level.options.portalsCount, "portal");
-    (() =>
-      this.addSpecifics(nucleotides, this.level.options.clipCount, "clip"))();
-
-    nucleotides.forEach((n) => (n.state = "present"));
-  }
+  // regenerate(n: number, filter: (n: nucleotide.Nucleotide) => boolean): void {
+  //   // todo: use changeState(): entity.Sequence instead of state accessor and returns it
+  //
+  //   // Pick a certain number of non-infected nucleotides
+  //   // @ts-ignore
+  //   const nucleotides: nucleotide.Nucleotide[] = _.chain(this.nucleotides)
+  //     // @ts-ignore
+  //     .filter(filter)
+  //     .shuffle()
+  //     .take(n)
+  //     .value();
+  //
+  //   // Make them disappear
+  //   nucleotides.forEach((n) => {
+  //     n.state = "missing";
+  //     this.generateNucleotide(n);
+  //   });
+  //
+  //   this.addSpecifics(nucleotides, this.level.options.portalsCount, "portal");
+  //   (() =>
+  //     this.addSpecifics(nucleotides, this.level.options.clipCount, "clip"))();
+  //
+  //   nucleotides.forEach((n) => (n.state = "present"));
+  // }
 
   generateNucleotide(nucleotide: nucleotide.Nucleotide) {
     nucleotide.type = "normal";

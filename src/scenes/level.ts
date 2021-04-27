@@ -1114,9 +1114,7 @@ export class Level extends entity.CompositeEntity {
     }
 
     if (this.options.variant === "turn" || this.options.variant === "fall") {
-      if (this.sequenceManager.sequenceCount === 0) {
-        context.push(this.fillHoles());
-      }
+      context.push(this.fillHoles());
     }
 
     context.push(
@@ -1151,7 +1149,8 @@ export class Level extends entity.CompositeEntity {
   public fillHoles(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionalEntity({
-        requestTransition: () => !this.disablingAnimations.has("path.crunch"),
+        requestTransition: () =>
+          !this.disablingAnimations.has("path.crunch.down"),
       }),
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.fillHoles", true);
