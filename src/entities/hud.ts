@@ -34,10 +34,9 @@ export class Gauge extends entity.CompositeEntity {
   private _background: PIXI.Sprite;
   private _barBaseWidth: number;
   private _triggered = false;
-  private _value: number = 0;
   private _statePopup: popup.StatePopup;
 
-  constructor(private _ringCount: number, private _maxValue: number) {
+  constructor(private _ringCount: number) {
     super();
   }
 
@@ -57,13 +56,11 @@ export class Gauge extends entity.CompositeEntity {
    * Set value of gauge bar (value/maxValue)
    * @param {number} value - The new value of gauge bar
    */
-  setValue(value: number) {
-    // todo: maybe use down for animation
-    const down = this._value > value;
-
-    this._value = value;
+  refreshValue() {
     this._bar.width = this.getBarWidth();
-    this._text.text = Math.floor(this._value) + " pts";
+    this._text.text =
+      Math.floor(this.level.options.winCondition.scoreGetter(this.level)) +
+      " pts";
 
     if (this._wave)
       this._wave.x = Math.min(
@@ -89,9 +86,9 @@ export class Gauge extends entity.CompositeEntity {
 
   getBarWidth(): number {
     return crispr.proportion(
-      this._value,
+      this.level.options.winCondition.scoreGetter(this.level),
       0,
-      this._maxValue,
+      this.level.options.winCondition.maxScore,
       0,
       this._barBaseWidth,
       true
@@ -275,13 +272,16 @@ export class Gauge extends entity.CompositeEntity {
       });
     });
 
-    this.level.onLevelEvent("scoreUpdated", this.setValue.bind(this));
+    this.level.onLevelEvent("scoreUpdated", this.refreshValue.bind(this));
 
-    this.setValue(0);
+    this.refreshValue();
   }
 
   _update(frameInfo: entity.FrameInfo) {
-    if (this._value < this._maxValue) {
+    if (
+      this.level.options.winCondition.scoreGetter(this.level) <
+      this.level.options.winCondition.maxScore
+    ) {
       const reachedScorePosition = this.reachedScoreXPosition;
       this._rings.children.forEach((ring: Ring) => {
         if (reachedScorePosition >= this.baseXOfBar + ring.base.x) {

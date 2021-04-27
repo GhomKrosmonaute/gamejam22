@@ -66,10 +66,14 @@ export interface LevelOptions {
   variant: LevelVariant;
   virus: virus.VirusType;
   maxLife: number;
-  maxScore: number;
+  winCondition: {
+    maxScore: number;
+    baseScore: number;
+    scoreGetter: (level: Level) => number;
+    scoreSetter: (level: Level, val: number) => unknown;
+  };
   dropSpeed: number;
   baseGain: number;
-  baseScore: number;
   minStarNeeded: number;
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
   sequenceLength: number | null;
@@ -111,9 +115,13 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   presetClips: null,
   maxLife: 5,
   dropSpeed: 1,
-  maxScore: 1000,
+  winCondition: {
+    maxScore: 1000,
+    baseScore: 0,
+    scoreGetter: (ctx) => ctx.score,
+    scoreSetter: (ctx, val) => (ctx.score = val),
+  },
   baseGain: 10,
-  baseScore: 0,
   minStarNeeded: 0,
   gaugeRings: [],
   sequenceLength: null,
@@ -131,7 +139,8 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
     //"No virus has escaped": (level) => !level.someVirusHasEscaped,
     "Not infected": (level) => !level.wasInfected,
     "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
-    "Max score reached": (level) => level.score >= level.options.maxScore,
+    "Max score reached": (level) =>
+      level.score >= level.options.winCondition.maxScore,
   },
   music: null,
 
@@ -327,7 +336,7 @@ export class Level extends entity.CompositeEntity {
 
   // game
   private _life: number;
-  public score: number;
+  public score = 0;
   public wasInfected = false;
   public someVirusHasEscaped = false;
   public crunchCount = 0;
@@ -358,7 +367,11 @@ export class Level extends entity.CompositeEntity {
         ? optionsResolvable(this)
         : optionsResolvable;
     this.options = util.fillInOptions(options, defaultLevelOptions);
-    this.score = this.options.baseScore;
+
+    this.options.winCondition.scoreSetter(
+      this,
+      this.options.winCondition.baseScore
+    );
 
     // @ts-ignore
     window.level = this;
@@ -561,10 +574,7 @@ export class Level extends entity.CompositeEntity {
   private _initGauge() {
     if (this.options.disableGauge) return;
 
-    this.gauge = new hud.Gauge(
-      this.options.gaugeRings.length,
-      this.options.maxScore
-    );
+    this.gauge = new hud.Gauge(this.options.gaugeRings.length);
 
     this._activateChildEntity(this.gauge, this.config);
   }
@@ -621,7 +631,10 @@ export class Level extends entity.CompositeEntity {
     if (this.options.variant === "zen") {
       // game over if out of zenMoves
       this.onLevelEvent("outOfZenMoves", () => {
-        if (this.score >= this.options.maxScore) {
+        if (
+          this.options.winCondition.scoreGetter(this) >=
+          this.options.winCondition.maxScore
+        ) {
           this.minimap.saveResults(this);
           this._activateChildEntity(new popup.TerminatedLevelPopup());
         } else {
@@ -882,7 +895,10 @@ export class Level extends entity.CompositeEntity {
 
     // reset options
     if (options.resetScore) {
-      this.score = this.options.baseScore;
+      this.options.winCondition.scoreSetter(
+        this,
+        this.options.winCondition.baseScore
+      );
     }
 
     // Bonus manager
@@ -1046,26 +1062,44 @@ export class Level extends entity.CompositeEntity {
   setScore(score: number) {
     if (this.options.disableScore) return;
 
-    if (score >= this.options.maxScore) {
+    if (score >= this.options.winCondition.maxScore) {
       this.emitLevelEvent("maxScoreReached");
-      this.score = this.options.maxScore;
+      this.options.winCondition.scoreSetter(
+        this,
+        this.options.winCondition.maxScore
+      );
     } else {
-      this.score = score;
+      this.options.winCondition.scoreSetter(this, score);
     }
 
-    this.emitLevelEvent("scoreUpdated", this.score);
+    this.emitLevelEvent(
+      "scoreUpdated",
+      this.options.winCondition.scoreGetter(this)
+    );
   }
 
   addScore(score: number) {
     if (this.options.disableScore) return;
 
-    if (this.score === this.options.maxScore) {
+    if (
+      this.options.winCondition.scoreGetter(this) ===
+      this.options.winCondition.maxScore
+    ) {
       return;
-    } else if (this.score + score >= this.options.maxScore) {
+    } else if (
+      this.options.winCondition.scoreGetter(this) + score >=
+      this.options.winCondition.maxScore
+    ) {
       this.emitLevelEvent("maxScoreReached");
-      this.score = this.options.maxScore;
+      this.options.winCondition.scoreSetter(
+        this,
+        this.options.winCondition.maxScore
+      );
     } else {
-      this.score += score;
+      this.options.winCondition.scoreSetter(
+        this,
+        this.options.winCondition.scoreGetter(this) + score
+      );
     }
 
     this.emitLevelEvent("scoreUpdated", this.score);

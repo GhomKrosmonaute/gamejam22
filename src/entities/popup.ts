@@ -736,7 +736,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
         `Score: ${this.level.score} pts (${crispr.proportion(
           this.level.score,
           0,
-          this.level.options.maxScore,
+          this.level.options.winCondition.maxScore,
           0,
           100,
           true
@@ -765,7 +765,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
               crispr.proportion(
                 value,
                 0,
-                this.level.options.maxScore,
+                this.level.options.winCondition.maxScore,
                 0,
                 100,
                 true
@@ -885,9 +885,9 @@ export class StatePopup extends ChecksPopup {
     text.position.y = 100;
 
     const score = crispr.makeText(
-      `Score: ${Math.floor(this.level.score)} / ${
-        this.level.options.maxScore
-      } pts`,
+      `Score: ${Math.floor(
+        this.level.options.winCondition.scoreGetter(this.level)
+      )} / ${this.level.options.winCondition.maxScore} pts`,
       {
         fontSize: 100,
         fill: 0xffffff,
