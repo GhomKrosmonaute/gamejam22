@@ -411,10 +411,25 @@ export class Grid extends entity.CompositeEntity {
     colors: nucleotide.ColorName[];
     nucleotides: nucleotide.Nucleotide[];
   } {
+    if (this.level.options.replaceHolesByInactives) {
+      // todo: do this
+      //length =
+    }
+
     let output: {
       colors: nucleotide.ColorName[];
       nucleotides: nucleotide.Nucleotide[];
     } = null;
+
+    const is = (
+      n: nucleotide.Nucleotide,
+      type: nucleotide.NucleotideType = "normal",
+      not = false
+    ): boolean => {
+      return (
+        (not ? n.type !== type : n.type === type) && n.state !== "inactive"
+      );
+    };
 
     while (output === null) {
       const passed: {
@@ -430,33 +445,31 @@ export class Grid extends entity.CompositeEntity {
       const addAndFocus = (n: nucleotide.Nucleotide) => {
         current = n;
         passed.nucleotides.push(n);
-        if (current.type === "normal") passed.colors.push(n.colorName);
+        if (is(current)) passed.colors.push(n.colorName);
       };
 
       // get all color-based nucleotides
-      const normals = this.nucleotides.filter((n) => n.type === "normal");
+      const normals = this.nucleotides.filter((n) => is(n));
 
       // if request is impossible, throw error
       if (normals.length < length) throw new Error("bad length request");
 
       // chose an entry point
-      addAndFocus(
-        crispr.random(this.nucleotides.filter((n) => n.type === "clip"))
-      );
+      addAndFocus(crispr.random(this.nucleotides.filter((n) => is(n, "clip"))));
 
       // while path is not full
       while (true) {
         // get possible next nucleotides
         let nextList: nucleotide.Nucleotide[] = [];
 
-        if (current.type === "portal") {
+        if (is(current, "portal")) {
           if (
-            passed.nucleotides.filter((n) => n.type === "portal").length % 2 ===
+            passed.nucleotides.filter((n) => is(n, "portal")).length % 2 ===
             0
           ) {
             nextList = this.getNeighbors(current).filter((n) => {
               return (
-                !!n && !passed.nucleotides.includes(n) && n.type !== "clip"
+                !!n && !passed.nucleotides.includes(n) && is(n, "clip", true)
               );
             });
           } else {
@@ -466,7 +479,9 @@ export class Grid extends entity.CompositeEntity {
           }
         } else {
           nextList = this.getNeighbors(current).filter((n) => {
-            return !!n && !passed.nucleotides.includes(n) && n.type !== "clip";
+            return (
+              !!n && !passed.nucleotides.includes(n) && is(n, "clip", true)
+            );
           });
         }
 
@@ -481,7 +496,7 @@ export class Grid extends entity.CompositeEntity {
           if (passed.colors.length >= length) {
             if (
               this.level.options.clipCount === 0 ||
-              passed.nucleotides.filter((n) => n.type === "clip").length > 0
+              passed.nucleotides.filter((n) => is(n, "clip")).length > 0
             ) {
               // return it
               output = passed;

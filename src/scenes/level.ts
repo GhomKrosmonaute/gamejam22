@@ -61,6 +61,7 @@ export interface LevelOptions {
   disableButton: boolean;
   disableGauge: boolean;
   disableScore: boolean;
+  replaceHolesByInactives: boolean;
   retryOnFail: boolean;
   infection: boolean;
   displayTurnTitles: boolean;
@@ -68,7 +69,7 @@ export interface LevelOptions {
   virus: virus.VirusType;
   maxLife: number;
   score: {
-    max: number;
+    max: number | ((level: Level) => number);
     initial: number;
     color: number;
     get: (level: Level) => number;
@@ -114,6 +115,7 @@ export interface LevelOptions {
 }
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
+  replaceHolesByInactives: false,
   disablingAnimations: [],
   disableExtraSequence: false,
   disableBonuses: false,
@@ -1069,9 +1071,11 @@ export class Level extends entity.CompositeEntity {
   setScore(score: number) {
     if (this.options.disableScore) return;
 
-    if (score >= this.options.score.max) {
+    const max = crispr.scrap(this.options.score.max, this);
+
+    if (score >= max) {
       this.emitLevelEvent("maxScoreReached");
-      this.options.score.set(this.options.score.max, this);
+      this.options.score.set(max, this);
     } else {
       this.options.score.set(score, this);
     }

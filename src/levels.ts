@@ -42,28 +42,34 @@ export const levels = {
         show: (value) => String(value) + " kills",
       },
       portalsCount: 4,
-      maxScore: 500,
     })),
 
   Hole: () =>
     new level.Level("Hole", (context) => ({
       gridShape: "hole",
+      replaceHolesByInactives: true,
+      score: {
+        max: () => context.grid.nucleotides.length,
+        initial: 0,
+        color: crisp.yellowNumber,
+        get: () =>
+          context.grid.nucleotides.filter((n) => n.state === "inactive").length,
+        set: (value) => (context.killedViruses = value),
+        show: (value) => String(value) + " crh",
+      },
       forceMatching: true,
-      maxScore: 500,
     })),
 
   "Bow Tie": () =>
     new level.Level("Bow Tie", (context) => ({
       gridShape: "bowTie",
       forceMatching: true,
-      maxScore: 500,
     })),
 
   "Little\nBridge": () =>
     new level.Level("Little\nBridge", (context) => ({
       gridShape: "littleBridge",
       forceMatching: true,
-      maxScore: 500,
       portalsCount: 2,
     })),
 
@@ -71,7 +77,6 @@ export const levels = {
     new level.Level("Four\nIslands", (context) => ({
       gridShape: "fourIslands",
       forceMatching: true,
-      maxScore: 500,
       clipCount: 3,
       sequenceLength: 5,
       portalsCount: 4,
@@ -85,7 +90,6 @@ export const levels = {
       gridShape: "medium",
       sequenceLength: 7,
       forceMatching: true,
-      maxScore: 1000,
       clipCount: 3,
       portalsCount: 4,
       gaugeRings: [
@@ -163,7 +167,6 @@ export const levels = {
   // Zen: () =>
   //   new level.Level("Zen", {
   //     variant: "zen",
-  //     maxScore: 1000,
   //     forceMatching: true,
   //     disableBonuses: true,
   //     portalsCount: 4,
@@ -206,7 +209,6 @@ export const levels = {
       forceMatching: true,
       clipCount: 3,
       portalsCount: 2,
-      maxScore: 400,
       gaugeRings: [
         (context) =>
           context.bonusesManager.add(
@@ -258,7 +260,6 @@ export const levels = {
       gridShape: "medium",
       forceMatching: true,
       clipCount: 3,
-      maxScore: 400,
       gaugeRings: [
         (context) =>
           context.bonusesManager.add(
@@ -344,7 +345,6 @@ export const levels = {
   Classic: () =>
     new level.Level("Classic", (context) => ({
       variant: "turn",
-      maxScore: 400,
       minStarNeeded: 1,
       forceMatching: true,
       gridShape: "medium",

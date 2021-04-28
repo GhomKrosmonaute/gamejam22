@@ -288,10 +288,11 @@ export class Nucleotide extends entity.CompositeEntity {
       );
     } else if (newState === "inactive") {
       // Freeze animation and grey it out
-      const animation = this.sprite as PIXI.AnimatedSprite;
+      const animation = this.sprite as PIXI.Sprite;
 
-      animation.stop();
       animation.tint = 0x333333;
+
+      this.refreshSprite();
 
       this.emit("stateChanged", newState);
     } else if (this._state === "missing") {

@@ -80,7 +80,10 @@ export class Gauge extends entity.CompositeEntity {
 
     if (score >= this.level.options.score.max) {
       this.level.finished = true;
-      this.level.options.score.set(this.level.options.score.max, this.level);
+      this.level.options.score.set(
+        crispr.scrap(this.level.options.score.max, this.level),
+        this.level
+      );
       this.level.activate(new popup.TerminatedLevelPopup());
     }
   }
@@ -98,7 +101,7 @@ export class Gauge extends entity.CompositeEntity {
     return crispr.proportion(
       this.level.options.score.get(this.level),
       0,
-      this.level.options.score.max,
+      crispr.scrap(this.level.options.score.max, this.level),
       0,
       this._barBaseWidth,
       true

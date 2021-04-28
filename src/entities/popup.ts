@@ -736,7 +736,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
         `Score: ${this.level.score} pts (${crispr.proportion(
           this.level.score,
           0,
-          this.level.options.score.max,
+          crispr.scrap(this.level.options.score.max, this.level),
           0,
           100,
           true
@@ -765,7 +765,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
               crispr.proportion(
                 value,
                 0,
-                this.level.options.score.max,
+                crispr.scrap(this.level.options.score.max, this.level),
                 0,
                 100,
                 true
