@@ -19,7 +19,7 @@ export const levels = {
       gridShape: "hive",
       maxLife: 3,
       forceMatching: true,
-      sequenceLength: 10,
+      sequenceLength: 8,
       score: {
         max: 5,
         initial: 0,
