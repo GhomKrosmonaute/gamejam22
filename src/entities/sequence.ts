@@ -232,36 +232,56 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   /** remove all validated sequences */
-  crunch(_path: path.Path): entity.Entity | void {
+  crunch(_path: path.Path | undefined): entity.Entity | void {
     if (
       typeof this.level.variant === "object" &&
       this.level.variant.onSequenceManagerCrunched
     )
       return this.level.variant.onSequenceManagerCrunched(this);
 
-    if (this.matchesSequence(_path) !== true) return;
+    if (_path && this.matchesSequence(_path) !== true) return;
 
-    const signature = _path.signature;
+    const sequence = [...this.sequences][0];
+
+    const signature = _path ? _path.signature : sequence.toString();
     const removedSequences: Sequence[] = [];
     let partialCrunch = false;
 
-    for (const s of this.sequences) {
-      if (this.level.options.variant === "zen") {
-        if (s.validate(signature, "partial")) {
-          s.deactivateSegment(_path.signature);
+    if (this.level.options.variant === "zen") {
+      if (sequence.validate(signature, "partial")) {
+        sequence.deactivateSegment(_path.signature);
 
-          partialCrunch = true;
-
-          if (s.isInactive()) {
-            removedSequences.push(s);
-          }
-        }
-      } else if (s.validate(signature)) {
         partialCrunch = true;
 
-        removedSequences.push(s);
+        if (sequence.isInactive()) {
+          removedSequences.push(sequence);
+        }
       }
+    } else if (this.level.options.canCrunchParts) {
+      removedSequences.push(sequence);
+    } else if (sequence.validate(signature)) {
+      partialCrunch = true;
+
+      removedSequences.push(sequence);
     }
+
+    // for (const s of this.sequences) {
+    //   if (this.level.options.variant === "zen") {
+    //     if (s.validate(signature, "partial")) {
+    //       s.deactivateSegment(_path.signature);
+
+    //       partialCrunch = true;
+
+    //       if (s.isInactive()) {
+    //         removedSequences.push(s);
+    //       }
+    //     }
+    //   } else if (s.validate(signature)) {
+    //     partialCrunch = true;
+
+    //     removedSequences.push(s);
+    //   }
+    // }
 
     const context: entity.Entity[] = [];
 
@@ -370,6 +390,34 @@ export class SequenceManager extends entity.CompositeEntity {
           )) ||
         "no match"
       );
+    } else if (this.level.options.canCrunchParts) {
+      const options = this.level.options.canCrunchParts;
+      const sequenceLength = [...this.sequences][0].baseLength;
+
+      for (const possiblePart of options.possibleParts.sort((a, b) => {
+        const lengthA = crispr.resolvePossiblePartLength(
+          a.length,
+          sequenceLength
+        );
+        const lengthB = crispr.resolvePossiblePartLength(
+          b.length,
+          sequenceLength
+        );
+        return lengthA - lengthB;
+      })) {
+        const length = crispr.resolvePossiblePartLength(
+          possiblePart.length,
+          sequenceLength
+        );
+
+        if (
+          _path.length === length &&
+          [...this.sequences][0].validate(_path.signature, "partial", options)
+        )
+          return true;
+      }
+
+      return "no match";
     } else {
       if (
         ![...this.sequences].some((s) => s.validate(_path.signature, "full"))
@@ -539,6 +587,30 @@ export class Sequence extends entity.CompositeEntity {
 
       n.state = "present";
 
+      if (this.level.options.canCrunchParts) {
+        const options = this.level.options.canCrunchParts;
+        for (const possiblePart of options.possibleParts.sort((a, b) => {
+          const lengthA = crispr.resolvePossiblePartLength(
+            a.length,
+            this.baseLength
+          );
+          const lengthB = crispr.resolvePossiblePartLength(
+            b.length,
+            this.baseLength
+          );
+          return lengthA - lengthB;
+        })) {
+          const length = crispr.resolvePossiblePartLength(
+            possiblePart.length,
+            this.baseLength
+          );
+
+          if (n.glowColor === null && i + 1 < length) {
+            n.glowColor = possiblePart.glowColor;
+          }
+        }
+      }
+
       this.nucleotides.push(n);
     }
 
@@ -592,6 +664,8 @@ export class Sequence extends entity.CompositeEntity {
 
   down(addScore: boolean, notACrunchResult = false) {
     let isLong: boolean, fully: boolean, shots: number;
+
+    const pathSignature = this.level.path.signature;
 
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
@@ -654,7 +728,7 @@ export class Sequence extends entity.CompositeEntity {
             }
           }
 
-          if (addScore) {
+          if (addScore && pathSignature.length >= index) {
             this.level.score += score;
 
             this._activateChildEntity(
@@ -724,7 +798,8 @@ export class Sequence extends entity.CompositeEntity {
 
   validate(
     signature: string,
-    validationMethod: "full" | "partial" = "full"
+    validationMethod: "full" | "partial" = "full",
+    options?: { fromLeft?: boolean; fromRight?: boolean }
   ): boolean {
     const sequenceSignature = this.toString();
     if (validationMethod === "full") {
@@ -735,7 +810,8 @@ export class Sequence extends entity.CompositeEntity {
     } else {
       return (
         sequenceSignature.includes(signature) ||
-        util.reverseString(sequenceSignature).includes(signature)
+        (options?.fromLeft && sequenceSignature.startsWith(signature)) ||
+        (options?.fromRight && sequenceSignature.endsWith(signature))
       );
     }
   }

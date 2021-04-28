@@ -209,3 +209,16 @@ export function resolveRange(range: RangeValue): number {
 
 export const yellow = "#ffda6b";
 export const yellowNumber = 0xffda6b;
+
+export function resolvePossiblePartLength(
+  length: number | string,
+  sequenceLength: number
+): number {
+  if (typeof length === "string") {
+    return Math.ceil(
+      proportion(Number(length.replace("%", "")), 0, 100, 0, sequenceLength)
+    );
+  } else {
+    return length;
+  }
+}

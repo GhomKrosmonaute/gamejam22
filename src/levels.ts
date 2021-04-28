@@ -20,6 +20,19 @@ export const levels = {
       maxLife: 3,
       forceMatching: true,
       sequenceLength: 8,
+      canCrunchParts: {
+        fromLeft: true,
+        possibleParts: [
+          {
+            glowColor: 0x00ff00,
+            length: 4,
+          },
+          {
+            glowColor: 0x00ffff,
+            length: 6,
+          },
+        ],
+      },
       score: {
         max: 5,
         initial: 0,

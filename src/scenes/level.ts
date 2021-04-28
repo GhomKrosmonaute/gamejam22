@@ -75,6 +75,15 @@ export interface LevelOptions {
     set: (score: number, level: Level) => unknown;
     show: (score: number, level: Level) => string;
   };
+  /**
+   * If canCrunchParts.possibleParts.length is a string,
+   * it is a percent of current sequence length.
+   */
+  canCrunchParts: {
+    fromLeft?: boolean;
+    fromRight?: boolean;
+    possibleParts: { length: number | string; glowColor: number }[];
+  } | null;
   dropSpeed: number;
   baseGain: number;
   minStarNeeded: number;
@@ -119,6 +128,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   presetClips: null,
   maxLife: 5,
   dropSpeed: 1,
+  canCrunchParts: null,
   score: {
     max: 1000,
     initial: 0,
@@ -1082,7 +1092,9 @@ export class Level extends entity.CompositeEntity {
       return new entity.NullEntity();
     }
 
-    const sequenceCrunch = this.sequenceManager.crunch(this.path);
+    const sequenceCrunch = this.sequenceManager.crunch(
+      this.options.canCrunchParts ? undefined : this.path
+    );
 
     if (!sequenceCrunch) return new entity.NullEntity();
 

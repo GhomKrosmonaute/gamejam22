@@ -9,7 +9,6 @@ import * as level from "../scenes/level";
 
 import * as anim from "../animations";
 import * as crispr from "../crispr";
-import { sprite } from "../crispr";
 
 export type NucleotideState = "missing" | "present" | "inactive";
 export type NucleotideType = "clip" | "normal" | "portal";
@@ -43,6 +42,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public id = Math.random();
 
   private _state: NucleotideState;
+  private _glowColorSprite: PIXI.Sprite;
   private _isHighlighted: boolean;
   private _spriteEntity:
     | entity.AnimatedSpriteEntity
@@ -75,6 +75,15 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._pathArrowEntity.sprite;
   }
 
+  set glowColor(color: number | null) {
+    this._glowColorSprite.visible = color !== null;
+    this._glowColorSprite.tint = color;
+  }
+
+  get glowColor(): number | null {
+    return this._glowColorSprite.visible ? this._glowColorSprite.tint : null;
+  }
+
   _setup() {
     this._state = "missing";
     this._isHighlighted = false;
@@ -87,6 +96,15 @@ export class Nucleotide extends entity.CompositeEntity {
 
     this.shakes = new anim.ShakesManager(this._container);
     this.shakes.setFloat("setup", this.floating);
+
+    this._glowColorSprite = crispr.sprite(this, "images/nucleotide_glow.png");
+    this._glowColorSprite.scale.set(0);
+    this._glowColorSprite.anchor.set(0.5);
+    this._glowColorSprite.position.x = this.position.x;
+    this._glowColorSprite.position.y = -100;
+    this._glowColorSprite.alpha = 0.5;
+    this.glowColor = null;
+    this._entityConfig.container.addChild(this._glowColorSprite);
 
     this._entityConfig.container.addChild(this._container);
 
@@ -106,6 +124,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   _update() {
+    this._glowColorSprite.position.x = this.position.x;
     this._container.position.copyFrom(this.position);
     this.pathArrow.position.copyFrom(this.position);
     this.shakes.anchor.copyFrom(this.position);
@@ -150,13 +169,13 @@ export class Nucleotide extends entity.CompositeEntity {
         this.sprite.scale.set(1.1);
       }
 
-      this._highlightSprite = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          this.parent === "grid"
-            ? "images/nucleotide_bright.png"
-            : "images/nucleotide_glow.png"
-        ].texture
+      this._highlightSprite = crispr.sprite(
+        this,
+        this.parent === "grid"
+          ? "images/nucleotide_bright.png"
+          : "images/nucleotide_glow.png"
       );
+
       this._highlightSprite.anchor.set(0.5);
       this._highlightSprite.scale.set(1.3);
       this._container.addChildAt(this._highlightSprite, 0);
@@ -401,7 +420,10 @@ export class Nucleotide extends entity.CompositeEntity {
           to: scale,
           duration: 1000,
           easing: easing.easeInOutQuad,
-          onUpdate: (value) => this._container.scale.set(value),
+          onUpdate: (value) => {
+            this._container.scale.set(value);
+            this._glowColorSprite.scale.set(value);
+          },
           onTeardown: () => {
             this.level.disablingAnimation(disablingAnimation, false);
           },
@@ -410,6 +432,7 @@ export class Nucleotide extends entity.CompositeEntity {
     } else {
       return new entity.FunctionCallEntity(() => {
         this._container.scale.set(scale);
+        this._glowColorSprite.scale.set(scale);
       });
     }
   }

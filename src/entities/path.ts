@@ -314,12 +314,6 @@ export class Path extends entity.CompositeEntity {
         timeBetween: 50,
         waitForAllSteps: true,
         onStep: (n, i, src, finish) => {
-          //const score = 10;
-          const fill = "#ffeccc";
-          const stroke = "black";
-
-          //this.level.addScore(score);
-
           if (n.type !== "normal") {
             this._activateChildEntity(
               new entity.EntitySequence([

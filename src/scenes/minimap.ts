@@ -1,7 +1,5 @@
 import * as PIXI from "pixi.js";
 
-import { OutlineFilter } from "@pixi/filter-outline";
-
 import * as entity from "booyah/src/entity";
 import * as scroll from "booyah/src/scroll";
 import * as tween from "booyah/src/tween";
