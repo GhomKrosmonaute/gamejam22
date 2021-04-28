@@ -17,10 +17,13 @@ export const levels = {
   Hive: () =>
     new level.Level("Hive", (context) => ({
       gridShape: "hive",
-      infection: false,
+      maxLife: 3,
+      forceMatching: true,
+      sequenceLength: 10,
       score: {
         max: 5,
         initial: 0,
+        color: crisp.yellowNumber,
         get: () => context.killedViruses,
         set: (value) => (context.killedViruses = value),
         show: (value) => String(value) + " kills",

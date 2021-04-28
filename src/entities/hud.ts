@@ -87,6 +87,11 @@ export class Gauge extends entity.CompositeEntity {
 
   setTint(tint: number) {
     this._bar.tint = tint;
+    this._particles.children.forEach((child) => {
+      if (child instanceof PIXI.Sprite) child.tint = tint;
+    });
+    this._wave.tint = tint;
+    this._text.style.fill = tint;
   }
 
   get barWidth(): number {
@@ -238,7 +243,7 @@ export class Gauge extends entity.CompositeEntity {
     }
 
     this._text = crispr.makeText("", {
-      fill: crispr.yellow,
+      fill: this.level.options.score.color,
       fontSize: 50,
       fontStyle: "italic bold",
       fontFamily: "Alien League",
@@ -276,6 +281,8 @@ export class Gauge extends entity.CompositeEntity {
         },
       });
     });
+
+    this.setTint(this.level.options.score.color);
   }
 
   _update(frameInfo: entity.FrameInfo) {

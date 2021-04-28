@@ -70,6 +70,7 @@ export interface LevelOptions {
   score: {
     max: number;
     initial: number;
+    color: number;
     get: (level: Level) => number;
     set: (score: number, level: Level) => unknown;
     show: (score: number, level: Level) => string;
@@ -121,6 +122,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   score: {
     max: 1000,
     initial: 0,
+    color: crispr.yellowNumber,
     get: (ctx) => ctx.score,
     set: (val, ctx) => (ctx.score = val),
     show: (val) => String(Math.floor(val)) + " pts",
@@ -1004,7 +1006,7 @@ export class Level extends entity.CompositeEntity {
         anim.tweenShaking(this.gauge.container, 600, 10, 0),
         new entity.EntitySequence([
           new tween.Tween({
-            from: 0xffffff,
+            from: this.options.score.color,
             to: 0xff0000,
             duration: 300,
             onUpdate: (value) => this.gauge.setTint(value),
@@ -1012,7 +1014,7 @@ export class Level extends entity.CompositeEntity {
           }),
           new tween.Tween({
             from: 0xff0000,
-            to: 0xffffff,
+            to: this.options.score.color,
             duration: 300,
             onUpdate: (value) => this.gauge.setTint(value),
             interpolate: tween.interpolation.color,
