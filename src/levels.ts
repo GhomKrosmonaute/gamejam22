@@ -18,15 +18,15 @@ export const levels = {
     new level.Level("Hive", (context) => ({
       gridShape: "hive",
       forceMatching: true,
+      score: {
+        max: 5,
+        initial: 0,
+        get: () => context.killedViruses,
+        set: (value) => (context.killedViruses = value),
+        show: (value) => String(value) + " kills",
+      },
       portalsCount: 4,
       maxScore: 500,
-      hooks: [
-        new level.Hook({
-          id: "outro",
-          event: "maxScoreReached",
-          entity: new popup.TerminatedLevelPopup(),
-        }),
-      ],
     })),
 
   Hole: () =>
@@ -34,13 +34,6 @@ export const levels = {
       gridShape: "hole",
       forceMatching: true,
       maxScore: 500,
-      hooks: [
-        new level.Hook({
-          id: "outro",
-          event: "maxScoreReached",
-          entity: new popup.TerminatedLevelPopup(),
-        }),
-      ],
     })),
 
   "Bow Tie": () =>
@@ -48,13 +41,6 @@ export const levels = {
       gridShape: "bowTie",
       forceMatching: true,
       maxScore: 500,
-      hooks: [
-        new level.Hook({
-          id: "outro",
-          event: "maxScoreReached",
-          entity: new popup.TerminatedLevelPopup(),
-        }),
-      ],
     })),
 
   "Little\nBridge": () =>
@@ -63,13 +49,6 @@ export const levels = {
       forceMatching: true,
       maxScore: 500,
       portalsCount: 2,
-      hooks: [
-        new level.Hook({
-          id: "outro",
-          event: "maxScoreReached",
-          entity: new popup.TerminatedLevelPopup(),
-        }),
-      ],
     })),
 
   "Four\nIslands": () =>
@@ -80,13 +59,6 @@ export const levels = {
       clipCount: 3,
       sequenceLength: 5,
       portalsCount: 4,
-      hooks: [
-        new level.Hook({
-          id: "outro",
-          event: "maxScoreReached",
-          entity: new popup.TerminatedLevelPopup(),
-        }),
-      ],
     })),
 
   Boss: () =>
@@ -166,11 +138,6 @@ export const levels = {
             if (context.isEnded)
               context.activate(anim.title(context.container, "Go!"));
           }),
-        }),
-        new level.Hook({
-          id: "outro",
-          event: "maxScoreReached",
-          entity: new popup.TerminatedLevelPopup(),
         }),
       ],
     })),
@@ -258,11 +225,6 @@ export const levels = {
           ),
       ],
       hooks: [
-        new level.Hook({
-          id: "outro",
-          event: "maxScoreReached",
-          entity: new popup.TerminatedLevelPopup(),
-        }),
         new level.Hook({
           id: "go title",
           event: "injectedSequence",
@@ -353,11 +315,6 @@ export const levels = {
           }),
         }),
         new level.Hook({
-          id: "outro",
-          event: "maxScoreReached",
-          entity: new popup.TerminatedLevelPopup(),
-        }),
-        new level.Hook({
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
@@ -425,11 +382,6 @@ export const levels = {
               coolDown: 2000,
             },
           }),
-        }),
-        new level.Hook({
-          id: "outro",
-          event: "maxScoreReached",
-          entity: new popup.TerminatedLevelPopup(),
         }),
       ],
     })),

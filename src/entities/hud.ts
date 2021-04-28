@@ -34,6 +34,7 @@ export class Gauge extends entity.CompositeEntity {
   private _background: PIXI.Sprite;
   private _barBaseWidth: number;
   private _triggered = false;
+  private _lastValue = 0;
   private _statePopup: popup.StatePopup;
 
   constructor(private _ringCount: number) {
@@ -52,15 +53,12 @@ export class Gauge extends entity.CompositeEntity {
     return this._container;
   }
 
-  /**
-   * Set value of gauge bar (value/maxValue)
-   * @param {number} value - The new value of gauge bar
-   */
   refreshValue() {
-    this._bar.width = this.getBarWidth();
-    this._text.text =
-      Math.floor(this.level.options.winCondition.scoreGetter(this.level)) +
-      " pts";
+    if (this.level.finished) return;
+
+    const score = this.level.options.score.get(this.level);
+    this._bar.width = this.barWidth;
+    this._text.text = this.level.options.score.show(score, this.level);
 
     if (this._wave)
       this._wave.x = Math.min(
@@ -68,7 +66,8 @@ export class Gauge extends entity.CompositeEntity {
         this._background.position.x + this._background.width - 125
       );
 
-    if (!this._triggered) {
+    if (!this._triggered && this._lastValue !== score) {
+      this._lastValue = score;
       this._triggered = true;
       this._activateChildEntity(
         anim.bubble(this._text, 1.4, 100, {
@@ -78,17 +77,23 @@ export class Gauge extends entity.CompositeEntity {
         })
       );
     }
+
+    if (score >= this.level.options.score.max) {
+      this.level.finished = true;
+      this.level.options.score.set(this.level.options.score.max, this.level);
+      this.level.activate(new popup.TerminatedLevelPopup());
+    }
   }
 
   setTint(tint: number) {
     this._bar.tint = tint;
   }
 
-  getBarWidth(): number {
+  get barWidth(): number {
     return crispr.proportion(
-      this.level.options.winCondition.scoreGetter(this.level),
+      this.level.options.score.get(this.level),
       0,
-      this.level.options.winCondition.maxScore,
+      this.level.options.score.max,
       0,
       this._barBaseWidth,
       true
@@ -100,7 +105,7 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   get reachedScoreXPosition(): number {
-    return this.baseXOfBar + this.getBarWidth();
+    return this.baseXOfBar + this.barWidth;
   }
 
   bubbleRings(options?: {
@@ -271,16 +276,11 @@ export class Gauge extends entity.CompositeEntity {
         },
       });
     });
-
-    this.level.onLevelEvent("scoreUpdated", this.refreshValue.bind(this));
-
-    this.refreshValue();
   }
 
   _update(frameInfo: entity.FrameInfo) {
     if (
-      this.level.options.winCondition.scoreGetter(this.level) <
-      this.level.options.winCondition.maxScore
+      this.level.options.score.get(this.level) < this.level.options.score.max
     ) {
       const reachedScorePosition = this.reachedScoreXPosition;
       this._rings.children.forEach((ring: Ring) => {
@@ -290,7 +290,9 @@ export class Gauge extends entity.CompositeEntity {
       });
     }
 
-    if (this.getBarWidth() > 100) {
+    const barWidth = this.barWidth;
+
+    if (barWidth > 100) {
       if (this._wave) {
         this._wave.visible = true;
         this._wave.tilePosition.y = Math.cos(frameInfo.playTime / 70) * 10;
@@ -307,7 +309,7 @@ export class Gauge extends entity.CompositeEntity {
         particle.scale.set(0.15 + vectorFast * 0.05);
         particle.position.x = Math.min(
           (index - 1) * 10 +
-            this.getBarWidth() +
+            barWidth +
             this._bar.position.x +
             (even ? vector : invertVector) * 15,
           this._background.position.x + this._background.width - 125
@@ -317,6 +319,8 @@ export class Gauge extends entity.CompositeEntity {
       this._particles.visible = false;
       if (this._wave) this._wave.visible = false;
     }
+
+    this.refreshValue();
   }
 
   _teardown() {

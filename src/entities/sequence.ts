@@ -655,7 +655,7 @@ export class Sequence extends entity.CompositeEntity {
           }
 
           if (addScore) {
-            this.level.addScore(score);
+            this.level.score += score;
 
             this._activateChildEntity(
               anim.textFade(

@@ -66,11 +66,12 @@ export interface LevelOptions {
   variant: LevelVariant;
   virus: virus.VirusType;
   maxLife: number;
-  winCondition: {
-    maxScore: number;
-    baseScore: number;
-    scoreGetter: (level: Level) => number;
-    scoreSetter: (level: Level, val: number) => unknown;
+  score: {
+    max: number;
+    initial: number;
+    get: (level: Level) => number;
+    set: (score: number, level: Level) => unknown;
+    show: (score: number, level: Level) => string;
   };
   dropSpeed: number;
   baseGain: number;
@@ -115,11 +116,12 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   presetClips: null,
   maxLife: 5,
   dropSpeed: 1,
-  winCondition: {
-    maxScore: 1000,
-    baseScore: 0,
-    scoreGetter: (ctx) => ctx.score,
-    scoreSetter: (ctx, val) => (ctx.score = val),
+  score: {
+    max: 1000,
+    initial: 0,
+    get: (ctx) => ctx.score,
+    set: (val, ctx) => (ctx.score = val),
+    show: (val) => String(Math.floor(val)) + " pts",
   },
   baseGain: 10,
   minStarNeeded: 0,
@@ -139,8 +141,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
     //"No virus has escaped": (level) => !level.someVirusHasEscaped,
     "Not infected": (level) => !level.wasInfected,
     "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
-    "Max score reached": (level) =>
-      level.score >= level.options.winCondition.maxScore,
+    "Max score reached": (level) => level.score >= level.options.score.max,
   },
   music: null,
 
@@ -337,6 +338,7 @@ export class Level extends entity.CompositeEntity {
   // game
   private _life: number;
   public score = 0;
+  public killedViruses = 0;
   public wasInfected = false;
   public someVirusHasEscaped = false;
   public crunchCount = 0;
@@ -368,10 +370,7 @@ export class Level extends entity.CompositeEntity {
         : optionsResolvable;
     this.options = util.fillInOptions(options, defaultLevelOptions);
 
-    this.options.winCondition.scoreSetter(
-      this,
-      this.options.winCondition.baseScore
-    );
+    this.options.score.set(this.options.score.initial, this);
 
     // @ts-ignore
     window.level = this;
@@ -631,10 +630,7 @@ export class Level extends entity.CompositeEntity {
     if (this.options.variant === "zen") {
       // game over if out of zenMoves
       this.onLevelEvent("outOfZenMoves", () => {
-        if (
-          this.options.winCondition.scoreGetter(this) >=
-          this.options.winCondition.maxScore
-        ) {
+        if (this.options.score.get(this) >= this.options.score.max) {
           this.minimap.saveResults(this);
           this._activateChildEntity(new popup.TerminatedLevelPopup());
         } else {
@@ -895,10 +891,7 @@ export class Level extends entity.CompositeEntity {
 
     // reset options
     if (options.resetScore) {
-      this.options.winCondition.scoreSetter(
-        this,
-        this.options.winCondition.baseScore
-      );
+      this.options.score.set(this.options.score.initial, this);
     }
 
     // Bonus manager
@@ -1062,47 +1055,14 @@ export class Level extends entity.CompositeEntity {
   setScore(score: number) {
     if (this.options.disableScore) return;
 
-    if (score >= this.options.winCondition.maxScore) {
+    if (score >= this.options.score.max) {
       this.emitLevelEvent("maxScoreReached");
-      this.options.winCondition.scoreSetter(
-        this,
-        this.options.winCondition.maxScore
-      );
+      this.options.score.set(this.options.score.max, this);
     } else {
-      this.options.winCondition.scoreSetter(this, score);
+      this.options.score.set(score, this);
     }
 
-    this.emitLevelEvent(
-      "scoreUpdated",
-      this.options.winCondition.scoreGetter(this)
-    );
-  }
-
-  addScore(score: number) {
-    if (this.options.disableScore) return;
-
-    if (
-      this.options.winCondition.scoreGetter(this) ===
-      this.options.winCondition.maxScore
-    ) {
-      return;
-    } else if (
-      this.options.winCondition.scoreGetter(this) + score >=
-      this.options.winCondition.maxScore
-    ) {
-      this.emitLevelEvent("maxScoreReached");
-      this.options.winCondition.scoreSetter(
-        this,
-        this.options.winCondition.maxScore
-      );
-    } else {
-      this.options.winCondition.scoreSetter(
-        this,
-        this.options.winCondition.scoreGetter(this) + score
-      );
-    }
-
-    this.emitLevelEvent("scoreUpdated", this.score);
+    this.emitLevelEvent("scoreUpdated", this.options.score.get(this));
   }
 
   get isDisablingAnimationInProgress(): boolean {
