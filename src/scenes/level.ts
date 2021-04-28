@@ -62,6 +62,7 @@ export interface LevelOptions {
   disableGauge: boolean;
   disableScore: boolean;
   retryOnFail: boolean;
+  infection: boolean;
   displayTurnTitles: boolean;
   variant: LevelVariant;
   virus: virus.VirusType;
@@ -110,6 +111,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableGauge: false,
   disableScore: false,
   retryOnFail: true,
+  infection: true,
   displayTurnTitles: true,
   variant: "turn",
   virus: "mini",
@@ -1160,30 +1162,35 @@ export class Level extends entity.CompositeEntity {
   }
 
   public infect(withSound = false): entity.Entity {
-    return new entity.EntitySequence([
-      new entity.FunctionCallEntity(() => {
-        this.disablingAnimation("level.infect", true);
-        this.wasInfected = true;
-        if (withSound) this._entityConfig.fxMachine.play("skip");
-      }),
-      new tween.Tween({
-        from: this.life,
-        to: this.life - 1,
-        easing: easing.easeInOutQuad,
-        duration: 2500,
-        onUpdate: (value) => {
-          this.life = value;
-        },
-        onTeardown: () => {
-          if (this.life <= 0) {
-            this.activate(new popup.FailedLevelPopup());
-          }
-        },
-      }),
-      //this.grid.infect(),
-      new entity.FunctionCallEntity(() => {
-        this.disablingAnimation("level.infect", false);
-      }),
-    ]);
+    return new entity.EntitySequence(
+      !this.options.infection
+        ? []
+        : [
+            new entity.FunctionCallEntity(() => {
+              this.disablingAnimation("level.infect", true);
+              this.wasInfected = true;
+              if (withSound) this._entityConfig.fxMachine.play("skip");
+            }),
+            new tween.Tween({
+              from: this.life,
+              to: this.life - 1,
+              easing: easing.easeInOutQuad,
+              duration: 2500,
+              onUpdate: (value) => {
+                this.life = value;
+              },
+              onTeardown: () => {
+                if (this.life <= 0) {
+                  this.finished = true;
+                  this.activate(new popup.FailedLevelPopup());
+                }
+              },
+            }),
+            //this.grid.infect(),
+            new entity.FunctionCallEntity(() => {
+              this.disablingAnimation("level.infect", false);
+            }),
+          ]
+    );
   }
 }

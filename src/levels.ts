@@ -17,7 +17,7 @@ export const levels = {
   Hive: () =>
     new level.Level("Hive", (context) => ({
       gridShape: "hive",
-      forceMatching: true,
+      infection: false,
       score: {
         max: 5,
         initial: 0,
