@@ -320,7 +320,7 @@ export class Path extends entity.CompositeEntity {
                 () => anim.down(n.sprite, 500, 1),
                 new entity.FunctionCallEntity(() => {
                   n.once("stateChanged", finish);
-                  n.state = this.level.options.replaceHolesByInactives
+                  n.state = this.level.options.gridCleaning
                     ? "inactive"
                     : "missing";
                 }),
@@ -360,7 +360,7 @@ export class Path extends entity.CompositeEntity {
                   ),
                 new entity.FunctionCallEntity(() => {
                   n.once("stateChanged", finish);
-                  n.state = this.level.options.replaceHolesByInactives
+                  n.state = this.level.options.gridCleaning
                     ? "inactive"
                     : "missing";
                 }),

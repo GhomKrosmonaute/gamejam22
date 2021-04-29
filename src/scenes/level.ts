@@ -61,7 +61,7 @@ export interface LevelOptions {
   disableButton: boolean;
   disableGauge: boolean;
   disableScore: boolean;
-  replaceHolesByInactives: boolean;
+  gridCleaning: boolean;
   retryOnFail: boolean;
   infection: boolean;
   displayTurnTitles: boolean;
@@ -115,7 +115,7 @@ export interface LevelOptions {
 }
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
-  replaceHolesByInactives: false,
+  gridCleaning: false,
   disablingAnimations: [],
   disableExtraSequence: false,
   disableBonuses: false,

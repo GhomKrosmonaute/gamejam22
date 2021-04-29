@@ -411,7 +411,7 @@ export class Grid extends entity.CompositeEntity {
     colors: nucleotide.ColorName[];
     nucleotides: nucleotide.Nucleotide[];
   } {
-    if (this.level.options.replaceHolesByInactives) {
+    if (this.level.options.gridCleaning) {
       // todo: do this
       //length =
     }
@@ -508,6 +508,20 @@ export class Grid extends entity.CompositeEntity {
     }
 
     return output;
+  }
+
+  getIslandNucleotidesOf(
+    n: nucleotide.Nucleotide,
+    list: Set<nucleotide.Nucleotide> = new Set()
+  ): nucleotide.Nucleotide[] {
+    list.add(n);
+
+    let neighborList = this.getNeighbors(n);
+
+    for (const neighbor of neighborList)
+      if (!list.has(neighbor)) this.getIslandNucleotidesOf(neighbor, list);
+
+    return [...list].filter((n) => !!n);
   }
 
   getNucleotideFromGridPosition(

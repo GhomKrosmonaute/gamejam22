@@ -47,7 +47,7 @@ export const levels = {
   Hole: () =>
     new level.Level("Hole", (context) => ({
       gridShape: "hole",
-      replaceHolesByInactives: true,
+      gridCleaning: true,
       score: {
         max: () => context.grid.nucleotides.length,
         initial: 0,
