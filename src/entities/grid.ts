@@ -381,10 +381,12 @@ export class Grid extends entity.CompositeEntity {
       }
     }
 
-    const safe = this.nucleotides;
+    const safe = this.nucleotides.filter((n) => n.state !== "inactive");
     if (safe.length === 0) return;
 
-    const normals = among.filter((n) => n.type === "normal");
+    const normals = among.filter(
+      (n) => n.type === "normal" && n.state !== "inactive"
+    );
     const neededCount =
       (countOption ?? count) - safe.filter((n) => n.type === type).length;
 
@@ -406,15 +408,12 @@ export class Grid extends entity.CompositeEntity {
   }
 
   getForcedMatchingPath(
-    length: number
+    givenLength: number
   ): {
     colors: nucleotide.ColorName[];
     nucleotides: nucleotide.Nucleotide[];
   } {
-    if (this.level.options.gridCleaning) {
-      // todo: do this
-      //length =
-    }
+    let security = 5000;
 
     let output: {
       colors: nucleotide.ColorName[];
@@ -431,7 +430,19 @@ export class Grid extends entity.CompositeEntity {
       );
     };
 
+    const islands = this.getIslands();
+
     while (output === null) {
+      const island = crispr.random(
+        islands.filter((island) => island.some((n) => n.type === "clip"))
+      );
+
+      if (!island) continue;
+
+      let length = island.some((n) => n.type === "portal")
+        ? givenLength
+        : Math.min(givenLength, island.length);
+
       const passed: {
         colors: nucleotide.ColorName[];
         nucleotides: nucleotide.Nucleotide[];
@@ -449,13 +460,13 @@ export class Grid extends entity.CompositeEntity {
       };
 
       // get all color-based nucleotides
-      const normals = this.nucleotides.filter((n) => is(n));
+      const normals = island.filter((n) => is(n));
 
       // if request is impossible, throw error
-      if (normals.length < length) throw new Error("bad length request");
+      if (normals.length < length) length = normals.length;
 
       // chose an entry point
-      addAndFocus(crispr.random(this.nucleotides.filter((n) => is(n, "clip"))));
+      addAndFocus(crispr.random(island.filter((n) => is(n, "clip"))));
 
       // while path is not full
       while (true) {
@@ -504,10 +515,35 @@ export class Grid extends entity.CompositeEntity {
             break;
           }
         }
+
+        security--;
+        if (security <= 0)
+          throw new Error(
+            "Max iterations reached in getForcedMatchingPath method loop."
+          );
       }
     }
 
     return output;
+  }
+
+  getIslands(): nucleotide.Nucleotide[][] {
+    const list = new Set<nucleotide.Nucleotide>();
+    const islands: nucleotide.Nucleotide[][] = [];
+
+    const all = this.nucleotides;
+
+    while (list.size < all.length) {
+      const notPassed = all.filter((n) => !list.has(n));
+
+      const island = this.getIslandNucleotidesOf(crispr.random(notPassed));
+
+      for (const n of island) list.add(n);
+
+      islands.push(island);
+    }
+
+    return islands;
   }
 
   getIslandNucleotidesOf(

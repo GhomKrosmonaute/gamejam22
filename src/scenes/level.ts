@@ -1104,9 +1104,52 @@ export class Level extends entity.CompositeEntity {
 
     this.disablingAnimation("level.attemptCrunch", true);
 
-    const context: entity.Entity[] = [
+    const context: entity.EntityResolvable[] = [
       new entity.ParallelEntity([this.path.crunch(), sequenceCrunch]),
     ];
+
+    if (this.options.gridCleaning) {
+      console.log("coucou");
+      // remove isolated little islands
+      context.push(() =>
+        anim.sequenced({
+          items: this.grid
+            .getIslands()
+            .filter(
+              (island) =>
+                island.length < 4 || island.every((n) => n.type !== "clip")
+            )
+            .flat(),
+          waitForAllSteps: true,
+          timeBetween: 250,
+          onStep: (n, index, all, finish) => {
+            this.activate(
+              anim.sink(n._container, 1000, () => {
+                n.state = "inactive";
+                finish();
+              })
+            );
+          },
+        })
+      );
+
+      // regenerate clips and portals
+      context.push(
+        new entity.FunctionCallEntity(() => {
+          this.grid.addSpecifics(
+            this.grid.nucleotides.filter((n) => n.state !== "inactive"),
+            this.options.clipCount,
+            "clip"
+          );
+          (() =>
+            this.grid.addSpecifics(
+              this.grid.nucleotides.filter((n) => n.state !== "inactive"),
+              this.options.portalsCount,
+              "portal"
+            ))();
+        })
+      );
+    }
 
     if (this.options.variant === "turn") {
       context.push(
