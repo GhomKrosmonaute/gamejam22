@@ -47,16 +47,16 @@ export const levels = {
   Hole: () =>
     new level.Level("Hole", (context) => ({
       gridShape: "hole",
-      gridCleaning: true,
-      score: {
-        max: () => context.grid.nucleotides.length,
-        initial: 0,
-        color: crisp.yellowNumber,
-        get: () =>
-          context.grid.nucleotides.filter((n) => n.state === "inactive").length,
-        set: (value) => (context.killedViruses = value),
-        show: (value) => String(value) + " crh",
-      },
+      // gridCleaning: true,
+      // score: {
+      //   max: () => context.grid.nucleotides.length,
+      //   initial: 0,
+      //   color: crisp.yellowNumber,
+      //   get: () =>
+      //     context.grid.nucleotides.filter((n) => n.state === "inactive").length,
+      //   set: (value) => (context.killedViruses = value),
+      //   show: (value) => String(value) + " crh",
+      // },
       forceMatching: true,
     })),
 
