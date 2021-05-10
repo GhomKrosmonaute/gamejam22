@@ -720,6 +720,13 @@ export class Sequence extends entity.CompositeEntity {
 
           let score = this.level.options.baseGain;
 
+          const multiplier = all.reduce(
+            (accumulator, n) => accumulator * n.crispyMultiplier,
+            1
+          );
+
+          score *= multiplier;
+
           if (isLong) {
             if (n.state !== "inactive") {
               score *= -1;
