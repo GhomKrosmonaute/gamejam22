@@ -274,11 +274,11 @@ export class Path extends entity.CompositeEntity {
                     ),
                   () =>
                     new tween.Tween({
-                      from: n._container.scale.x,
-                      to: items[index]._container.scale.x,
+                      from: n.bonusContainer.scale.x,
+                      to: items[index].container.scale.x,
                       easing: easing.easeOutBounce,
                       duration: 1000,
-                      onUpdate: (value) => n._container.scale.set(value),
+                      onUpdate: (value) => n.bonusContainer.scale.set(value),
                     }),
                 ]),
                 new entity.FunctionCallEntity(() => finish()),
@@ -344,11 +344,11 @@ export class Path extends entity.CompositeEntity {
                 () => anim.down(n.sprite, 500, 1),
                 () =>
                   new tween.Tween({
-                    from: n._container.scale.x,
+                    from: n.bonusContainer.scale.x,
                     to: 1,
                     easing: easing.linear,
                     duration: 1,
-                    onUpdate: (value) => n._container.scale.set(value),
+                    onUpdate: (value) => n.bonusContainer.scale.set(value),
                   }),
                 () =>
                   anim.move(

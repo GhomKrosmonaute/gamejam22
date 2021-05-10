@@ -36,7 +36,9 @@ export const fullColorNames: { [k in ColorName]: string } = {
  * - stateChanged( NucleotideState )
  */
 export class Nucleotide extends entity.CompositeEntity {
-  public _container: PIXI.Container;
+  public container: PIXI.Container;
+  public bonusContainer: PIXI.Container;
+  public shakingContainer: PIXI.Container;
   public type: NucleotideType = "normal";
   public isHovered = false;
   public shakes: anim.ShakesManager;
@@ -53,6 +55,7 @@ export class Nucleotide extends entity.CompositeEntity {
   private _infectionSpriteEntity: entity.DisplayObjectEntity<PIXI.Sprite> = null;
   private _highlightSprite: PIXI.Sprite = null;
   private _pathArrowEntity: entity.AnimatedSpriteEntity;
+  private _crispyMultiplier = 1;
   private _radius: number;
 
   public floating = anim.makeFloatingOptions({});
@@ -91,13 +94,16 @@ export class Nucleotide extends entity.CompositeEntity {
     this._state = "missing";
     this._isHighlighted = false;
 
-    this._container = new PIXI.Container();
-    this._container.rotation = this.rotation;
-    this._container.position.copyFrom(this.position);
+    this.shakingContainer = new PIXI.Container();
+    this.shakingContainer.position.copyFrom(this.position);
+    this.shakingContainer.scale.set(0);
 
-    this._container.scale.set(0);
+    this.container = new PIXI.Container();
+    this.container.rotation = this.rotation;
 
-    this.shakes = new anim.ShakesManager(this._container);
+    this.bonusContainer = new PIXI.Container();
+
+    this.shakes = new anim.ShakesManager(this.shakingContainer);
     this.shakes.setFloat("setup", this.floating);
 
     this._glowColorSprite = crispr.sprite(this, "images/nucleotide_glow.png");
@@ -107,9 +113,14 @@ export class Nucleotide extends entity.CompositeEntity {
     this._glowColorSprite.position.y = -100;
     this._glowColorSprite.alpha = 0.5;
     this.glowColor = null;
-    this._entityConfig.container.addChild(this._glowColorSprite);
 
-    this._entityConfig.container.addChild(this._container);
+    this.shakingContainer.addChild(
+      this._glowColorSprite,
+      this.container,
+      this.bonusContainer
+    );
+
+    this._entityConfig.container.addChild(this.shakingContainer);
 
     this._pathArrowEntity = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources["images/path_arrow.json"]
@@ -127,8 +138,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   _update() {
-    this._glowColorSprite.position.x = this.position.x;
-    this._container.position.copyFrom(this.position);
+    this.shakingContainer.position.copyFrom(this.position);
     this.pathArrow.position.copyFrom(this.position);
     this.shakes.anchor.copyFrom(this.position);
 
@@ -151,10 +161,9 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   _teardown() {
-    if (this._container.children.includes(this._highlightSprite))
-      this._container.removeChild(this._highlightSprite);
+    this.container.removeChildren();
     this._highlightSprite = null;
-    this._entityConfig.container.removeChild(this._container);
+    this._entityConfig.container.removeChildren();
   }
 
   get isHighlighted(): boolean {
@@ -181,7 +190,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
       this._highlightSprite.anchor.set(0.5);
       this._highlightSprite.scale.set(1.3);
-      this._container.addChildAt(this._highlightSprite, 0);
+      this.container.addChildAt(this._highlightSprite, 0);
     } else if (!isHighlighted && this._isHighlighted) {
       this.shakes.removeShake("highlight");
 
@@ -191,7 +200,7 @@ export class Nucleotide extends entity.CompositeEntity {
         //this.sprite.scale.set(1.1);
       }
 
-      this._container.removeChild(this._highlightSprite);
+      this.container.removeChild(this._highlightSprite);
       this._highlightSprite = null;
     }
 
@@ -217,7 +226,7 @@ export class Nucleotide extends entity.CompositeEntity {
   async bubble(duration: number, onTop?: (nucleotide: Nucleotide) => any) {
     return new Promise((resolve) => {
       this._activateChildEntity(
-        anim.bubble(this._container, 1.3, duration, {
+        anim.bubble(this.container, 1.3, duration, {
           onTeardown: resolve,
           onTop: () => {
             onTop?.(this);
@@ -281,7 +290,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this._activateChildEntity(
         this._spriteEntity,
         entity.extendConfig({
-          container: this._container,
+          container: this.container,
         })
       );
       this._activateChildEntity(
@@ -306,10 +315,10 @@ export class Nucleotide extends entity.CompositeEntity {
       this._activateChildEntity(
         this._spriteEntity,
         entity.extendConfig({
-          container: this._container,
+          container: this.container,
         })
       );
-      this._container.setChildIndex(this.sprite, 0);
+      this.container.setChildIndex(this.sprite, 0);
 
       this._activateChildEntity(this._refreshScale());
 
@@ -336,7 +345,29 @@ export class Nucleotide extends entity.CompositeEntity {
     this.colorName = getRandomColorName();
   }
 
+  public set crispyMultiplier(n: number) {
+    this.bonusContainer.removeChildren();
+    this._crispyMultiplier = n;
+    if (n > 1 && n < 6)
+      this.bonusContainer.addChild(
+        crispr.sprite(this, "images/nucleotide_gold_border.png", (it) => {
+          it.anchor.set(0.5);
+          it.scale.set(this.shakingContainer.scale.x);
+        }),
+        crispr.sprite(this, `images/crispy_x${n}.png`, (it) => {
+          it.anchor.set(0.5, 0);
+          it.scale.set(this.shakingContainer.scale.x);
+        })
+      );
+  }
+
+  public get crispyMultiplier(): number {
+    return this._crispyMultiplier;
+  }
+
   private refreshSprite() {
+    this.crispyMultiplier =
+      Math.random() < 0.1 ? 2 + Math.floor(Math.random() * 4) : null;
     if (this.type === "normal") {
       if (!this.colorName) this.generateColor();
       const spriteEntity = util.makeAnimatedSprite(
@@ -420,13 +451,12 @@ export class Nucleotide extends entity.CompositeEntity {
         }),
         new entity.WaitingEntity(400),
         new tween.Tween({
-          from: this._container.scale.x,
+          from: this.shakingContainer.scale.x,
           to: scale,
           duration: 1000,
           easing: easing.easeInOutQuad,
           onUpdate: (value) => {
-            this._container.scale.set(value);
-            this._glowColorSprite.scale.set(value);
+            this.shakingContainer.scale.set(value);
           },
           onTeardown: () => {
             this.level.disablingAnimation(disablingAnimation, false);
@@ -435,8 +465,7 @@ export class Nucleotide extends entity.CompositeEntity {
       ]);
     } else {
       return new entity.FunctionCallEntity(() => {
-        this._container.scale.set(scale);
-        this._glowColorSprite.scale.set(scale);
+        this.shakingContainer.scale.set(scale);
       });
     }
   }

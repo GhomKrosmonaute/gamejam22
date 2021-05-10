@@ -81,7 +81,8 @@ export abstract class Popup extends entity.CompositeEntity {
 
   protected abstract onSetup(): any;
 
-  public _container: PIXI.Container;
+  public container: PIXI.Container;
+
   private _setupAt: number;
   private _width: number;
 
@@ -110,13 +111,13 @@ export abstract class Popup extends entity.CompositeEntity {
     this.minimized = false;
     this._artificialHeight = 0;
 
-    this._container = new PIXI.Container();
-    this._container.zIndex = 10;
-    this._container.position.copyFrom(this.options.from);
+    this.container = new PIXI.Container();
+    this.container.zIndex = 10;
+    this.container.position.copyFrom(this.options.from);
 
     this.body = new PIXI.Container();
 
-    this._container.addChild(this.body);
+    this.container.addChild(this.body);
 
     this._width = this.options.width;
     this._height = this.options.adjustHeight ? 0 : this.options.height;
@@ -152,7 +153,7 @@ export abstract class Popup extends entity.CompositeEntity {
             this.minimizedBackground.visible = false;
             this.minimizedBackground.buttonMode = true;
             this.minimizedBackground.interactive = true;
-            this._container.addChildAt(this.minimizedBackground, 0);
+            this.container.addChildAt(this.minimizedBackground, 0);
           }
 
           // background of body
@@ -199,7 +200,7 @@ export abstract class Popup extends entity.CompositeEntity {
             this.body.addChild(this.logo);
           }
 
-          this._entityConfig.container.addChild(this._container);
+          this._entityConfig.container.addChild(this.container);
 
           this.onSetup();
 
@@ -215,10 +216,10 @@ export abstract class Popup extends entity.CompositeEntity {
                       this._playSound();
                     }),
                   ]),
-                  anim.popup(this._container, 700),
+                  anim.popup(this.container, 700),
                   new tween.Tween({
                     duration: this.options.animationDuration,
-                    obj: this._container,
+                    obj: this.container,
                     property: "position",
                     from: this.options.from,
                     to: new PIXI.Point(crispr.width / 2, crispr.height / 2),
@@ -245,7 +246,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
                         this.button(this.background, this.defaultClosure);
 
-                        this._container.addChildAt(this.background, 0);
+                        this.container.addChildAt(this.background, 0);
                       }
 
                       // close on body click
@@ -284,14 +285,14 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   _teardown() {
-    if (!this._container) return;
+    if (!this.container) return;
     this.emit("closed");
     this.level.disablingAnimation(this.id, false);
     this.body.removeChildren();
-    this._container.removeChildren();
-    this._entityConfig.container.removeChild(this._container);
+    this.container.removeChildren();
+    this._entityConfig.container.removeChild(this.container);
     this._entityConfig.container.removeChild(this.bodyBackgroundBis);
-    this._container = null;
+    this.container = null;
     this.logo = null;
     this.body = null;
     this.bodyBackground = null;
@@ -378,7 +379,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
     this._activateChildEntity(
       new entity.ParallelEntity([
-        anim.sink(this._container, 150, () => {
+        anim.sink(this.container, 150, () => {
           this.options.onClose(this);
           this.emit("closed");
           this.level.emitLevelEvent("closedPopup", this);
@@ -387,7 +388,7 @@ export abstract class Popup extends entity.CompositeEntity {
         }),
         new tween.Tween({
           duration: this.options.animationDuration,
-          obj: this._container,
+          obj: this.container,
           property: "position",
           from: new PIXI.Point(crispr.width / 2, crispr.height / 2),
           to: this.options.from,
@@ -413,10 +414,10 @@ export abstract class Popup extends entity.CompositeEntity {
 
     if (this.minimized) {
       Popup.minimized.forEach((popup) => {
-        popup._container.visible = true;
+        popup.container.visible = true;
       });
 
-      this._container.zIndex = 1;
+      this.container.zIndex = 1;
 
       this.body.children.forEach((child) => (child.visible = false));
 
@@ -447,10 +448,10 @@ export abstract class Popup extends entity.CompositeEntity {
             onUpdate: (value) => (this.height = value),
           }),
           new tween.Tween({
-            obj: this._container,
+            obj: this.container,
             property: "position",
             duration: this.options.animationDuration,
-            from: this._container.position.clone(),
+            from: this.container.position.clone(),
             to: new PIXI.Point(crispr.width - 100, 600 + minimizedY),
             interpolate: tween.interpolation.point,
             easing: easing.easeInOutQuad,
@@ -486,7 +487,7 @@ export abstract class Popup extends entity.CompositeEntity {
       } else {
         this.width = 50;
         this.height = 50;
-        this._container.position.set(crispr.width - 100, 600 + minimizedY);
+        this.container.position.set(crispr.width - 100, 600 + minimizedY);
 
         if (this.logo) {
           this.logo.position.set(75, 25);
@@ -497,7 +498,7 @@ export abstract class Popup extends entity.CompositeEntity {
         this.level.emitLevelEvent("minimizedPopup", this);
       }
     } else {
-      this._container.zIndex = 10;
+      this.container.zIndex = 10;
 
       this.minimizedBackground.visible = false;
       this.bodyBackground.interactive = false;
@@ -505,7 +506,7 @@ export abstract class Popup extends entity.CompositeEntity {
       this.bodyBackgroundBis.visible = true;
 
       Popup.minimized.forEach((popup) => {
-        if (popup.minimized) popup._container.visible = false;
+        if (popup.minimized) popup.container.visible = false;
       });
 
       context.push(
@@ -524,7 +525,7 @@ export abstract class Popup extends entity.CompositeEntity {
           onUpdate: (value) => (this.height = value),
         }),
         new tween.Tween({
-          obj: this._container,
+          obj: this.container,
           property: "position",
           duration: this.options.animationDuration,
           from: new PIXI.Point(crispr.width - 100, 600 + minimizedY),
@@ -660,7 +661,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
   }
 
   setTitle(title: string, config: Partial<PIXI.TextStyle> = {}) {
-    if (this.title) this._container.removeChild(this.title);
+    if (this.title) this.container.removeChild(this.title);
 
     const dotted = title
       .replace(/\./g, "")
@@ -675,7 +676,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
     });
 
     this.title.position.y = -600;
-    this._container.addChild(this.title);
+    this.container.addChild(this.title);
   }
 }
 

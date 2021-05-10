@@ -1124,7 +1124,7 @@ export class Level extends entity.CompositeEntity {
           timeBetween: 250,
           onStep: (n, index, all, finish) => {
             this.activate(
-              anim.sink(n._container, 1000, () => {
+              anim.sink(n.bonusContainer, 1000, () => {
                 n.state = "inactive";
                 finish();
               })
