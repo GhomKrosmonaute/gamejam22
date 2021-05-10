@@ -367,7 +367,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
   private refreshSprite() {
     this.crispyMultiplier =
-      Math.random() < 0.1 ? 2 + Math.floor(Math.random() * 4) : null;
+      Math.random() < 0.1 ? 2 + Math.floor(Math.random() * 4) : 1;
     if (this.type === "normal") {
       if (!this.colorName) this.generateColor();
       const spriteEntity = util.makeAnimatedSprite(

@@ -727,6 +727,10 @@ export class Sequence extends entity.CompositeEntity {
 
           score *= multiplier;
 
+          if (crispr.debug) {
+            console.log("Multiplier:", multiplier, "Score:", score);
+          }
+
           if (isLong) {
             if (n.state !== "inactive") {
               score *= -1;

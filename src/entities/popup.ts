@@ -574,7 +574,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
   button(button: PIXI.Container, callback: () => any) {
     if (
-      !this.body.children.includes(button) &&
+      !this.body?.children.includes(button) &&
       button !== this.body &&
       button !== this.background
     ) {
