@@ -313,7 +313,7 @@ export class Path extends entity.CompositeEntity {
         items: this.items,
         timeBetween: 50,
         waitForAllSteps: true,
-        onStep: (n, i, src, finish) => {
+        onStep: (n, i, all, finish) => {
           if (n.type !== "normal") {
             this._activateChildEntity(
               new entity.EntitySequence([
@@ -368,24 +368,39 @@ export class Path extends entity.CompositeEntity {
             );
           }
 
-          // if (!this.level.options.disableScore) {
-          //   this._activateChildEntity(
-          //     anim.textFade(
-          //       this.level.grid.nucleotideContainer,
-          //       crispr.makeText(`+ ${score}`, {
-          //         fill,
-          //         stroke,
-          //         strokeThickness: 10,
-          //         fontSize: 90 + score * 4,
-          //         dropShadow: true,
-          //         dropShadowBlur: 10,
-          //       }),
-          //       500,
-          //       n.position.clone(),
-          //       "up"
-          //     )
-          //   );
-          // }
+          if (!this.level.options.disableScore) {
+            let score = this.level.options.baseGain;
+
+            const multiplier = all.reduce(
+              (accumulator, n) => accumulator * n.crispyMultiplier,
+              1
+            );
+
+            score *= multiplier;
+
+            this.level.score += score;
+
+            if (crispr.debug) {
+              console.log("Multiplier:", multiplier, "Score:", score);
+            }
+
+            this._activateChildEntity(
+              anim.textFade(
+                this.level.grid.nucleotideContainer,
+                crispr.makeText(`+ ${score}`, {
+                  fill: score < 0 ? "#d70000" : "#ffffff",
+                  fontSize: 70 + score,
+                  stroke: "#000000",
+                  strokeThickness: 4,
+                  dropShadow: true,
+                  dropShadowBlur: 10,
+                }),
+                500,
+                n.position.clone(),
+                "down"
+              )
+            );
+          }
         },
       }),
       new entity.FunctionCallEntity(() => {

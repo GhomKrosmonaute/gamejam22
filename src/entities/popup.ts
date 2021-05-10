@@ -292,12 +292,6 @@ export abstract class Popup extends entity.CompositeEntity {
     this.container.removeChildren();
     this._entityConfig.container.removeChild(this.container);
     this._entityConfig.container.removeChild(this.bodyBackgroundBis);
-    this.container = null;
-    this.logo = null;
-    this.body = null;
-    this.bodyBackground = null;
-    this.bodyBackgroundBis = null;
-    this.minimized = null;
     this._height = 0;
     this._width = 0;
   }
