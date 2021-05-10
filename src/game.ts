@@ -70,6 +70,12 @@ const graphicalAssets = [
   "images/bonus_heal_disabled.png",
   "images/bonus_time_disabled.png",
 
+  "images/crispy.png",
+  "images/crispy_x2.png",
+  "images/crispy_x3.png",
+  "images/crispy_x4.png",
+  "images/crispy_x5.png",
+
   "images/hole.png",
   "images/bubble.png",
   "images/clip_top.png",
@@ -77,6 +83,7 @@ const graphicalAssets = [
 
   "images/nucleotide_glow.png",
   "images/nucleotide_bright.png",
+  "images/nucleotide_gold_border.png",
 
   "images/particle.png",
 

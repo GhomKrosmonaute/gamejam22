@@ -10,6 +10,8 @@ import * as level from "../scenes/level";
 import * as anim from "../animations";
 import * as crispr from "../crispr";
 
+import * as path from "./path";
+
 export type NucleotideState = "missing" | "present" | "inactive";
 export type NucleotideType = "clip" | "normal" | "portal";
 
@@ -39,6 +41,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public isHovered = false;
   public shakes: anim.ShakesManager;
   public position: PIXI.Point;
+  public effect: (path: path.Path) => unknown;
   public id = Math.random();
 
   private _state: NucleotideState;
