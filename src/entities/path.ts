@@ -369,7 +369,7 @@ export class Path extends entity.CompositeEntity {
           }
 
           if (!this.level.options.disableScore) {
-            let score = this.level.options.baseGain;
+            let score = this.level.options.baseCrispyGain;
 
             const multiplier = all.reduce(
               (accumulator, n) => accumulator * n.crispyMultiplier,
@@ -389,11 +389,9 @@ export class Path extends entity.CompositeEntity {
                 this.level.grid.nucleotideContainer,
                 crispr.makeText(`+ ${score}`, {
                   fill: score < 0 ? "#d70000" : "#ffffff",
-                  fontSize: 70 + score,
-                  stroke: "#000000",
+                  fontSize: Math.min(100, 70 + score),
+                  stroke: "#ffa200",
                   strokeThickness: 4,
-                  dropShadow: true,
-                  dropShadowBlur: 10,
                 }),
                 500,
                 n.position.clone(),

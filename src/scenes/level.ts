@@ -81,6 +81,7 @@ export interface LevelOptions {
   variant: LevelVariant;
   virus: virus.VirusType;
   maxLife: number;
+  crispyBonusRate: number;
   score: Partial<ScoreOptions>;
   /**
    * If canCrunchParts.possibleParts.length is a string,
@@ -92,7 +93,7 @@ export interface LevelOptions {
     possibleParts: { length: number | string; glowColor: number }[];
   } | null;
   dropSpeed: number;
-  baseGain: number;
+  baseCrispyGain: number;
   minStarNeeded: number;
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
   sequenceLength: number | null;
@@ -154,8 +155,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   dropSpeed: 1,
   canCrunchParts: null,
   score: defaultScoreOptions,
-  baseGain: 10,
+  baseCrispyGain: 10,
   minStarNeeded: 0,
+  crispyBonusRate: 0.1,
   gaugeRings: [],
   sequenceLength: null,
   sequences: null,

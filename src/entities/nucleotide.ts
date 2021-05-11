@@ -367,7 +367,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   public setRandomCrispyMultiplier() {
-    if (Math.random() < 0.1) {
+    if (Math.random() < this.level.options.crispyBonusRate) {
       const rand = Math.random();
       if (rand < 0.025) this.crispyMultiplier = 5;
       else if (rand < 0.1) this.crispyMultiplier = 4;

@@ -329,7 +329,7 @@ export function textFade(
   direction: "up" | "down" | "left" | "right",
   callback?: AnimationCallback
 ) {
-  const shift = 50;
+  const shift = text.style.fontSize;
   let to: PIXI.Point;
 
   switch (direction) {

@@ -14,6 +14,48 @@ import * as crisp from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
+  Caribbean: () =>
+    new level.Level("Caribbean", (ctx) => ({
+      gridShape: "fourIslands",
+      forceMatching: false,
+      clipCount: 4,
+      sequenceLength: 4,
+      portalsCount: 4,
+      maxLife: 10,
+      crispyBonusRate: 0.6,
+      score: {
+        max: 10000,
+      },
+      initialBonuses: [
+        {
+          bonus: (ctx) => ctx.swapBonus,
+          quantity: 2,
+        },
+      ],
+      hooks: [
+        new level.Hook({
+          id: "intro",
+          event: "init",
+          once: true,
+          entity: new entity.FunctionCallEntity(() => {
+            ctx.activate(
+              new popup.TutorialPopup({
+                title: "Land in sight!",
+                content:
+                  "Loot the Caribbean treasures, collect at least 10,000!",
+                image: "images/crispy.png",
+                imageHeight: 200,
+                popupOptions: {
+                  minimizeOnClose: false,
+                  coolDown: 2000,
+                },
+              })
+            );
+          }),
+        }),
+      ],
+    })),
+
   Hive: () =>
     new level.Level("Hive", (context) => ({
       gridShape: "hive",
