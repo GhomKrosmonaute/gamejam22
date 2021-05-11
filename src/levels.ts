@@ -402,6 +402,25 @@ export const levels = {
       ],
     })),
 
+  Tutorial: () =>
+    new level.Level("Tutorial", {
+      variant: "turn",
+      clipCount: 0,
+      gridShape: [],
+      sequences: [["r", "g", "b"]],
+      disableButton: true,
+      disableBonuses: true,
+      disableGauge: true,
+      disableScore: true,
+      disablingAnimations: ["tutorial"],
+      checks: {
+        "Crunch a sequence": (context) => context.sequenceWasCrunched,
+        "Includes scissors": (context) =>
+          context.triggeredHooks.has("step 3 => step 4"),
+        "Reach 200 pts": (context) => context.score >= 200,
+      },
+    }),
+
   // Tutorial: () =>
   //   new level.Level("Tutorial", {
   //     variant: "turn",
