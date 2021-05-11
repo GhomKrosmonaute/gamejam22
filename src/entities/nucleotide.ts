@@ -273,6 +273,8 @@ export class Nucleotide extends entity.CompositeEntity {
       return;
     }
 
+    this.crispyMultiplier = 1;
+
     if (newState === "missing") {
       this._state = newState;
 
@@ -303,8 +305,6 @@ export class Nucleotide extends entity.CompositeEntity {
       const animation = this.sprite as PIXI.Sprite;
 
       animation.tint = 0x333333;
-
-      this.refreshSprite();
 
       this.emit("stateChanged", newState);
     } else if (this._state === "missing") {
@@ -365,9 +365,18 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._crispyMultiplier;
   }
 
+  public setRandomCrispyMultiplier() {
+    if (Math.random() < 0.1) {
+      const rand = Math.random();
+      if (rand < 0.025) this.crispyMultiplier = 5;
+      else if (rand < 0.1) this.crispyMultiplier = 4;
+      else if (rand < 0.25) this.crispyMultiplier = 3;
+      else this.crispyMultiplier = 2;
+    } else this.crispyMultiplier = 1;
+  }
+
   private refreshSprite() {
-    this.crispyMultiplier =
-      Math.random() < 0.1 ? 2 + Math.floor(Math.random() * 4) : 1;
+    this.setRandomCrispyMultiplier();
     if (this.type === "normal") {
       if (!this.colorName) this.generateColor();
       const spriteEntity = util.makeAnimatedSprite(
