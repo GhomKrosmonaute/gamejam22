@@ -54,6 +54,19 @@ export interface LevelResults {
   failed: boolean;
 }
 
+export interface ScoreOptions {
+  max: number | ((level: Level) => number);
+  initial: number;
+  color: number;
+  get: (level: Level) => number;
+  set: (score: number, level: Level) => unknown;
+  show: (score: number, level: Level) => string;
+  devise?: (
+    score: number,
+    level: Level
+  ) => PIXI.Sprite | PIXI.AnimatedSprite | string;
+}
+
 export interface LevelOptions {
   disablingAnimations: string[];
   disableExtraSequence: boolean;
@@ -68,14 +81,7 @@ export interface LevelOptions {
   variant: LevelVariant;
   virus: virus.VirusType;
   maxLife: number;
-  score: {
-    max: number | ((level: Level) => number);
-    initial: number;
-    color: number;
-    get: (level: Level) => number;
-    set: (score: number, level: Level) => unknown;
-    show: (score: number, level: Level) => string;
-  };
+  score: Partial<ScoreOptions>;
   /**
    * If canCrunchParts.possibleParts.length is a string,
    * it is a percent of current sequence length.
@@ -103,6 +109,7 @@ export interface LevelOptions {
   initialBonuses: bonuses.InitialBonuses;
   checks: { [text: string]: (level: Level) => boolean };
   music: string;
+  noCrispyBonus: boolean;
 
   // reset options
   resetScore: boolean;
@@ -113,6 +120,21 @@ export interface LevelOptions {
   // zen
   zenMoves: number;
 }
+
+export const defaultScoreOptions: Readonly<ScoreOptions> = {
+  max: 1000,
+  initial: 0,
+  color: crispr.yellowNumber,
+  get: (ctx) => ctx.score,
+  set: (val, ctx) => (ctx.score = val),
+  show: (val) => String(Math.floor(val)),
+  devise: (val, ctx) =>
+    crispr.sprite(ctx, "images/crispy.png", (it) => {
+      it.anchor.set(0.5);
+      it.scale.set(0.6);
+      it.x = 65;
+    }),
+};
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
   gridCleaning: false,
@@ -131,14 +153,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   maxLife: 5,
   dropSpeed: 1,
   canCrunchParts: null,
-  score: {
-    max: 1000,
-    initial: 0,
-    color: crispr.yellowNumber,
-    get: (ctx) => ctx.score,
-    set: (val, ctx) => (ctx.score = val),
-    show: (val) => String(Math.floor(val)) + " pts",
-  },
+  score: defaultScoreOptions,
   baseGain: 10,
   minStarNeeded: 0,
   gaugeRings: [],
@@ -160,6 +175,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
     "Max score reached": (level) => level.score >= level.options.score.max,
   },
   music: null,
+  noCrispyBonus: false,
 
   // reset options
   resetScore: true,
@@ -385,7 +401,10 @@ export class Level extends entity.CompositeEntity {
         ? optionsResolvable(this)
         : optionsResolvable;
     this.options = util.fillInOptions(options, defaultLevelOptions);
-
+    this.options.score = util.fillInOptions(
+      this.options.score,
+      defaultScoreOptions
+    );
     this.options.score.set(this.options.score.initial, this);
 
     // @ts-ignore
@@ -1250,6 +1269,7 @@ export class Level extends entity.CompositeEntity {
             //this.grid.infect(),
             new entity.FunctionCallEntity(() => {
               this.disablingAnimation("level.infect", false);
+              this.emitLevelEvent("infected");
             }),
           ]
     );

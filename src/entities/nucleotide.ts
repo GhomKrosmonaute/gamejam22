@@ -346,6 +346,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   public set crispyMultiplier(n: number) {
+    if (this.level.options.noCrispyBonus) n = 1;
     this.bonusContainer.removeChildren();
     this._crispyMultiplier = n;
     if (n > 1 && n < 6)

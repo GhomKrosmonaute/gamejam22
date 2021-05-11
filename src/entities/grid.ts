@@ -88,7 +88,7 @@ export type GridShape =
  */
 export class Grid extends entity.CompositeEntity {
   public container: PIXI.Graphics;
-  public allNucleotides: nucleotide.Nucleotide[] = [];
+  public allNucleotides: (nucleotide.Nucleotide | undefined)[] = [];
   public solution: nucleotide.Nucleotide[] = [];
   public nucleotideContainer: PIXI.Container;
   public x = crispr.width * 0.09;
@@ -153,8 +153,8 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides = [];
   }
 
-  get shape(): (nucleotide.ColorName | "s")[][] {
-    const shape: (nucleotide.ColorName | "s")[][] = [];
+  get shape(): (nucleotide.ColorName | "c")[][] {
+    const shape: (nucleotide.ColorName | "c")[][] = [];
     for (let y = 0; y < colCount; y++) {
       shape.push([]);
       for (let x = 0; x < rowCount; x++) {
@@ -163,7 +163,7 @@ export class Grid extends entity.CompositeEntity {
           if (n.type === "normal") {
             shape[y][x] = n.colorName;
           } else {
-            shape[y][x] = "s";
+            shape[y][x] = "c";
           }
         }
       }
@@ -211,6 +211,23 @@ export class Grid extends entity.CompositeEntity {
       })
     );
     this.allNucleotides[y * colCount + x] = n;
+  }
+
+  applyPresetClips() {
+    if (this.level.options.presetClips) {
+      this.clips.forEach((clip) => (clip.type = "normal"));
+      this.level.options.presetClips.forEach((row, y) => {
+        if (row.length > 0)
+          row.forEach((col, x) => {
+            if (col === true) {
+              const n = this.getNucleotideFromGridPosition(
+                new PIXI.Point(x, y)
+              );
+              n.type = "clip";
+            }
+          });
+      });
+    }
   }
 
   generateShape() {
@@ -261,33 +278,20 @@ export class Grid extends entity.CompositeEntity {
     }
 
     // preset scissors
-    if (this.level.options.presetClips) {
-      this.level.options.presetClips.forEach((row, y) => {
-        if (row)
-          row.forEach((col, x) => {
-            if (col) {
-              const n = this.getNucleotideFromGridPosition(
-                new PIXI.Point(x, y)
-              );
-              n.type = "clip";
-            }
-          });
-      });
-    }
+    this.applyPresetClips();
 
     // finalize
     this.addSpecifics(
-      this.nucleotides,
+      this.allNucleotides,
       this.level.options.portalsCount,
       "portal"
     );
-    (() =>
-      this.addSpecifics(
-        this.nucleotides,
-        this.level.options.clipCount,
-        "clip"
-      ))();
-    this.nucleotides.forEach((n) => (n.state = "present"));
+    this.addSpecifics(
+      this.allNucleotides,
+      this.level.options.clipCount,
+      "clip"
+    );
+    this.allNucleotides.forEach((n) => (n ? (n.state = "present") : null));
   }
 
   reset() {
@@ -349,8 +353,16 @@ export class Grid extends entity.CompositeEntity {
     return this.allNucleotides.filter((n) => n !== undefined);
   }
 
+  get clips(): nucleotide.Nucleotide[] {
+    return this.allNucleotides.filter((n) => n?.type === "clip");
+  }
+
+  get portals(): nucleotide.Nucleotide[] {
+    return this.allNucleotides.filter((n) => n?.type === "portal");
+  }
+
   addSpecifics(
-    among: nucleotide.Nucleotide[],
+    among: (nucleotide.Nucleotide | undefined)[],
     count: number,
     type: nucleotide.NucleotideType
   ) {
@@ -381,11 +393,13 @@ export class Grid extends entity.CompositeEntity {
       }
     }
 
+    if ((countOption ?? count) === 0) return;
+
     const safe = this.nucleotides.filter((n) => n.state !== "inactive");
     if (safe.length === 0) return;
 
     const normals = among.filter(
-      (n) => n.type === "normal" && n.state !== "inactive"
+      (n) => n && n.type === "normal" && n.state !== "inactive"
     );
     const neededCount =
       (countOption ?? count) - safe.filter((n) => n.type === type).length;

@@ -791,6 +791,7 @@ export class TutorialPopup extends Popup {
       content: string;
       image?: string;
       imageHeight?: number;
+      imageAnimationSpeed?: number;
       popupOptions?: Partial<PopupOptions>;
     }
   ) {
@@ -824,6 +825,8 @@ export class TutorialPopup extends Popup {
         this.image = util.makeAnimatedSprite(
           this._entityConfig.app.loader.resources[this._options.image]
         );
+        this.image.sprite.animationSpeed =
+          this._options.imageAnimationSpeed ?? 20 / 60;
         this._activateChildEntity(this.image);
       } else {
         this.image = new PIXI.Sprite(

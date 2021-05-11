@@ -60,6 +60,19 @@ export class Gauge extends entity.CompositeEntity {
     this._bar.width = this.barWidth;
     this._text.text = this.level.options.score.show(score, this.level);
 
+    const devise = this.level.options.score.devise;
+
+    if (devise !== undefined) {
+      const resolved =
+        typeof devise === "function" ? devise(score, this.level) : devise;
+      if (typeof resolved === "string") {
+        this._text.text += " " + resolved;
+      } else {
+        this._text.removeChildren();
+        this._text.addChild(resolved);
+      }
+    }
+
     if (this._wave)
       this._wave.x = Math.min(
         this.reachedScoreXPosition,
