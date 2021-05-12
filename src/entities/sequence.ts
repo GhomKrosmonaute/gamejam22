@@ -671,7 +671,11 @@ export class Sequence extends entity.CompositeEntity {
 
     const pathSignature = this.level.path.signature;
     const pathItems = this.level.path.items.map((n) => n.toJSON());
-    const allDownNucleotides = [...this.nucleotides.concat(), ...pathItems];
+    const allDownNucleotides = pathItems; //[...this.nucleotides, ...pathItems];
+    const multiplier = allDownNucleotides.reduce(
+      (accumulator, n) => accumulator * n.crispyMultiplier,
+      1
+    );
 
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
@@ -732,11 +736,6 @@ export class Sequence extends entity.CompositeEntity {
           text.position.x = crispr.width / 2 - this.container.position.x;
 
           this.container.addChild(text);
-
-          const multiplier = allDownNucleotides.reduce(
-            (accumulator, n) => accumulator * n.crispyMultiplier,
-            1
-          );
 
           this.level.activate(
             new entity.EntitySequence([
@@ -820,26 +819,21 @@ export class Sequence extends entity.CompositeEntity {
 
             this._playNote(index);
 
-            let score = this.level.options.baseCrispyGain * 2;
-
-            const multiplier = allDownNucleotides.reduce(
-              (accumulator, n) => accumulator + n.crispyMultiplier,
-              1
-            );
+            let score = this.level.options.baseCrispyGain;
 
             score *= multiplier;
 
-            if (crispr.debug) {
-              console.log("Multiplier:", multiplier, "Score:", score);
-            }
+            // if (crispr.debug) {
+            //   console.log("Multiplier:", multiplier, "Score:", score);
+            // }
 
-            if (isLong) {
-              if (n.state !== "inactive") {
-                score *= -1;
-              } else if (fully) {
-                score *= 2;
-              }
-            }
+            // if (isLong) {
+            //   if (n.state !== "inactive") {
+            //     score *= -1;
+            //   } else if (fully) {
+            //     score *= 2;
+            //   }
+            // }
 
             if (addScore && pathSignature.length >= index) {
               this.level.score += score;

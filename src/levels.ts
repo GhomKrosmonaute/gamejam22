@@ -24,7 +24,7 @@ export const levels = {
       maxLife: 10,
       crispyBonusRate: 0.6,
       score: {
-        max: 10000,
+        max: 1000,
       },
       initialBonuses: [
         {
@@ -41,8 +41,7 @@ export const levels = {
             ctx.activate(
               new popup.TutorialPopup({
                 title: "Land in sight!",
-                content:
-                  "Loot the Caribbean treasures, collect at least 10,000!",
+                content: `Loot the Caribbean treasures, collect at least ${ctx.options.score.max}!`,
                 image: "images/crispy.png",
                 imageHeight: 200,
                 popupOptions: {
