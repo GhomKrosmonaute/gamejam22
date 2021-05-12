@@ -218,7 +218,10 @@ export interface LevelEvents {
   clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
 }
 
-export interface HookOptions<Entity, EventName extends LevelEventName> {
+export interface HookOptions<
+  Entity extends entity.Entity,
+  EventName extends LevelEventName
+> {
   id: string;
   delay?: number;
   event: EventName;

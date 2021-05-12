@@ -368,37 +368,37 @@ export class Path extends entity.CompositeEntity {
             );
           }
 
-          if (!this.level.options.disableScore) {
-            let score = this.level.options.baseCrispyGain;
-
-            const multiplier = all.reduce(
-              (accumulator, n) => accumulator * n.crispyMultiplier,
-              1
-            );
-
-            score *= multiplier;
-
-            this.level.score += score;
-
-            if (crispr.debug) {
-              console.log("Multiplier:", multiplier, "Score:", score);
-            }
-
-            this._activateChildEntity(
-              anim.textFade(
-                this.level.grid.nucleotideContainer,
-                crispr.makeText(`+ ${score}`, {
-                  fill: score < 0 ? "#d70000" : "#ffffff",
-                  fontSize: Math.min(100, 70 + score),
-                  stroke: "#ffa200",
-                  strokeThickness: 4,
-                }),
-                500,
-                n.position.clone(),
-                "down"
-              )
-            );
-          }
+          // if (!this.level.options.disableScore) {
+          //   let score = this.level.options.baseCrispyGain;
+          //
+          //   const multiplier = all.reduce(
+          //     (accumulator, n) => accumulator * n.crispyMultiplier,
+          //     1
+          //   );
+          //
+          //   score *= multiplier;
+          //
+          //   this.level.score += score;
+          //
+          //   if (crispr.debug) {
+          //     console.log("Multiplier:", multiplier, "Score:", score);
+          //   }
+          //
+          //   this._activateChildEntity(
+          //     anim.textFade(
+          //       this.level.grid.nucleotideContainer,
+          //       crispr.makeText(`+ ${score}`, {
+          //         fill: score < 0 ? "#d70000" : "#ffffff",
+          //         fontSize: Math.min(100, 70 + score),
+          //         stroke: "#ffa200",
+          //         strokeThickness: 4,
+          //       }),
+          //       500,
+          //       n.position.clone(),
+          //       "down"
+          //     )
+          //   );
+          // }
         },
       }),
       new entity.FunctionCallEntity(() => {

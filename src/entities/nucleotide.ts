@@ -437,6 +437,19 @@ export class Nucleotide extends entity.CompositeEntity {
     }
   }
 
+  toJSON() {
+    return {
+      type: this.type,
+      state: this.state,
+      color: this.fullColorName,
+      crispyMultiplier: this.crispyMultiplier,
+      position: {
+        x: this.position.x,
+        y: this.position.y,
+      },
+    };
+  }
+
   get radius(): number {
     return this._radius;
   }

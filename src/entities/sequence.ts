@@ -670,6 +670,8 @@ export class Sequence extends entity.CompositeEntity {
       length: number;
 
     const pathSignature = this.level.path.signature;
+    const pathItems = this.level.path.items.map((n) => n.toJSON());
+    const allDownNucleotides = [...this.nucleotides.concat(), ...pathItems];
 
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
@@ -688,7 +690,7 @@ export class Sequence extends entity.CompositeEntity {
         isLong = this.level.options.variant === "zen";
         fully = this.nucleotides.every((n) => n.state === "inactive");
         shots = this.level.path.crunchCountBeforeSequenceDown;
-        length = this.nucleotides.length;
+        length = allDownNucleotides.length;
 
         if (isLong && fully && shots === 1) {
           this.level.oneShotLongSequence = true;
@@ -715,7 +717,7 @@ export class Sequence extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         if (addScore) {
           const text = crispr.makeText(
-            `${this.level.options.baseCrispyGain} x ${this.nucleotides.length}`,
+            `${this.level.options.baseCrispyGain} x ${length}`,
             {
               fontFamily: "Waffle Crisp",
               fill: crispr.yellow,
@@ -731,7 +733,7 @@ export class Sequence extends entity.CompositeEntity {
 
           this.container.addChild(text);
 
-          const multiplier = this.nucleotides.reduce(
+          const multiplier = allDownNucleotides.reduce(
             (accumulator, n) => accumulator * n.crispyMultiplier,
             1
           );
@@ -764,28 +766,31 @@ export class Sequence extends entity.CompositeEntity {
                   },
                 }),
               () =>
-                anim.sequenced({
-                  items: multiplier - 1,
-                  timeBetween: 300,
-                  waitForAllSteps: true,
-                  onStep: (index) =>
-                    anim.bubble(text, 1.25, 200, {
-                      onTop: () => {
-                        this.level.screenShake(50, 1.2, 100);
-                        text.text = `${
-                          this.level.options.baseCrispyGain *
-                          length *
-                          (index + 1)
-                        } x ${index + 1}`;
-                      },
-                    }),
-                }),
+                new entity.ParallelEntity([
+                  new entity.FunctionCallEntity(() => {
+                    this.level.screenShake(10, 1.2, 1000);
+                  }),
+                  new tween.Tween({
+                    from: this.level.options.baseCrispyGain,
+                    to: this.level.options.baseCrispyGain * length * multiplier,
+                    onUpdate: (value) => {
+                      text.text = String(Math.round(value));
+                    },
+                    easing: easing.easeInCubic,
+                    duration: 1000,
+                  }),
+                  anim.bubble(text, 1.25, 1000, {
+                    onTop: () => {
+                      this.level.screenShake(10, 1.2, 100);
+                    },
+                  }),
+                ]),
               () =>
                 anim.bubble(text, 1.25, 200, {
                   onTop: () => {
-                    text.text = `${
+                    text.text = String(
                       this.level.options.baseCrispyGain * length * multiplier
-                    }`;
+                    );
                   },
                   onTeardown: () => {
                     this.level.activate(
@@ -815,16 +820,12 @@ export class Sequence extends entity.CompositeEntity {
 
             this._playNote(index);
 
-            const baseShift = Math.round(Math.random() * 50) + 50;
+            let score = this.level.options.baseCrispyGain * 2;
 
-            let score = this.level.options.baseCrispyGain;
-
-            const multiplier = all.reduce(
-              (accumulator, n) => accumulator * n.crispyMultiplier,
+            const multiplier = allDownNucleotides.reduce(
+              (accumulator, n) => accumulator + n.crispyMultiplier,
               1
             );
-
-            const baseScore = score;
 
             score *= multiplier;
 
@@ -839,10 +840,6 @@ export class Sequence extends entity.CompositeEntity {
                 score *= 2;
               }
             }
-
-            const finalScoreText = `${score >= 0 ? "+" : "-"} ${String(
-              score
-            ).replace("-", "")}`;
 
             if (addScore && pathSignature.length >= index) {
               this.level.score += score;
