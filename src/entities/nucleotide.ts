@@ -366,7 +366,7 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._crispyMultiplier;
   }
 
-  public setRandomCrispyMultiplier() {
+  private setRandomCrispyMultiplier() {
     if (Math.random() < this.level.options.crispyBonusRate) {
       const rand = Math.random();
       if (rand < 0.025) this.crispyMultiplier = 5;
@@ -377,7 +377,9 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   private refreshSprite() {
-    this.setRandomCrispyMultiplier();
+    if (!/portal|clip/.test(this.type)) this.setRandomCrispyMultiplier();
+    else this.crispyMultiplier = 1;
+
     if (this.type === "normal") {
       if (!this.colorName) this.generateColor();
       const spriteEntity = util.makeAnimatedSprite(

@@ -666,7 +666,8 @@ export class Sequence extends entity.CompositeEntity {
     let isLong: boolean,
       fully: boolean,
       shots: number,
-      scoreAnimationFinished = !addScore;
+      scoreAnimationFinished = !addScore,
+      length: number;
 
     const pathSignature = this.level.path.signature;
 
@@ -687,6 +688,7 @@ export class Sequence extends entity.CompositeEntity {
         isLong = this.level.options.variant === "zen";
         fully = this.nucleotides.every((n) => n.state === "inactive");
         shots = this.level.path.crunchCountBeforeSequenceDown;
+        length = this.nucleotides.length;
 
         if (isLong && fully && shots === 1) {
           this.level.oneShotLongSequence = true;
@@ -715,6 +717,7 @@ export class Sequence extends entity.CompositeEntity {
           const text = crispr.makeText(
             `${this.level.options.baseCrispyGain} x ${this.nucleotides.length}`,
             {
+              fontFamily: "Waffle Crisp",
               fill: crispr.yellow,
               fontSize: 80,
               stroke: fully ? "#ffa200" : "#000000",
@@ -741,57 +744,54 @@ export class Sequence extends entity.CompositeEntity {
                     text.position,
                     text.position.clone(),
                     new PIXI.Point(text.position.x, text.position.y - 100),
-                    250,
+                    1000,
                     easing.easeOutBounce
                   ),
                 new tween.Tween({
                   from: 0,
                   to: 1,
-                  duration: 250,
+                  duration: 1000,
                   easing: easing.easeInOutQuart,
                   onUpdate: (value) => (text.alpha = value),
                 }),
               ]),
               () =>
-                anim.bubble(text, 1.5, 250, {
+                anim.bubble(text, 1.5, 500, {
                   onTop: () => {
                     text.text = `${
-                      this.level.options.baseCrispyGain *
-                      this.nucleotides.length
+                      this.level.options.baseCrispyGain * length
                     } x ${multiplier}`;
                   },
                 }),
               () =>
                 anim.sequenced({
-                  items: multiplier,
-                  timeBetween: 150,
+                  items: multiplier - 1,
+                  timeBetween: 300,
                   waitForAllSteps: true,
                   onStep: (index) =>
-                    anim.bubble(text, 1.25, 75, {
+                    anim.bubble(text, 1.25, 200, {
                       onTop: () => {
+                        this.level.screenShake(50, 1.2, 100);
                         text.text = `${
                           this.level.options.baseCrispyGain *
-                          this.nucleotides.length *
-                          index
-                        } x ${index}`;
-                      },
-                      onTeardown: () => {
-                        text.scale.set(
-                          1 +
-                            crispr.proportion(index, 0, multiplier, 0, 1, true)
-                        );
+                          length *
+                          (index + 1)
+                        } x ${index + 1}`;
                       },
                     }),
-                  callback: () => {
+                }),
+              () =>
+                anim.bubble(text, 1.25, 200, {
+                  onTop: () => {
                     text.text = `${
-                      this.level.options.baseCrispyGain *
-                      this.nucleotides.length *
-                      multiplier
+                      this.level.options.baseCrispyGain * length * multiplier
                     }`;
+                  },
+                  onTeardown: () => {
                     this.level.activate(
                       anim.down(
                         text,
-                        250,
+                        500,
                         text.scale.x,
                         () => (scoreAnimationFinished = true)
                       )
