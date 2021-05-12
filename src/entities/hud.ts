@@ -34,7 +34,7 @@ export class Gauge extends entity.CompositeEntity {
   private _background: PIXI.Sprite;
   private _barBaseWidth: number;
   private _triggered = false;
-  private _lastValue = 0;
+  private _lastText: string = "";
   private _statePopup: popup.StatePopup;
 
   constructor(private _ringCount: number) {
@@ -79,8 +79,8 @@ export class Gauge extends entity.CompositeEntity {
         this._background.position.x + this._background.width - 125
       );
 
-    if (!this._triggered && this._lastValue !== score) {
-      this._lastValue = score;
+    if (!this._triggered && this._lastText !== this._text.text) {
+      this._lastText = this._text.text;
       this._triggered = true;
       this._activateChildEntity(
         anim.bubble(this._text, 1.4, 100, {
@@ -342,8 +342,6 @@ export class Gauge extends entity.CompositeEntity {
       this._particles.visible = false;
       if (this._wave) this._wave.visible = false;
     }
-
-    this.refreshValue();
   }
 
   _teardown() {

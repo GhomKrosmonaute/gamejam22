@@ -15,6 +15,30 @@ import * as crispr from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
+  Timed: () =>
+    new level.Level("Timed", (ctx) => ({
+      gridShape: "hole",
+      virus: "medium",
+      checks: {
+        "Reach 1000pts": (ctx) => ctx.score > 1000,
+      },
+      score: {
+        max: 120000,
+        devise: (score, ctx) =>
+          crispr.sprite(ctx, "images/bonus_time.png", (it) => {
+            it.anchor.set(0.5);
+            it.scale.set(0.5);
+            it.position.x = 90;
+            //it.tint = 0xff4141
+          }),
+        show: (score) => `${Math.round(score / 1000)} s`,
+        get: (ctx) => 120000 - ctx.playTime,
+        set: (value, ctx) => (ctx.playTime = 120000 - value),
+        color: 0xff4141,
+        initial: 120000,
+      },
+    })),
+
   Caribbean: () =>
     new level.Level("Caribbean", (ctx) => ({
       gridShape: "fourIslands",

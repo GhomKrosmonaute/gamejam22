@@ -387,6 +387,8 @@ export class Level extends entity.CompositeEntity {
   public crunchedSequenceCount = 0;
   public isInit = false;
   public isEnded = false;
+  public playTime = 0;
+  public lastPlayTime = 0;
 
   // bonuses
   public syringeBonus: bonuses.Bonus;
@@ -758,7 +760,12 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update(frameInfo: entity.FrameInfo) {
+    this.playTime += frameInfo.playTime - this.lastPlayTime;
+    this.lastPlayTime = frameInfo.playTime;
+
     if (this.isEnded) return;
+
+    this.gauge.refreshValue();
 
     // swimming viruses
     {
