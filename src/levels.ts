@@ -5,12 +5,13 @@ import { OutlineFilter } from "@pixi/filter-outline";
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
+import * as util from "booyah/src/util";
 
 import * as popup from "./entities/popup";
 
 import * as level from "./scenes/level";
 
-import * as crisp from "./crispr";
+import * as crispr from "./crispr";
 import * as anim from "./animations";
 
 export const levels = {
@@ -77,10 +78,25 @@ export const levels = {
       score: {
         max: 5,
         initial: 0,
-        color: crisp.yellowNumber,
+        color: crispr.yellowNumber,
         get: () => context.killedViruses,
         set: (value) => (context.killedViruses = value),
-        show: (value) => String(value) + " kills",
+        show: (value) => String(value) + " kill" + (value === 1 ? "" : "s"),
+        devise: (value, ctx) => {
+          const spriteEntity = util.makeAnimatedSprite(
+            ctx.entityConfig.app.loader.resources["images/mini_bob_idle.json"]
+          );
+          ctx.activate(spriteEntity);
+          const sp = spriteEntity.sprite;
+          sp.autoUpdate = true;
+          sp.animationSpeed = 20 / 60;
+          sp.loop = true;
+          sp.play();
+          sp.scale.set(0.08);
+          sp.anchor.set(0.5);
+          sp.position.x = 150;
+          return sp;
+        },
       },
       portalsCount: 4,
     })),
@@ -169,18 +185,18 @@ export const levels = {
                   v.scale = 4.5;
                   v.rounded = false;
                   v.angle = 0;
-                  v.position = { x: crisp.width / 2, y: crisp.height * 2 };
+                  v.position = { x: crispr.width / 2, y: crispr.height * 2 };
                   v.filters = [new OutlineFilter(20, 0x000000) as any];
                 }),
               (v) => v.stingIn(),
               (v) =>
                 new tween.Tween({
                   duration: 500,
-                  from: crisp.height * 2,
-                  to: crisp.height,
+                  from: crispr.height * 2,
+                  to: crispr.height,
                   easing: easing.easeOutCubic,
                   onUpdate: (value) => {
-                    v.position = { x: crisp.width / 2, y: value };
+                    v.position = { x: crispr.width / 2, y: value };
                   },
                 }),
               (v) => v.stingOut(),
