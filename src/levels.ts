@@ -8,6 +8,7 @@ import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
 
 import * as popup from "./entities/popup";
+import * as grid from "./entities/grid";
 
 import * as level from "./scenes/level";
 
@@ -473,50 +474,28 @@ export const levels = {
     })),
 
   Editor: () =>
-    new level.Level("Editor", (ctx) => ({
-      variant: "turn",
-      minStarNeeded: 3,
-      forceMatching: true,
-      gridShape: "medium",
-      clipCount: 3,
-      gaugeRings: [
-        (context, ring) =>
-          context.activate(
-            new entity.EntitySequence([
-              new entity.FunctionCallEntity(() => {
-                context.bonusesManager.add(
-                  context.swapBonus,
-                  1,
-                  new PIXI.Point(500, -2000)
-                );
-                context.swapBonus.highlight = true;
-              }),
-              new popup.TutorialPopup({
-                title: "The Swap bonus",
-                content: "Can swap two nucleotides",
-                popupOptions: {
-                  id: "popup ring 1",
-                  from: ring.position,
-                  coolDown: 2000,
-                  logo: "images/bonus_swap.png",
-                  logoPosition: { x: 0, y: -110 },
-                  logoScale: 1.3,
-                },
-              }),
-            ])
-          ),
-      ],
-      hooks: [
-        new level.Hook({
-          id: "load level",
-          event: "init",
-          once: true,
-          entity: new entity.FunctionCallEntity(() => {
-            ctx.activate(new popup.EditorLevelSelectPopup());
-          }),
-        }),
-      ],
-    })),
+    new level.Level("Editor", (ctx) => {
+      ctx.finished = true;
+      var editorGridShape: grid.GridShape = new Array(6).fill(
+        new Array(7).fill("h")
+      );
+      editorGridShape[editorGridShape.length - 1] = editorGridShape[
+        editorGridShape.length - 1
+      ].map((val, x) => {
+        if (x % 2 === 0) return null;
+        else return val;
+      });
+      return {
+        variant: "turn",
+        minStarNeeded: 3,
+        forceMatching: false,
+        gridShape: editorGridShape,
+        clipCount: 0,
+        sequenceLength: -1,
+        disableButton: true,
+        disableBonuses: true,
+      };
+    }),
 };
 
 export const levelNames = Object.keys(levels);

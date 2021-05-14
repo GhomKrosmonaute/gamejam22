@@ -76,7 +76,7 @@ export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
 
 export type GridShape =
   | "full"
-  | GridPreset<nucleotide.ColorName>
+  | GridPreset<nucleotide.ColorName | "?" | "h">
   | GridArrowShape
   | GridShapeOptions;
 
@@ -240,7 +240,17 @@ export class Grid extends entity.CompositeEntity {
       shape.forEach((row, y) => {
         if (row)
           row.forEach((col, x) => {
-            if (col) this.addNucleotide(x, y, col);
+            if (col) {
+              if (col === "?" || col === "h") {
+                this.addNucleotide(x, y);
+                if (col === "h") {
+                  const n = this.getNucleotideFromGridPosition(
+                    new PIXI.Point(x, y)
+                  );
+                  n.stayMissing = true;
+                }
+              } else this.addNucleotide(x, y, col);
+            }
           });
       });
     } else {
@@ -291,7 +301,11 @@ export class Grid extends entity.CompositeEntity {
       this.level.options.clipCount,
       "clip"
     );
-    this.allNucleotides.forEach((n) => (n ? (n.state = "present") : null));
+    this.allNucleotides.forEach((n) => {
+      if (!n) return;
+      if (n.stayMissing) n.state = "missing";
+      else n.state = "present";
+    });
   }
 
   reset() {

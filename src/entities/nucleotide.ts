@@ -45,6 +45,7 @@ export class Nucleotide extends entity.CompositeEntity {
   public position: PIXI.Point;
   public effect: (path: path.Path) => unknown;
   public id = Math.random();
+  public stayMissing = false;
 
   private _state: NucleotideState;
   private _glowColorSprite: PIXI.Sprite;
@@ -269,7 +270,7 @@ export class Nucleotide extends entity.CompositeEntity {
   set state(newState: NucleotideState) {
     if (!this.isSetup) return;
 
-    if (newState === this._state) {
+    if (newState === this._state && newState !== "missing") {
       this.emit("stateChanged", newState);
       return;
     }
