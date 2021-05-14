@@ -475,7 +475,7 @@ export const levels = {
   Editor: () =>
     new level.Level("Editor", (ctx) => ({
       variant: "turn",
-      minStarNeeded: 1,
+      minStarNeeded: 3,
       forceMatching: true,
       gridShape: "medium",
       clipCount: 3,
@@ -508,28 +508,11 @@ export const levels = {
       ],
       hooks: [
         new level.Hook({
-          id: "minimized popup ring 1",
-          event: "minimizedPopup",
-          filter: (p) => p.id === "popup ring 1",
-          entity: new entity.FunctionCallEntity(() => {
-            ctx.swapBonus.highlight = false;
-          }),
-        }),
-        new level.Hook({
-          id: "intro",
+          id: "load level",
           event: "init",
           once: true,
           entity: new entity.FunctionCallEntity(() => {
-            ctx.activate(
-              new popup.TutorialPopup({
-                title: "Turn by turn",
-                content: `Now you know the basics, try with some longer sequences.\n\nReach ${ctx.options.score.max} points to continue!`,
-                popupOptions: {
-                  minimizeOnClose: false,
-                  coolDown: 2000,
-                },
-              })
-            );
+            ctx.activate(new popup.EditorLevelSelectPopup());
           }),
         }),
       ],

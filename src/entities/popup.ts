@@ -10,6 +10,8 @@ import * as crispr from "../crispr";
 
 import * as level from "../scenes/level";
 
+import * as editor from "./editor";
+
 export function makeCross(radius: number): PIXI.Graphics {
   return new PIXI.Graphics()
     .beginFill(0xffffff)
@@ -896,5 +898,63 @@ export class StatePopup extends ChecksPopup {
     score.position.y = 75;
 
     this.addRow(text, 200).addRow(score, 150).addCheckRows();
+  }
+}
+
+export class EditorLevelSelectPopup extends Popup {
+  constructor() {
+    super({
+      withBackground: true,
+      withClosureCross: false,
+    });
+  }
+
+  onSetup() {
+    const text = crispr.makeText(this.level.name, {
+      fontSize: 150,
+      fill: 0xffffff,
+    });
+    text.position.x = this.center.x;
+    text.position.y = 100;
+
+    const textType = crispr.makeText("Editor type :", {
+      fontSize: 100,
+      fill: 0xffffff,
+    });
+    textType.position.x = this.center.x;
+    textType.position.y = 50;
+
+    const radio = new editor.RadioButtons({
+      edit: () => {
+        alert("edit");
+      },
+      template: () => {
+        alert("template");
+      },
+    });
+    this._activateChildEntity(
+      radio,
+      entity.extendConfig({ container: this.container })
+    );
+    radio.container.position.x = this.center.x;
+    radio.container.position.y = 0;
+
+    const loadButton = crispr.makeText("Submit", {
+      fontSize: 120,
+      fill: 0xffffff,
+    });
+    loadButton.position.x = this.center.x;
+    loadButton.position.y = 150;
+    loadButton.interactive = true;
+    loadButton.buttonMode = true;
+    this._on(loadButton, "pointerup", () => {
+      radio.run();
+      this.close();
+    });
+
+    this.addRow(text, 200)
+      .addRow(textType, 200)
+      .addRow(radio.container, 300)
+      .addRow(loadButton, 200);
   }
 }
