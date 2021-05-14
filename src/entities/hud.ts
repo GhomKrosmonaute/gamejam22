@@ -97,7 +97,13 @@ export class Gauge extends entity.CompositeEntity {
         crispr.scrap(this.level.options.score.max, this.level),
         this.level
       );
-      this.level.activate(new popup.TerminatedLevelPopup());
+      this.level.finished = true;
+      this.level.activate(
+        new entity.EntitySequence([
+          new entity.WaitingEntity(2000),
+          new popup.TerminatedLevelPopup(),
+        ])
+      );
     }
   }
 
@@ -400,6 +406,9 @@ export class ActionButton extends entity.CompositeEntity {
     this.sprite.position.copyFrom(this.disabledSprite.position);
 
     this._on(this.sprite, "pointerup", () => {
+      if (this.level.bonusesManager.selected) {
+        this.level.bonusesManager.selected.abort();
+      }
       const go = this.press();
       if (go) this._activateChildEntity(go);
     });

@@ -671,7 +671,7 @@ export class Sequence extends entity.CompositeEntity {
 
     const pathSignature = this.level.path.signature;
     const pathItems = this.level.path.items.map((n) => n.toJSON());
-    const allDownNucleotides = pathItems; //[...this.nucleotides, ...pathItems];
+    const allDownNucleotides = pathItems.filter((n) => n.type !== "portal"); //[...this.nucleotides, ...pathItems];
     const multiplier = allDownNucleotides.reduce(
       (accumulator, n) => accumulator * n.crispyMultiplier,
       1

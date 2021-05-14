@@ -2,9 +2,9 @@ import * as PIXI from "pixi.js";
 
 import { OutlineFilter } from "@pixi/filter-outline";
 
+import * as easing from "booyah/src/easing";
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
-import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
 
 import * as popup from "./entities/popup";
@@ -16,28 +16,44 @@ import * as anim from "./animations";
 
 export const levels = {
   Timed: () =>
-    new level.Level("Timed", (ctx) => ({
-      gridShape: "hole",
-      virus: "medium",
-      checks: {
-        "Reach 1000pts": (ctx) => ctx.score > 1000,
-      },
-      score: {
-        max: 120000,
-        devise: (score, ctx) =>
-          crispr.sprite(ctx, "images/bonus_time.png", (it) => {
-            it.anchor.set(0.5);
-            it.scale.set(0.5);
-            it.position.x = 90;
-            //it.tint = 0xff4141
-          }),
-        show: (score) => `${Math.round(score / 1000)} s`,
-        get: (ctx) => 120000 - ctx.playTime,
-        set: (value, ctx) => (ctx.playTime = 120000 - value),
-        color: 0xff4141,
-        initial: 120000,
-      },
-    })),
+    new level.Level("Timed", (ctx) => {
+      ctx.playTime = 0;
+
+      ctx.onLevelEvent("update", () => {
+        if (ctx.playTime >= ctx.options.score.max) {
+          ctx.finished = true;
+          ctx.activate(
+            new entity.EntitySequence([
+              new entity.WaitingEntity(2000),
+              new popup.FailedLevelPopup(),
+            ])
+          );
+        }
+      });
+
+      return {
+        gridShape: "hole",
+        virus: "mini",
+        checks: {
+          "Reach 1000pts": (ctx) => ctx.score > 1000,
+        },
+        score: {
+          max: 120000,
+          devise: (score, ctx) =>
+            crispr.sprite(ctx, "images/bonus_time.png", (it) => {
+              it.anchor.set(0.5);
+              it.scale.set(0.5);
+              it.position.x = 90;
+              //it.tint = 0xff4141
+            }),
+          show: (score) => `${Math.round(score / 1000)} s`,
+          get: (ctx) => 120000 - ctx.playTime,
+          set: (value, ctx) => (ctx.playTime = 120000 - value),
+          color: 0xff4141,
+          initial: 120000,
+        },
+      };
+    }),
 
   Caribbean: () =>
     new level.Level("Caribbean", (ctx) => ({
@@ -236,7 +252,7 @@ export const levels = {
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
-            if (context.isEnded)
+            if (context.isEnded && !context.finished)
               context.activate(anim.title(context.container, "Go!"));
           }),
         }),
@@ -315,7 +331,7 @@ export const levels = {
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
-            if (context.isEnded)
+            if (context.isEnded && !context.finished)
               context.activate(anim.title(context.container, "Go!"));
           }),
         }),
@@ -402,7 +418,7 @@ export const levels = {
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
-            if (context.isEnded)
+            if (context.isEnded && !context.finished)
               context.activate(anim.title(context.container, "Go!"));
           }),
         }),

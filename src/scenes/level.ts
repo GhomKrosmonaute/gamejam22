@@ -198,6 +198,7 @@ export interface LevelEvents {
   end: [];
   init: [];
   setup: [];
+  update: [level: Level];
   canReset: [];
   infected: [];
   fallingDown: [];
@@ -210,7 +211,6 @@ export interface LevelEvents {
   pathUpdated: [];
   ringReached: [ring: hud.Ring];
   sequenceDown: [];
-  scoreUpdated: [score: number];
   clickedBonus: [bonus: bonuses.Bonus];
   outOfZenMoves: [];
   maxScoreReached: [];
@@ -672,11 +672,22 @@ export class Level extends entity.CompositeEntity {
     if (this.options.variant === "zen") {
       // game over if out of zenMoves
       this.onLevelEvent("outOfZenMoves", () => {
+        this.finished = true;
         if (this.options.score.get(this) >= this.options.score.max) {
           this.minimap.saveResults(this);
-          this._activateChildEntity(new popup.TerminatedLevelPopup());
+          this._activateChildEntity(
+            new entity.EntitySequence([
+              new entity.WaitingEntity(2000),
+              new popup.TerminatedLevelPopup(),
+            ])
+          );
         } else {
-          this._activateChildEntity(new popup.FailedLevelPopup());
+          this._activateChildEntity(
+            new entity.EntitySequence([
+              new entity.WaitingEntity(2000),
+              new popup.FailedLevelPopup(),
+            ])
+          );
         }
       });
 
@@ -764,6 +775,9 @@ export class Level extends entity.CompositeEntity {
     this.lastPlayTime = frameInfo.playTime;
 
     if (this.isEnded) return;
+    if (this.finished) return;
+
+    this.emitLevelEvent("update", this);
 
     this.gauge.refreshValue();
 
@@ -1044,7 +1058,7 @@ export class Level extends entity.CompositeEntity {
           from: this.score,
           to: Math.floor(this.score / 2),
           duration: 600,
-          onUpdate: (value) => this.setScore(value),
+          onUpdate: (value) => (this.score = value),
         }),
         anim.tweenShaking(this.gauge.container, 600, 10, 0),
         new entity.EntitySequence([
@@ -1097,21 +1111,6 @@ export class Level extends entity.CompositeEntity {
   exit(save: boolean = false) {
     if (save) this.minimap.saveResults(this);
     this._transition = entity.makeTransition();
-  }
-
-  setScore(score: number) {
-    if (this.options.disableScore) return;
-
-    const max = crispr.scrap(this.options.score.max, this);
-
-    if (score >= max) {
-      this.emitLevelEvent("maxScoreReached");
-      this.options.score.set(max, this);
-    } else {
-      this.options.score.set(score, this);
-    }
-
-    this.emitLevelEvent("scoreUpdated", this.options.score.get(this));
   }
 
   get isDisablingAnimationInProgress(): boolean {

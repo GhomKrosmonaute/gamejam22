@@ -39,6 +39,7 @@ export interface PopupOptions {
   height: number;
   width: number;
   animationDuration: number;
+  withBlackBackground: boolean;
   onClose: (popup: Popup) => void;
 }
 
@@ -53,6 +54,7 @@ export const defaultPopupOptions: PopupOptions = {
   minimizeOnClose: false,
   withBackground: false,
   withClosureCross: true,
+  withBlackBackground: false,
   closeOnBackgroundClick: false,
   closeOnBodyClick: false,
   width: crispr.width * 0.8, // 864
@@ -93,8 +95,9 @@ export abstract class Popup extends entity.CompositeEntity {
   public body: PIXI.Container;
   public background?: PIXI.Graphics;
   public bodyBackground?: PIXI.Sprite;
-  public bodyBackgroundBis?: PIXI.Sprite;
   public minimizedBackground?: PIXI.Sprite;
+
+  public entityConfigBackgroundContainer: PIXI.Container;
 
   public logo?: PIXI.Sprite;
 
@@ -156,18 +159,37 @@ export abstract class Popup extends entity.CompositeEntity {
             this.container.addChildAt(this.minimizedBackground, 0);
           }
 
+          this.entityConfigBackgroundContainer = new PIXI.Container();
+
+          if (this.options.withBlackBackground) {
+            if (this.level.variant === "fall" || this.level.name === "Timed") {
+              const blackBackground = new PIXI.Graphics()
+                .beginFill()
+                .drawRect(0, 0, crispr.width, crispr.height)
+                .endFill();
+
+              this.entityConfigBackgroundContainer.addChild(blackBackground);
+            }
+          }
+
+          this._entityConfig.container.addChild(
+            this.entityConfigBackgroundContainer
+          );
+
           // background of body
           if (this.options.withBackground) {
-            this.bodyBackgroundBis = crispr.sprite(
+            const bodyBackgroundBis = crispr.sprite(
               this,
               "images/popup_background_bis.png"
             );
+
+            this.entityConfigBackgroundContainer.addChild(bodyBackgroundBis);
+
             this.bodyBackground = crispr.sprite(
               this,
               "images/popup_background.png"
             );
 
-            this._entityConfig.container.addChild(this.bodyBackgroundBis);
             this.body.addChild(this.bodyBackground);
 
             this.bodyBackground.width = this.width;
@@ -291,7 +313,9 @@ export abstract class Popup extends entity.CompositeEntity {
     this.body.removeChildren();
     this.container.removeChildren();
     this._entityConfig.container.removeChild(this.container);
-    this._entityConfig.container.removeChild(this.bodyBackgroundBis);
+    this._entityConfig.container.removeChild(
+      this.entityConfigBackgroundContainer
+    );
     this._height = 0;
     this._width = 0;
   }
@@ -378,7 +402,9 @@ export abstract class Popup extends entity.CompositeEntity {
           this.emit("closed");
           this.level.emitLevelEvent("closedPopup", this);
           this._transition = entity.makeTransition();
-          this._entityConfig.container.removeChild(this.bodyBackgroundBis);
+          this._entityConfig.container.removeChild(
+            this.entityConfigBackgroundContainer
+          );
         }),
         new tween.Tween({
           duration: this.options.animationDuration,
@@ -419,7 +445,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
       if (this.logo) this.logo.visible = true;
 
-      this.bodyBackgroundBis.visible = false;
+      this.entityConfigBackgroundContainer.visible = false;
 
       this._once(this.minimizedBackground, "pointerup", () => {
         this.minimize();
@@ -497,7 +523,7 @@ export abstract class Popup extends entity.CompositeEntity {
       this.minimizedBackground.visible = false;
       this.bodyBackground.interactive = false;
       this.bodyBackground.buttonMode = false;
-      this.bodyBackgroundBis.visible = true;
+      this.entityConfigBackgroundContainer.visible = true;
 
       Popup.minimized.forEach((popup) => {
         if (popup.minimized) popup.container.visible = false;
@@ -798,6 +824,7 @@ export class TutorialPopup extends Popup {
     super({
       minimizeOnClose: true,
       withBackground: true,
+      withBlackBackground: true,
       closeOnBackgroundClick: true,
       adjustHeight: true,
       ...(_options.popupOptions ?? {}),
@@ -868,6 +895,7 @@ export class StatePopup extends ChecksPopup {
     super({
       closeOnBackgroundClick: true,
       withBackground: true,
+      withBlackBackground: false,
       adjustHeight: true,
       from: new PIXI.Point(200, 100),
     });

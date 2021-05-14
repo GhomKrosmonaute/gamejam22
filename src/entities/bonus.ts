@@ -131,6 +131,8 @@ export class SwapBonus extends Bonus {
     if (a.colorName === b.colorName && a.type === b.type && a.state === b.state)
       return this.abort();
 
+    if (a.type === "portal" || b.type === "portal") return this.abort();
+
     this.isUpdateDisabled = true;
     this.level.grid.swap(a, b, false);
     this.level.disablingAnimation(this.name, true);
@@ -312,7 +314,7 @@ export type InitialBonuses = InitialBonus[];
 export class BonusesManager extends entity.CompositeEntity {
   public container: PIXI.Container;
   public bonuses = new Set<Bonus>();
-  public selected: Bonus;
+  public selected: Bonus | null;
   public shakeAmount = 3;
   public wasBonusUsed = false;
   public disablingAnimation = false;
