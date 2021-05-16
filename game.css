@@ -12,32 +12,28 @@
 
 @font-face {
   font-family: "Alien League";
-  src: url("fonts/alienleague/alienleague.woff")
-  format("woff");
+  src: url("fonts/alienleague/alienleague.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Geosans Light";
-  src: url("fonts/geosans-light/geosans-light.woff")
-  format("woff");
+  src: url("fonts/geosans-light/geosans-light.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Waffle Crisp";
-  src: url("fonts/waffle-crisp/waffle-crisp.woff")
-  format("woff");
+  src: url("fonts/waffle-crisp/waffle-crisp.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
 
 @font-face {
   font-family: "Optimus";
-  src: url("fonts/optimus/optimus.woff")
-  format("woff");
+  src: url("fonts/optimus/optimus.woff") format("woff");
   font-weight: normal;
   font-style: normal;
 }
@@ -90,6 +86,11 @@ body {
   -ms-user-select: none;
 }
 
+#game-parent.embedded {
+  height: 100vh;
+  max-height: unset;
+}
+
 #game-parent:fullscreen {
   max-height: unset;
 }
@@ -124,6 +125,11 @@ body {
   -ms-transform: translate(-50%, 0);
 
   background-color: black;
+}
+
+#game-parent.embedded canvas {
+  height: 100vh;
+  max-height: unset;
 }
 
 #game-parent:fullscreen {
