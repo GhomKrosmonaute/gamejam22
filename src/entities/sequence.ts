@@ -923,7 +923,9 @@ export class Sequence extends entity.CompositeEntity {
     const segment = this.getMatchingSegment(signature);
 
     for (const n of this.nucleotides) {
-      n.isHighlighted = segment && segment.includes(n);
+      n.isHighlighted =
+        (segment && segment.includes(n)) ||
+        (n.type === "clip" && this.level.path?.first?.type === "clip");
     }
   }
 
