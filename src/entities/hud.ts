@@ -406,7 +406,7 @@ export class ActionButton extends entity.CompositeEntity {
     this.sprite.position.copyFrom(this.disabledSprite.position);
 
     this._on(this.sprite, "pointertap", () => {
-      if (this.level.bonusesManager.selected) {
+      if (this.level.bonusesManager?.selected) {
         this.level.bonusesManager.selected.abort();
       }
       const go = this.press();

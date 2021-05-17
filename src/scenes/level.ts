@@ -779,7 +779,7 @@ export class Level extends entity.CompositeEntity {
 
     this.emitLevelEvent("update", this);
 
-    this.gauge.refreshValue();
+    if (!this.options.disableGauge) this.gauge.refreshValue();
 
     // swimming viruses
     {

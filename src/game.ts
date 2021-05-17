@@ -78,6 +78,7 @@ const graphicalAssets = [
 
   "images/hole.png",
   "images/bubble.png",
+  "images/clip.png",
   "images/clip_top.png",
   "images/clip_bottom.png",
 
