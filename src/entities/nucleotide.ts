@@ -13,11 +13,11 @@ import * as crispr from "../crispr";
 import * as path from "./path";
 
 export type NucleotideState = "missing" | "present" | "inactive";
-export type NucleotideType = "clip" | "normal" | "portal";
+export type NucleotideType = "clip" | "normal" | "portal" | "joker";
 
 // TODO: Use string enum here?
-export type ColorName = "b" | "r" | "g" | "y";
-export const colorNames: ColorName[] = ["b", "r", "g", "y"];
+export type ColorName = "b" | "r" | "g" | "y" | "*";
+export const colorNames: ColorName[] = ["b", "r", "g", "y", "*"];
 export function getRandomColorName(): ColorName {
   return colorNames[Math.floor(Math.random() * colorNames.length)];
 }
@@ -27,6 +27,7 @@ export const fullColorNames: { [k in ColorName]: string } = {
   r: "red",
   g: "green",
   y: "yellow",
+  "*": "joker",
 };
 
 /**
@@ -377,7 +378,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   private refreshSprite() {
-    if (!/portal|clip/.test(this.type)) this.setRandomCrispyMultiplier();
+    if (!/portal|clip|joker/.test(this.type)) this.setRandomCrispyMultiplier();
     else this.crispyMultiplier = 1;
 
     if (this.type === "normal") {
@@ -388,6 +389,17 @@ export class Nucleotide extends entity.CompositeEntity {
         ]
       );
       spriteEntity.sprite.animationSpeed = 25 / 60;
+      // Start on a random frame
+      spriteEntity.sprite.gotoAndPlay(
+        Math.floor(Math.random() * spriteEntity.sprite.totalFrames)
+      );
+      spriteEntity.sprite.anchor.set(0.5);
+      this._spriteEntity = spriteEntity;
+    } else if (this.type === "joker") {
+      const spriteEntity = util.makeAnimatedSprite(
+        this._entityConfig.app.loader.resources[`images/nucleotide_joker.json`]
+      );
+      spriteEntity.sprite.animationSpeed = 2;
       // Start on a random frame
       spriteEntity.sprite.gotoAndPlay(
         Math.floor(Math.random() * spriteEntity.sprite.totalFrames)

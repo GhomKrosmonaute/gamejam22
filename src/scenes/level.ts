@@ -97,13 +97,15 @@ export interface LevelOptions {
   minStarNeeded: number;
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
   sequenceLength: number | null;
+
   clipCount: number;
   portalsCount: number;
+  jokerCount: number;
+
   nucleotideRadius: number;
   sequenceRounded: boolean;
   sequenceNucleotideRadius: number;
   gridShape: grid.GridShape | string;
-  presetClips: grid.GridPreset | null;
   sequences: nucleotide.ColorName[][] | null;
   forceMatching: boolean;
   hooks: Hook[];
@@ -150,7 +152,6 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   displayTurnTitles: true,
   variant: "turn",
   virus: "mini",
-  presetClips: null,
   maxLife: 5,
   dropSpeed: 1,
   canCrunchParts: null,
@@ -161,8 +162,11 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   gaugeRings: [],
   sequenceLength: null,
   sequences: null,
+
   clipCount: 4,
   portalsCount: 0,
+  jokerCount: 1,
+
   nucleotideRadius: crispr.width / 13.44,
   sequenceNucleotideRadius: crispr.width * 0.04,
   sequenceRounded: false,
@@ -964,7 +968,6 @@ export class Level extends entity.CompositeEntity {
     // grid rebuild
     if (options.resetGrid) {
       this.options.gridShape = options.gridShape;
-      this.options.presetClips = options.presetClips;
       this.grid.reset();
     }
 

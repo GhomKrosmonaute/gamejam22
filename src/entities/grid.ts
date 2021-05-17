@@ -30,6 +30,7 @@ export type GridArrowShape = (x: number, y: number) => boolean;
 export interface GridShapeOptions {
   portals?: PIXI.IPointData[] | number;
   clips?: PIXI.IPointData[] | number;
+  jokers?: PIXI.IPointData[] | number;
   shape: GridPreset<nucleotide.ColorName> | GridArrowShape;
 }
 
@@ -203,7 +204,7 @@ export class Grid extends entity.CompositeEntity {
     n.floating.active.y = true;
     n.floating.speed.set(1.4, 2);
     n.floating.amplitude.set(0.3, 0.3);
-    n.type = "normal";
+    n.type = color === "*" ? "joker" : "normal";
     this._activateChildEntity(
       n,
       entity.extendConfig({
@@ -211,23 +212,6 @@ export class Grid extends entity.CompositeEntity {
       })
     );
     this.allNucleotides[y * colCount + x] = n;
-  }
-
-  applyPresetClips() {
-    if (this.level.options.presetClips) {
-      this.clips.forEach((clip) => (clip.type = "normal"));
-      this.level.options.presetClips.forEach((row, y) => {
-        if (row.length > 0)
-          row.forEach((col, x) => {
-            if (col === true) {
-              const n = this.getNucleotideFromGridPosition(
-                new PIXI.Point(x, y)
-              );
-              n.type = "clip";
-            }
-          });
-      });
-    }
   }
 
   generateShape() {
@@ -277,9 +261,6 @@ export class Grid extends entity.CompositeEntity {
       }
     }
 
-    // preset scissors
-    this.applyPresetClips();
-
     // finalize
     this.addSpecifics(
       this.allNucleotides,
@@ -290,6 +271,11 @@ export class Grid extends entity.CompositeEntity {
       this.allNucleotides,
       this.level.options.clipCount,
       "clip"
+    );
+    this.addSpecifics(
+      this.allNucleotides,
+      this.level.options.jokerCount,
+      "joker"
     );
     this.allNucleotides.forEach((n) => (n ? (n.state = "present") : null));
   }
@@ -375,7 +361,8 @@ export class Grid extends entity.CompositeEntity {
         const resolvableOptions = gridShapes[shape];
 
         if (typeof resolvableOptions !== "function") {
-          const val = resolvableOptions[(type + "s") as "portals" | "clips"];
+          const val =
+            resolvableOptions[(type + "s") as "portals" | "clips" | "jokers"];
 
           if (val !== undefined) {
             if (typeof val === "number") {
@@ -385,7 +372,10 @@ export class Grid extends entity.CompositeEntity {
                 const n = this.getNucleotideFromGridPosition(
                   new PIXI.Point(x, y)
                 );
-                if (n) n.type = type;
+                if (n) {
+                  n.type = type;
+                  if (type === "joker") n.colorName = "*";
+                }
               });
             }
           }

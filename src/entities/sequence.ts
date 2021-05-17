@@ -890,11 +890,33 @@ export class Sequence extends entity.CompositeEntity {
     validationMethod: "full" | "partial" = "full",
     options?: { fromLeft?: boolean; fromRight?: boolean }
   ): boolean {
+    const resolveJokers = (sign1: string, sign2: string): boolean => {
+      sign1.split("").forEach((l, i) => {
+        if (l === "?")
+          sign2 = sign2
+            .split("")
+            .map((l2, i2) => {
+              return i === i2 ? "?" : l2;
+            })
+            .join("");
+      });
+      sign2.split("").forEach((l, i) => {
+        if (l === "?")
+          sign1 = sign1
+            .split("")
+            .map((l2, i2) => {
+              return i === i2 ? "?" : l2;
+            })
+            .join("");
+      });
+      return sign1 === sign2;
+    };
+
     const sequenceSignature = this.toString();
     if (validationMethod === "full") {
       return (
-        signature === sequenceSignature ||
-        signature === util.reverseString(sequenceSignature)
+        resolveJokers(signature, sequenceSignature) ||
+        resolveJokers(signature, util.reverseString(sequenceSignature))
       );
     } else {
       return (
