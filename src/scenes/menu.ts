@@ -132,7 +132,8 @@ export class Menu extends entity.CompositeEntity {
       this.container.addChild(this.title);
     }
 
-    {
+    if (util.supportsFullscreen()) {
+      // if (false) {
       this.fullscreenSwitcher = new SpriteSwitcher(
         {
           on: "images/menu_fullscreen_button.png",
@@ -239,12 +240,15 @@ export class Menu extends entity.CompositeEntity {
       });
     }
 
-    this._activateChildEntity(
-      this.fullscreenSwitcher,
-      entity.extendConfig({
-        container: this.popupBackground,
-      })
-    );
+    if (this.fullscreenSwitcher) {
+      this._activateChildEntity(
+        this.fullscreenSwitcher,
+        entity.extendConfig({
+          container: this.popupBackground,
+        })
+      );
+    }
+
     this._activateChildEntity(
       this.subTitleSwitcher,
       entity.extendConfig({
