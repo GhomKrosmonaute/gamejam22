@@ -103,6 +103,9 @@ export class TimeBonus extends Bonus {
     this.level.sequenceManager.first?.nucleotides.forEach((n) => {
       n.sprite.tint = 0x4df9ff;
     });
+
+    this.abort()
+
     this.level.activate(
       new entity.EntitySequence([
         new entity.WaitingEntity(5000),
