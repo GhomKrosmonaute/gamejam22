@@ -710,14 +710,6 @@ export class Sequence extends entity.CompositeEntity {
 
         this.level.path.crunchCountBeforeSequenceDown = 0;
       }),
-      new entity.FunctionalEntity({
-        requestTransition: () => {
-          return (
-            notACrunchResult ||
-            this.level.disablingAnimations.has("path.crunch.down")
-          );
-        },
-      }),
       new entity.FunctionCallEntity(() => {
         if (addScore) {
           const text = crispr.makeText(
@@ -767,7 +759,8 @@ export class Sequence extends entity.CompositeEntity {
               () =>
                 new entity.ParallelEntity([
                   new entity.FunctionCallEntity(() => {
-                    this.level.screenShake(10, 1.2, 1000);
+                    this.level.screenShake(8, 1.05, 1000);
+                    this._entityConfig.fxMachine.play("score_ring");
                   }),
                   new tween.Tween({
                     from: this.level.options.baseCrispyGain,
@@ -780,7 +773,7 @@ export class Sequence extends entity.CompositeEntity {
                   }),
                   anim.bubble(text, 1.25, 1000, {
                     onTop: () => {
-                      this.level.screenShake(10, 1.2, 100);
+                      //this.level.screenShake(5, 1.05, 100);
                     },
                   }),
                 ]),
@@ -807,7 +800,12 @@ export class Sequence extends entity.CompositeEntity {
         }
       }),
       new entity.FunctionalEntity({
-        requestTransition: () => scoreAnimationFinished,
+        requestTransition: () => {
+          return (
+            notACrunchResult ||
+            this.level.disablingAnimations.has("path.crunch.down")
+          );
+        },
       }),
       () =>
         anim.sequenced({

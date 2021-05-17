@@ -398,7 +398,7 @@ export class Nucleotide extends entity.CompositeEntity {
       const spriteEntity = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources["images/portal.json"]
       );
-      spriteEntity.sprite.animationSpeed = 20 / 60;
+      spriteEntity.sprite.animationSpeed = 15 / 60;
       // Start on a random frame
       spriteEntity.sprite.gotoAndPlay(
         Math.floor(Math.random() * spriteEntity.sprite.totalFrames)

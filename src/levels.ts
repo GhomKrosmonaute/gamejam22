@@ -102,41 +102,41 @@ export const levels = {
       maxLife: 3,
       forceMatching: true,
       sequenceLength: 8,
-      canCrunchParts: {
-        fromLeft: true,
-        possibleParts: [
-          {
-            glowColor: 0x00ff00,
-            length: 4,
-          },
-          {
-            glowColor: 0x00ffff,
-            length: 6,
-          },
-        ],
-      },
+      // canCrunchParts: {
+      //   fromLeft: true,
+      //   possibleParts: [
+      //     {
+      //       glowColor: 0x00ff00,
+      //       length: 4,
+      //     },
+      //     {
+      //       glowColor: 0x00ffff,
+      //       length: 6,
+      //     },
+      //   ],
+      // },
       score: {
         max: 5,
         initial: 0,
         color: crispr.yellowNumber,
         get: () => context.killedViruses,
         set: (value) => (context.killedViruses = value),
-        show: (value) => String(value) + " kill" + (value === 1 ? "" : "s"),
-        devise: (value, ctx) => {
-          const spriteEntity = util.makeAnimatedSprite(
-            ctx.entityConfig.app.loader.resources["images/mini_bob_idle.json"]
-          );
-          ctx.activate(spriteEntity);
-          const sp = spriteEntity.sprite;
-          sp.autoUpdate = true;
-          sp.animationSpeed = 20 / 60;
-          sp.loop = true;
-          sp.play();
-          sp.scale.set(0.08);
-          sp.anchor.set(0.5);
-          sp.position.x = 150;
-          return sp;
-        },
+        show: () => String(Math.round(context.score)),
+        // devise: (value, ctx) => {
+        //   const spriteEntity = util.makeAnimatedSprite(
+        //     ctx.entityConfig.app.loader.resources["images/mini_bob_idle.json"]
+        //   );
+        //   ctx.activate(spriteEntity);
+        //   const sp = spriteEntity.sprite;
+        //   sp.autoUpdate = true;
+        //   sp.animationSpeed = 20 / 60;
+        //   sp.loop = true;
+        //   sp.play();
+        //   sp.scale.set(0.08);
+        //   sp.anchor.set(0.5);
+        //   sp.position.x = 150;
+        //   return sp;
+        // },
       },
       portalsCount: 4,
     })),

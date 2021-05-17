@@ -51,11 +51,16 @@ export class Minimap extends entity.CompositeEntity {
       const index = Object.keys(levels.levels).indexOf(levelName);
       const even = index % 2 === 0;
       const data = localStorage.getItem(levelName);
-      const isAccessible = Object.entries(levels.levels)
-        .slice(index + 1)
-        .every(([key]) => {
-          return !!localStorage.getItem(key);
-        });
+
+      /**
+       * If previous level is done or Boss level is done.
+       */
+      const isAccessible =
+        Object.entries(levels.levels)
+          .slice(index + 1)
+          .every(([key]) => {
+            return !!localStorage.getItem(key);
+          }) || !!localStorage.getItem("Boss");
 
       // make a button
       const position = new PIXI.Point(

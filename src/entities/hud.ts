@@ -405,7 +405,7 @@ export class ActionButton extends entity.CompositeEntity {
     this.sprite.anchor.set(0.5);
     this.sprite.position.copyFrom(this.disabledSprite.position);
 
-    this._on(this.sprite, "pointerup", () => {
+    this._on(this.sprite, "pointertap", () => {
       if (this.level.bonusesManager.selected) {
         this.level.bonusesManager.selected.abort();
       }
