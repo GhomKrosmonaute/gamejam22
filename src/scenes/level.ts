@@ -1120,7 +1120,7 @@ export class Level extends entity.CompositeEntity {
   // TODO: refactor this as a separate object, using the strategy pattern
   public attemptCrunch(): entity.Entity {
     if (
-      this.path.items.length === 0 ||
+      this.path.length === 0 ||
       this.sequenceManager.matchesSequence(this.path) !== true
     ) {
       return new entity.NullEntity();

@@ -387,13 +387,14 @@ export class SequenceManager extends entity.CompositeEntity {
       return this.level.variant.onSequenceManagerMatchPath(this.level, _path);
 
     if (this.level.options.variant === "zen") {
-      return (
+      const state =
         (_path.length > 2 &&
-          [...this.sequences].some((s) =>
-            s.validate(_path.signature, "partial")
-          )) ||
-        "no match"
-      );
+          this.first?.validate(_path.signature, "partial")) ||
+        "no match";
+
+      if (crispr.debug) console.log("path state:", state);
+
+      return state;
     } else if (this.level.options.canCrunchParts) {
       const options = this.level.options.canCrunchParts;
       const sequenceLength = [...this.sequences][0].baseLength;
@@ -536,7 +537,11 @@ export class Sequence extends entity.CompositeEntity {
       this.level.grid.solution = forcedMatching.nucleotides;
     }
 
-    for (let i = -1; i < this.baseLength; i++) {
+    for (
+      let i = this.level.variant === "zen" ? 0 : -1;
+      i < this.baseLength;
+      i++
+    ) {
       const position = new PIXI.Point();
 
       if (
@@ -667,7 +672,7 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   down(addScore: boolean, notACrunchResult = false) {
-    let isLong: boolean,
+    let isZen: boolean,
       fully: boolean,
       shots: number,
       scoreAnimationFinished = !addScore,
@@ -695,12 +700,12 @@ export class Sequence extends entity.CompositeEntity {
           );
         }
 
-        isLong = this.level.options.variant === "zen";
+        isZen = this.level.options.variant === "zen";
         fully = this.nucleotides.every((n) => n.state === "inactive");
         shots = this.level.path.crunchCountBeforeSequenceDown;
         length = allDownNucleotides.length;
 
-        if (isLong && fully && shots === 1) {
+        if (isZen && fully && shots === 1) {
           this.level.oneShotLongSequence = true;
 
           if (crispr.debug) {
@@ -899,6 +904,7 @@ export class Sequence extends entity.CompositeEntity {
     } else {
       return (
         sequenceSignature.includes(signature) ||
+        sequenceSignature.includes(util.reverseString(signature)) ||
         (options?.fromLeft && sequenceSignature.startsWith(signature)) ||
         (options?.fromRight && sequenceSignature.endsWith(signature))
       );
@@ -930,11 +936,16 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   getMatchingSegment(signature: string): nucleotide.Nucleotide[] | null {
+    const nucleotides =
+      this.level.variant === "zen"
+        ? this.nucleotides
+        : this.nucleotides.slice(1);
+
     // Try forwards
     let sequenceSignature = this.toString();
     let index = sequenceSignature.indexOf(signature);
     if (index !== -1) {
-      return util.subarray(this.nucleotides.slice(1), index, signature.length);
+      return util.subarray(nucleotides, index, signature.length);
     }
 
     // Try backwards
@@ -942,7 +953,7 @@ export class Sequence extends entity.CompositeEntity {
     index = sequenceSignature.indexOf(signature);
     if (index !== -1) {
       return util.subarray(
-        this.nucleotides.slice(1),
+        nucleotides,
         sequenceSignature.length - 1 - index,
         signature.length * -1
       );

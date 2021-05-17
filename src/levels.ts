@@ -261,43 +261,31 @@ export const levels = {
 
   // todo: intermediary levels with medium virus
 
-  // Zen: () =>
-  //   new level.Level("Zen", {
-  //     variant: "zen",
-  //     forceMatching: true,
-  //     disableBonuses: true,
-  //     portalsCount: 4,
-  //     zenMoves: 10,
-  //     clipCount: 0,
-  //     checks: {
-  //       "Reach 1000 pts": (context) =>
-  //         context.score >= context.options.maxScore,
-  //       "One shot sequence": (context) => context.oneShotLongSequence,
-  //       "Win in 5 moves or less": (context) =>
-  //         context.options.zenMoves - context.zenMovesIndicator.count <= 5,
-  //     },
-  //     hooks: [
-  //       new level.Hook({
-  //         id: "intro",
-  //         event: "setup",
-  //         once: true,
-  //         entity: new popup.TutorialPopup({
-  //           title: "Zen",
-  //           content:
-  //             "No viruses, no scissors. You can even start in the middle.\n\nChill out and enjoy making long DNA sequences.\n\nYou have 10 moves to rack up 1000 points and continue",
-  //           popupOptions: {
-  //             minimizeOnClose: false,
-  //             coolDown: 2000,
-  //           },
-  //         }),
-  //       }),
-  //       new level.Hook({
-  //         id: "outro",
-  //         event: "maxScoreReached",
-  //         entity: new popup.TerminatedLevelPopup(),
-  //       }),
-  //     ],
-  //   }),
+  Zen: () =>
+    new level.Level("Zen", {
+      variant: "zen",
+      forceMatching: false,
+      disableBonuses: true,
+      portalsCount: 4,
+      zenMoves: 10,
+      clipCount: 0,
+      hooks: [
+        new level.Hook({
+          id: "intro",
+          event: "setup",
+          once: true,
+          entity: new popup.TutorialPopup({
+            title: "Zen",
+            content:
+              "Chill out and enjoy making long DNA sequences.\n\nYou have 10 moves to rack up 1000 points and continue",
+            popupOptions: {
+              minimizeOnClose: false,
+              coolDown: 2000,
+            },
+          }),
+        }),
+      ],
+    }),
 
   "Chrono\nPortal": () =>
     new level.Level("Chrono\nPortal", (context) => ({

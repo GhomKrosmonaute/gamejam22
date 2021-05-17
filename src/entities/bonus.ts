@@ -104,7 +104,7 @@ export class TimeBonus extends Bonus {
       n.sprite.tint = 0x4df9ff;
     });
 
-    this.abort()
+    this.abort();
 
     this.level.activate(
       new entity.EntitySequence([
