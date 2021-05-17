@@ -317,7 +317,7 @@ export class Path extends entity.CompositeEntity {
           if (n.type !== "normal") {
             this._activateChildEntity(
               new entity.EntitySequence([
-                () => anim.down(n.sprite, 500, 1),
+                () => anim.down(n.shakingContainer, 500, 1),
                 new entity.FunctionCallEntity(() => {
                   n.once("stateChanged", finish);
                   n.state = this.level.options.gridCleaning

@@ -186,12 +186,13 @@ export function bubble(
 }
 
 export function down(
-  obj: PIXI.DisplayObject,
+  obj: PIXI.DisplayObject | PIXI.DisplayObject[],
   duration: number,
   defaultScale: number,
   callback?: AnimationCallback
 ) {
-  const onUpdate = (value: number) => obj.scale.set(value);
+  const target = Array.isArray(obj) ? obj : [obj];
+  const onUpdate = (value: number) => target.forEach((o) => o.scale.set(value));
   return new entity.EntitySequence([
     new tween.Tween({
       from: defaultScale,

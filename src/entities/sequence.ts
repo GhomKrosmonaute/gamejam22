@@ -767,6 +767,7 @@ export class Sequence extends entity.CompositeEntity {
                     to: this.level.options.baseCrispyGain * length * multiplier,
                     onUpdate: (value) => {
                       text.text = String(Math.round(value));
+                      text.style.fontSize = text.style.fontSize + 2;
                     },
                     easing: easing.easeInCubic,
                     duration: 1000,
