@@ -232,3 +232,7 @@ booyah.go({
     scale: 3,
   },
 });
+
+let mainDiv = document.createElement("div");
+mainDiv.id = "editor";
+document.body.append(mainDiv);

@@ -102,6 +102,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
     this.container = new PIXI.Container();
     this.container.rotation = this.rotation;
+    this.container.interactive = true;
 
     this.bonusContainer = new PIXI.Container();
 
@@ -137,6 +138,10 @@ export class Nucleotide extends entity.CompositeEntity {
     this._activateChildEntity(this.shakes);
     this._activateChildEntity(this._pathArrowEntity);
     this._activateChildEntity(this._refreshScale());
+
+    this._on(this.container, "pointertap", () => {
+      this.level.emitLevelEvent("clickedNucleotide", this);
+    });
   }
 
   _update() {

@@ -22,6 +22,7 @@ import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
 import * as menu from "../scenes/menu";
+import { LEVEL } from "../../globals";
 
 export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
 
@@ -198,6 +199,7 @@ export interface LevelEvents {
   init: [];
   setup: [];
   canReset: [];
+  trigger: [];
   infected: [];
   fallingDown: [];
   virusLeaves: [virus: virus.Virus];
@@ -413,8 +415,7 @@ export class Level extends entity.CompositeEntity {
     );
     this.options.score.set(this.options.score.initial, this);
 
-    // @ts-ignore
-    window.level = this;
+    var LEVEL = this;
   }
 
   get variant(): LevelVariant {
@@ -764,7 +765,7 @@ export class Level extends entity.CompositeEntity {
 
     if (this.isEnded) return;
 
-    this.gauge.refreshValue();
+    if (!this._disableGauge) this.gauge.refreshValue();
 
     // swimming viruses
     {

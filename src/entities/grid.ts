@@ -27,10 +27,12 @@ export type GridPreset<T = true> = ((T | null)[] | null)[];
 
 export type GridArrowShape = (x: number, y: number) => boolean;
 
+export type GridPresetInput = GridPreset<nucleotide.ColorName | "?" | "h">;
+
 export interface GridShapeOptions {
   portals?: PIXI.IPointData[] | number;
   clips?: PIXI.IPointData[] | number;
-  shape: GridPreset<nucleotide.ColorName> | GridArrowShape;
+  shape: GridPresetInput | GridArrowShape;
 }
 
 export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
@@ -76,7 +78,7 @@ export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
 
 export type GridShape =
   | "full"
-  | GridPreset<nucleotide.ColorName | "?" | "h">
+  | GridPresetInput
   | GridArrowShape
   | GridShapeOptions;
 
@@ -253,7 +255,7 @@ export class Grid extends entity.CompositeEntity {
             }
           });
       });
-    } else {
+    } else if (typeof shape === "string" || typeof shape === "function") {
       // preset shape
       for (let x = 0; x < colCount; x++) {
         for (let y = 0; y < rowCount; y++) {
@@ -272,7 +274,16 @@ export class Grid extends entity.CompositeEntity {
                   sub.forEach((row, y) => {
                     if (row)
                       row.forEach((col, x) => {
-                        if (col) this.addNucleotide(x, y, col);
+                        if (!col) return;
+                        if (col === "?" || col === "h") {
+                          this.addNucleotide(x, y);
+                          if (col === "h") {
+                            const n = this.getNucleotideFromGridPosition(
+                              new PIXI.Point(x, y)
+                            );
+                            n.stayMissing = true;
+                          }
+                        } else this.addNucleotide(x, y, col);
                       });
                   });
                 }
@@ -285,6 +296,25 @@ export class Grid extends entity.CompositeEntity {
           this.addNucleotide(x, y);
         }
       }
+    } else {
+      debugger;
+      const sub = shape.shape;
+      if (typeof sub === "function") return;
+      sub.forEach((row, y) => {
+        if (row)
+          row.forEach((col, x) => {
+            if (!col) return;
+            if (col === "?" || col === "h") {
+              this.addNucleotide(x, y);
+              if (col === "h") {
+                const n = this.getNucleotideFromGridPosition(
+                  new PIXI.Point(x, y)
+                );
+                n.stayMissing = true;
+              }
+            } else this.addNucleotide(x, y, col);
+          });
+      });
     }
 
     // preset scissors

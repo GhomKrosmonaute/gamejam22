@@ -9,11 +9,14 @@ import * as util from "booyah/src/util";
 
 import * as popup from "./entities/popup";
 import * as grid from "./entities/grid";
+import * as editor from "./entities/editor";
 
 import * as level from "./scenes/level";
 
 import * as crispr from "./crispr";
 import * as anim from "./animations";
+import { LEVEL } from "../globals";
+import { ColorName, Nucleotide } from "./entities/nucleotide";
 
 export const levels = {
   Timed: () =>
@@ -476,24 +479,62 @@ export const levels = {
   Editor: () =>
     new level.Level("Editor", (ctx) => {
       ctx.finished = true;
-      var editorGridShape: grid.GridShape = new Array(6).fill(
-        new Array(7).fill("h")
-      );
+
+      var editorGridShape: grid.GridShapeOptions["shape"] = new Array(6);
+      for (let i = 0; i < editorGridShape.length; i++) {
+        editorGridShape[i] = new Array(7).fill("h");
+      }
       editorGridShape[editorGridShape.length - 1] = editorGridShape[
         editorGridShape.length - 1
       ].map((val, x) => {
         if (x % 2 === 0) return null;
         else return val;
       });
+
+      var editorGridPortals: grid.GridShapeOptions["portals"];
+      var editorGridClips: grid.GridShapeOptions["clips"];
+
+      var editorDOM: editor.EditorDOM = new editor.EditorDOM();
+      const gridEditor = new level.Hook({
+        id: "reload grid",
+        event: "clickedNucleotide",
+        filter: (nucleotide) => {
+          const pos = ctx.grid.getGridPositionOf(nucleotide);
+          let posValue: ColorName | "?" | "h";
+
+          if (editorDOM.GetTypeChecked() === "Empty") posValue = "h";
+          else posValue = "?";
+
+          if (typeof editorGridShape === "function") return false;
+
+          if (posValue === editorGridShape[pos.y][pos.x]) return false;
+
+          editorGridShape[pos.y][pos.x] = posValue;
+          return true;
+        },
+      });
+
+      gridEditor.options.reset = {
+        gridShape: {
+          shape: editorGridShape,
+          clips: editorGridClips,
+          portals: editorGridPortals,
+        },
+        resetGrid: true,
+        hooks: [gridEditor],
+      };
+
       return {
         variant: "turn",
         minStarNeeded: 3,
         forceMatching: false,
-        gridShape: editorGridShape,
+        gridShape: gridEditor.options.reset.gridShape,
         clipCount: 0,
         sequenceLength: -1,
         disableButton: true,
         disableBonuses: true,
+        disableGauge: true,
+        hooks: [gridEditor],
       };
     }),
 };
