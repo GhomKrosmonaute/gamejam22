@@ -100,13 +100,16 @@ export class TimeBonus extends Bonus {
     this._entityConfig.fxMachine.play("bonus_time");
 
     this.level.fallingStopped = true;
-    this.level.sequenceManager.first.nucleotides.forEach((n) => {
+    this.level.sequenceManager.first?.nucleotides.forEach((n) => {
       n.sprite.tint = 0x4df9ff;
     });
     this.level.activate(
       new entity.EntitySequence([
         new entity.WaitingEntity(5000),
         new entity.FunctionCallEntity(() => {
+          this.level.sequenceManager.first?.nucleotides.forEach((n) => {
+            n.sprite.tint = 0xffffff;
+          });
           this.level.fallingStopped = false;
           this.end();
         }),

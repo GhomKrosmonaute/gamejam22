@@ -343,6 +343,7 @@ export const levels = {
       variant: "fall",
       gridShape: "medium",
       forceMatching: true,
+      crispyBonusRate: 0.3,
       clipCount: 3,
       gaugeRings: [
         (context) =>
