@@ -154,15 +154,17 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides = [];
   }
 
-  get shape(): (nucleotide.ColorName | "c")[][] {
-    const shape: (nucleotide.ColorName | "c")[][] = [];
+  get shape(): (nucleotide.ColorName | "c" | "p")[][] {
+    const shape: (nucleotide.ColorName | "c" | "p")[][] = [];
     for (let y = 0; y < colCount; y++) {
       shape.push([]);
       for (let x = 0; x < rowCount; x++) {
         const n = this.getNucleotideFromGridPosition(new PIXI.Point(x, y));
         if (n) {
-          if (n.type === "normal") {
+          if (n.type === "normal" || n.type === "joker") {
             shape[y][x] = n.colorName;
+          } else if (n.type === "portal") {
+            shape[y][x] = "p";
           } else {
             shape[y][x] = "c";
           }
