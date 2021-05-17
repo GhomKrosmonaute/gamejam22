@@ -100,6 +100,10 @@ export class SequenceManager extends entity.CompositeEntity {
   public container = new PIXI.Container();
   public adjustment = new SequenceAdjustment();
 
+  get first(): Sequence | null {
+    return [...this.sequences][0] ?? null;
+  }
+
   _setup() {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);

@@ -94,13 +94,16 @@ export class TimeBonus extends Bonus {
 
   protected _setup() {
     if (this.level.sequenceManager.sequenceCount === 0) {
-      return this.abort();
+      return super.abort();
     }
 
     this._entityConfig.fxMachine.play("bonus_time");
 
     this.level.fallingStopped = true;
-    this._activateChildEntity(
+    this.level.sequenceManager.first.nucleotides.forEach((n) => {
+      n.sprite.tint = 0x4df9ff;
+    });
+    this.level.activate(
       new entity.EntitySequence([
         new entity.WaitingEntity(5000),
         new entity.FunctionCallEntity(() => {
@@ -109,6 +112,11 @@ export class TimeBonus extends Bonus {
         }),
       ])
     );
+  }
+
+  abort() {
+    this._count--;
+    super.abort();
   }
 }
 
