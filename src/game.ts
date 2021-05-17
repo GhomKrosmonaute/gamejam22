@@ -8,6 +8,7 @@ import * as minimap from "./scenes/minimap";
 
 import * as crispr from "./crispr";
 import * as levels from "./levels";
+import * as metrics from "./metrics";
 
 const main = new minimap.Minimap();
 
@@ -210,6 +211,8 @@ const entityInstallers: ((
   //   menuButtonPosition: new PIXI.Point(crispr.width - 111, 106),
   // }),
 ];
+
+metrics.init();
 
 booyah.go({
   states: gameStates,

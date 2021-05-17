@@ -7,6 +7,7 @@
     "booyah": "play-curious/booyah#crispr-crunch",
     "csv-parse": "^4.4.1",
     "del": "^4.1.0",
+    "firebase": "^8.6.1",
     "gulp": "^4.0.0",
     "gulp-cli": "^2.0.1",
     "gulp-concat": "^2.6.1",

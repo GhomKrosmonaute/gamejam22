@@ -9,6 +9,7 @@ import * as anim from "../animations";
 import * as crispr from "../crispr";
 
 import * as level from "../scenes/level";
+import * as metrics from "../metrics";
 
 export function makeCross(radius: number): PIXI.Graphics {
   return new PIXI.Graphics()
@@ -685,6 +686,13 @@ export class FailedLevelPopup extends EndOfLevelPopup {
     // add title
     this.setTitle("Failed");
     this.addCheckRows();
+
+    const results = this.level.checkAndReturnsResults();
+    metrics.logEvent("level_end", {
+      level_name: this.level.name,
+      success: false,
+      results,
+    });
   }
 }
 
@@ -771,6 +779,12 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
     }
 
     this.addCheckRows();
+
+    metrics.logEvent("level_end", {
+      level_name: this.level.name,
+      success: true,
+      results,
+    });
   }
 
   protected _playSound() {

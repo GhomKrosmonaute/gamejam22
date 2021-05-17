@@ -22,6 +22,7 @@ import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
 import * as menu from "../scenes/menu";
+import * as metrics from "../metrics";
 
 export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
 
@@ -662,6 +663,9 @@ export class Level extends entity.CompositeEntity {
     this.container.sortableChildren = true;
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
+
+    metrics.logEvent("level_start", { level_name: this.name });
+
 
     // this._on(this,"deactivatedChildEntity", (e) => {
     //   if (e instanceof Hook) {
