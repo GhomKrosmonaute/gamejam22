@@ -491,25 +491,65 @@ export const levels = {
         else return val;
       });
 
-      var editorGridPortals: grid.GridShapeOptions["portals"];
-      var editorGridClips: grid.GridShapeOptions["clips"];
+      var editorGridPortals: grid.GridShapeOptions["portals"] = new Array();
+      var editorGridClips: grid.GridShapeOptions["clips"] = new Array();
 
       var editorDOM: editor.EditorDOM = new editor.EditorDOM();
       const gridEditor = new level.Hook({
         id: "reload grid",
         event: "clickedNucleotide",
         filter: (nucleotide) => {
-          const pos = ctx.grid.getGridPositionOf(nucleotide);
-          let posValue: ColorName | "?" | "h";
-
-          if (editorDOM.GetTypeChecked() === "Empty") posValue = "h";
-          else posValue = "?";
-
           if (typeof editorGridShape === "function") return false;
 
-          if (posValue === editorGridShape[pos.y][pos.x]) return false;
+          const pos = ctx.grid.getGridPositionOf(nucleotide);
+          const checked = editorDOM.GetRadioChecked();
 
-          editorGridShape[pos.y][pos.x] = posValue;
+          let posValue: ColorName | "?" | "h";
+
+          if (editorDOM.GetRadioChecked() === "Empty") posValue = "h";
+          else if (editorDOM.GetRadioChecked() === "Cell") posValue = "?";
+
+          if (
+            editorDOM.IsFixedPortals() &&
+            editorDOM.GetRadioChecked() === "Portal"
+          ) {
+            if (typeof editorGridPortals === "number")
+              editorGridPortals = new Array();
+            editorGridPortals.push(pos);
+          }
+
+          if (
+            editorDOM.IsFixedClips() &&
+            editorDOM.GetRadioChecked() === "Clip"
+          ) {
+            if (typeof editorGridClips === "number")
+              editorGridClips = new Array();
+            editorGridClips.push(pos);
+          }
+
+          if (
+            !(editorDOM.GetRadioChecked() === "Portal") &&
+            typeof editorGridPortals !== "number"
+          ) {
+            let toRemove: number = -1;
+            editorGridPortals.forEach((elem, index) => {
+              if (elem.x === pos.x && elem.y === pos.y) toRemove = index;
+            });
+            if (toRemove >= 0) editorGridPortals.splice(toRemove, 1);
+          }
+
+          if (
+            !(editorDOM.GetRadioChecked() === "Clip") &&
+            typeof editorGridClips !== "number"
+          ) {
+            let toRemove: number = -1;
+            editorGridClips.forEach((elem, index) => {
+              if (elem.x === pos.x && elem.y === pos.y) toRemove = index;
+            });
+            if (toRemove >= 0) editorGridClips.splice(toRemove, 1);
+          }
+
+          editorGridShape[pos.y][pos.x] = posValue ? posValue : "?";
           return true;
         },
       });

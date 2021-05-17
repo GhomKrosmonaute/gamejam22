@@ -297,7 +297,6 @@ export class Grid extends entity.CompositeEntity {
         }
       }
     } else {
-      debugger;
       const sub = shape.shape;
       if (typeof sub === "function") return;
       sub.forEach((row, y) => {
@@ -433,6 +432,18 @@ export class Grid extends entity.CompositeEntity {
               });
             }
           }
+        }
+      }
+    } else if (!Array.isArray(shape) && typeof shape !== "function") {
+      const val = shape[(type + "s") as "portals" | "clips"];
+      if (val !== undefined) {
+        if (typeof val === "number") {
+          countOption = val;
+        } else {
+          return val.forEach(({ x, y }) => {
+            const n = this.getNucleotideFromGridPosition(new PIXI.Point(x, y));
+            if (n) n.type = type;
+          });
         }
       }
     }

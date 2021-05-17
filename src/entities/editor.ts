@@ -45,13 +45,48 @@ export class EditorDOM {
       radioPortal,
       labelPortal,
       radioClip,
-      labelClip
+      labelClip,
+      document.createElement("br"),
+      document.createElement("br")
+    );
+
+    let checkboxPortal = document.createElement("input");
+    checkboxPortal.setAttribute("type", "checkbox");
+    checkboxPortal.id = "checkboxPortal";
+    checkboxPortal.onchange = (e: Event) => {
+      if (checkboxPortal.checked && radioPortal.checked)
+        radioCell.checked = true;
+      radioPortal.checked = false;
+      radioPortal.disabled = checkboxPortal.checked;
+    };
+    let checkboxClip = document.createElement("input");
+    checkboxClip.setAttribute("type", "checkbox");
+    checkboxClip.id = "checkboxClip";
+    checkboxClip.onchange = (e: Event) => {
+      if (checkboxClip.checked && radioClip.checked) radioCell.checked = true;
+      radioClip.checked = false;
+      radioClip.disabled = checkboxClip.checked;
+    };
+
+    let labelcheckboxPortal = document.createElement("label");
+    labelcheckboxPortal.setAttribute("for", "checkboxPortal");
+    labelcheckboxPortal.innerHTML = "Random Portals";
+    let labelCheckboxClip = document.createElement("label");
+    labelCheckboxClip.setAttribute("for", "checkboxClip");
+    labelCheckboxClip.innerHTML = "Random Clips";
+
+    this._divEditor.append(
+      checkboxPortal,
+      labelcheckboxPortal,
+      document.createElement("br"),
+      checkboxClip,
+      labelCheckboxClip
     );
 
     document.body.append(this._divEditor);
   }
 
-  GetTypeChecked(): string {
+  GetRadioChecked(): string {
     const children = this._divEditor.getElementsByTagName("input");
     for (var i = 0; i < children.length; i++) {
       if (children[i].checked) {
@@ -59,5 +94,15 @@ export class EditorDOM {
       }
     }
     return null;
+  }
+
+  IsFixedPortals(): boolean {
+    return !this._divEditor.querySelector<HTMLInputElement>("#checkboxPortal")
+      .checked;
+  }
+
+  IsFixedClips(): boolean {
+    return !this._divEditor.querySelector<HTMLInputElement>("#checkboxClip")
+      .checked;
   }
 }
