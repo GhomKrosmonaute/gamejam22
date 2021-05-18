@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 import * as util from "booyah/src/util";
 
 import * as crispr from "../crispr";
@@ -21,27 +22,9 @@ import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
 import * as menu from "../scenes/menu";
+import * as metrics from "../metrics";
 
-export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
-
-export interface ILevelVariant {
-  onActionButtonPressed?: (level: Level) => entity.Entity;
-  onSequenceManagerCrunched?: (
-    manager: sequence.SequenceManager
-  ) => entity.Entity;
-  onSequenceManagerMatchPath?: (
-    level: Level,
-    path: path.Path
-  ) => "no match" | "missing scissors" | true;
-  sequenceCountLimit?: crispr.Scrapper<
-    number,
-    [level: Level, manager: sequence.SequenceManager]
-  >;
-  sequenceLength?: crispr.Scrapper<
-    number,
-    [level: Level, sequence: sequence.SequenceManager]
-  >;
-}
+export type LevelVariant = "turn" | "fall" | "zen";
 
 export const baseDropSpeed = 0.001;
 
@@ -53,6 +36,19 @@ export interface LevelResults {
   failed: boolean;
 }
 
+export interface ScoreOptions {
+  max: number | ((level: Level) => number);
+  initial: number;
+  color: number;
+  get: (level: Level) => number;
+  set: (score: number, level: Level) => unknown;
+  show: (score: number, level: Level) => string;
+  devise?: (
+    score: number,
+    level: Level
+  ) => PIXI.Sprite | PIXI.AnimatedSprite | string;
+}
+
 export interface LevelOptions {
   disablingAnimations: string[];
   disableExtraSequence: boolean;
@@ -60,29 +56,43 @@ export interface LevelOptions {
   disableButton: boolean;
   disableGauge: boolean;
   disableScore: boolean;
+  disableClips: boolean;
+  gridCleaning: boolean;
   retryOnFail: boolean;
+  infection: boolean;
   displayTurnTitles: boolean;
   variant: LevelVariant;
   virus: virus.VirusType;
-  maxScore: number;
+  maxLife: number;
+  crispyBonusRate: number;
+  score: Partial<ScoreOptions>;
+  /**
+   * If canCrunchParts.possibleParts.length is a string,
+   * it is a percent of current sequence length.
+   */
+  canCrunchParts: {
+    fromLeft?: boolean;
+    fromRight?: boolean;
+    possibleParts: { length: number | string; glowColor: number }[];
+  } | null;
   dropSpeed: number;
-  baseGain: number;
-  baseScore: number;
+  baseCrispyGain: number;
   minStarNeeded: number;
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
   sequenceLength: number | null;
-  scissorCount: number;
+  clipCount: number;
+  portalsCount: number;
   nucleotideRadius: number;
   sequenceRounded: boolean;
   sequenceNucleotideRadius: number;
-  gridShape: grid.GridShape;
-  presetScissors: grid.GridPreset | null;
+  gridShape: grid.GridShape | string;
   sequences: nucleotide.ColorName[][] | null;
   forceMatching: boolean;
   hooks: Hook[];
   initialBonuses: bonuses.InitialBonuses;
   checks: { [text: string]: (level: Level) => boolean };
   music: string;
+  noCrispyBonus: boolean;
 
   // reset options
   resetScore: boolean;
@@ -94,27 +104,77 @@ export interface LevelOptions {
   zenMoves: number;
 }
 
+// export const defaultScoreOptions: Readonly<ScoreOptions> = {
+//   max: 1000,
+//   initial: 0,
+//   color: crispr.yellowNumber,
+//   get: (ctx) => ctx.score,
+//   set: (val, ctx) => (ctx.score = val),
+//   show: (val) => String(Math.floor(val)),
+//   devise: (val, ctx) =>
+//     crispr.sprite(ctx, "images/crispy.png", (it) => {
+//       it.anchor.set(0.5);
+//       it.scale.set(0.6);
+//       it.x = 65;
+//     }),
+// };
+
+export const defaultScoreOptions: Readonly<ScoreOptions> = {
+  max: 5,
+  initial: 0,
+  color: crispr.yellowNumber,
+  get: (context) => context.killedViruses,
+  set: (value, context) => (context.killedViruses = value),
+  show: (value, context) => String(Math.round(context.score)),
+  devise: (val, ctx) =>
+    crispr.sprite(ctx, "images/crispy.png", (it) => {
+      it.anchor.set(0.5);
+      it.scale.set(0.6);
+      it.x = 65;
+    }),
+  // devise: (value, ctx) => {
+  //   const spriteEntity = util.makeAnimatedSprite(
+  //     ctx.entityConfig.app.loader.resources["images/mini_bob_idle.json"]
+  //   );
+  //   ctx.activate(spriteEntity);
+  //   const sp = spriteEntity.sprite;
+  //   sp.autoUpdate = true;
+  //   sp.animationSpeed = 20 / 60;
+  //   sp.loop = true;
+  //   sp.play();
+  //   sp.scale.set(0.08);
+  //   sp.anchor.set(0.5);
+  //   sp.position.x = 150;
+  //   return sp;
+  // },
+};
+
 export const defaultLevelOptions: Readonly<LevelOptions> = {
+  gridCleaning: false,
   disablingAnimations: [],
   disableExtraSequence: false,
   disableBonuses: false,
   disableButton: false,
   disableGauge: false,
   disableScore: false,
+  disableClips: false,
   retryOnFail: true,
+  infection: true,
   displayTurnTitles: true,
   variant: "turn",
   virus: "mini",
-  presetScissors: null,
+  maxLife: 5,
   dropSpeed: 1,
-  maxScore: 1000,
-  baseGain: 10,
-  baseScore: 0,
+  canCrunchParts: null,
+  score: defaultScoreOptions,
+  baseCrispyGain: 10,
   minStarNeeded: 0,
+  crispyBonusRate: 0.1,
   gaugeRings: [],
   sequenceLength: null,
   sequences: null,
-  scissorCount: 6,
+  clipCount: 4,
+  portalsCount: 0,
   nucleotideRadius: crispr.width / 13.44,
   sequenceNucleotideRadius: crispr.width * 0.04,
   sequenceRounded: false,
@@ -126,9 +186,12 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
     //"No virus has escaped": (level) => !level.someVirusHasEscaped,
     "Not infected": (level) => !level.wasInfected,
     "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
-    "Max score reached": (level) => level.score >= level.options.maxScore,
+    "All virus killed": (level) =>
+      level.options.score.get(level) >=
+      crispr.scrap(level.options.score.max, level),
   },
   music: null,
+  noCrispyBonus: false,
 
   // reset options
   resetScore: true,
@@ -146,29 +209,33 @@ export type LevelEventParams<
 > = LevelEvents[EventName];
 
 export interface LevelEvents {
+  end: [];
   init: [];
   setup: [];
+  update: [level: Level];
   canReset: [];
   infected: [];
   fallingDown: [];
-  virusLeaves: [virus.Virus];
-  closedPopup: [popup.Popup];
-  minimizedPopup: [popup.Popup];
+  virusLeaves: [virus: virus.Virus];
+  closedPopup: [popup: popup.Popup];
+  minimizedPopup: [popup: popup.Popup];
   pathCrunched: [];
   partialCrunched: [];
   cleanedInfection: [];
   pathUpdated: [];
   ringReached: [ring: hud.Ring];
   sequenceDown: [];
-  scoreUpdated: [score: number];
   clickedBonus: [bonus: bonuses.Bonus];
   outOfZenMoves: [];
   maxScoreReached: [];
-  injectedSequence: [sequence.Sequence];
+  injectedSequence: [sequence: sequence.Sequence];
   clickedNucleotide: [nucleotide: nucleotide.Nucleotide];
 }
 
-export interface HookOptions<Entity, EventName extends LevelEventName> {
+export interface HookOptions<
+  Entity extends entity.Entity,
+  EventName extends LevelEventName
+> {
   id: string;
   delay?: number;
   event: EventName;
@@ -244,6 +311,7 @@ export class Hook<
           resetBonuses: false,
           resetSequences: false,
           forceMatching: false,
+          disableClips: false,
         };
 
         // apply changes
@@ -297,14 +365,18 @@ export class Level extends entity.CompositeEntity {
   public triggeredHooks: Set<string> = new Set();
   public fallingStopped = false;
   public container = new PIXI.Container();
+  public backgroundCellDangerMask: PIXI.Sprite;
   public backgroundLayers: PIXI.Sprite[];
   public sequenceManager: sequence.SequenceManager;
   public bonusesManager: bonuses.BonusesManager;
   public hairManager: hair.HairManager;
+  public swimmingViruses: virus.SwimmingVirus[] = [];
+  public swimmingVirusCount = 0;
+  public swimmingVirusesContainer = new PIXI.Container();
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
-  public goButton: hud.ActionButton;
+  public actionButton: hud.ActionButton;
   public zenMovesIndicator: hud.ZenMovesIndicator;
   public menu: menu.Menu;
 
@@ -316,17 +388,22 @@ export class Level extends entity.CompositeEntity {
   //public screenShakeComponents: (PIXI.Sprite | PIXI.AnimatedSprite | PIXI.Container)[]
 
   // game
-  public score: number;
+  private _life: number;
+  public score = 0;
+  public killedViruses = 0;
   public wasInfected = false;
   public someVirusHasEscaped = false;
   public crunchCount = 0;
   public failed = false;
   public finished = false;
   public sequenceWasCrunched = false;
-  public scissorsWasIncludes = false;
+  public clipsWasIncludes = false;
   public oneShotLongSequence = false;
   public crunchedSequenceCount = 0;
   public isInit = false;
+  public isEnded = false;
+  public playTime = 0;
+  public lastPlayTime = 0;
 
   // bonuses
   public syringeBonus: bonuses.Bonus;
@@ -346,7 +423,11 @@ export class Level extends entity.CompositeEntity {
         ? optionsResolvable(this)
         : optionsResolvable;
     this.options = util.fillInOptions(options, defaultLevelOptions);
-    this.score = this.options.baseScore;
+    this.options.score = util.fillInOptions(
+      this.options.score,
+      defaultScoreOptions
+    );
+    this.options.score.set(this.options.score.initial, this);
 
     // @ts-ignore
     window.level = this;
@@ -399,6 +480,10 @@ export class Level extends entity.CompositeEntity {
     return this.grid.cursor;
   }
 
+  private _initLife() {
+    this.life = this.options.maxLife;
+  }
+
   private _initScreenShake() {
     this.screenShake(0, 0, 0);
     // this.screenShakeComponents = [
@@ -441,7 +526,7 @@ export class Level extends entity.CompositeEntity {
       //"background_layer_3-eclaircir.png",
       //"background_layer_4-lumiere_tamisee.png",
       "background_cell.png",
-      "particles_background.png",
+      "background_cell_danger.png",
     ].forEach((filename) => {
       const sprite = crispr.sprite(this, "images/" + filename);
 
@@ -453,15 +538,26 @@ export class Level extends entity.CompositeEntity {
       if (filename.includes("4"))
         sprite.blendMode = PIXI.BLEND_MODES.SOFT_LIGHT;
 
+      if (filename.includes("background_cell_danger.png")) {
+        this.backgroundCellDangerMask = crispr.sprite(
+          this,
+          "images/background_cell_danger_mask.png"
+        );
+        this.container.addChild(this.backgroundCellDangerMask);
+        sprite.anchor.set(0, 1);
+        sprite.position.y = crispr.height;
+        sprite.mask = this.backgroundCellDangerMask;
+      }
+
       this.container.addChild(sprite);
     });
+
+    this.container.addChild(this.swimmingVirusesContainer);
   }
 
   private _initForeground() {
-    const particles = crispr.sprite(this, "images/particles_foreground.png");
     const membrane = crispr.sprite(this, "images/membrane.png");
     membrane.position.set(0, 300);
-    this.container.addChild(particles);
     this.container.addChild(membrane);
   }
 
@@ -488,14 +584,14 @@ export class Level extends entity.CompositeEntity {
   private _initButton() {
     if (this.options.disableButton) return;
 
-    this.goButton = new hud.ActionButton();
-    this._activateChildEntity(this.goButton, this.config);
+    this.actionButton = new hud.ActionButton();
+    this._activateChildEntity(this.actionButton, this.config);
   }
 
   private _disableButton() {
     if (this.options.disableButton) return;
-    this._deactivateChildEntity(this.goButton);
-    this.goButton = null;
+    this._deactivateChildEntity(this.actionButton);
+    this.actionButton = null;
   }
 
   private _initBonuses() {
@@ -534,10 +630,7 @@ export class Level extends entity.CompositeEntity {
   private _initGauge() {
     if (this.options.disableGauge) return;
 
-    this.gauge = new hud.Gauge(
-      this.options.gaugeRings.length,
-      this.options.maxScore
-    );
+    this.gauge = new hud.Gauge(this.options.gaugeRings.length);
 
     this._activateChildEntity(this.gauge, this.config);
   }
@@ -585,6 +678,9 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
 
+    metrics.logEvent("level_start", { level_name: this.name });
+
+
     // this._on(this,"deactivatedChildEntity", (e) => {
     //   if (e instanceof Hook) {
     //     this.options.hooks = this.options.hooks.filter((h) => h !== e);
@@ -594,11 +690,22 @@ export class Level extends entity.CompositeEntity {
     if (this.options.variant === "zen") {
       // game over if out of zenMoves
       this.onLevelEvent("outOfZenMoves", () => {
-        if (this.score >= this.options.maxScore) {
+        this.finished = true;
+        if (this.options.score.get(this) >= this.options.score.max) {
           this.minimap.saveResults(this);
-          this._activateChildEntity(new popup.TerminatedLevelPopup());
+          this._activateChildEntity(
+            new entity.EntitySequence([
+              new entity.WaitingEntity(2000),
+              new popup.TerminatedLevelPopup(),
+            ])
+          );
         } else {
-          this.gameOverByFail();
+          this._activateChildEntity(
+            new entity.EntitySequence([
+              new entity.WaitingEntity(2000),
+              new popup.FailedLevelPopup(),
+            ])
+          );
         }
       });
 
@@ -635,12 +742,13 @@ export class Level extends entity.CompositeEntity {
           new entity.FunctionCallEntity(() => {
             this.path.remove();
           }),
-          this.infect(),
-          new entity.FunctionCallEntity(() => {
-            this.checkGameOverByInfection();
-          }),
+          this.infect(true),
         ])
       );
+    });
+
+    this.onLevelEvent("end", () => {
+      this.isEnded = true;
     });
 
     this._initScreenShake();
@@ -653,6 +761,7 @@ export class Level extends entity.CompositeEntity {
     this.emitLevelEvent("init");
     this.isInit = true;
 
+    this._initLife();
     this._initZenMoves();
     this._initGrid();
     this._initPath();
@@ -680,6 +789,55 @@ export class Level extends entity.CompositeEntity {
   }
 
   _update(frameInfo: entity.FrameInfo) {
+    this.playTime += frameInfo.playTime - this.lastPlayTime;
+    this.lastPlayTime = frameInfo.playTime;
+
+    if (this.isEnded) return;
+    if (this.finished) return;
+
+    this.emitLevelEvent("update", this);
+
+    if (!this.options.disableGauge) this.gauge.refreshValue();
+
+    // swimming viruses
+    {
+      while (this.swimmingViruses.length < this.swimmingVirusCount) {
+        const generated = virus.generateSwimmingVirus(
+          this,
+          this.backgroundCellDangerMask.y * -1
+        );
+
+        this._activateChildEntity(
+          generated.entity,
+          entity.extendConfig({
+            container: this.swimmingVirusesContainer,
+          })
+        );
+
+        this.swimmingViruses.push(generated);
+      }
+
+      while (this.swimmingViruses.length > this.swimmingVirusCount) {
+        const removed = this.swimmingViruses.shift();
+
+        this.deactivate(removed.entity);
+      }
+
+      this.swimmingViruses.forEach((v) => {
+        v.entity.sprite.x += v.speed;
+        if (
+          v.entity.sprite.x > crispr.width + 400 ||
+          v.entity.sprite.x < -400
+        ) {
+          virus.generateSwimmingVirus(
+            this,
+            this.backgroundCellDangerMask.y * -1,
+            v
+          );
+        }
+      });
+    }
+
     if (
       this.screenShakeDuration &&
       this.screenShakeStart &&
@@ -762,33 +920,23 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.level = this;
 
     // assign flags
-    {
-      [
-        "disableExtraSequence",
-        "disableScore",
-        "retryOnFail",
-        "displayTurnTitles",
-        "variant",
-        "maxScore",
-        "dropSpeed",
-        "baseGain",
-        "baseScore",
-        "gaugeRings",
-        "sequenceLength",
-        "checks",
-        "scissorCount",
-        "nucleotideRadius",
-        "sequenceNucleotideRadius",
-        "forceMatching",
-        "disablingAnimations",
-      ].forEach((prop) => {
+    for (const key in options) {
+      // @ts-ignore
+      const value: any = options[key];
+      if (
+        (typeof value === "boolean" ||
+          typeof value === "number" ||
+          typeof value === "string") &&
+        !/^disable(?:Bonuses|Button|Gauge)$/.test(key)
+      ) {
         // @ts-ignore
-        this.options[prop] = options[prop];
-      });
+        this.options[key] = value;
+      }
     }
 
     this._initScreenShake();
     this._initDisablingAnimations();
+    this._initLife();
 
     // manage components switches
     {
@@ -812,7 +960,11 @@ export class Level extends entity.CompositeEntity {
 
     // reset options
     if (options.resetScore) {
-      this.score = this.options.baseScore;
+      this.options.score = {
+        ...this.options.score,
+        ...options.score,
+      };
+      this.options.score.set(this.options.score.initial, this);
     }
 
     // Bonus manager
@@ -823,8 +975,11 @@ export class Level extends entity.CompositeEntity {
 
     // grid rebuild
     if (options.resetGrid) {
+      console.table({
+        oldOptions: this.options.clipCount,
+        newOptions: options.clipCount,
+      });
       this.options.gridShape = options.gridShape;
-      this.options.presetScissors = options.presetScissors;
       this.grid.reset();
     }
 
@@ -867,6 +1022,27 @@ export class Level extends entity.CompositeEntity {
     }
   }
 
+  set life(life: number) {
+    this._life = life;
+    this.swimmingVirusCount = Math.round(
+      crispr.proportion(life, this.options.maxLife, 0, 0, 5)
+    );
+    if (this.backgroundCellDangerMask) {
+      this.backgroundCellDangerMask.position.y = Math.max(
+        -1420,
+        crispr.proportion(life, this.options.maxLife, 1, 200, -1420)
+      );
+    }
+  }
+
+  get life(): number {
+    return this._life;
+  }
+
+  solution() {
+    this.activate(this.grid.applySolution());
+  }
+
   disablingAnimation(name: string, state: boolean) {
     const oldLength = this.disablingAnimations.size;
     this.disablingAnimations[state ? "add" : "delete"](name);
@@ -876,11 +1052,8 @@ export class Level extends entity.CompositeEntity {
         console.log("updated disabling animations:", newLength, [
           ...this.disablingAnimations,
         ]);
-      } else if(state){
-        console.warn(
-          `Warning: useless start of disablingAnimation:`,
-          name
-        );
+      } else if (state) {
+        console.warn(`Warning: useless start of disablingAnimation:`, name);
       }
     }
   }
@@ -900,12 +1073,12 @@ export class Level extends entity.CompositeEntity {
           from: this.score,
           to: Math.floor(this.score / 2),
           duration: 600,
-          onUpdate: (value) => this.setScore(value),
+          onUpdate: (value) => (this.score = value),
         }),
         anim.tweenShaking(this.gauge.container, 600, 10, 0),
         new entity.EntitySequence([
           new tween.Tween({
-            from: 0xffffff,
+            from: this.options.score.color,
             to: 0xff0000,
             duration: 300,
             onUpdate: (value) => this.gauge.setTint(value),
@@ -913,7 +1086,7 @@ export class Level extends entity.CompositeEntity {
           }),
           new tween.Tween({
             from: 0xff0000,
-            to: 0xffffff,
+            to: this.options.score.color,
             duration: 300,
             onUpdate: (value) => this.gauge.setTint(value),
             interpolate: tween.interpolation.color,
@@ -921,19 +1094,6 @@ export class Level extends entity.CompositeEntity {
         ]),
       ]),
     ]);
-  }
-
-  gameOverByFail() {
-    if (this.finished || this.failed) return;
-
-    this.failed = true;
-
-    if (this.options.retryOnFail) {
-      this._activateChildEntity(new popup.FailedLevelPopup(), this.config);
-    } else {
-      this.minimap.saveResults(this);
-      this._activateChildEntity(new popup.TerminatedLevelPopup(), this.config);
-    }
   }
 
   checkAndReturnsResults(): LevelResults {
@@ -968,62 +1128,70 @@ export class Level extends entity.CompositeEntity {
     this._transition = entity.makeTransition();
   }
 
-  setScore(score: number) {
-    if (this.options.disableScore) return;
-
-    if (score >= this.options.maxScore) {
-      this.emitLevelEvent("maxScoreReached");
-      this.score = this.options.maxScore;
-    } else {
-      this.score = score;
-    }
-
-    this.emitLevelEvent("scoreUpdated", this.score);
-  }
-
-  addScore(score: number) {
-    if (this.options.disableScore) return;
-
-    if (this.score === this.options.maxScore) {
-      return;
-    } else if (this.score + score >= this.options.maxScore) {
-      this.emitLevelEvent("maxScoreReached");
-      this.score = this.options.maxScore;
-    } else {
-      this.score += score;
-    }
-
-    this.emitLevelEvent("scoreUpdated", this.score);
-  }
-
   get isDisablingAnimationInProgress(): boolean {
     return this.disablingAnimations.size > 0 || this.finished || this.failed;
   }
 
-  public checkGameOverByInfection(): boolean {
-    if (this.grid.isFullyInfected()) {
-      this.gameOverByFail();
-      return true;
-    }
-    return false;
-  }
-
-  // TODO: refactor this as a separate object, using the strategy pattern
   public attemptCrunch(): entity.Entity {
     if (
       this.path.items.length === 0 ||
-      this.sequenceManager.matchesSequence(this.path) !== true
+      this.sequenceManager.matchesSequence() !== true
     ) {
       return new entity.NullEntity();
     }
 
-    const sequenceCrunch = this.sequenceManager.crunch(this.path);
+    const sequenceCrunch = this.sequenceManager.crunch();
 
     if (!sequenceCrunch) return new entity.NullEntity();
 
     this.disablingAnimation("level.attemptCrunch", true);
 
-    const context: entity.Entity[] = [this.path.crunch(), sequenceCrunch];
+    const context: entity.EntityResolvable[] = [
+      new entity.ParallelEntity([this.path.crunch(), sequenceCrunch]),
+    ];
+
+    if (this.options.gridCleaning) {
+      console.log("coucou");
+      // remove isolated little islands
+      context.push(() =>
+        anim.sequenced({
+          items: this.grid
+            .getIslands()
+            .filter(
+              (island) =>
+                island.length < 4 || island.every((n) => n.type !== "clip")
+            )
+            .flat(),
+          waitForAllSteps: true,
+          timeBetween: 250,
+          onStep: (n, index, all, finish) => {
+            this.activate(
+              anim.sink(n.bonusContainer, 1000, () => {
+                n.state = "inactive";
+                finish();
+              })
+            );
+          },
+        })
+      );
+
+      // regenerate clips and portals
+      context.push(
+        new entity.FunctionCallEntity(() => {
+          this.grid.addSpecifics(
+            this.grid.nucleotides.filter((n) => n.state !== "inactive"),
+            this.options.clipCount,
+            "clip"
+          );
+          (() =>
+            this.grid.addSpecifics(
+              this.grid.nucleotides.filter((n) => n.state !== "inactive"),
+              this.options.portalsCount,
+              "portal"
+            ))();
+        })
+      );
+    }
 
     if (this.options.variant === "turn") {
       context.push(
@@ -1045,9 +1213,7 @@ export class Level extends entity.CompositeEntity {
     }
 
     if (this.options.variant === "turn" || this.options.variant === "fall") {
-      if (this.sequenceManager.sequenceCount === 0) {
-        context.push(this.fillHoles());
-      }
+      context.push(this.fillHoles());
     }
 
     context.push(
@@ -1060,29 +1226,30 @@ export class Level extends entity.CompositeEntity {
     return new entity.EntitySequence(context);
   }
 
-  public setGoButtonText(text: path.PathState) {
-    if (!this.options.disableButton) this.goButton.setText(text);
+  public setActionButtonText(text: path.PathState) {
+    this.actionButton?.setText(text);
   }
 
   public refresh(): void {
     if (this.path.items.length > 0) {
-      const match = this.sequenceManager.matchesSequence(this.path);
+      const match = this.sequenceManager.matchesSequence();
       if (match === true) {
-        if (this.options.variant === "zen") this.setGoButtonText("crunch");
-        else this.setGoButtonText("matching");
+        if (this.options.variant === "zen") this.setActionButtonText("crunch");
+        else this.setActionButtonText("matching");
       } else {
-        this.setGoButtonText(match);
+        this.setActionButtonText(match);
       }
     } else {
-      this.setGoButtonText("SKIP");
+      this.setActionButtonText("SKIP");
     }
-    this.sequenceManager.updateHighlighting(this.path);
+    this.sequenceManager.updateHighlighting({ fromLeft: true, partial: true });
   }
 
   public fillHoles(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionalEntity({
-        requestTransition: () => !this.disablingAnimations.has("path.crunch"),
+        requestTransition: () =>
+          !this.disablingAnimations.has("path.crunch.down"),
       }),
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.fillHoles", true);
@@ -1097,15 +1264,37 @@ export class Level extends entity.CompositeEntity {
     ]);
   }
 
-  public infect(): entity.Entity {
-    return new entity.EntitySequence([
-      new entity.FunctionCallEntity(() => {
-        this.disablingAnimation("level.infect", true);
-      }),
-      this.grid.infect(),
-      new entity.FunctionCallEntity(() => {
-        this.disablingAnimation("level.infect", false);
-      }),
-    ]);
+  public infect(withSound = false): entity.Entity {
+    return new entity.EntitySequence(
+      !this.options.infection
+        ? []
+        : [
+            new entity.FunctionCallEntity(() => {
+              this.disablingAnimation("level.infect", true);
+              this.wasInfected = true;
+              if (withSound) this._entityConfig.fxMachine.play("skip");
+            }),
+            new tween.Tween({
+              from: this.life,
+              to: this.life - 1,
+              easing: easing.easeInOutQuad,
+              duration: 2500,
+              onUpdate: (value) => {
+                this.life = value;
+              },
+              onTeardown: () => {
+                if (this.life <= 0) {
+                  this.finished = true;
+                  this.activate(new popup.FailedLevelPopup());
+                }
+              },
+            }),
+            //this.grid.infect(),
+            new entity.FunctionCallEntity(() => {
+              this.disablingAnimation("level.infect", false);
+              this.emitLevelEvent("infected");
+            }),
+          ]
+    );
   }
 }

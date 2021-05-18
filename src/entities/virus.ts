@@ -15,6 +15,43 @@ export type VirusAnimation = "sting" | "idle" | "walk" | "dead";
 export const leftEdge = 30;
 export const rightEdge = -30;
 
+export interface SwimmingVirus {
+  speed: number;
+  entity: entity.AnimatedSpriteEntity;
+}
+
+export function generateSwimmingVirus(
+  ctx: entity.EntityBase,
+  maxHeight: number,
+  ref: Partial<SwimmingVirus> = {}
+): SwimmingVirus {
+  const scale = crispr.random(0.5, 1);
+
+  ref.speed =
+    Math.round(crispr.proportion(scale, 0.5, 1, 5, 10)) *
+    (Math.random() > 0.5 ? -1 : 1);
+
+  if (!ref.entity)
+    ref.entity = util.makeAnimatedSprite(
+      ctx.entityConfig.app.loader.resources["images/mini_bob_swim.json"]
+    );
+
+  const toRight = ref.speed > 0;
+
+  ref.entity.sprite.anchor.set(0.5);
+  ref.entity.sprite.scale.set(scale);
+  ref.entity.sprite.angle = toRight ? 90 : -90;
+  ref.entity.sprite.alpha = (scale - 0.25) / 2;
+  ref.entity.sprite.animationSpeed = 20 / 60;
+  ref.entity.sprite.tint = 0x241e1e;
+  ref.entity.sprite.position.set(
+    toRight ? -300 : crispr.width + 300,
+    crispr.height - crispr.random(maxHeight)
+  );
+
+  return ref as SwimmingVirus;
+}
+
 /**
  * Emits:
  * - stungIn
@@ -170,6 +207,8 @@ export class Virus extends entity.CompositeEntity {
   kill(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
+        this.level.killedViruses++;
+
         this.setAnimatedSprite("dead", false);
 
         this._entityConfig.fxMachine.play("virus_death");

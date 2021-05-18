@@ -5,6 +5,8 @@ import * as entity from "booyah/src/entity";
 
 import * as level from "./scenes/level";
 
+import * as game from "./game";
+
 export const width = 1080;
 export const height = 1920;
 
@@ -43,9 +45,9 @@ export function middle(a: PIXI.Point, b: PIXI.Point): PIXI.Point {
 /** random between 0 and 1 */
 export function random(): number;
 /** random between 0 and X */
-export function random(min: number): number;
+export function random(max: number): number;
 /** random pick in array */
-export function random<T>(min: T[]): T;
+export function random<T>(list: T[]): T;
 /** random in range */
 export function random(min: number, max: number): number;
 /** polyvalent random util */
@@ -129,7 +131,12 @@ export function positionAlongMembrane(
   }
 }
 
-export function makeText(text: string = "", options?: Partial<PIXI.TextStyle>) {
+export function makeText(
+  text: string = "",
+  options?: Partial<
+    PIXI.TextStyle & { fontFamily: game.FontFamily | string | string[] }
+  >
+) {
   const defaultConfig = {
     fontFamily: "Geosans Light",
     fontSize: 80,
@@ -169,8 +176,16 @@ export function leveled<T extends Function>(
   return true;
 }
 
-export function sprite(ctx: entity.EntityBase, path: string): PIXI.Sprite {
-  return new PIXI.Sprite(ctx.entityConfig.app.loader.resources[path].texture);
+export function sprite(
+  ctx: entity.EntityBase,
+  path: string,
+  modifier?: (it: PIXI.Sprite) => unknown
+): PIXI.Sprite {
+  const sprite = new PIXI.Sprite(
+    ctx.entityConfig.app.loader.resources[path].texture
+  );
+  modifier?.(sprite);
+  return sprite;
 }
 
 /**
@@ -198,4 +213,20 @@ export function resolveRange(range: RangeValue): number {
     : range.length === 2
     ? Math.floor(random(...(range as [number, number])))
     : random(range);
+}
+
+export const yellow = "#ffda6b";
+export const yellowNumber = 0xffda6b;
+
+export function resolvePossiblePartLength(
+  length: number | string,
+  sequenceLength: number
+): number {
+  if (typeof length === "string") {
+    return Math.ceil(
+      proportion(Number(length.replace("%", "")), 0, 100, 0, sequenceLength)
+    );
+  } else {
+    return length;
+  }
 }

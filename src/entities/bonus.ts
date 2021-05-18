@@ -94,21 +94,35 @@ export class TimeBonus extends Bonus {
 
   protected _setup() {
     if (this.level.sequenceManager.sequenceCount === 0) {
-      return this.abort();
+      return super.abort();
     }
 
     this._entityConfig.fxMachine.play("bonus_time");
 
     this.level.fallingStopped = true;
-    this._activateChildEntity(
+    this.level.sequenceManager.first?.nucleotides.forEach((n) => {
+      n.sprite.tint = 0x4df9ff;
+    });
+
+    this.abort();
+
+    this.level.activate(
       new entity.EntitySequence([
         new entity.WaitingEntity(5000),
         new entity.FunctionCallEntity(() => {
+          this.level.sequenceManager.first?.nucleotides.forEach((n) => {
+            n.sprite.tint = 0xffffff;
+          });
           this.level.fallingStopped = false;
           this.end();
         }),
       ])
     );
+  }
+
+  abort() {
+    this._count--;
+    super.abort();
   }
 }
 
@@ -130,6 +144,8 @@ export class SwapBonus extends Bonus {
   swap(a: nucleotide.Nucleotide, b: nucleotide.Nucleotide) {
     if (a.colorName === b.colorName && a.type === b.type && a.state === b.state)
       return this.abort();
+
+    if (a.type === "portal" || b.type === "portal") return this.abort();
 
     this.isUpdateDisabled = true;
     this.level.grid.swap(a, b, false);
@@ -284,6 +300,7 @@ export class SyringeBonus extends Bonus {
         new entity.EntitySequence([
           this.level.sequenceManager.removeSequence(
             !this.level.options.disableScore,
+            true,
             s
           ),
           new entity.FunctionCallEntity(() => {
@@ -311,7 +328,7 @@ export type InitialBonuses = InitialBonus[];
 export class BonusesManager extends entity.CompositeEntity {
   public container: PIXI.Container;
   public bonuses = new Set<Bonus>();
-  public selected: Bonus;
+  public selected: Bonus | null;
   public shakeAmount = 3;
   public wasBonusUsed = false;
   public disablingAnimation = false;

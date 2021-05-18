@@ -8,6 +8,7 @@ import * as minimap from "./scenes/minimap";
 
 import * as crispr from "./crispr";
 import * as levels from "./levels";
+import * as metrics from "./metrics";
 
 const main = new minimap.Minimap();
 
@@ -24,10 +25,10 @@ const graphicalAssets = [
   "images/titlescreen_title.png",
 
   "images/map_background.png",
-  "images/particles_background.png",
-  "images/particles_foreground.png",
   "images/background.png",
   "images/background_cell.png",
+  "images/background_cell_danger.png",
+  "images/background_cell_danger_mask.png",
   "images/background_layer_1.png",
   "images/background_layer_2.png",
   "images/background_layer_3-eclaircir.png",
@@ -39,11 +40,13 @@ const graphicalAssets = [
   "images/minimap_layer_2.png",
   "images/minimap_level.png",
   "images/minimap_level_disabled.png",
+  "images/minimap_level_preview_mask.png",
   "images/minimap_virus_0.png",
   "images/minimap_virus_1.png",
   "images/minimap_virus_2.png",
   "images/minimap_virus_3.png",
   "images/minimap_virus_4.png",
+  "images/test_preview.png",
 
   "images/menu_home_button.png",
   "images/menu_music_range_full.png",
@@ -68,16 +71,23 @@ const graphicalAssets = [
   "images/bonus_heal_disabled.png",
   "images/bonus_time_disabled.png",
 
+  "images/crispy.png",
+  "images/crispy_x2.png",
+  "images/crispy_x3.png",
+  "images/crispy_x4.png",
+  "images/crispy_x5.png",
+
+  "images/finger.png",
+
   "images/hole.png",
   "images/bubble.png",
-
-  "images/infection_red.png",
-  "images/infection_blue.png",
-  "images/infection_green.png",
-  "images/infection_yellow.png",
+  "images/clip.png",
+  "images/clip_top.png",
+  "images/clip_bottom.png",
 
   "images/nucleotide_glow.png",
   "images/nucleotide_bright.png",
+  "images/nucleotide_gold_border.png",
 
   "images/particle.png",
 
@@ -122,6 +132,7 @@ const graphicalAssets = [
   "images/nucleotide_blue.json",
   "images/nucleotide_green.json",
   "images/nucleotide_yellow.json",
+  "images/portal.json",
   "images/scissors.json",
   "images/scissors_mini.json",
   "images/hair.json",
@@ -144,7 +155,17 @@ const graphicalAssets = [
   "images/big_bob_dead.json",
 ];
 
-const fontAssets = ["Alien League", "Geosans Light"];
+const fontAssets: FontFamily[] = [
+  "Alien League",
+  "Geosans Light",
+  "Waffle Crisp",
+  "Optimus",
+];
+export type FontFamily =
+  | "Alien League"
+  | "Geosans Light"
+  | "Waffle Crisp"
+  | "Optimus";
 
 const fxAssets = [
   "notification",
@@ -178,7 +199,7 @@ const fxAssets = [
   "tile_green",
   "tile_yellow",
   "tile_blue",
-  "tile_scissors",
+  "tile_clips",
 ];
 
 const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen"];
@@ -193,6 +214,8 @@ const entityInstallers: ((
   //   menuButtonPosition: new PIXI.Point(crispr.width - 111, 106),
   // }),
 ];
+
+metrics.init();
 
 booyah.go({
   states: gameStates,

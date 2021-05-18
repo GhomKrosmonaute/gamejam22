@@ -34,10 +34,10 @@ export class Gauge extends entity.CompositeEntity {
   private _background: PIXI.Sprite;
   private _barBaseWidth: number;
   private _triggered = false;
-  private _value: number = 0;
+  private _lastText: string = "";
   private _statePopup: popup.StatePopup;
 
-  constructor(private _ringCount: number, private _maxValue: number) {
+  constructor(private _ringCount: number) {
     super();
   }
 
@@ -53,19 +53,34 @@ export class Gauge extends entity.CompositeEntity {
     return this._container;
   }
 
-  /**
-   * Set value of gauge bar (value/maxValue)
-   * @param {number} value - The new value of gauge bar
-   */
-  setValue(value: number) {
-    // todo: maybe use down for animation
-    const down = this._value > value;
+  refreshValue() {
+    if (this.level.finished) return;
 
-    this._value = value;
-    this._bar.width = this.getBarWidth();
-    this._text.text = Math.floor(this._value) + " pts";
-    if (this._wave) this._wave.x = this.reachedScoreXPosition;
-    if (!this._triggered) {
+    const score = this.level.options.score.get(this.level);
+    this._bar.width = this.barWidth;
+    this._text.text = this.level.options.score.show(score, this.level);
+
+    const devise = this.level.options.score.devise;
+
+    if (devise !== undefined) {
+      const resolved =
+        typeof devise === "function" ? devise(score, this.level) : devise;
+      if (typeof resolved === "string") {
+        this._text.text += " " + resolved;
+      } else {
+        this._text.removeChildren();
+        this._text.addChild(resolved);
+      }
+    }
+
+    if (this._wave)
+      this._wave.x = Math.min(
+        this.reachedScoreXPosition,
+        this._background.position.x + this._background.width - 125
+      );
+
+    if (!this._triggered && this._lastText !== this._text.text) {
+      this._lastText = this._text.text;
       this._triggered = true;
       this._activateChildEntity(
         anim.bubble(this._text, 1.4, 100, {
@@ -75,17 +90,37 @@ export class Gauge extends entity.CompositeEntity {
         })
       );
     }
+
+    if (score >= this.level.options.score.max) {
+      this.level.finished = true;
+      this.level.options.score.set(
+        crispr.scrap(this.level.options.score.max, this.level),
+        this.level
+      );
+      this.level.finished = true;
+      this.level.activate(
+        new entity.EntitySequence([
+          new entity.WaitingEntity(2000),
+          new popup.TerminatedLevelPopup(),
+        ])
+      );
+    }
   }
 
   setTint(tint: number) {
     this._bar.tint = tint;
+    this._particles.children.forEach((child) => {
+      if (child instanceof PIXI.Sprite) child.tint = tint;
+    });
+    this._wave.tint = tint;
+    this._text.style.fill = tint;
   }
 
-  getBarWidth(): number {
+  get barWidth(): number {
     return crispr.proportion(
-      this._value,
+      this.level.options.score.get(this.level),
       0,
-      this._maxValue,
+      crispr.scrap(this.level.options.score.max, this.level),
       0,
       this._barBaseWidth,
       true
@@ -97,7 +132,7 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   get reachedScoreXPosition(): number {
-    return this.baseXOfBar + this.getBarWidth();
+    return this.baseXOfBar + this.barWidth;
   }
 
   bubbleRings(options?: {
@@ -230,7 +265,7 @@ export class Gauge extends entity.CompositeEntity {
     }
 
     this._text = crispr.makeText("", {
-      fill: "#ffda6b",
+      fill: this.level.options.score.color,
       fontSize: 50,
       fontStyle: "italic bold",
       fontFamily: "Alien League",
@@ -269,13 +304,13 @@ export class Gauge extends entity.CompositeEntity {
       });
     });
 
-    this.level.onLevelEvent("scoreUpdated", this.setValue.bind(this));
-
-    this.setValue(0);
+    this.setTint(this.level.options.score.color);
   }
 
   _update(frameInfo: entity.FrameInfo) {
-    if (this._value < this._maxValue) {
+    if (
+      this.level.options.score.get(this.level) < this.level.options.score.max
+    ) {
       const reachedScorePosition = this.reachedScoreXPosition;
       this._rings.children.forEach((ring: Ring) => {
         if (reachedScorePosition >= this.baseXOfBar + ring.base.x) {
@@ -284,7 +319,9 @@ export class Gauge extends entity.CompositeEntity {
       });
     }
 
-    if (this.getBarWidth() > 100) {
+    const barWidth = this.barWidth;
+
+    if (barWidth > 100) {
       if (this._wave) {
         this._wave.visible = true;
         this._wave.tilePosition.y = Math.cos(frameInfo.playTime / 70) * 10;
@@ -301,7 +338,7 @@ export class Gauge extends entity.CompositeEntity {
         particle.scale.set(0.15 + vectorFast * 0.05);
         particle.position.x = Math.min(
           (index - 1) * 10 +
-            this.getBarWidth() +
+            barWidth +
             this._bar.position.x +
             (even ? vector : invertVector) * 15,
           this._background.position.x + this._background.width - 125
@@ -368,7 +405,10 @@ export class ActionButton extends entity.CompositeEntity {
     this.sprite.anchor.set(0.5);
     this.sprite.position.copyFrom(this.disabledSprite.position);
 
-    this._on(this.sprite, "pointerup", () => {
+    this._on(this.sprite, "pointertap", () => {
+      if (this.level.bonusesManager?.selected) {
+        this.level.bonusesManager.selected.abort();
+      }
       const go = this.press();
       if (go) this._activateChildEntity(go);
     });
@@ -401,16 +441,12 @@ export class ActionButton extends entity.CompositeEntity {
   }
 
   public setText(text: path.PathState) {
-    this.missingScissorsSprite.visible = text === "missing scissors";
+    this.missingScissorsSprite.visible = text === "missing clips";
     // this.text.style.fontSize = text.length > 6 ? 50 : 70;
     // this.text.text = text;
   }
 
   private press(): entity.Entity {
-    if (typeof this.level.options.variant === "object") {
-      return this.level.options.variant.onActionButtonPressed?.(this.level);
-    }
-
     if (this.level.isDisablingAnimationInProgress) {
       return anim.tweenShaking(this.sprite, 300, 6);
     }
@@ -467,7 +503,6 @@ export class ActionButton extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("goButton.press", false);
         this.level.refresh();
-        this.level.checkGameOverByInfection();
       })
     );
 
@@ -502,7 +537,7 @@ export class ZenMovesIndicator extends entity.CompositeEntity {
       fontSize: 80,
       stroke: "#000000",
       strokeThickness: 5,
-      fill: "#ffda6b",
+      fill: crispr.yellow,
       fontStyle: "bold italic",
       fontFamily: "Alien League",
     });

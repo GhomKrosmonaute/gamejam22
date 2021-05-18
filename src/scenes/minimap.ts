@@ -15,9 +15,12 @@ import * as anim from "../animations";
 import * as crispr from "../crispr";
 
 export class Minimap extends entity.CompositeEntity {
+  static savedScroll = -9999999;
+  static lastLevel: levels.LevelName = null;
+
   private menu: menu.Menu;
-  private background: PIXI.Sprite;
   private container: PIXI.Container;
+  private background: PIXI.Sprite;
   private buttons: PIXI.Container;
   private layer1: PIXI.Sprite;
   private layer2: PIXI.Sprite;
@@ -25,7 +28,7 @@ export class Minimap extends entity.CompositeEntity {
   private scrollBox: scroll.Scrollbox;
 
   protected _setup() {
-    this._entityConfig.jukebox.changeMusic("menu");
+    this._entityConfig.jukebox.play("menu");
 
     this.links = new PIXI.Graphics();
     this.container = new PIXI.Container();
@@ -34,45 +37,34 @@ export class Minimap extends entity.CompositeEntity {
     this.menu = new menu.Menu();
 
     this.background = crispr.sprite(this, "images/minimap_background.png");
+
     this.container.addChild(this.background);
 
     this.layer1 = crispr.sprite(this, "images/minimap_layer_1.png");
     this.layer2 = crispr.sprite(this, "images/minimap_layer_2.png");
 
-    // {
-    //   const options = anim.makeFloatingOptions({
-    //     active: { x: true, y: true },
-    //     amplitude: new PIXI.Point(0.5, 0.5),
-    //     speed: new PIXI.Point(Math.random(), Math.random()),
-    //   });
-    //   const shaking = new anim.ShakesManager(this.layer1);
-    //   shaking.setFloat("float", options);
-    //   this._activateChildEntity(shaking);
-    // }
-    // {
-    //   const options = anim.makeFloatingOptions({
-    //     active: { x: true, y: true },
-    //     amplitude: new PIXI.Point(2, 2),
-    //     speed: new PIXI.Point(Math.random(), Math.random()),
-    //   });
-    //   const shaking = new anim.ShakesManager(this.layer2);
-    //   shaking.setFloat("float", options);
-    //   this._activateChildEntity(shaking);
-    // }
-
     this.container.addChild(this.layer1);
     this.container.addChild(this.layer2);
     this.container.addChild(this.links);
 
-    for (const levelName in levels.levels) {
+    for (const levelName of Object.keys(levels.levels)) {
       const index = Object.keys(levels.levels).indexOf(levelName);
+      const even = index % 2 === 0;
+      const data = localStorage.getItem(levelName);
+
+      /**
+       * If previous level is done or Boss level is done.
+       */
+      const isAccessible =
+        Object.entries(levels.levels)
+          .slice(index + 1)
+          .every(([key]) => {
+            return !!localStorage.getItem(key);
+          }) || !!localStorage.getItem("Boss");
 
       // make a button
       const position = new PIXI.Point(
-        crispr.approximate(
-          crispr.width * 0.5 + (index % 2 === 0 ? -100 : 100),
-          50
-        ),
+        crispr.approximate(crispr.width * 0.5 + (even ? -150 : 150), 50),
         crispr.proportion(
           levels.levelNames.indexOf(levelName),
           -0.5,
@@ -83,39 +75,63 @@ export class Minimap extends entity.CompositeEntity {
       );
 
       const levelSprite = crispr.sprite(this, "images/minimap_level.png");
+
       levelSprite.anchor.set(0.5);
       levelSprite.scale.set(0.9 + Math.random() * 0.2);
       levelSprite.position.copyFrom(position);
       levelSprite.interactive = true;
       levelSprite.buttonMode = true;
 
+      if (isAccessible && data) {
+        const preview = crispr.sprite(this, "images/test_preview.png");
+
+        const previewMask = crispr.sprite(
+          this,
+          "images/minimap_level_preview_mask.png"
+        );
+        previewMask.anchor.set(0.5);
+
+        preview.addChild(previewMask);
+        preview.mask = previewMask;
+        preview.anchor.set(0.5);
+
+        levelSprite.addChild(preview);
+      }
+
+      if (levelName === Minimap.lastLevel) {
+        const circle = new PIXI.Graphics()
+          .lineStyle(10, crispr.yellowNumber)
+          .drawCircle(0, 25, 165);
+
+        levelSprite.addChild(circle);
+      }
+
       const text = crispr.makeText(levelName, {
-        fontStyle: "bold",
-        fill: "#ffda6b",
+        fontFamily: "Optimus",
+        fill: crispr.yellow,
       });
 
-      levelSprite.addChild(text);
+      text.scale.set(0.8);
+      text.anchor.set(even ? 0 : 1, 1);
+      text.position.x = even ? 200 : -200;
 
-      if (!crispr.debug) {
-        const levelIndex = levels.levelNames.indexOf(levelName);
-        if (levelIndex < levels.levelNames.length - 1) {
-          console.log("index", levelIndex, levelName);
-          const previousLevelName = levels.levelNames[levelIndex + 1];
-          if (!localStorage.getItem(previousLevelName)) {
-            console.log("local", levelIndex + 1, previousLevelName);
-            //text.style.fill = 0xb0b0b0;
-            text.visible = false;
-            levelSprite.tint = 0xb0b0b0;
-            levelSprite.interactive = false;
-            levelSprite.buttonMode = false;
-          }
-        }
-      }
+      const line = new PIXI.Graphics()
+        .lineStyle(5, crispr.yellowNumber)
+        .moveTo(even ? 100 : -100, 0)
+        .lineTo(even ? -55 : 55, 0);
+
+      line.position.y = 10;
+
+      text.addChild(line);
+
+      levelSprite.addChild(text);
 
       this._on(levelSprite, "pointerup", () => {
         this._entityConfig.fxMachine.play("validate");
 
-        levelSprite.filters = [new PIXI.filters.AlphaFilter(1)];
+        Minimap.savedScroll = this.scrollBox.currentScroll.y;
+        Minimap.lastLevel = levelName as levels.LevelName;
+
         this._activateChildEntity(
           new tween.Tween({
             from: 0,
@@ -123,14 +139,7 @@ export class Minimap extends entity.CompositeEntity {
             duration: 500,
             onUpdate: (value) => {
               levelSprite.scale.set(crispr.proportion(value, 0, 1, 1, 10));
-              (levelSprite
-                .filters[0] as PIXI.filters.AlphaFilter).alpha = crispr.proportion(
-                value,
-                0,
-                1,
-                1,
-                0
-              );
+              levelSprite.alpha = crispr.proportion(value, 0, 1, 1, 0);
             },
             onTeardown: () => {
               this.setLevel(<levels.LevelName>levelName);
@@ -139,9 +148,7 @@ export class Minimap extends entity.CompositeEntity {
         );
       });
 
-      const data = localStorage.getItem(levelName);
-
-      if (data) {
+      if (isAccessible && data) {
         const result: level.LevelResults = JSON.parse(data);
 
         const stars = crispr.sprite(
@@ -149,11 +156,12 @@ export class Minimap extends entity.CompositeEntity {
           `images/reward_stars_${result.starCount}.png`
         );
 
-        stars.anchor.set(0.5);
         stars.scale.set(0.3);
-        stars.position.y = 50;
+        stars.anchor.set(even ? 0 : 1, 1);
+        stars.position.x = even ? 200 : -200;
+        stars.position.y = 100;
 
-        text.position.y = -50;
+        //text.position.y = -50;
 
         levelSprite.addChild(stars);
       } else {
@@ -165,6 +173,14 @@ export class Minimap extends entity.CompositeEntity {
         viruses.anchor.set(0.5);
 
         levelSprite.addChild(viruses);
+      }
+
+      if (!isAccessible && !crispr.debug) {
+        text.visible = false;
+
+        levelSprite.tint = 0xb0b0b0;
+        levelSprite.interactive = false;
+        levelSprite.buttonMode = false;
       }
 
       const shaking = new anim.ShakesManager(levelSprite);
@@ -194,7 +210,7 @@ export class Minimap extends entity.CompositeEntity {
         container: this.container,
       })
     );
-    this.scrollBox.scrollTo(new PIXI.Point(0, -9999999));
+    this.scrollBox.scrollTo(new PIXI.Point(0, Minimap.savedScroll));
     this.scrollBox.refresh();
 
     this._entityConfig.container.addChild(this.container);

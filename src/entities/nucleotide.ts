@@ -10,14 +10,10 @@ import * as level from "../scenes/level";
 import * as anim from "../animations";
 import * as crispr from "../crispr";
 
-export type NucleotideState = "missing" | "present" | "infected" | "inactive";
-export type NucleotideType = "scissors" | "bonus" | "normal";
+import * as path from "./path";
 
-export const nucleotideTypes: NucleotideType[] = [
-  "scissors",
-  "bonus",
-  "normal",
-];
+export type NucleotideState = "missing" | "present" | "inactive";
+export type NucleotideType = "clip" | "normal" | "portal";
 
 // TODO: Use string enum here?
 export type ColorName = "b" | "r" | "g" | "y";
@@ -40,14 +36,18 @@ export const fullColorNames: { [k in ColorName]: string } = {
  * - stateChanged( NucleotideState )
  */
 export class Nucleotide extends entity.CompositeEntity {
-  public _container: PIXI.Container;
+  public container: PIXI.Container;
+  public bonusContainer: PIXI.Container;
+  public shakingContainer: PIXI.Container;
   public type: NucleotideType = "normal";
   public isHovered = false;
   public shakes: anim.ShakesManager;
   public position: PIXI.Point;
+  public effect: (path: path.Path) => unknown;
   public id = Math.random();
 
   private _state: NucleotideState;
+  private _glowColorSprite: PIXI.Sprite;
   private _isHighlighted: boolean;
   private _spriteEntity:
     | entity.AnimatedSpriteEntity
@@ -55,6 +55,7 @@ export class Nucleotide extends entity.CompositeEntity {
   private _infectionSpriteEntity: entity.DisplayObjectEntity<PIXI.Sprite> = null;
   private _highlightSprite: PIXI.Sprite = null;
   private _pathArrowEntity: entity.AnimatedSpriteEntity;
+  private _crispyMultiplier = 1;
   private _radius: number;
 
   public floating = anim.makeFloatingOptions({});
@@ -80,20 +81,46 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._pathArrowEntity.sprite;
   }
 
+  set glowColor(color: number | null) {
+    this._glowColorSprite.visible = color !== null;
+    this._glowColorSprite.tint = color;
+  }
+
+  get glowColor(): number | null {
+    return this._glowColorSprite.visible ? this._glowColorSprite.tint : null;
+  }
+
   _setup() {
     this._state = "missing";
     this._isHighlighted = false;
 
-    this._container = new PIXI.Container();
-    this._container.rotation = this.rotation;
-    this._container.position.copyFrom(this.position);
+    this.shakingContainer = new PIXI.Container();
+    this.shakingContainer.position.copyFrom(this.position);
+    this.shakingContainer.scale.set(0);
 
-    this._container.scale.set(0);
+    this.container = new PIXI.Container();
+    this.container.rotation = this.rotation;
 
-    this.shakes = new anim.ShakesManager(this._container);
+    this.bonusContainer = new PIXI.Container();
+
+    this.shakes = new anim.ShakesManager(this.shakingContainer);
     this.shakes.setFloat("setup", this.floating);
 
-    this._entityConfig.container.addChild(this._container);
+    this._glowColorSprite = crispr.sprite(this, "images/nucleotide_glow.png");
+    this._glowColorSprite.scale.set(0);
+    this._glowColorSprite.anchor.set(0.5);
+    this._glowColorSprite.position.x = this.position.x;
+    this._glowColorSprite.position.y = -100;
+    this._glowColorSprite.alpha = 0.5;
+    this.glowColor = null;
+
+    this.shakingContainer.addChild(
+      this._glowColorSprite,
+      this.container,
+      this.bonusContainer
+    );
+
+    this._entityConfig.container.addChild(this.shakingContainer);
 
     this._pathArrowEntity = util.makeAnimatedSprite(
       this._entityConfig.app.loader.resources["images/path_arrow.json"]
@@ -111,22 +138,22 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   _update() {
-    this._container.position.copyFrom(this.position);
+    this.shakingContainer.position.copyFrom(this.position);
     this.pathArrow.position.copyFrom(this.position);
     this.shakes.anchor.copyFrom(this.position);
 
-    // coup coup
+    // coup' coup' !
     if (
-      this.type === "scissors" &&
+      this.type === "clip" &&
       this.sprite &&
       this.sprite instanceof PIXI.AnimatedSprite
     ) {
       if (this.sprite.currentFrame >= this.sprite.totalFrames - 1) {
-        this.sprite.gotoAndPlay(0);
         this.sprite.animationSpeed = 0;
+        this.sprite.gotoAndPlay(1);
       } else if (this.sprite.animationSpeed === 0) {
         if (Math.random() < 0.005) {
-          this.sprite.gotoAndPlay(0);
+          this.sprite.gotoAndPlay(1);
           this.sprite.animationSpeed = 30 / 60;
         }
       }
@@ -134,10 +161,9 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   _teardown() {
-    if (this._container.children.includes(this._highlightSprite))
-      this._container.removeChild(this._highlightSprite);
+    this.container.removeChildren();
     this._highlightSprite = null;
-    this._entityConfig.container.removeChild(this._container);
+    this._entityConfig.container.removeChildren();
   }
 
   get isHighlighted(): boolean {
@@ -150,39 +176,31 @@ export class Nucleotide extends entity.CompositeEntity {
       this.shakes.setShake("highlight", 2);
 
       if (this.parent === "grid") {
-        if (this.infected) {
-          this.infectionSprite.scale.set(0.9);
-        } else {
-          this.sprite.scale.set(0.9);
-        }
+        this.sprite.scale.set(0.9);
       } else {
         this.sprite.scale.set(1.1);
       }
 
-      this._highlightSprite = new PIXI.Sprite(
-        this._entityConfig.app.loader.resources[
-          this.parent === "grid"
-            ? "images/nucleotide_bright.png"
-            : "images/nucleotide_glow.png"
-        ].texture
+      this._highlightSprite = crispr.sprite(
+        this,
+        this.parent === "grid"
+          ? "images/nucleotide_bright.png"
+          : "images/nucleotide_glow.png"
       );
+
       this._highlightSprite.anchor.set(0.5);
       this._highlightSprite.scale.set(1.3);
-      this._container.addChildAt(this._highlightSprite, 0);
+      this.container.addChildAt(this._highlightSprite, 0);
     } else if (!isHighlighted && this._isHighlighted) {
       this.shakes.removeShake("highlight");
 
       if (this.parent === "grid") {
-        if (this.infected) {
-          this.infectionSprite.scale.set(1);
-        } else {
-          this.sprite.scale.set(1);
-        }
+        this.sprite.scale.set(1);
       } else {
         //this.sprite.scale.set(1.1);
       }
 
-      this._container.removeChild(this._highlightSprite);
+      this.container.removeChild(this._highlightSprite);
       this._highlightSprite = null;
     }
 
@@ -191,10 +209,6 @@ export class Nucleotide extends entity.CompositeEntity {
 
   get fullColorName(): string {
     return fullColorNames[this.colorName] || "white";
-  }
-
-  get infected(): boolean {
-    return this._state === "infected";
   }
 
   get spriteEntity():
@@ -209,14 +223,10 @@ export class Nucleotide extends entity.CompositeEntity {
       : this.spriteEntity.displayObject;
   }
 
-  get infectionSprite(): PIXI.Sprite {
-    return this._infectionSpriteEntity.displayObject as PIXI.Sprite;
-  }
-
   async bubble(duration: number, onTop?: (nucleotide: Nucleotide) => any) {
     return new Promise((resolve) => {
       this._activateChildEntity(
-        anim.bubble(this._container, 1.3, duration, {
+        anim.bubble(this.container, 1.3, duration, {
           onTeardown: resolve,
           onTop: () => {
             onTop?.(this);
@@ -263,13 +273,10 @@ export class Nucleotide extends entity.CompositeEntity {
       return;
     }
 
-    if (newState === "missing") {
-      if (this._state === "infected") {
-        this._deactivateChildEntity(this._infectionSpriteEntity);
-      }
+    this.crispyMultiplier = 1;
 
+    if (newState === "missing") {
       this._state = newState;
-      this.shakes.removeShake("infection");
 
       if (this.children.includes(this._spriteEntity)) {
         this._deactivateChildEntity(this._spriteEntity);
@@ -285,7 +292,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this._activateChildEntity(
         this._spriteEntity,
         entity.extendConfig({
-          container: this._container,
+          container: this.container,
         })
       );
       this._activateChildEntity(
@@ -293,70 +300,10 @@ export class Nucleotide extends entity.CompositeEntity {
           this.emit("stateChanged", newState);
         })
       );
-    } else if (newState === "infected") {
-      // Freeze animation
-      (this.sprite as PIXI.AnimatedSprite).stop();
-
-      // Create mask
-      const mask = new PIXI.Graphics();
-      mask.beginFill(0x000001);
-      mask.drawCircle(0, 0, this.fullRadius);
-      mask.endFill();
-      // this._container.addChild(mask);
-
-      // Overlay infection
-      this._infectionSpriteEntity = new entity.DisplayObjectEntity(
-        new PIXI.Sprite(
-          this._entityConfig.app.loader.resources[
-            `images/infection_${this.fullColorName}.png`
-          ].texture
-        )
-      );
-      this.infectionSprite.anchor.set(0.5, 0.5);
-      this.infectionSprite.visible = false;
-      this._activateChildEntity(
-        this._infectionSpriteEntity,
-        entity.extendConfig({
-          container: this._container,
-        })
-      );
-
-      // Make infection "grow"
-
-      this._activateChildEntity(
-        new entity.EntitySequence([
-          anim.tweenShaking(this._container, 150, 10, 3),
-
-          new entity.FunctionCallEntity(() => {
-            this.shakes.setShake("infection", 1);
-
-            this._container.addChild(mask);
-            this.infectionSprite.mask = mask;
-            this.infectionSprite.visible = true;
-          }),
-
-          new tween.Tween({
-            from: 0,
-            to: 1,
-            easing: easing.easeOutCubic,
-            onUpdate: (value) => mask.scale.set(value),
-          }),
-
-          // Remove mask and infection
-          new entity.FunctionCallEntity(() => {
-            this.infectionSprite.mask = null;
-            this._container.removeChild(mask);
-
-            this._deactivateChildEntity(this._spriteEntity);
-            this.emit("stateChanged", newState);
-          }),
-        ])
-      );
     } else if (newState === "inactive") {
       // Freeze animation and grey it out
-      const animation = this.sprite as PIXI.AnimatedSprite;
+      const animation = this.sprite as PIXI.Sprite;
 
-      animation.stop();
       animation.tint = 0x333333;
 
       this.emit("stateChanged", newState);
@@ -364,14 +311,14 @@ export class Nucleotide extends entity.CompositeEntity {
       if (this._spriteEntity) this._deactivateChildEntity(this._spriteEntity);
 
       // Create animated sprite
-      this._spriteEntity = this._createAnimatedSprite();
+      this.refreshSprite();
       this._activateChildEntity(
         this._spriteEntity,
         entity.extendConfig({
-          container: this._container,
+          container: this.container,
         })
       );
-      this._container.setChildIndex(this.sprite, 0);
+      this.container.setChildIndex(this.sprite, 0);
 
       this._activateChildEntity(this._refreshScale());
 
@@ -389,25 +336,6 @@ export class Nucleotide extends entity.CompositeEntity {
         },
       });
       this._activateChildEntity(radiusTween);
-    } else if (this._state === "infected") {
-      this.shakes.removeShake("infection");
-
-      if (this._infectionSpriteEntity)
-        this._deactivateChildEntity(this._infectionSpriteEntity);
-
-      // Create animated sprite
-      this._spriteEntity = this._createAnimatedSprite();
-      this._activateChildEntity(
-        this._spriteEntity,
-        entity.extendConfig({
-          container: this._container,
-        })
-      );
-      this._container.setChildIndex(this.sprite, 0);
-
-      this._activateChildEntity(this._refreshScale());
-
-      this.emit("stateChanged", newState);
     }
 
     this._state = newState;
@@ -417,42 +345,77 @@ export class Nucleotide extends entity.CompositeEntity {
     this.colorName = getRandomColorName();
   }
 
-  private _createAnimatedSprite(): entity.AnimatedSpriteEntity {
-    let animatedSprite: entity.AnimatedSpriteEntity;
+  public set crispyMultiplier(n: number) {
+    if (this.level.options.noCrispyBonus) n = 1;
+    this.bonusContainer.removeChildren();
+    this._crispyMultiplier = n;
+    if (n > 1 && n < 6)
+      this.bonusContainer.addChild(
+        crispr.sprite(this, "images/nucleotide_gold_border.png", (it) => {
+          it.anchor.set(0.5);
+          it.scale.set(this.shakingContainer.scale.x);
+        }),
+        crispr.sprite(this, `images/crispy_x${n}.png`, (it) => {
+          it.anchor.set(0.5, 0);
+          it.scale.set(this.shakingContainer.scale.x);
+        })
+      );
+  }
+
+  public get crispyMultiplier(): number {
+    return this._crispyMultiplier;
+  }
+
+  private setRandomCrispyMultiplier() {
+    if (Math.random() < this.level.options.crispyBonusRate) {
+      const rand = Math.random();
+      if (rand < 0.025) this.crispyMultiplier = 5;
+      else if (rand < 0.1) this.crispyMultiplier = 4;
+      else if (rand < 0.25) this.crispyMultiplier = 3;
+      else this.crispyMultiplier = 2;
+    } else this.crispyMultiplier = 1;
+  }
+
+  private refreshSprite() {
+    if (!/portal|clip/.test(this.type)) this.setRandomCrispyMultiplier();
+    else this.crispyMultiplier = 1;
+
     if (this.type === "normal") {
       if (!this.colorName) this.generateColor();
-      animatedSprite = util.makeAnimatedSprite(
+      const spriteEntity = util.makeAnimatedSprite(
         this._entityConfig.app.loader.resources[
           `images/nucleotide_${this.fullColorName}.json`
         ]
       );
-      animatedSprite.sprite.animationSpeed = 25 / 60;
+      spriteEntity.sprite.animationSpeed = 25 / 60;
       // Start on a random frame
-      animatedSprite.sprite.gotoAndPlay(
-        Math.floor(Math.random() * animatedSprite.sprite.totalFrames)
+      spriteEntity.sprite.gotoAndPlay(
+        Math.floor(Math.random() * spriteEntity.sprite.totalFrames)
       );
-    } else if (this.type === "scissors") {
+      spriteEntity.sprite.anchor.set(0.5);
+      this._spriteEntity = spriteEntity;
+    } else if (this.type === "portal") {
+      const spriteEntity = util.makeAnimatedSprite(
+        this._entityConfig.app.loader.resources["images/portal.json"]
+      );
+      spriteEntity.sprite.animationSpeed = 15 / 60;
+      // Start on a random frame
+      spriteEntity.sprite.gotoAndPlay(
+        Math.floor(Math.random() * spriteEntity.sprite.totalFrames)
+      );
+      spriteEntity.sprite.anchor.set(0.5);
+      this._spriteEntity = spriteEntity;
+    } else if (this.type === "clip") {
       this.colorName = null;
-      animatedSprite = util.makeAnimatedSprite(
-        this._entityConfig.app.loader.resources["images/scissors_mini.json"]
+      const sprite = crispr.sprite(
+        this,
+        `images/clip_${this.parent === "grid" ? "bottom" : "top"}.png`
       );
-      animatedSprite.sprite.loop = false;
-      animatedSprite.sprite.animationSpeed = 0;
-      // Start on a random frame
-      animatedSprite.sprite.gotoAndStop(0);
-
-      const bubble = crispr.sprite(this, "images/bubble.png");
-      bubble.anchor.set(0.5);
-
-      animatedSprite.sprite.addChild(bubble);
+      sprite.anchor.set(0.5);
+      this._spriteEntity = new entity.DisplayObjectEntity(sprite);
     } else {
       throw new Error("Unhandled type");
     }
-
-    animatedSprite.sprite.anchor.set(0.5);
-    //animatedSprite.interactive = true
-
-    return animatedSprite;
   }
 
   static getNucleotideDimensionsByRadius(radius: number) {
@@ -463,6 +426,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   toString(): string {
+    if (this.type === "clip") return "c";
     switch (this._state) {
       case "inactive":
         return "i";
@@ -471,6 +435,19 @@ export class Nucleotide extends entity.CompositeEntity {
       default:
         return this.colorName;
     }
+  }
+
+  toJSON() {
+    return {
+      type: this.type,
+      state: this.state,
+      color: this.fullColorName,
+      crispyMultiplier: this.crispyMultiplier,
+      position: {
+        x: this.position.x,
+        y: this.position.y,
+      },
+    };
   }
 
   get radius(): number {
@@ -499,11 +476,13 @@ export class Nucleotide extends entity.CompositeEntity {
         }),
         new entity.WaitingEntity(400),
         new tween.Tween({
-          from: this._container.scale.x,
+          from: this.shakingContainer.scale.x,
           to: scale,
           duration: 1000,
           easing: easing.easeInOutQuad,
-          onUpdate: (value) => this._container.scale.set(value),
+          onUpdate: (value) => {
+            this.shakingContainer.scale.set(value);
+          },
           onTeardown: () => {
             this.level.disablingAnimation(disablingAnimation, false);
           },
@@ -511,7 +490,7 @@ export class Nucleotide extends entity.CompositeEntity {
       ]);
     } else {
       return new entity.FunctionCallEntity(() => {
-        this._container.scale.set(scale);
+        this.shakingContainer.scale.set(scale);
       });
     }
   }
