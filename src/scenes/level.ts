@@ -23,26 +23,7 @@ import * as hud from "../entities/hud";
 
 import * as menu from "../scenes/menu";
 
-export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
-
-export interface ILevelVariant {
-  onActionButtonPressed?: (level: Level) => entity.Entity;
-  onSequenceManagerCrunched?: (
-    manager: sequence.SequenceManager
-  ) => entity.Entity;
-  onSequenceManagerMatchPath?: (
-    level: Level,
-    path: path.Path
-  ) => "no match" | "missing clips" | true;
-  sequenceCountLimit?: crispr.Scrapper<
-    number,
-    [level: Level, manager: sequence.SequenceManager]
-  >;
-  sequenceLength?: crispr.Scrapper<
-    number,
-    [level: Level, sequence: sequence.SequenceManager]
-  >;
-}
+export type LevelVariant = "turn" | "fall" | "zen";
 
 export const baseDropSpeed = 0.001;
 
@@ -74,6 +55,7 @@ export interface LevelOptions {
   disableButton: boolean;
   disableGauge: boolean;
   disableScore: boolean;
+  disableClips: boolean;
   gridCleaning: boolean;
   retryOnFail: boolean;
   infection: boolean;
@@ -145,6 +127,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableButton: false,
   disableGauge: false,
   disableScore: false,
+  disableClips: false,
   retryOnFail: true,
   infection: true,
   displayTurnTitles: true,
@@ -1117,18 +1100,15 @@ export class Level extends entity.CompositeEntity {
     return this.disablingAnimations.size > 0 || this.finished || this.failed;
   }
 
-  // TODO: refactor this as a separate object, using the strategy pattern
   public attemptCrunch(): entity.Entity {
     if (
       this.path.items.length === 0 ||
-      this.sequenceManager.matchesSequence(this.path) !== true
+      this.sequenceManager.matchesSequence() !== true
     ) {
       return new entity.NullEntity();
     }
 
-    const sequenceCrunch = this.sequenceManager.crunch(
-      this.options.canCrunchParts ? undefined : this.path
-    );
+    const sequenceCrunch = this.sequenceManager.crunch();
 
     if (!sequenceCrunch) return new entity.NullEntity();
 
@@ -1220,7 +1200,7 @@ export class Level extends entity.CompositeEntity {
 
   public refresh(): void {
     if (this.path.items.length > 0) {
-      const match = this.sequenceManager.matchesSequence(this.path);
+      const match = this.sequenceManager.matchesSequence();
       if (match === true) {
         if (this.options.variant === "zen") this.setGoButtonText("crunch");
         else this.setGoButtonText("matching");

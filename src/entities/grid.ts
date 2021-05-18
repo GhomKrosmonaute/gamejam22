@@ -213,23 +213,6 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides[y * colCount + x] = n;
   }
 
-  applyPresetClips() {
-    if (this.level.options.presetClips) {
-      this.clips.forEach((clip) => (clip.type = "normal"));
-      this.level.options.presetClips.forEach((row, y) => {
-        if (row.length > 0)
-          row.forEach((col, x) => {
-            if (col === true) {
-              const n = this.getNucleotideFromGridPosition(
-                new PIXI.Point(x, y)
-              );
-              n.type = "clip";
-            }
-          });
-      });
-    }
-  }
-
   generateShape() {
     this.allNucleotides.length = colCount * rowCount;
 
@@ -277,20 +260,18 @@ export class Grid extends entity.CompositeEntity {
       }
     }
 
-    // preset scissors
-    this.applyPresetClips();
-
     // finalize
     this.addSpecifics(
       this.allNucleotides,
       this.level.options.portalsCount,
       "portal"
     );
-    this.addSpecifics(
-      this.allNucleotides,
-      this.level.options.clipCount,
-      "clip"
-    );
+    if (!this.level.options.disableClips)
+      this.addSpecifics(
+        this.allNucleotides,
+        this.level.options.clipCount,
+        "clip"
+      );
     this.allNucleotides.forEach((n) => (n ? (n.state = "present") : null));
   }
 
@@ -448,7 +429,9 @@ export class Grid extends entity.CompositeEntity {
 
     while (output === null) {
       const island = crispr.random(
-        islands.filter((island) => island.some((n) => n.type === "clip"))
+        this.level.options.disableClips
+          ? islands
+          : islands.filter((island) => island.some((n) => n.type === "clip"))
       );
 
       if (!island) continue;
@@ -480,7 +463,13 @@ export class Grid extends entity.CompositeEntity {
       if (normals.length < length) length = normals.length;
 
       // chose an entry point
-      addAndFocus(crispr.random(island.filter((n) => is(n, "clip"))));
+      addAndFocus(
+        crispr.random(
+          island.filter((n) => {
+            return is(n, "clip", this.level.options.disableClips);
+          })
+        )
+      );
 
       // while path is not full
       while (true) {
@@ -520,7 +509,7 @@ export class Grid extends entity.CompositeEntity {
           // if path is full
           if (passed.colors.length >= length) {
             if (
-              this.level.options.clipCount === 0 ||
+              this.level.options.disableClips ||
               passed.nucleotides.filter((n) => is(n, "clip")).length > 0
             ) {
               // return it
@@ -665,7 +654,10 @@ export class Grid extends entity.CompositeEntity {
     }
 
     this.addSpecifics(oldHoles, this.level.options.portalsCount, "portal");
-    (() => this.addSpecifics(oldHoles, this.level.options.clipCount, "clip"))();
+    (() => {
+      if (!this.level.options.disableClips)
+        this.addSpecifics(oldHoles, this.level.options.clipCount, "clip");
+    })();
     // this.refresh();
   }
 
@@ -690,7 +682,10 @@ export class Grid extends entity.CompositeEntity {
       this.generateNucleotide(nucleotide);
     }
     this.addSpecifics(holes, this.level.options.portalsCount, "portal");
-    (() => this.addSpecifics(holes, this.level.options.clipCount, "clip"))();
+    (() => {
+      if (!this.level.options.disableClips)
+        this.addSpecifics(holes, this.level.options.clipCount, "clip");
+    })();
 
     holes.forEach((n) => (n.state = "present"));
 

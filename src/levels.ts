@@ -493,7 +493,7 @@ export const levels = {
     new level.Level("Tutorial", {
       variant: "turn",
       noCrispyBonus: true,
-      clipCount: 0,
+      disableClips: true,
       gridShape: [],
       sequences: [["r", "g", "b"]],
       disableButton: true,
@@ -545,8 +545,7 @@ export const levels = {
           filter: (p) => p.id === "popup step 1.2",
           reset: (context) => ({
             resetGrid: true,
-            clipCount: 0,
-            presetClips: [[], [], [], [null, null, null, true], [], [], []],
+            disableClips: true,
             resetSequences: false,
             gridShape: [
               [],
@@ -572,11 +571,10 @@ export const levels = {
                           "Start with the middle tile, and draw on the grid to match the virus DNA",
                         popupOptions: {
                           id: "popup step 2",
-                          minimizeOnClose: false,
                           coolDown: 2000,
                           logo: "images/clip.png",
-                          logoScale: 1.9,
-                          logoPosition: { x: 0, y: -100 },
+                          logoScale: 1.7,
+                          logoPosition: { x: 0, y: -200 },
                         },
                       })
                     );
@@ -585,7 +583,7 @@ export const levels = {
               }),
               new level.Hook({
                 id: "step 2.1",
-                event: "closedPopup",
+                event: "minimizedPopup",
                 filter: (p) => p.id === "popup step 2",
                 entity: new entity.FunctionCallEntity(() => {
                   context.disablingAnimation("tutorial", false);
