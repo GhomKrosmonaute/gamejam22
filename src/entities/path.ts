@@ -125,10 +125,8 @@ export class Path extends entity.CompositeEntity {
   add(n: nucleotide.Nucleotide): boolean {
     if (this.level.isDisablingAnimationInProgress) return false;
 
-    const isZen = this.level.variant === "zen";
-
     // add clips on first position
-    if (!isZen) {
+    if (!this.level.options.disableClips) {
       if (this.first && this.first.type !== "clip") {
         this.remove();
         return false;

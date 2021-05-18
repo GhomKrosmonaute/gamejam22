@@ -76,6 +76,8 @@ const graphicalAssets = [
   "images/crispy_x4.png",
   "images/crispy_x5.png",
 
+  "images/finger.png",
+
   "images/hole.png",
   "images/bubble.png",
   "images/clip.png",

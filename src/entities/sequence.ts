@@ -14,6 +14,7 @@ import * as path from "./path";
 import * as virus from "./virus";
 
 import * as level from "../scenes/level";
+import { TransitoryEntity } from "booyah/src/entity";
 
 export interface SequenceMatchingOptions {
   fromLeft?: boolean;
@@ -157,15 +158,6 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   get sequenceCountLimit(): number {
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.sequenceCountLimit
-    )
-      return crispr.scrap(
-        this.level.variant.sequenceCountLimit,
-        this.level,
-        this
-      );
     switch (this.level.options.variant) {
       case "turn":
         return 3;
@@ -178,12 +170,6 @@ export class SequenceManager extends entity.CompositeEntity {
   private _pickSequenceLength(): number {
     if (this.level.options.sequenceLength !== null)
       return this.level.options.sequenceLength;
-
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.sequenceLength
-    )
-      return crispr.scrap(this.level.variant.sequenceLength, this.level, this);
 
     switch (this.level.options.variant) {
       case "turn":
@@ -243,14 +229,10 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   /** remove all validated sequences */
-  crunch(_path: path.Path | undefined): entity.Entity | void {
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.onSequenceManagerCrunched
-    )
-      return this.level.variant.onSequenceManagerCrunched(this);
+  crunch(): entity.Entity | void {
+    const path = this.level.path;
 
-    if (_path && this.matchesSequence(_path) !== true) return;
+    if (path && this.matchesSequence() !== true) return;
 
     const sequence = this.first;
     const removedSequences: Sequence[] = [];
@@ -383,49 +365,19 @@ export class SequenceManager extends entity.CompositeEntity {
     );
   }
 
-  matchesSequence(_path: path.Path): path.PathState {
-    // TODO: perhaps this should only work if one and only one sequence matches?
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.onSequenceManagerMatchPath
-    )
-      return this.level.variant.onSequenceManagerMatchPath(this.level, _path);
+  matchesSequence(): path.PathState {
+    const path = this.level.path;
 
     if (this.level.options.variant === "zen") {
       return (
-        (_path.length > 2 && this.first?.validate({ partial: true })) ||
+        (path.length > 2 && this.first?.validate({ partial: true })) ||
         "no match"
       );
-    } else if (this.level.options.canCrunchParts) {
-      const options = this.level.options.canCrunchParts;
-      const sequenceLength = [...this.sequences][0].baseLength;
-
-      for (const possiblePart of options.possibleParts.sort((a, b) => {
-        const lengthA = crispr.resolvePossiblePartLength(
-          a.length,
-          sequenceLength
-        );
-        const lengthB = crispr.resolvePossiblePartLength(
-          b.length,
-          sequenceLength
-        );
-        return lengthA - lengthB;
-      })) {
-        const length = crispr.resolvePossiblePartLength(
-          possiblePart.length,
-          sequenceLength
-        );
-
-        if (_path.length === length && this.first?.validate({ partial: true }))
-          return true;
-      }
-
-      return "no match";
     } else {
       if (!this.first?.validate()) {
         return "no match";
       }
-      if (this.level.options.clipCount > 0 && !_path.correctlyContainsClips()) {
+      if (!this.level.options.disableClips && !path.correctlyContainsClips()) {
         return "missing clips";
       }
       return true;
@@ -533,7 +485,7 @@ export class Sequence extends entity.CompositeEntity {
     }
 
     for (
-      let i = this.level.variant === "zen" ? 0 : -1;
+      let i = this.level.options.disableClips ? 0 : -1;
       i < this.baseLength;
       i++
     ) {
@@ -753,13 +705,15 @@ export class Sequence extends entity.CompositeEntity {
                 }),
               ]),
               () =>
-                anim.bubble(text, 1.5, 500, {
-                  onTop: () => {
-                    text.text = `${
-                      this.level.options.baseCrispyGain * length
-                    } x ${multiplier}`;
-                  },
-                }),
+                multiplier > 1
+                  ? anim.bubble(text, 1.5, 500, {
+                      onTop: () => {
+                        text.text = `${
+                          this.level.options.baseCrispyGain * length
+                        } x ${multiplier}`;
+                      },
+                    })
+                  : new entity.TransitoryEntity(),
               () =>
                 new entity.ParallelEntity([
                   new entity.FunctionCallEntity(() => {

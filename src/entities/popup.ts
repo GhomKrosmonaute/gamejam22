@@ -162,7 +162,9 @@ export abstract class Popup extends entity.CompositeEntity {
           this.entityConfigBackgroundContainer = new PIXI.Container();
 
           if (this.options.withBlackBackground) {
-            if (this.level.variant === "fall" || this.level.name === "Timed") {
+            if (
+              this.level.variant === "fall" /* || this.level.name === "Timed"*/
+            ) {
               const blackBackground = new PIXI.Graphics()
                 .beginFill()
                 .drawRect(0, 0, crispr.width, crispr.height)
@@ -911,9 +913,9 @@ export class StatePopup extends ChecksPopup {
     text.position.y = 100;
 
     const score = crispr.makeText(
-      `Score: ${Math.floor(this.level.options.score.get(this.level))} / ${
-        this.level.options.score.max
-      } pts`,
+      `Progress: ${Math.floor(
+        this.level.options.score.get(this.level)
+      )} / ${crispr.scrap(this.level.options.score.max, this.level)}`,
       {
         fontSize: 100,
         fill: 0xffffff,

@@ -23,26 +23,7 @@ import * as hud from "../entities/hud";
 
 import * as menu from "../scenes/menu";
 
-export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
-
-export interface ILevelVariant {
-  onActionButtonPressed?: (level: Level) => entity.Entity;
-  onSequenceManagerCrunched?: (
-    manager: sequence.SequenceManager
-  ) => entity.Entity;
-  onSequenceManagerMatchPath?: (
-    level: Level,
-    path: path.Path
-  ) => "no match" | "missing clips" | true;
-  sequenceCountLimit?: crispr.Scrapper<
-    number,
-    [level: Level, manager: sequence.SequenceManager]
-  >;
-  sequenceLength?: crispr.Scrapper<
-    number,
-    [level: Level, sequence: sequence.SequenceManager]
-  >;
-}
+export type LevelVariant = "turn" | "fall" | "zen";
 
 export const baseDropSpeed = 0.001;
 
@@ -74,6 +55,7 @@ export interface LevelOptions {
   disableButton: boolean;
   disableGauge: boolean;
   disableScore: boolean;
+  disableClips: boolean;
   gridCleaning: boolean;
   retryOnFail: boolean;
   infection: boolean;
@@ -103,7 +85,6 @@ export interface LevelOptions {
   sequenceRounded: boolean;
   sequenceNucleotideRadius: number;
   gridShape: grid.GridShape | string;
-  presetClips: grid.GridPreset | null;
   sequences: nucleotide.ColorName[][] | null;
   forceMatching: boolean;
   hooks: Hook[];
@@ -122,19 +103,49 @@ export interface LevelOptions {
   zenMoves: number;
 }
 
+// export const defaultScoreOptions: Readonly<ScoreOptions> = {
+//   max: 1000,
+//   initial: 0,
+//   color: crispr.yellowNumber,
+//   get: (ctx) => ctx.score,
+//   set: (val, ctx) => (ctx.score = val),
+//   show: (val) => String(Math.floor(val)),
+//   devise: (val, ctx) =>
+//     crispr.sprite(ctx, "images/crispy.png", (it) => {
+//       it.anchor.set(0.5);
+//       it.scale.set(0.6);
+//       it.x = 65;
+//     }),
+// };
+
 export const defaultScoreOptions: Readonly<ScoreOptions> = {
-  max: 1000,
+  max: 5,
   initial: 0,
   color: crispr.yellowNumber,
-  get: (ctx) => ctx.score,
-  set: (val, ctx) => (ctx.score = val),
-  show: (val) => String(Math.floor(val)),
+  get: (context) => context.killedViruses,
+  set: (value, context) => (context.killedViruses = value),
+  show: (value, context) => String(Math.round(context.score)),
   devise: (val, ctx) =>
     crispr.sprite(ctx, "images/crispy.png", (it) => {
       it.anchor.set(0.5);
       it.scale.set(0.6);
       it.x = 65;
     }),
+  // devise: (value, ctx) => {
+  //   const spriteEntity = util.makeAnimatedSprite(
+  //     ctx.entityConfig.app.loader.resources["images/mini_bob_idle.json"]
+  //   );
+  //   ctx.activate(spriteEntity);
+  //   const sp = spriteEntity.sprite;
+  //   sp.autoUpdate = true;
+  //   sp.animationSpeed = 20 / 60;
+  //   sp.loop = true;
+  //   sp.play();
+  //   sp.scale.set(0.08);
+  //   sp.anchor.set(0.5);
+  //   sp.position.x = 150;
+  //   return sp;
+  // },
 };
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
@@ -145,12 +156,12 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableButton: false,
   disableGauge: false,
   disableScore: false,
+  disableClips: false,
   retryOnFail: true,
   infection: true,
   displayTurnTitles: true,
   variant: "turn",
   virus: "mini",
-  presetClips: null,
   maxLife: 5,
   dropSpeed: 1,
   canCrunchParts: null,
@@ -174,7 +185,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
     //"No virus has escaped": (level) => !level.someVirusHasEscaped,
     "Not infected": (level) => !level.wasInfected,
     "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
-    "Max score reached": (level) => level.score >= level.options.score.max,
+    "All virus killed": (level) =>
+      level.options.score.get(level) >=
+      crispr.scrap(level.options.score.max, level),
   },
   music: null,
   noCrispyBonus: false,
@@ -297,6 +310,7 @@ export class Hook<
           resetBonuses: false,
           resetSequences: false,
           forceMatching: false,
+          disableClips: false,
         };
 
         // apply changes
@@ -361,7 +375,7 @@ export class Level extends entity.CompositeEntity {
   public gauge: hud.Gauge;
   public path: path.Path;
   public grid: grid.Grid;
-  public goButton: hud.ActionButton;
+  public actionButton: hud.ActionButton;
   public zenMovesIndicator: hud.ZenMovesIndicator;
   public menu: menu.Menu;
 
@@ -569,14 +583,14 @@ export class Level extends entity.CompositeEntity {
   private _initButton() {
     if (this.options.disableButton) return;
 
-    this.goButton = new hud.ActionButton();
-    this._activateChildEntity(this.goButton, this.config);
+    this.actionButton = new hud.ActionButton();
+    this._activateChildEntity(this.actionButton, this.config);
   }
 
   private _disableButton() {
     if (this.options.disableButton) return;
-    this._deactivateChildEntity(this.goButton);
-    this.goButton = null;
+    this._deactivateChildEntity(this.actionButton);
+    this.actionButton = null;
   }
 
   private _initBonuses() {
@@ -902,33 +916,23 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.level = this;
 
     // assign flags
-    {
-      [
-        "disableExtraSequence",
-        "disableScore",
-        "retryOnFail",
-        "displayTurnTitles",
-        "variant",
-        "maxScore",
-        "dropSpeed",
-        "baseGain",
-        "baseScore",
-        "gaugeRings",
-        "sequenceLength",
-        "checks",
-        "scissorCount",
-        "nucleotideRadius",
-        "sequenceNucleotideRadius",
-        "forceMatching",
-        "disablingAnimations",
-      ].forEach((prop) => {
+    for (const key in options) {
+      // @ts-ignore
+      const value: any = options[key];
+      if (
+        (typeof value === "boolean" ||
+          typeof value === "number" ||
+          typeof value === "string") &&
+        !/^disable(?:Bonuses|Button|Gauge)$/.test(key)
+      ) {
         // @ts-ignore
-        this.options[prop] = options[prop];
-      });
+        this.options[key] = value;
+      }
     }
 
     this._initScreenShake();
     this._initDisablingAnimations();
+    this._initLife();
 
     // manage components switches
     {
@@ -952,6 +956,10 @@ export class Level extends entity.CompositeEntity {
 
     // reset options
     if (options.resetScore) {
+      this.options.score = {
+        ...this.options.score,
+        ...options.score,
+      };
       this.options.score.set(this.options.score.initial, this);
     }
 
@@ -963,8 +971,11 @@ export class Level extends entity.CompositeEntity {
 
     // grid rebuild
     if (options.resetGrid) {
+      console.table({
+        oldOptions: this.options.clipCount,
+        newOptions: options.clipCount,
+      });
       this.options.gridShape = options.gridShape;
-      this.options.presetClips = options.presetClips;
       this.grid.reset();
     }
 
@@ -1117,18 +1128,15 @@ export class Level extends entity.CompositeEntity {
     return this.disablingAnimations.size > 0 || this.finished || this.failed;
   }
 
-  // TODO: refactor this as a separate object, using the strategy pattern
   public attemptCrunch(): entity.Entity {
     if (
-      this.path.length === 0 ||
-      this.sequenceManager.matchesSequence(this.path) !== true
+      this.path.items.length === 0 ||
+      this.sequenceManager.matchesSequence() !== true
     ) {
       return new entity.NullEntity();
     }
 
-    const sequenceCrunch = this.sequenceManager.crunch(
-      this.options.canCrunchParts ? undefined : this.path
-    );
+    const sequenceCrunch = this.sequenceManager.crunch();
 
     if (!sequenceCrunch) return new entity.NullEntity();
 
@@ -1214,21 +1222,21 @@ export class Level extends entity.CompositeEntity {
     return new entity.EntitySequence(context);
   }
 
-  public setGoButtonText(text: path.PathState) {
-    if (!this.options.disableButton) this.goButton.setText(text);
+  public setActionButtonText(text: path.PathState) {
+    this.actionButton?.setText(text);
   }
 
   public refresh(): void {
     if (this.path.items.length > 0) {
-      const match = this.sequenceManager.matchesSequence(this.path);
+      const match = this.sequenceManager.matchesSequence();
       if (match === true) {
-        if (this.options.variant === "zen") this.setGoButtonText("crunch");
-        else this.setGoButtonText("matching");
+        if (this.options.variant === "zen") this.setActionButtonText("crunch");
+        else this.setActionButtonText("matching");
       } else {
-        this.setGoButtonText(match);
+        this.setActionButtonText(match);
       }
     } else {
-      this.setGoButtonText("SKIP");
+      this.setActionButtonText("SKIP");
     }
     this.sequenceManager.updateHighlighting(
       this.options.variant === "zen"
