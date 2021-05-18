@@ -477,280 +477,270 @@ export const levels = {
       ],
     })),
 
-  // Tutorial: () =>
-  //   new level.Level("Tutorial", {
-  //     variant: "turn",
-  //     noCrispyBonus: true,
-  //     clipCount: 0,
-  //     gridShape: [],
-  //     sequences: [["r", "g", "b"]],
-  //     disableButton: true,
-  //     disableBonuses: true,
-  //     disableGauge: true,
-  //     disableScore: true,
-  //     disablingAnimations: ["tutorial"],
-  //     checks: {
-  //       "Crunch a sequence": (context) => context.sequenceWasCrunched,
-  //       "Includes scissors": (context) =>
-  //         context.triggeredHooks.has("step 3 => step 4"),
-  //       "Reach 200 pts": (context) => context.score >= 200,
-  //     },
-  //     hooks: [
-  //       new level.Hook({
-  //         id: "step 1",
-  //         event: "init",
-  //         once: true,
-  //         entity: new popup.TutorialPopup({
-  //           title: "Welcome",
-  //           content:
-  //             "Here comes a virus, it wants to inject its own DNA so that your bacteria will reproduce it.",
-  //           image: "images/mini_bob_idle.json",
-  //           imageHeight: 300,
-  //           popupOptions: {
-  //             minimizeOnClose: false,
-  //             coolDown: 2000,
-  //           },
-  //         }),
-  //       }),
-  //       new level.Hook({
-  //         id: "step 1.2",
-  //         event: "injectedSequence",
-  //         once: true,
-  //         entity: new popup.TutorialPopup({
-  //           title: "Your job",
-  //           content:
-  //             "As the CRISPR Designer, it’s your job to create a matching CRISPR sequence.",
-  //           popupOptions: {
-  //             id: "popup step 1.2",
-  //             minimizeOnClose: false,
-  //             coolDown: 2000,
-  //           },
-  //         }),
-  //       }),
-  //       new level.Hook({
-  //         id: "step 1 => step 2",
-  //         event: "closedPopup",
-  //         filter: (p) => p.id === "popup step 1.2",
-  //         reset: (context) => ({
-  //           resetGrid: true,
-  //           clipCount: 0,
-  //           presetClips: [[], [], [], [null, null, null, true], [], [], []],
-  //           resetSequences: false,
-  //           gridShape: [
-  //             [],
-  //             [],
-  //             [null, null, "y", "g", "r"],
-  //             [null, null, "b", "g", "g"],
-  //             [null, null, null, "b"],
-  //             [],
-  //             [],
-  //           ],
-  //           hooks: [
-  //             new level.Hook({
-  //               id: "step 2",
-  //               event: "init",
-  //               entity: new entity.EntitySequence([
-  //                 new entity.WaitingEntity(1000),
-  //                 new entity.FunctionCallEntity(() => {
-  //                   context.activate(
-  //                     new popup.TutorialPopup({
-  //                       title: "Draw!",
-  //                       content:
-  //                         "Go ahead and draw on the grid to match the virus DNA",
-  //                       popupOptions: {
-  //                         id: "popup step 2",
-  //                         minimizeOnClose: false,
-  //                         coolDown: 2000,
-  //                       },
-  //                     })
-  //                   );
-  //                 }),
-  //               ]),
-  //             }),
-  //             new level.Hook({
-  //               id: "step 2.1",
-  //               event: "closedPopup",
-  //               filter: (p) => p.id === "popup step 2",
-  //               entity: new entity.FunctionCallEntity(() => {
-  //                 context.disablingAnimation("tutorial", false);
-  //               }),
-  //             }),
-  //             new level.Hook({
-  //               id: "step 2 => step 3",
-  //               event: "sequenceDown",
-  //               reset: {
-  //                 gridShape: "mini",
-  //                 resetGrid: true,
-  //                 resetSequences: true,
-  //                 forceMatching: true,
-  //                 clipCount: 1,
-  //                 sequenceLength: 4,
-  //                 hooks: [
-  //                   new level.Hook({
-  //                     id: "step 3",
-  //                     event: "init",
-  //                     once: true,
-  //                     entity: new popup.TutorialPopup({
-  //                       title: "Clips",
-  //                       content:
-  //                         "To destroy the virus DNA, you’ll need to include the CRISPR clip at the start of your sequence.",
-  //                       popupOptions: {
-  //                         logo: "images/clip.png",
-  //                         coolDown: 2000,
-  //                       },
-  //                     }),
-  //                   }),
-  //                   new level.Hook({
-  //                     id: "step 3 => step 4",
-  //                     event: "sequenceDown",
-  //                     reset: (context) => ({
-  //                       resetGrid: true,
-  //                       resetSequences: true,
-  //                       gridShape: [
-  //                         null,
-  //                         [null, null, "y", "y", "b"],
-  //                         [null, "b", "y", "b", "y", "b"],
-  //                         [null, "b", "y", "y", "b", "b"],
-  //                         [null, "y", "b", "b", "y", "b"],
-  //                         [null, null, null, "y"],
-  //                       ],
-  //                       sequences: [["g", "r", "g", "r", "r"]],
-  //                       presetClips: [
-  //                         [],
-  //                         [],
-  //                         [],
-  //                         [null, null, null, true],
-  //                         [],
-  //                         [],
-  //                         [],
-  //                       ],
-  //                       clipCount: 1,
-  //                       sequenceLength: 6,
-  //                       forceMatching: true,
-  //                       disableButton: false,
-  //                       hooks: [
-  //                         new level.Hook({
-  //                           id: "step 4",
-  //                           event: "init",
-  //                           once: true,
-  //                           entity: new popup.TutorialPopup({
-  //                             title: "Skip button",
-  //                             content:
-  //                               "Sometimes you’ll get stuck, and you can’t make a matching sequence.\n\nIn that case, press the skip button.",
-  //                             popupOptions: {
-  //                               coolDown: 2000,
-  //                               logo: "images/hud_action_button.png",
-  //                             },
-  //                           }),
-  //                         }),
-  //                         new level.Hook({
-  //                           id: "step 4.1",
-  //                           event: "infected",
-  //                           once: true,
-  //                           entity: new entity.EntitySequence([
-  //                             new entity.FunctionCallEntity(() => {
-  //                               context.disablingAnimation(
-  //                                 "preventVirus",
-  //                                 true
-  //                               );
-  //                             }),
-  //                             new entity.WaitingEntity(1500),
-  //                             new entity.FunctionCallEntity(() => {
-  //                               context.activate(
-  //                                 new popup.TutorialPopup({
-  //                                   title: "Infection",
-  //                                   image: "images/mini_bob_swim.json",
-  //                                   imageHeight: 400,
-  //                                   content:
-  //                                     "When you skip, parts of your cell will get infected.\n\nIf the entire cell gets infected, it’s game over.",
-  //                                   popupOptions: {
-  //                                     id: "popup step 4.1",
-  //                                     minimizeOnClose: false,
-  //                                     coolDown: 2000,
-  //                                   },
-  //                                 })
-  //                               );
-  //                               context.disablingAnimation("tutorial", true);
-  //                             }),
-  //                           ]),
-  //                         }),
-  //                         new level.Hook({
-  //                           id: "step 4.3",
-  //                           event: "closedPopup",
-  //                           filter: (p) => p.id === "popup step 4.1",
-  //                           entity: new entity.FunctionCallEntity(() => {
-  //                             context.disablingAnimation("tutorial", false);
-  //                             context.disablingAnimation("preventVirus", false);
-  //                             context.emitLevelEvent("canReset");
-  //                           }),
-  //                         }),
-  //                         new level.Hook({
-  //                           id: "step 4 => step 5",
-  //                           event: "canReset",
-  //                           reset: {
-  //                             gridShape: "medium",
-  //                             resetGrid: true,
-  //                             resetScore: true,
-  //                             resetSequences: true,
-  //                             sequenceLength: 5,
-  //                             clipCount: 3,
-  //                             sequences: null,
-  //                             presetClips: null,
-  //                             disableScore: false,
-  //                             disableGauge: false,
-  //                             forceMatching: true,
-  //                             hooks: [
-  //                               new level.Hook({
-  //                                 id: "step 5",
-  //                                 once: true,
-  //                                 event: "init",
-  //                                 entity: new entity.EntitySequence([
-  //                                   new entity.WaitingEntity(1500),
-  //                                   new entity.FunctionCallEntity(() => {
-  //                                     context.disablingAnimation(
-  //                                       "preventVirus",
-  //                                       false
-  //                                     );
-  //                                     context.activate(
-  //                                       new popup.TutorialPopup({
-  //                                         title: "Nice work!",
-  //                                         content:
-  //                                           "You get points for each sequence you match. The longer the sequence, the more points.\n\nNow try to make 200 points.",
-  //                                         popupOptions: {
-  //                                           minimizeOnClose: false,
-  //                                           coolDown: 1000,
-  //                                           onClose: () => {
-  //                                             context.activate(
-  //                                               anim.title(
-  //                                                 context.container,
-  //                                                 "Go!"
-  //                                               )
-  //                                             );
-  //                                             context.disablingAnimation(
-  //                                               "tutorial",
-  //                                               false
-  //                                             );
-  //                                           },
-  //                                         },
-  //                                       })
-  //                                     );
-  //                                   }),
-  //                                 ]),
-  //                               }),
-  //                             ],
-  //                           },
-  //                         }),
-  //                       ],
-  //                     }),
-  //                   }),
-  //                 ],
-  //               },
-  //             }),
-  //           ],
-  //         }),
-  //       }),
-  //     ],
-  //   }),
+  Tutorial: () =>
+    new level.Level("Tutorial", {
+      variant: "turn",
+      noCrispyBonus: true,
+      clipCount: 0,
+      gridShape: [],
+      sequences: [["r", "g", "b"]],
+      disableButton: true,
+      disableBonuses: true,
+      disableGauge: true,
+      disableScore: true,
+      disablingAnimations: ["tutorial"],
+      checks: {
+        "Crunch a sequence": (context) => context.sequenceWasCrunched,
+        "Includes scissors": (context) =>
+          context.triggeredHooks.has("step 3 => step 4"),
+        "Reach 200 pts": (context) => context.score >= 200,
+      },
+      hooks: [
+        new level.Hook({
+          id: "step 1",
+          event: "init",
+          once: true,
+          entity: new popup.TutorialPopup({
+            title: "Welcome",
+            content:
+              "Here comes a virus, it wants to inject its own DNA so that your bacteria will reproduce it.",
+            image: "images/mini_bob_idle.json",
+            imageHeight: 300,
+            popupOptions: {
+              minimizeOnClose: false,
+              coolDown: 2000,
+            },
+          }),
+        }),
+        new level.Hook({
+          id: "step 1.2",
+          event: "injectedSequence",
+          once: true,
+          entity: new popup.TutorialPopup({
+            title: "Your job",
+            content:
+              "As the CRISPR Designer, it’s your job to create a matching CRISPR sequence.",
+            popupOptions: {
+              id: "popup step 1.2",
+              minimizeOnClose: false,
+              coolDown: 2000,
+            },
+          }),
+        }),
+        new level.Hook({
+          id: "step 1 => step 2",
+          event: "closedPopup",
+          filter: (p) => p.id === "popup step 1.2",
+          reset: (context) => ({
+            resetGrid: true,
+            clipCount: 0,
+            presetClips: [[], [], [], [null, null, null, true], [], [], []],
+            resetSequences: false,
+            gridShape: [
+              [],
+              [],
+              [null, null, "y", "g", "r"],
+              [null, null, "b", "g", "g"],
+              [null, null, null, "b"],
+              [],
+              [],
+            ],
+            hooks: [
+              new level.Hook({
+                id: "step 2",
+                event: "init",
+                entity: new entity.EntitySequence([
+                  new entity.WaitingEntity(1000),
+                  new entity.FunctionCallEntity(() => {
+                    context.activate(
+                      new popup.TutorialPopup({
+                        title: "PAM!",
+                        content:
+                          "To destroy the virus DNA, you’ll need to start with a special tile, called the PAM.\n\n" +
+                          "Start with the middle tile, and draw on the grid to match the virus DNA",
+                        popupOptions: {
+                          id: "popup step 2",
+                          minimizeOnClose: false,
+                          coolDown: 2000,
+                          logo: "images/clip.png",
+                          logoScale: 1.9,
+                          logoPosition: { x: 0, y: -100 },
+                        },
+                      })
+                    );
+                  }),
+                ]),
+              }),
+              new level.Hook({
+                id: "step 2.1",
+                event: "closedPopup",
+                filter: (p) => p.id === "popup step 2",
+                entity: new entity.FunctionCallEntity(() => {
+                  context.disablingAnimation("tutorial", false);
+                }),
+              }),
+              new level.Hook({
+                id: "step 2 => step 3",
+                event: "sequenceDown",
+                reset: {
+                  gridShape: "mini",
+                  resetGrid: true,
+                  resetSequences: true,
+                  forceMatching: true,
+                  clipCount: 1,
+                  sequenceLength: 4,
+                  hooks: [
+                    new level.Hook({
+                      id: "step 3 => step 4",
+                      event: "sequenceDown",
+                      reset: (context) => ({
+                        resetGrid: true,
+                        resetSequences: true,
+                        gridShape: [
+                          null,
+                          [null, null, "y", "y", "b"],
+                          [null, "b", "y", "b", "y", "b"],
+                          [null, "b", "y", "y", "b", "b"],
+                          [null, "y", "b", "b", "y", "b"],
+                          [null, null, null, "y"],
+                        ],
+                        sequences: [["g", "r", "g", "r", "r"]],
+                        presetClips: [
+                          [],
+                          [],
+                          [],
+                          [null, null, null, true],
+                          [],
+                          [],
+                          [],
+                        ],
+                        clipCount: 1,
+                        sequenceLength: 6,
+                        forceMatching: true,
+                        disableButton: false,
+                        hooks: [
+                          new level.Hook({
+                            id: "step 4",
+                            event: "init",
+                            once: true,
+                            entity: new popup.TutorialPopup({
+                              title: "Skip button",
+                              content:
+                                "Sometimes you’ll get stuck, and you can’t make a matching sequence.\n\nIn that case, press the skip button.",
+                              popupOptions: {
+                                coolDown: 2000,
+                                logo: "images/hud_action_button.png",
+                              },
+                            }),
+                          }),
+                          new level.Hook({
+                            id: "step 4.1",
+                            event: "infected",
+                            once: true,
+                            entity: new entity.EntitySequence([
+                              new entity.FunctionCallEntity(() => {
+                                context.disablingAnimation(
+                                  "preventVirus",
+                                  true
+                                );
+                              }),
+                              new entity.WaitingEntity(1500),
+                              new entity.FunctionCallEntity(() => {
+                                context.activate(
+                                  new popup.TutorialPopup({
+                                    title: "Infection",
+                                    image: "images/mini_bob_swim.json",
+                                    imageHeight: 400,
+                                    content:
+                                      "When you skip, the virus will infect you.\nIf you get infected too many times, it’s game over.",
+                                    popupOptions: {
+                                      id: "popup step 4.1",
+                                      minimizeOnClose: false,
+                                      coolDown: 2000,
+                                    },
+                                  })
+                                );
+                                context.disablingAnimation("tutorial", true);
+                              }),
+                            ]),
+                          }),
+                          new level.Hook({
+                            id: "step 4.3",
+                            event: "closedPopup",
+                            filter: (p) => p.id === "popup step 4.1",
+                            entity: new entity.FunctionCallEntity(() => {
+                              context.disablingAnimation("tutorial", false);
+                              context.disablingAnimation("preventVirus", false);
+                              context.emitLevelEvent("canReset");
+                            }),
+                          }),
+                          new level.Hook({
+                            id: "step 4 => step 5",
+                            event: "canReset",
+                            reset: {
+                              gridShape: "medium",
+                              resetGrid: true,
+                              resetScore: true,
+                              resetSequences: true,
+                              sequenceLength: 5,
+                              clipCount: 3,
+                              sequences: null,
+                              presetClips: null,
+                              disableScore: false,
+                              disableGauge: false,
+                              forceMatching: true,
+                              hooks: [
+                                new level.Hook({
+                                  id: "step 5",
+                                  once: true,
+                                  event: "init",
+                                  entity: new entity.EntitySequence([
+                                    new entity.WaitingEntity(1500),
+                                    new entity.FunctionCallEntity(() => {
+                                      context.disablingAnimation(
+                                        "preventVirus",
+                                        false
+                                      );
+                                      context.activate(
+                                        new popup.TutorialPopup({
+                                          title: "Nice work!",
+                                          content:
+                                            "You get points for each sequence you match. The longer the sequence, the more points.\n\nNow try to make 200 points.",
+                                          popupOptions: {
+                                            minimizeOnClose: false,
+                                            coolDown: 1000,
+                                            onClose: () => {
+                                              context.activate(
+                                                anim.title(
+                                                  context.container,
+                                                  "Go!"
+                                                )
+                                              );
+                                              context.disablingAnimation(
+                                                "tutorial",
+                                                false
+                                              );
+                                            },
+                                          },
+                                        })
+                                      );
+                                    }),
+                                  ]),
+                                }),
+                              ],
+                            },
+                          }),
+                        ],
+                      }),
+                    }),
+                  ],
+                },
+              }),
+            ],
+          }),
+        }),
+      ],
+    }),
 };
 
 export const levelNames = Object.keys(levels);

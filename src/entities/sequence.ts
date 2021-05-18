@@ -15,6 +15,13 @@ import * as virus from "./virus";
 
 import * as level from "../scenes/level";
 
+export interface SequenceMatchingOptions {
+  fromLeft?: boolean;
+  fromRight?: boolean;
+  reversible?: boolean;
+  partial?: boolean;
+}
+
 export class SequenceAdjustment extends entity.CompositeEntity {
   private readonly disablingAnimation = "adjustSequences";
 
@@ -245,15 +252,13 @@ export class SequenceManager extends entity.CompositeEntity {
 
     if (_path && this.matchesSequence(_path) !== true) return;
 
-    const sequence = [...this.sequences][0];
-
-    const signature = _path ? _path.signature : sequence.toString();
+    const sequence = this.first;
     const removedSequences: Sequence[] = [];
     let partialCrunch = false;
 
     if (this.level.options.variant === "zen") {
-      if (sequence.validate(signature, "partial")) {
-        sequence.deactivateSegment(_path.signature);
+      if (sequence.validate({ partial: true })) {
+        sequence.deactivateSegment();
 
         partialCrunch = true;
 
@@ -263,7 +268,7 @@ export class SequenceManager extends entity.CompositeEntity {
       }
     } else if (this.level.options.canCrunchParts) {
       removedSequences.push(sequence);
-    } else if (sequence.validate(signature)) {
+    } else if (sequence.validate()) {
       partialCrunch = true;
 
       removedSequences.push(sequence);
@@ -387,14 +392,10 @@ export class SequenceManager extends entity.CompositeEntity {
       return this.level.variant.onSequenceManagerMatchPath(this.level, _path);
 
     if (this.level.options.variant === "zen") {
-      const state =
-        (_path.length > 2 &&
-          this.first?.validate(_path.signature, "partial")) ||
-        "no match";
-
-      if (crispr.debug) console.log("path state:", state);
-
-      return state;
+      return (
+        (_path.length > 2 && this.first?.validate({ partial: true })) ||
+        "no match"
+      );
     } else if (this.level.options.canCrunchParts) {
       const options = this.level.options.canCrunchParts;
       const sequenceLength = [...this.sequences][0].baseLength;
@@ -415,18 +416,13 @@ export class SequenceManager extends entity.CompositeEntity {
           sequenceLength
         );
 
-        if (
-          _path.length === length &&
-          [...this.sequences][0].validate(_path.signature, "partial", options)
-        )
+        if (_path.length === length && this.first?.validate({ partial: true }))
           return true;
       }
 
       return "no match";
     } else {
-      if (
-        ![...this.sequences].some((s) => s.validate(_path.signature, "full"))
-      ) {
+      if (!this.first?.validate()) {
         return "no match";
       }
       if (this.level.options.clipCount > 0 && !_path.correctlyContainsClips()) {
@@ -436,9 +432,8 @@ export class SequenceManager extends entity.CompositeEntity {
     }
   }
 
-  updateHighlighting(_path: path.Path): void {
-    const signature = _path.signature;
-    this.sequences.forEach((s) => s.highlightSegment(signature));
+  updateHighlighting(options?: SequenceMatchingOptions): void {
+    this.sequences.forEach((s) => s.highlightSegment(options));
   }
 
   get sequenceCount(): number {
@@ -678,7 +673,7 @@ export class Sequence extends entity.CompositeEntity {
       scoreAnimationFinished = !addScore,
       length: number;
 
-    const pathSignature = this.level.path.signature;
+    const pathSignature = this.level.path.toString();
     const pathItems = this.level.path.items.map((n) => n.toJSON());
     const allDownNucleotides = pathItems.filter((n) => n.type !== "portal"); //[...this.nucleotides, ...pathItems];
     const multiplier = allDownNucleotides.reduce(
@@ -890,24 +885,54 @@ export class Sequence extends entity.CompositeEntity {
     ]);
   }
 
-  validate(
-    signature: string,
-    validationMethod: "full" | "partial" = "full",
-    options?: { fromLeft?: boolean; fromRight?: boolean }
-  ): boolean {
+  validate(options?: SequenceMatchingOptions): boolean {
+    const pathSignature = this.level.path.toString();
     const sequenceSignature = this.toString();
-    if (validationMethod === "full") {
-      return (
-        signature === sequenceSignature ||
-        signature === util.reverseString(sequenceSignature)
-      );
+
+    if (options) {
+      let result = false;
+
+      if (options.partial) {
+        if (options.fromLeft) {
+          if (options.reversible) {
+            result =
+              sequenceSignature.startsWith(pathSignature) ||
+              sequenceSignature.startsWith(util.reverseString(pathSignature));
+          } else {
+            result = sequenceSignature.startsWith(pathSignature);
+          }
+        }
+
+        if (!result && options.fromRight) {
+          if (options.reversible) {
+            return (
+              sequenceSignature.endsWith(pathSignature) ||
+              sequenceSignature.endsWith(util.reverseString(pathSignature))
+            );
+          } else {
+            return sequenceSignature.endsWith(pathSignature);
+          }
+        }
+      } else {
+        if (options.reversible) {
+          return (
+            sequenceSignature === pathSignature ||
+            sequenceSignature === util.reverseString(pathSignature)
+          );
+        } else {
+          if (options.fromLeft) {
+            result = sequenceSignature === pathSignature;
+          }
+
+          if (!result && options.fromRight) {
+            return sequenceSignature === util.reverseString(pathSignature);
+          }
+        }
+      }
+
+      return result;
     } else {
-      return (
-        sequenceSignature.includes(signature) ||
-        sequenceSignature.includes(util.reverseString(signature)) ||
-        (options?.fromLeft && sequenceSignature.startsWith(signature)) ||
-        (options?.fromRight && sequenceSignature.endsWith(signature))
-      );
+      return pathSignature === sequenceSignature;
     }
   }
 
@@ -915,8 +940,8 @@ export class Sequence extends entity.CompositeEntity {
    * Make the nucleotides that match the signature inactive
    * @param signature
    */
-  deactivateSegment(signature: string): boolean {
-    const segment = this.getMatchingSegment(signature);
+  deactivateSegment(): boolean {
+    const segment = this.getMatchingSegment();
 
     if (!segment) return false;
 
@@ -925,41 +950,91 @@ export class Sequence extends entity.CompositeEntity {
     return true;
   }
 
-  highlightSegment(signature: string = ""): void {
-    const segment = this.getMatchingSegment(signature);
+  highlightSegment(options?: SequenceMatchingOptions): void {
+    const segment = this.getMatchingSegment(options);
 
-    for (const n of this.nucleotides) {
-      n.isHighlighted =
-        (segment && segment.includes(n)) ||
-        (n.type === "clip" && this.level.path?.first?.type === "clip");
-    }
+    for (const n of this.nucleotides)
+      n.isHighlighted = segment && segment.includes(n);
   }
 
-  getMatchingSegment(signature: string): nucleotide.Nucleotide[] | null {
-    const nucleotides =
-      this.level.variant === "zen"
-        ? this.nucleotides
-        : this.nucleotides.slice(1);
 
-    // Try forwards
-    let sequenceSignature = this.toString();
-    let index = sequenceSignature.indexOf(signature);
-    if (index !== -1) {
-      return util.subarray(nucleotides, index, signature.length);
+  getMatchingSegment(
+    options?: SequenceMatchingOptions
+  ): nucleotide.Nucleotide[] | null {
+    const pathSignature = this.level.path.toString();
+    const sequenceSignature = this.toString();
+
+    if (options) {
+      let result: nucleotide.Nucleotide[] | null;
+
+      if (options.partial) {
+        if (options.fromLeft) {
+          if (options.reversible) {
+            const validation =
+              sequenceSignature.startsWith(pathSignature) ||
+              sequenceSignature.startsWith(util.reverseString(pathSignature));
+            const reversed = !sequenceSignature.startsWith(pathSignature);
+            result = validation
+              ? reversed
+                ? this.nucleotides.slice(0, pathSignature.length)
+                : null
+              : null;
+          } else {
+            result = sequenceSignature.startsWith(pathSignature)
+              ? this.nucleotides.slice(0, pathSignature.length)
+              : null;
+          }
+        }
+
+        if (!result && options.fromRight) {
+          if (options.reversible) {
+            const validation =
+              sequenceSignature.endsWith(pathSignature) ||
+              sequenceSignature.endsWith(util.reverseString(pathSignature));
+            const reversed = !sequenceSignature.endsWith(pathSignature);
+            result = validation
+              ? reversed
+                ? this.nucleotides
+                    .slice()
+                    .reverse()
+                    .slice(0, pathSignature.length)
+                    .reverse()
+                : null
+              : null;
+          } else {
+            result = sequenceSignature.endsWith(pathSignature)
+              ? this.nucleotides
+                  .slice()
+                  .reverse()
+                  .slice(0, pathSignature.length)
+                  .reverse()
+              : null;
+          }
+        }
+      } else {
+        if (options.reversible) {
+          return sequenceSignature === pathSignature ||
+            sequenceSignature === util.reverseString(pathSignature)
+            ? this.nucleotides
+            : null;
+        } else {
+          if (options.fromLeft) {
+            result =
+              sequenceSignature === pathSignature ? this.nucleotides : null;
+          }
+
+          if (!result && options.fromRight) {
+            return sequenceSignature === util.reverseString(pathSignature)
+              ? this.nucleotides
+              : null;
+          }
+        }
+      }
+
+      return result;
+    } else {
+      return pathSignature === sequenceSignature ? this.nucleotides : null;
     }
-
-    // Try backwards
-    sequenceSignature = util.reverseString(sequenceSignature);
-    index = sequenceSignature.indexOf(signature);
-    if (index !== -1) {
-      return util.subarray(
-        nucleotides,
-        sequenceSignature.length - 1 - index,
-        signature.length * -1
-      );
-    }
-
-    return null;
   }
 
   isInactive(): boolean {
