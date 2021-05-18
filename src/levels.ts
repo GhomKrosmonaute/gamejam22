@@ -17,45 +17,45 @@ import * as l from "./scenes/level";
 declare var level: l.Level;
 
 export const levels = {
-  Timed: () =>
-    new l.Level("Timed", (ctx) => {
-      ctx.playTime = 0;
-
-      ctx.onLevelEvent("update", () => {
-        if (ctx.playTime >= ctx.options.score.max) {
-          ctx.finished = true;
-          ctx.activate(
-            new entity.EntitySequence([
-              new entity.WaitingEntity(2000),
-              new popup.FailedLevelPopup(),
-            ])
-          );
-        }
-      });
-
-      return {
-        gridShape: "hole",
-        virus: "mini",
-        checks: {
-          "Reach 1000pts": (ctx) => ctx.score > 1000,
-        },
-        score: {
-          max: 120000,
-          devise: (score, ctx) =>
-            crispr.sprite(ctx, "images/bonus_time.png", (it) => {
-              it.anchor.set(0.5);
-              it.scale.set(0.5);
-              it.position.x = 90;
-              //it.tint = 0xff4141
-            }),
-          show: (score) => `${Math.round(score / 1000)} s`,
-          get: (ctx) => 120000 - ctx.playTime,
-          set: (value, ctx) => (ctx.playTime = 120000 - value),
-          color: 0xff4141,
-          initial: 120000,
-        },
-      };
-    }),
+  // Timed: () =>
+  //   new l.Level("Timed", (ctx) => {
+  //     ctx.playTime = 0;
+  //
+  //     ctx.onLevelEvent("update", () => {
+  //       if (ctx.playTime >= ctx.options.score.max) {
+  //         ctx.finished = true;
+  //         ctx.activate(
+  //           new entity.EntitySequence([
+  //             new entity.WaitingEntity(2000),
+  //             new popup.FailedLevelPopup(),
+  //           ])
+  //         );
+  //       }
+  //     });
+  //
+  //     return {
+  //       gridShape: "hole",
+  //       virus: "mini",
+  //       checks: {
+  //         "Reach 1000pts": (ctx) => ctx.score > 1000,
+  //       },
+  //       score: {
+  //         max: 120000,
+  //         devise: (score, ctx) =>
+  //           crispr.sprite(ctx, "images/bonus_time.png", (it) => {
+  //             it.anchor.set(0.5);
+  //             it.scale.set(0.5);
+  //             it.position.x = 90;
+  //             //it.tint = 0xff4141
+  //           }),
+  //         show: (score) => `${Math.round(score / 1000)} s`,
+  //         get: (ctx) => 120000 - ctx.playTime,
+  //         set: (value, ctx) => (ctx.playTime = 120000 - value),
+  //         color: 0xff4141,
+  //         initial: 120000,
+  //       },
+  //     };
+  //   }),
 
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
@@ -453,7 +453,7 @@ export const levels = {
             context.activate(
               new popup.TutorialPopup({
                 title: "Turn by turn",
-                content: `Now you know the basics, try with some longer sequences.\n\nReach ${context.options.score.max} points to continue!`,
+                content: `Now you know the basics, try with some longer sequences.\n\nKill ${context.options.score.max} viruses to continue!`,
                 popupOptions: {
                   minimizeOnClose: false,
                   coolDown: 2000,

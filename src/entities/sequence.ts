@@ -14,6 +14,7 @@ import * as path from "./path";
 import * as virus from "./virus";
 
 import * as level from "../scenes/level";
+import { TransitoryEntity } from "booyah/src/entity";
 
 export interface SequenceMatchingOptions {
   fromLeft?: boolean;
@@ -704,13 +705,15 @@ export class Sequence extends entity.CompositeEntity {
                 }),
               ]),
               () =>
-                anim.bubble(text, 1.5, 500, {
-                  onTop: () => {
-                    text.text = `${
-                      this.level.options.baseCrispyGain * length
-                    } x ${multiplier}`;
-                  },
-                }),
+                multiplier > 1
+                  ? anim.bubble(text, 1.5, 500, {
+                      onTop: () => {
+                        text.text = `${
+                          this.level.options.baseCrispyGain * length
+                        } x ${multiplier}`;
+                      },
+                    })
+                  : new entity.TransitoryEntity(),
               () =>
                 new entity.ParallelEntity([
                   new entity.FunctionCallEntity(() => {
