@@ -97,7 +97,13 @@ export class Gauge extends entity.CompositeEntity {
         crispr.scrap(this.level.options.score.max, this.level),
         this.level
       );
-      this.level.activate(new popup.TerminatedLevelPopup());
+      this.level.finished = true;
+      this.level.activate(
+        new entity.EntitySequence([
+          new entity.WaitingEntity(2000),
+          new popup.TerminatedLevelPopup(),
+        ])
+      );
     }
   }
 
@@ -399,7 +405,10 @@ export class ActionButton extends entity.CompositeEntity {
     this.sprite.anchor.set(0.5);
     this.sprite.position.copyFrom(this.disabledSprite.position);
 
-    this._on(this.sprite, "pointerup", () => {
+    this._on(this.sprite, "pointertap", () => {
+      if (this.level.bonusesManager?.selected) {
+        this.level.bonusesManager.selected.abort();
+      }
       const go = this.press();
       if (go) this._activateChildEntity(go);
     });
@@ -438,10 +447,6 @@ export class ActionButton extends entity.CompositeEntity {
   }
 
   private press(): entity.Entity {
-    if (typeof this.level.options.variant === "object") {
-      return this.level.options.variant.onActionButtonPressed?.(this.level);
-    }
-
     if (this.level.isDisablingAnimationInProgress) {
       return anim.tweenShaking(this.sprite, 300, 6);
     }

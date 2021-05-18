@@ -14,6 +14,14 @@ import * as path from "./path";
 import * as virus from "./virus";
 
 import * as level from "../scenes/level";
+import { TransitoryEntity } from "booyah/src/entity";
+
+export interface SequenceMatchingOptions {
+  fromLeft?: boolean;
+  fromRight?: boolean;
+  reversible?: boolean;
+  partial?: boolean;
+}
 
 export class SequenceAdjustment extends entity.CompositeEntity {
   private readonly disablingAnimation = "adjustSequences";
@@ -100,6 +108,10 @@ export class SequenceManager extends entity.CompositeEntity {
   public container = new PIXI.Container();
   public adjustment = new SequenceAdjustment();
 
+  get first(): Sequence | null {
+    return [...this.sequences][0] ?? null;
+  }
+
   _setup() {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
@@ -146,15 +158,6 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   get sequenceCountLimit(): number {
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.sequenceCountLimit
-    )
-      return crispr.scrap(
-        this.level.variant.sequenceCountLimit,
-        this.level,
-        this
-      );
     switch (this.level.options.variant) {
       case "turn":
         return 3;
@@ -167,12 +170,6 @@ export class SequenceManager extends entity.CompositeEntity {
   private _pickSequenceLength(): number {
     if (this.level.options.sequenceLength !== null)
       return this.level.options.sequenceLength;
-
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.sequenceLength
-    )
-      return crispr.scrap(this.level.variant.sequenceLength, this.level, this);
 
     switch (this.level.options.variant) {
       case "turn":
@@ -232,24 +229,18 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   /** remove all validated sequences */
-  crunch(_path: path.Path | undefined): entity.Entity | void {
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.onSequenceManagerCrunched
-    )
-      return this.level.variant.onSequenceManagerCrunched(this);
+  crunch(): entity.Entity | void {
+    const path = this.level.path;
 
-    if (_path && this.matchesSequence(_path) !== true) return;
+    if (path && this.matchesSequence() !== true) return;
 
-    const sequence = [...this.sequences][0];
-
-    const signature = _path ? _path.signature : sequence.toString();
+    const sequence = this.first;
     const removedSequences: Sequence[] = [];
     let partialCrunch = false;
 
     if (this.level.options.variant === "zen") {
-      if (sequence.validate(signature, "partial")) {
-        sequence.deactivateSegment(_path.signature);
+      if (sequence.validate({ partial: true })) {
+        sequence.deactivateSegment();
 
         partialCrunch = true;
 
@@ -259,7 +250,7 @@ export class SequenceManager extends entity.CompositeEntity {
       }
     } else if (this.level.options.canCrunchParts) {
       removedSequences.push(sequence);
-    } else if (sequence.validate(signature)) {
+    } else if (sequence.validate()) {
       partialCrunch = true;
 
       removedSequences.push(sequence);
@@ -374,66 +365,27 @@ export class SequenceManager extends entity.CompositeEntity {
     );
   }
 
-  matchesSequence(_path: path.Path): path.PathState {
-    // TODO: perhaps this should only work if one and only one sequence matches?
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.onSequenceManagerMatchPath
-    )
-      return this.level.variant.onSequenceManagerMatchPath(this.level, _path);
+  matchesSequence(): path.PathState {
+    const path = this.level.path;
 
     if (this.level.options.variant === "zen") {
       return (
-        (_path.length > 2 &&
-          [...this.sequences].some((s) =>
-            s.validate(_path.signature, "partial")
-          )) ||
+        (path.length > 2 && this.first?.validate({ partial: true })) ||
         "no match"
       );
-    } else if (this.level.options.canCrunchParts) {
-      const options = this.level.options.canCrunchParts;
-      const sequenceLength = [...this.sequences][0].baseLength;
-
-      for (const possiblePart of options.possibleParts.sort((a, b) => {
-        const lengthA = crispr.resolvePossiblePartLength(
-          a.length,
-          sequenceLength
-        );
-        const lengthB = crispr.resolvePossiblePartLength(
-          b.length,
-          sequenceLength
-        );
-        return lengthA - lengthB;
-      })) {
-        const length = crispr.resolvePossiblePartLength(
-          possiblePart.length,
-          sequenceLength
-        );
-
-        if (
-          _path.length === length &&
-          [...this.sequences][0].validate(_path.signature, "partial", options)
-        )
-          return true;
-      }
-
-      return "no match";
     } else {
-      if (
-        ![...this.sequences].some((s) => s.validate(_path.signature, "full"))
-      ) {
+      if (!this.first?.validate()) {
         return "no match";
       }
-      if (this.level.options.clipCount > 0 && !_path.correctlyContainsClips()) {
+      if (!this.level.options.disableClips && !path.correctlyContainsClips()) {
         return "missing clips";
       }
       return true;
     }
   }
 
-  updateHighlighting(_path: path.Path): void {
-    const signature = _path.signature;
-    this.sequences.forEach((s) => s.highlightSegment(signature));
+  updateHighlighting(options?: SequenceMatchingOptions): void {
+    this.sequences.forEach((s) => s.highlightSegment(options));
   }
 
   get sequenceCount(): number {
@@ -532,7 +484,11 @@ export class Sequence extends entity.CompositeEntity {
       this.level.grid.solution = forcedMatching.nucleotides;
     }
 
-    for (let i = -1; i < this.baseLength; i++) {
+    for (
+      let i = this.level.options.disableClips ? 0 : -1;
+      i < this.baseLength;
+      i++
+    ) {
       const position = new PIXI.Point();
 
       if (
@@ -669,9 +625,9 @@ export class Sequence extends entity.CompositeEntity {
       scoreAnimationFinished = !addScore,
       length: number;
 
-    const pathSignature = this.level.path.signature;
+    const pathSignature = this.level.path.toString();
     const pathItems = this.level.path.items.map((n) => n.toJSON());
-    const allDownNucleotides = pathItems; //[...this.nucleotides, ...pathItems];
+    const allDownNucleotides = pathItems.filter((n) => n.type !== "portal"); //[...this.nucleotides, ...pathItems];
     const multiplier = allDownNucleotides.reduce(
       (accumulator, n) => accumulator * n.crispyMultiplier,
       1
@@ -709,14 +665,6 @@ export class Sequence extends entity.CompositeEntity {
         }
 
         this.level.path.crunchCountBeforeSequenceDown = 0;
-      }),
-      new entity.FunctionalEntity({
-        requestTransition: () => {
-          return (
-            notACrunchResult ||
-            this.level.disablingAnimations.has("path.crunch.down")
-          );
-        },
       }),
       new entity.FunctionCallEntity(() => {
         if (addScore) {
@@ -757,30 +705,34 @@ export class Sequence extends entity.CompositeEntity {
                 }),
               ]),
               () =>
-                anim.bubble(text, 1.5, 500, {
-                  onTop: () => {
-                    text.text = `${
-                      this.level.options.baseCrispyGain * length
-                    } x ${multiplier}`;
-                  },
-                }),
+                multiplier > 1
+                  ? anim.bubble(text, 1.5, 500, {
+                      onTop: () => {
+                        text.text = `${
+                          this.level.options.baseCrispyGain * length
+                        } x ${multiplier}`;
+                      },
+                    })
+                  : new entity.TransitoryEntity(),
               () =>
                 new entity.ParallelEntity([
                   new entity.FunctionCallEntity(() => {
-                    this.level.screenShake(10, 1.2, 1000);
+                    this.level.screenShake(8, 1.05, 1000);
+                    this._entityConfig.fxMachine.play("score_ring");
                   }),
                   new tween.Tween({
                     from: this.level.options.baseCrispyGain,
                     to: this.level.options.baseCrispyGain * length * multiplier,
                     onUpdate: (value) => {
                       text.text = String(Math.round(value));
+                      text.style.fontSize = text.style.fontSize + 2;
                     },
                     easing: easing.easeInCubic,
                     duration: 1000,
                   }),
                   anim.bubble(text, 1.25, 1000, {
                     onTop: () => {
-                      this.level.screenShake(10, 1.2, 100);
+                      //this.level.screenShake(5, 1.05, 100);
                     },
                   }),
                 ]),
@@ -807,7 +759,12 @@ export class Sequence extends entity.CompositeEntity {
         }
       }),
       new entity.FunctionalEntity({
-        requestTransition: () => scoreAnimationFinished,
+        requestTransition: () => {
+          return (
+            notACrunchResult ||
+            this.level.disablingAnimations.has("path.crunch.down")
+          );
+        },
       }),
       () =>
         anim.sequenced({
@@ -882,23 +839,54 @@ export class Sequence extends entity.CompositeEntity {
     ]);
   }
 
-  validate(
-    signature: string,
-    validationMethod: "full" | "partial" = "full",
-    options?: { fromLeft?: boolean; fromRight?: boolean }
-  ): boolean {
+  validate(options?: SequenceMatchingOptions): boolean {
+    const pathSignature = this.level.path.toString();
     const sequenceSignature = this.toString();
-    if (validationMethod === "full") {
-      return (
-        signature === sequenceSignature ||
-        signature === util.reverseString(sequenceSignature)
-      );
+
+    if (options) {
+      let result = false;
+
+      if (options.partial) {
+        if (options.fromLeft) {
+          if (options.reversible) {
+            result =
+              sequenceSignature.startsWith(pathSignature) ||
+              sequenceSignature.startsWith(util.reverseString(pathSignature));
+          } else {
+            result = sequenceSignature.startsWith(pathSignature);
+          }
+        }
+
+        if (!result && options.fromRight) {
+          if (options.reversible) {
+            return (
+              sequenceSignature.endsWith(pathSignature) ||
+              sequenceSignature.endsWith(util.reverseString(pathSignature))
+            );
+          } else {
+            return sequenceSignature.endsWith(pathSignature);
+          }
+        }
+      } else {
+        if (options.reversible) {
+          return (
+            sequenceSignature === pathSignature ||
+            sequenceSignature === util.reverseString(pathSignature)
+          );
+        } else {
+          if (options.fromLeft) {
+            result = sequenceSignature === pathSignature;
+          }
+
+          if (!result && options.fromRight) {
+            return sequenceSignature === util.reverseString(pathSignature);
+          }
+        }
+      }
+
+      return result;
     } else {
-      return (
-        sequenceSignature.includes(signature) ||
-        (options?.fromLeft && sequenceSignature.startsWith(signature)) ||
-        (options?.fromRight && sequenceSignature.endsWith(signature))
-      );
+      return pathSignature === sequenceSignature;
     }
   }
 
@@ -906,8 +894,8 @@ export class Sequence extends entity.CompositeEntity {
    * Make the nucleotides that match the signature inactive
    * @param signature
    */
-  deactivateSegment(signature: string): boolean {
-    const segment = this.getMatchingSegment(signature);
+  deactivateSegment(): boolean {
+    const segment = this.getMatchingSegment();
 
     if (!segment) return false;
 
@@ -916,34 +904,90 @@ export class Sequence extends entity.CompositeEntity {
     return true;
   }
 
-  highlightSegment(signature: string = ""): void {
-    const segment = this.getMatchingSegment(signature);
+  highlightSegment(options?: SequenceMatchingOptions): void {
+    const segment = this.getMatchingSegment(options);
 
-    for (const n of this.nucleotides) {
+    for (const n of this.nucleotides)
       n.isHighlighted = segment && segment.includes(n);
-    }
   }
 
-  getMatchingSegment(signature: string): nucleotide.Nucleotide[] | null {
-    // Try forwards
-    let sequenceSignature = this.toString();
-    let index = sequenceSignature.indexOf(signature);
-    if (index !== -1) {
-      return util.subarray(this.nucleotides.slice(1), index, signature.length);
-    }
+  getMatchingSegment(
+    options?: SequenceMatchingOptions
+  ): nucleotide.Nucleotide[] | null {
+    const pathSignature = this.level.path.toString();
+    const sequenceSignature = this.toString();
 
-    // Try backwards
-    sequenceSignature = util.reverseString(sequenceSignature);
-    index = sequenceSignature.indexOf(signature);
-    if (index !== -1) {
-      return util.subarray(
-        this.nucleotides.slice(1),
-        sequenceSignature.length - 1 - index,
-        signature.length * -1
-      );
-    }
+    if (options) {
+      let result: nucleotide.Nucleotide[] | null;
 
-    return null;
+      if (options.partial) {
+        if (options.fromLeft) {
+          if (options.reversible) {
+            const validation =
+              sequenceSignature.startsWith(pathSignature) ||
+              sequenceSignature.startsWith(util.reverseString(pathSignature));
+            const reversed = !sequenceSignature.startsWith(pathSignature);
+            result = validation
+              ? reversed
+                ? this.nucleotides.slice(0, pathSignature.length)
+                : null
+              : null;
+          } else {
+            result = sequenceSignature.startsWith(pathSignature)
+              ? this.nucleotides.slice(0, pathSignature.length)
+              : null;
+          }
+        }
+
+        if (!result && options.fromRight) {
+          if (options.reversible) {
+            const validation =
+              sequenceSignature.endsWith(pathSignature) ||
+              sequenceSignature.endsWith(util.reverseString(pathSignature));
+            const reversed = !sequenceSignature.endsWith(pathSignature);
+            result = validation
+              ? reversed
+                ? this.nucleotides
+                    .slice()
+                    .reverse()
+                    .slice(0, pathSignature.length)
+                    .reverse()
+                : null
+              : null;
+          } else {
+            result = sequenceSignature.endsWith(pathSignature)
+              ? this.nucleotides
+                  .slice()
+                  .reverse()
+                  .slice(0, pathSignature.length)
+                  .reverse()
+              : null;
+          }
+        }
+      } else {
+        if (options.reversible) {
+          return sequenceSignature === pathSignature ||
+            sequenceSignature === util.reverseString(pathSignature)
+            ? this.nucleotides
+            : null;
+        } else {
+          if (options.fromLeft) {
+            result =
+              sequenceSignature === pathSignature ? this.nucleotides : null;
+          }
+
+          if (!result && options.fromRight) {
+            return sequenceSignature === util.reverseString(pathSignature)
+              ? this.nucleotides
+              : null;
+          }
+        }
+      }
+
+      return result;
+    } else {
+      return pathSignature === sequenceSignature ? this.nucleotides : null;
+    }
   }
 
   isInactive(): boolean {

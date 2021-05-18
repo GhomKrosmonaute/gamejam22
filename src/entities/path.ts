@@ -55,10 +55,6 @@ export class Path extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  get signature(): string {
-    return this.nucleotides.join("");
-  }
-
   /** The real length without cuts */
   get length(): number {
     return this.nucleotides.length;
@@ -101,12 +97,18 @@ export class Path extends entity.CompositeEntity {
 
     // check the cancellation & cancel to previous nucleotide
     const index = this.items.indexOf(n);
+
+    // if click in start of existing path
     if (index === 0) {
       // Clear path
       this.items = [];
+
+      // if click in existing path
     } else if (index > -1) {
       // Return to previous step in the path
       this.items = this.items.slice(0, index + 1);
+
+      // else
     } else {
       // Try adding to the path
       if (this.add(n)) return true;
@@ -124,9 +126,11 @@ export class Path extends entity.CompositeEntity {
     if (this.level.isDisablingAnimationInProgress) return false;
 
     // add clips on first position
-    if (this.first && this.first.type !== "clip") {
-      this.remove();
-      return false;
+    if (!this.level.options.disableClips) {
+      if (this.first && this.first.type !== "clip") {
+        this.remove();
+        return false;
+      }
     }
 
     // Ignore clips
@@ -317,7 +321,7 @@ export class Path extends entity.CompositeEntity {
           if (n.type !== "normal") {
             this._activateChildEntity(
               new entity.EntitySequence([
-                () => anim.down(n.sprite, 500, 1),
+                () => anim.down(n.shakingContainer, 500, 1),
                 new entity.FunctionCallEntity(() => {
                   n.once("stateChanged", finish);
                   n.state = this.level.options.gridCleaning
@@ -410,7 +414,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   toString(reverse = false) {
-    return (reverse ? this.nucleotides.reverse() : this.nucleotides).join(",");
+    return (reverse ? this.nucleotides.reverse() : this.nucleotides).join("");
   }
 
   private _playNote(): void {
