@@ -1,6 +1,3 @@
-/// @ts-check
-/// <reference path="../../globals.d.ts" />
-
 import { Level } from "../scenes/level";
 import { GridPresetInput, GridShapeOptions } from "./grid";
 
