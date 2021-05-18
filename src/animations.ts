@@ -259,8 +259,8 @@ export function popup(
 
 export function move(
   target: PIXI.Point,
-  from: PIXI.Point,
-  to: PIXI.Point,
+  from: PIXI.IPointData,
+  to: PIXI.IPointData,
   duration: number,
   easing: easing.EasingFunction,
   callback?: AnimationCallback
@@ -437,6 +437,58 @@ export function tweenShaking(
       callback?.();
     },
   });
+}
+
+export function finger(
+  ctx: entity.EntityBase,
+  options: {
+    container: PIXI.Container;
+    from?: PIXI.IPointData;
+    to: PIXI.IPointData;
+    duration: number;
+  }
+) {
+  if (!options.from) options.from = options.to;
+  const sprite = crispr.sprite(ctx, "images/finger.png", (it) => {
+    it.position.copyFrom(options.from);
+    it.anchor.set(0.2);
+    it.scale.set(1.5);
+    it.alpha = 0;
+  });
+  return new entity.EntitySequence([
+    new entity.FunctionCallEntity(() => {
+      options.container.addChild(sprite);
+    }),
+    new tween.Tween({
+      from: 0,
+      to: 1,
+      duration: options.duration * 0.25,
+      onUpdate: (value) => {
+        sprite.scale.set(1.5 - 0.5 * value);
+        sprite.alpha = value;
+      },
+    }),
+    // move with easing
+    move(
+      sprite.position,
+      options.from,
+      options.to,
+      options.duration * 0.5,
+      easing.easeInOutQuart
+    ),
+    new tween.Tween({
+      from: 1,
+      to: 0,
+      duration: options.duration * 0.25,
+      onUpdate: (value) => {
+        sprite.scale.set(1.5 - 0.5 * value);
+        sprite.alpha = value;
+      },
+    }),
+    new entity.FunctionCallEntity(() => {
+      options.container.removeChild(sprite);
+    }),
+  ]);
 }
 
 export interface FloatingOptions {

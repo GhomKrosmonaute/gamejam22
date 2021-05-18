@@ -9,14 +9,16 @@ import * as util from "booyah/src/util";
 
 import * as popup from "./entities/popup";
 
-import * as level from "./scenes/level";
-
 import * as crispr from "./crispr";
 import * as anim from "./animations";
 
+import * as l from "./scenes/level";
+
+declare var level: l.Level;
+
 export const levels = {
   Timed: () =>
-    new level.Level("Timed", (ctx) => {
+    new l.Level("Timed", (ctx) => {
       ctx.playTime = 0;
 
       ctx.onLevelEvent("update", () => {
@@ -56,7 +58,7 @@ export const levels = {
     }),
 
   Caribbean: () =>
-    new level.Level("Caribbean", (ctx) => ({
+    new l.Level("Caribbean", (ctx) => ({
       gridShape: "fourIslands",
       forceMatching: false,
       clipCount: 4,
@@ -64,9 +66,6 @@ export const levels = {
       portalsCount: 4,
       maxLife: 10,
       crispyBonusRate: 0.6,
-      score: {
-        max: 1000,
-      },
       initialBonuses: [
         {
           bonus: (ctx) => ctx.swapBonus,
@@ -74,7 +73,7 @@ export const levels = {
         },
       ],
       hooks: [
-        new level.Hook({
+        new l.Hook({
           id: "intro",
           event: "init",
           once: true,
@@ -97,7 +96,7 @@ export const levels = {
     })),
 
   Hive: () =>
-    new level.Level("Hive", (context) => ({
+    new l.Level("Hive", (context) => ({
       gridShape: "hive",
       maxLife: 3,
       forceMatching: true,
@@ -115,34 +114,11 @@ export const levels = {
       //     },
       //   ],
       // },
-      score: {
-        max: 5,
-        initial: 0,
-        color: crispr.yellowNumber,
-        get: () => context.killedViruses,
-        set: (value) => (context.killedViruses = value),
-        show: () => String(Math.round(context.score)),
-        // devise: (value, ctx) => {
-        //   const spriteEntity = util.makeAnimatedSprite(
-        //     ctx.entityConfig.app.loader.resources["images/mini_bob_idle.json"]
-        //   );
-        //   ctx.activate(spriteEntity);
-        //   const sp = spriteEntity.sprite;
-        //   sp.autoUpdate = true;
-        //   sp.animationSpeed = 20 / 60;
-        //   sp.loop = true;
-        //   sp.play();
-        //   sp.scale.set(0.08);
-        //   sp.anchor.set(0.5);
-        //   sp.position.x = 150;
-        //   return sp;
-        // },
-      },
       portalsCount: 4,
     })),
 
   Hole: () =>
-    new level.Level("Hole", (context) => ({
+    new l.Level("Hole", (context) => ({
       gridShape: "hole",
       // gridCleaning: true,
       // score: {
@@ -158,20 +134,20 @@ export const levels = {
     })),
 
   "Bow Tie": () =>
-    new level.Level("Bow Tie", (context) => ({
+    new l.Level("Bow Tie", (context) => ({
       gridShape: "bowTie",
       forceMatching: true,
     })),
 
   "Little\nBridge": () =>
-    new level.Level("Little\nBridge", (context) => ({
+    new l.Level("Little\nBridge", (context) => ({
       gridShape: "littleBridge",
       forceMatching: true,
       portalsCount: 2,
     })),
 
   "Four\nIslands": () =>
-    new level.Level("Four\nIslands", (context) => ({
+    new l.Level("Four\nIslands", (context) => ({
       gridShape: "fourIslands",
       forceMatching: true,
       clipCount: 3,
@@ -180,7 +156,7 @@ export const levels = {
     })),
 
   Boss: () =>
-    new level.Level("Boss", (context) => ({
+    new l.Level("Boss", (context) => ({
       virus: "big",
       variant: "fall",
       dropSpeed: 1,
@@ -210,7 +186,7 @@ export const levels = {
         },
       ],
       hooks: [
-        new level.Hook({
+        new l.Hook({
           id: "intro animation",
           event: "init",
           once: true,
@@ -248,7 +224,7 @@ export const levels = {
             }),
           ]),
         }),
-        new level.Hook({
+        new l.Hook({
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
@@ -300,7 +276,7 @@ export const levels = {
   //   }),
 
   "Chrono\nPortal": () =>
-    new level.Level("Chrono\nPortal", (context) => ({
+    new l.Level("Chrono\nPortal", (context) => ({
       variant: "fall",
       gridShape: "medium",
       forceMatching: true,
@@ -327,7 +303,7 @@ export const levels = {
           ),
       ],
       hooks: [
-        new level.Hook({
+        new l.Hook({
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
@@ -339,7 +315,7 @@ export const levels = {
     })),
 
   Chrono: () =>
-    new level.Level("Chrono", (context) => ({
+    new l.Level("Chrono", (context) => ({
       variant: "fall",
       gridShape: "medium",
       forceMatching: true,
@@ -379,7 +355,7 @@ export const levels = {
           ),
       ],
       hooks: [
-        new level.Hook({
+        new l.Hook({
           id: "minimized popup ring 1",
           event: "minimizedPopup",
           filter: (p) => p.id === "popup ring 1",
@@ -387,7 +363,7 @@ export const levels = {
             context.timeBonus.highlight = false;
           }),
         }),
-        new level.Hook({
+        new l.Hook({
           id: "intro",
           event: "init",
           once: true,
@@ -407,7 +383,7 @@ export const levels = {
             );
           }),
         }),
-        new level.Hook({
+        new l.Hook({
           id: "start",
           event: "closedPopup",
           filter: (p) => p.id === "intro popup",
@@ -415,7 +391,7 @@ export const levels = {
             context.disablingAnimation("preventVirus", false);
           }),
         }),
-        new level.Hook({
+        new l.Hook({
           id: "go title",
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
@@ -427,7 +403,7 @@ export const levels = {
     })),
 
   Classic: () =>
-    new level.Level("Classic", (context) => ({
+    new l.Level("Classic", (context) => ({
       variant: "turn",
       minStarNeeded: 1,
       forceMatching: true,
@@ -461,7 +437,7 @@ export const levels = {
           ),
       ],
       hooks: [
-        new level.Hook({
+        new l.Hook({
           id: "minimized popup ring 1",
           event: "minimizedPopup",
           filter: (p) => p.id === "popup ring 1",
@@ -469,7 +445,7 @@ export const levels = {
             context.swapBonus.highlight = false;
           }),
         }),
-        new level.Hook({
+        new l.Hook({
           id: "intro",
           event: "init",
           once: true,
@@ -490,7 +466,7 @@ export const levels = {
     })),
 
   Tutorial: () =>
-    new level.Level("Tutorial", {
+    new l.Level("Tutorial", {
       variant: "turn",
       noCrispyBonus: true,
       disableClips: true,
@@ -503,12 +479,10 @@ export const levels = {
       disablingAnimations: ["tutorial"],
       checks: {
         "Crunch a sequence": (context) => context.sequenceWasCrunched,
-        "Includes scissors": (context) =>
-          context.triggeredHooks.has("step 3 => step 4"),
         "Reach 200 pts": (context) => context.score >= 200,
       },
       hooks: [
-        new level.Hook({
+        new l.Hook({
           id: "step 1",
           event: "init",
           once: true,
@@ -524,7 +498,7 @@ export const levels = {
             },
           }),
         }),
-        new level.Hook({
+        new l.Hook({
           id: "step 1.2",
           event: "injectedSequence",
           once: true,
@@ -539,13 +513,14 @@ export const levels = {
             },
           }),
         }),
-        new level.Hook({
+        new l.Hook({
           id: "step 1 => step 2",
           event: "closedPopup",
           filter: (p) => p.id === "popup step 1.2",
           reset: (context) => ({
             resetGrid: true,
             disableClips: true,
+            disableButton: true,
             resetSequences: false,
             gridShape: [
               [],
@@ -557,39 +532,26 @@ export const levels = {
               [],
             ],
             hooks: [
-              new level.Hook({
+              new l.Hook({
                 id: "step 2",
                 event: "init",
-                entity: new entity.EntitySequence([
-                  new entity.WaitingEntity(1000),
-                  new entity.FunctionCallEntity(() => {
-                    context.activate(
-                      new popup.TutorialPopup({
-                        title: "PAM!",
-                        content:
-                          "To destroy the virus DNA, you’ll need to start with a special tile, called the PAM.\n\n" +
-                          "Start with the middle tile, and draw on the grid to match the virus DNA",
-                        popupOptions: {
-                          id: "popup step 2",
-                          coolDown: 2000,
-                          logo: "images/clip.png",
-                          logoScale: 1.7,
-                          logoPosition: { x: 0, y: -200 },
-                        },
-                      })
-                    );
-                  }),
-                ]),
-              }),
-              new level.Hook({
-                id: "step 2.1",
-                event: "minimizedPopup",
-                filter: (p) => p.id === "popup step 2",
+                delay: 2000,
                 entity: new entity.FunctionCallEntity(() => {
-                  context.disablingAnimation("tutorial", false);
+                  level.disablingAnimation("tutorial", false);
+
+                  const gridPos = level.grid.nucleotideContainer.position;
+
+                  level.activate(
+                    anim.finger(level, {
+                      container: level.entityConfig.container,
+                      from: { x: 562 + gridPos.x, y: 417 + gridPos.y },
+                      to: { x: 321 + gridPos.x, y: 556 + gridPos.y },
+                      duration: 2000,
+                    })
+                  );
                 }),
               }),
-              new level.Hook({
+              new l.Hook({
                 id: "step 2 => step 3",
                 event: "sequenceDown",
                 reset: {
@@ -597,10 +559,44 @@ export const levels = {
                   resetGrid: true,
                   resetSequences: true,
                   forceMatching: true,
+                  disableButton: true,
                   clipCount: 1,
                   sequenceLength: 4,
                   hooks: [
-                    new level.Hook({
+                    new l.Hook({
+                      id: "step 2",
+                      event: "init",
+                      entity: new entity.EntitySequence([
+                        new entity.WaitingEntity(1000),
+                        new entity.FunctionCallEntity(() => {
+                          context.activate(
+                            new popup.TutorialPopup({
+                              title: "PAM!",
+                              content:
+                                "All good CRISPR sequences begin with a PAM.\n\n" +
+                                "Start with the PAM, then draw on the grid to match the virus DNA",
+                              popupOptions: {
+                                id: "popup step 2",
+                                coolDown: 2000,
+                                logo: "images/clip.png",
+                                logoScale: 1.7,
+                                logoPosition: { x: 0, y: -200 },
+                              },
+                            })
+                          );
+                        }),
+                      ]),
+                    }),
+                    new l.Hook({
+                      id: "step 2 unlock",
+                      once: true,
+                      event: "minimizedPopup",
+                      filter: (p) => p.id === "popup step 2",
+                      entity: new entity.FunctionCallEntity(() => {
+                        level.disablingAnimation("tutorial", false);
+                      }),
+                    }),
+                    new l.Hook({
                       id: "step 3 => step 4",
                       event: "sequenceDown",
                       reset: (context) => ({
@@ -615,40 +611,58 @@ export const levels = {
                           [null, null, null, "y"],
                         ],
                         sequences: [["g", "r", "g", "r", "r"]],
-                        presetClips: [
-                          [],
-                          [],
-                          [],
-                          [null, null, null, true],
-                          [],
-                          [],
-                          [],
-                        ],
                         clipCount: 1,
                         sequenceLength: 6,
                         forceMatching: true,
                         disableButton: false,
+                        maxLife: 2,
                         hooks: [
-                          new level.Hook({
+                          new l.Hook({
                             id: "step 4",
-                            event: "init",
                             once: true,
+                            event: "init",
                             entity: new popup.TutorialPopup({
                               title: "Skip button",
                               content:
                                 "Sometimes you’ll get stuck, and you can’t make a matching sequence.\n\nIn that case, press the skip button.",
                               popupOptions: {
+                                id: "popup skip button",
                                 coolDown: 2000,
                                 logo: "images/hud_action_button.png",
                               },
                             }),
                           }),
-                          new level.Hook({
+                          new l.Hook({
+                            id: "step 4 unlock and finger",
+                            once: true,
+                            event: "minimizedPopup",
+                            filter: (p) => p.id === "popup skip button",
+                            delay: 5000,
+                            entity: new entity.FunctionCallEntity(() => {
+                              level.disablingAnimation("tutorial", false);
+
+                              const buttonPos =
+                                level.actionButton.sprite.position;
+
+                              level.activate(
+                                new entity.EntitySequence([
+                                  new entity.WaitingEntity(2000),
+                                  anim.finger(level, {
+                                    container: level.entityConfig.container,
+                                    to: { x: buttonPos.x, y: buttonPos.y },
+                                    duration: 2000,
+                                  }),
+                                ])
+                              );
+                            }),
+                          }),
+                          new l.Hook({
                             id: "step 4.1",
                             event: "infected",
                             once: true,
                             entity: new entity.EntitySequence([
                               new entity.FunctionCallEntity(() => {
+                                context.disablingAnimation("tutorial", true);
                                 context.disablingAnimation(
                                   "preventVirus",
                                   true
@@ -670,11 +684,10 @@ export const levels = {
                                     },
                                   })
                                 );
-                                context.disablingAnimation("tutorial", true);
                               }),
                             ]),
                           }),
-                          new level.Hook({
+                          new l.Hook({
                             id: "step 4.3",
                             event: "closedPopup",
                             filter: (p) => p.id === "popup step 4.1",
@@ -682,9 +695,10 @@ export const levels = {
                               context.disablingAnimation("tutorial", false);
                               context.disablingAnimation("preventVirus", false);
                               context.emitLevelEvent("canReset");
+                              context.wasInfected = false;
                             }),
                           }),
-                          new level.Hook({
+                          new l.Hook({
                             id: "step 4 => step 5",
                             event: "canReset",
                             reset: {
@@ -693,20 +707,25 @@ export const levels = {
                               resetScore: true,
                               resetSequences: true,
                               sequenceLength: 5,
+                              maxLife: 5,
                               clipCount: 3,
                               sequences: null,
-                              presetClips: null,
                               disableScore: false,
                               disableGauge: false,
                               forceMatching: true,
+                              score: {
+                                initial: 0,
+                                max: 2,
+                              },
                               hooks: [
-                                new level.Hook({
+                                new l.Hook({
                                   id: "step 5",
                                   once: true,
                                   event: "init",
                                   entity: new entity.EntitySequence([
                                     new entity.WaitingEntity(1500),
                                     new entity.FunctionCallEntity(() => {
+                                      context.life = 5;
                                       context.disablingAnimation(
                                         "preventVirus",
                                         false
@@ -715,7 +734,8 @@ export const levels = {
                                         new popup.TutorialPopup({
                                           title: "Nice work!",
                                           content:
-                                            "You get points for each sequence you match. The longer the sequence, the more points.\n\nNow try to make 200 points.",
+                                            `You get points for each sequence you match. The longer the sequence, the more points.` +
+                                            `\n\nNow try to kill 2 viruses!`,
                                           popupOptions: {
                                             minimizeOnClose: false,
                                             coolDown: 1000,
