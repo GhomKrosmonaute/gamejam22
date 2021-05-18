@@ -426,7 +426,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   toString(): string {
-    if (this.type === "clip") return "";
+    if (this.type === "clip") return "c";
     switch (this._state) {
       case "inactive":
         return "i";

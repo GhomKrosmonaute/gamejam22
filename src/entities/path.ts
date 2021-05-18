@@ -55,10 +55,6 @@ export class Path extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  get signature(): string {
-    return this.nucleotides.join("");
-  }
-
   /** The real length without cuts */
   get length(): number {
     return this.nucleotides.length;
@@ -410,7 +406,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   toString(reverse = false) {
-    return (reverse ? this.nucleotides.reverse() : this.nucleotides).join(",");
+    return (reverse ? this.nucleotides.reverse() : this.nucleotides).join("");
   }
 
   private _playNote(): void {
