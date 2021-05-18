@@ -315,37 +315,36 @@ export class Nucleotide extends entity.CompositeEntity {
 
       this.emit("stateChanged", newState);
     } else if (this._state === "missing") {
-      if (this._spriteEntity) this._deactivateChildEntity(this._spriteEntity);
-
-      // Create animated sprite
-      this.refreshSprite();
-      this._activateChildEntity(
-        this._spriteEntity,
-        entity.extendConfig({
-          container: this.container,
-        })
-      );
-      this.container.setChildIndex(this.sprite, 0);
-
-      this._activateChildEntity(this._refreshScale());
-
-      this.emit("stateChanged", newState);
-
-      // Trigger "generation" animation
-      const radiusTween = new tween.Tween({
-        obj: this,
-        property: "radius",
-        from: 0,
-        to: this.fullRadius,
-        easing: easing.easeOutBounce,
-        onTeardown: () => {
-          this.emit("stateChanged", newState);
-        },
-      });
-      this._activateChildEntity(radiusTween);
+      this.activateNode();
     }
 
     this._state = newState;
+  }
+
+  public activateNode() {
+    if (this._spriteEntity) this._deactivateChildEntity(this._spriteEntity);
+
+    // Create animated sprite
+    this.refreshSprite();
+    this._activateChildEntity(
+      this._spriteEntity,
+      entity.extendConfig({
+        container: this.container,
+      })
+    );
+    this.container.setChildIndex(this.sprite, 0);
+
+    this._activateChildEntity(this._refreshScale());
+
+    // Trigger "generation" animation
+    const radiusTween = new tween.Tween({
+      obj: this,
+      property: "radius",
+      from: 0,
+      to: this.fullRadius,
+      easing: easing.easeOutBounce,
+    });
+    this._activateChildEntity(radiusTween);
   }
 
   public generateColor() {
@@ -383,7 +382,7 @@ export class Nucleotide extends entity.CompositeEntity {
     } else this.crispyMultiplier = 1;
   }
 
-  private refreshSprite() {
+  public refreshSprite() {
     if (!/portal|clip/.test(this.type)) this.setRandomCrispyMultiplier();
     else this.crispyMultiplier = 1;
 

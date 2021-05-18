@@ -4,6 +4,7 @@
   "description": "Just another Booyah game",
   "main": "",
   "dependencies": {
+    "@types/node": "^15.3.0",
     "booyah": "play-curious/booyah#crispr-crunch",
     "csv-parse": "^4.4.1",
     "del": "^4.1.0",

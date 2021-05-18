@@ -418,7 +418,7 @@ export const levels = {
       variant: "turn",
       minStarNeeded: 1,
       forceMatching: true,
-      gridShape: "medium",
+      gridShape: "test",
       clipCount: 3,
       gaugeRings: [
         (context, ring) =>
@@ -494,15 +494,22 @@ export const levels = {
       var editorGridPortals: grid.GridShapeOptions["portals"] = new Array();
       var editorGridClips: grid.GridShapeOptions["clips"] = new Array();
 
-      var editorDOM: editor.EditorDOM = new editor.EditorDOM();
+      var editorDOM: editor.EditorDOM = new editor.EditorDOM(ctx);
       const gridEditor = new level.Hook({
-        id: "reload grid",
+        id: "update cell",
         event: "clickedNucleotide",
         filter: (nucleotide) => {
           if (typeof editorGridShape === "function") return false;
 
           const pos = ctx.grid.getGridPositionOf(nucleotide);
           const checked = editorDOM.GetRadioChecked();
+
+          var refEditorGridPortals: number | grid.GridShapeOptions["portals"];
+          var refEditorGridClips: number | grid.GridShapeOptions["clips"];
+          // @ts-ignore
+          refEditorGridPortals = reloadHook.options.reset.gridShape.portals;
+          // @ts-ignore
+          refEditorGridClips = reloadHook.options.reset.gridShape.clips;
 
           let posValue: ColorName | "?" | "h";
 
@@ -513,68 +520,115 @@ export const levels = {
             editorDOM.IsFixedPortals() &&
             editorDOM.GetRadioChecked() === "Portal"
           ) {
-            if (typeof editorGridPortals === "number")
-              editorGridPortals = new Array();
-            editorGridPortals.push(pos);
+            if (typeof refEditorGridPortals === "number")
+              refEditorGridPortals = new Array();
+            refEditorGridPortals.push(pos);
           }
 
           if (
             editorDOM.IsFixedClips() &&
             editorDOM.GetRadioChecked() === "Clip"
           ) {
-            if (typeof editorGridClips === "number")
-              editorGridClips = new Array();
-            editorGridClips.push(pos);
+            if (typeof refEditorGridClips === "number")
+              refEditorGridClips = new Array();
+            refEditorGridClips.push(pos);
           }
 
           if (
             !(editorDOM.GetRadioChecked() === "Portal") &&
-            typeof editorGridPortals !== "number"
+            typeof refEditorGridPortals !== "number"
           ) {
             let toRemove: number = -1;
-            editorGridPortals.forEach((elem, index) => {
+            refEditorGridPortals.forEach((elem, index) => {
               if (elem.x === pos.x && elem.y === pos.y) toRemove = index;
             });
-            if (toRemove >= 0) editorGridPortals.splice(toRemove, 1);
+            if (toRemove >= 0) refEditorGridPortals.splice(toRemove, 1);
           }
 
           if (
             !(editorDOM.GetRadioChecked() === "Clip") &&
-            typeof editorGridClips !== "number"
+            typeof refEditorGridClips !== "number"
           ) {
             let toRemove: number = -1;
-            editorGridClips.forEach((elem, index) => {
+            refEditorGridClips.forEach((elem, index) => {
               if (elem.x === pos.x && elem.y === pos.y) toRemove = index;
             });
-            if (toRemove >= 0) editorGridClips.splice(toRemove, 1);
+            if (toRemove >= 0) refEditorGridClips.splice(toRemove, 1);
           }
 
           editorGridShape[pos.y][pos.x] = posValue ? posValue : "?";
+
+          // @ts-ignore
+          reloadHook.options.reset.gridShape.portals = refEditorGridPortals;
+          // @ts-ignore
+          reloadHook.options.reset.gridShape.clips = refEditorGridClips;
+
+          ctx.emitLevelEvent("triggerHook", "reload grid");
+
           return true;
         },
       });
 
-      gridEditor.options.reset = {
+      const reloadHook = new level.Hook({
+        id: "reload grid",
+        event: "triggerHook",
+      });
+      reloadHook.options.filter = (type) => {
+        console.log(type, reloadHook.options.id);
+        if (type !== reloadHook.options.id) return false;
+
+        var refEditorGridPortals: number | grid.GridShapeOptions["portals"];
+        var refEditorGridClips: number | grid.GridShapeOptions["clips"];
+        // @ts-ignore
+        refEditorGridPortals = reloadHook.options.reset.gridShape.portals;
+        // @ts-ignore
+        refEditorGridClips = reloadHook.options.reset.gridShape.clips;
+
+        if (!editorDOM.IsFixedPortals()) {
+          refEditorGridPortals = editorDOM.NumberOfPortals();
+        } else {
+          if (typeof refEditorGridPortals === "number")
+            refEditorGridPortals = new Array();
+        }
+
+        if (!editorDOM.IsFixedClips()) {
+          refEditorGridClips = editorDOM.NumberOfClips();
+        } else {
+          if (typeof refEditorGridClips === "number")
+            refEditorGridClips = new Array();
+        }
+
+        // @ts-ignore
+        reloadHook.options.reset.gridShape.portals = refEditorGridPortals;
+        // @ts-ignore
+        reloadHook.options.reset.gridShape.clips = refEditorGridClips;
+        // @ts-ignore
+        editorDOM.ShowArrays(reloadHook.options.reset.gridShape);
+
+        return true;
+      };
+
+      reloadHook.options.reset = {
         gridShape: {
           shape: editorGridShape,
           clips: editorGridClips,
           portals: editorGridPortals,
         },
         resetGrid: true,
-        hooks: [gridEditor],
+        hooks: [gridEditor, reloadHook],
       };
 
       return {
         variant: "turn",
         minStarNeeded: 3,
         forceMatching: false,
-        gridShape: gridEditor.options.reset.gridShape,
+        gridShape: reloadHook.options.reset.gridShape,
         clipCount: 0,
         sequenceLength: -1,
         disableButton: true,
         disableBonuses: true,
         disableGauge: true,
-        hooks: [gridEditor],
+        hooks: [gridEditor, reloadHook],
       };
     }),
 };

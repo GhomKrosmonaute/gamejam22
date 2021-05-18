@@ -74,6 +74,26 @@ export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
     (y === 0 && (x < 2 || x > 4)) ||
     (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5)),
   hive: (x: number, y: number) => x % 2 !== 0 && y % 2 === 0,
+  test: {
+    shape: [
+      ["?", "?", "?", "?", "?", "?", "?"],
+      ["?", "?", null, "?", null, "?", "?"],
+      ["?", null, null, null, null, null, "?"],
+      ["?", null, null, null, null, null, "?"],
+      ["?", "?", "?", "?", "?", "?", "?"],
+      [null, "?", null, "?", null, "?", null],
+    ],
+    portals: [
+      { x: 3, y: 5 },
+      { x: 0, y: 2 },
+      { x: 3, y: 0 },
+      { x: 6, y: 2 },
+    ],
+    clips: [
+      { x: 3, y: 4 },
+      { x: 3, y: 1 },
+    ],
+  },
 };
 
 export type GridShape =
@@ -234,7 +254,7 @@ export class Grid extends entity.CompositeEntity {
 
   generateShape() {
     this.allNucleotides.length = colCount * rowCount;
-
+    debugger;
     // colors and shape
     const shape = this.level.options.gridShape;
     if (Array.isArray(shape)) {
@@ -257,43 +277,53 @@ export class Grid extends entity.CompositeEntity {
       });
     } else if (typeof shape === "string" || typeof shape === "function") {
       // preset shape
-      for (let x = 0; x < colCount; x++) {
-        for (let y = 0; y < rowCount; y++) {
-          if (x % 2 === 0 && y === rowCount - 1) continue;
-
-          if (shape !== "full") {
-            if (typeof shape === "string") {
-              const resolvedShape = gridShapes[shape];
-              if (typeof resolvedShape === "function") {
+      if (shape !== "full") {
+        if (typeof shape === "string") {
+          const resolvedShape = gridShapes[shape];
+          if (typeof resolvedShape === "function") {
+            for (let x = 0; x < colCount; x++) {
+              for (let y = 0; y < rowCount; y++) {
                 if (resolvedShape(x, y)) continue;
-              } else {
-                const sub = resolvedShape.shape;
-                if (typeof sub === "function") {
+                if (x % 2 === 0 && y === rowCount - 1) continue;
+                this.addNucleotide(x, y);
+              }
+            }
+          } else {
+            const sub = resolvedShape.shape;
+            if (typeof sub === "function") {
+              for (let x = 0; x < colCount; x++) {
+                for (let y = 0; y < rowCount; y++) {
                   if (sub(x, y)) continue;
-                } else {
-                  sub.forEach((row, y) => {
-                    if (row)
-                      row.forEach((col, x) => {
-                        if (!col) return;
-                        if (col === "?" || col === "h") {
-                          this.addNucleotide(x, y);
-                          if (col === "h") {
-                            const n = this.getNucleotideFromGridPosition(
-                              new PIXI.Point(x, y)
-                            );
-                            n.stayMissing = true;
-                          }
-                        } else this.addNucleotide(x, y, col);
-                      });
-                  });
+                  if (x % 2 === 0 && y === rowCount - 1) continue;
+                  this.addNucleotide(x, y);
                 }
               }
-            } else if (typeof shape === "function") {
-              if (shape(x, y)) continue;
+            } else {
+              sub.forEach((row, y) => {
+                if (row)
+                  row.forEach((col, x) => {
+                    if (!col) return;
+                    if (col === "?" || col === "h") {
+                      this.addNucleotide(x, y);
+                      if (col === "h") {
+                        const n = this.getNucleotideFromGridPosition(
+                          new PIXI.Point(x, y)
+                        );
+                        n.stayMissing = true;
+                      }
+                    } else this.addNucleotide(x, y, col);
+                  });
+              });
             }
           }
-
-          this.addNucleotide(x, y);
+        } else if (typeof shape === "function") {
+          for (let x = 0; x < colCount; x++) {
+            for (let y = 0; y < rowCount; y++) {
+              if (shape(x, y)) continue;
+              if (x % 2 === 0 && y === rowCount - 1) continue;
+              this.addNucleotide(x, y);
+            }
+          }
         }
       }
     } else {
@@ -320,6 +350,11 @@ export class Grid extends entity.CompositeEntity {
     this.applyPresetClips();
 
     // finalize
+    this.allNucleotides.forEach((n) => {
+      if (!n) return;
+      if (n.stayMissing) n.state = "missing";
+      else n.state = "present";
+    });
     this.addSpecifics(
       this.allNucleotides,
       this.level.options.portalsCount,
@@ -330,10 +365,8 @@ export class Grid extends entity.CompositeEntity {
       this.level.options.clipCount,
       "clip"
     );
-    this.allNucleotides.forEach((n) => {
-      if (!n) return;
-      if (n.stayMissing) n.state = "missing";
-      else n.state = "present";
+    this.presents.forEach((n) => {
+      n.activateNode();
     });
   }
 
@@ -396,6 +429,10 @@ export class Grid extends entity.CompositeEntity {
     return this.allNucleotides.filter((n) => n !== undefined);
   }
 
+  get presents(): nucleotide.Nucleotide[] {
+    return this.allNucleotides.filter((n) => n.state === "present");
+  }
+
   get clips(): nucleotide.Nucleotide[] {
     return this.allNucleotides.filter((n) => n?.type === "clip");
   }
@@ -410,9 +447,7 @@ export class Grid extends entity.CompositeEntity {
     type: nucleotide.NucleotideType
   ) {
     let countOption: number = null;
-
     const shape = this.level.options.gridShape;
-
     if (typeof shape === "string") {
       if (shape in gridShapes) {
         const resolvableOptions = gridShapes[shape];
@@ -454,7 +489,11 @@ export class Grid extends entity.CompositeEntity {
     if (safe.length === 0) return;
 
     const normals = among.filter(
-      (n) => n && n.type === "normal" && n.state !== "inactive"
+      (n) =>
+        n &&
+        n.type === "normal" &&
+        n.state !== "missing" &&
+        n.state !== "inactive"
     );
     const neededCount =
       (countOption ?? count) - safe.filter((n) => n.type === type).length;

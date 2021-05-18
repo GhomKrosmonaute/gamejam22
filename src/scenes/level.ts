@@ -199,9 +199,9 @@ export interface LevelEvents {
   init: [];
   setup: [];
   canReset: [];
-  trigger: [];
   infected: [];
   fallingDown: [];
+  triggerHook: [type: string];
   virusLeaves: [virus: virus.Virus];
   closedPopup: [popup: popup.Popup];
   minimizedPopup: [popup: popup.Popup];
