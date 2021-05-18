@@ -957,7 +957,6 @@ export class Sequence extends entity.CompositeEntity {
       n.isHighlighted = segment && segment.includes(n);
   }
 
-
   getMatchingSegment(
     options?: SequenceMatchingOptions
   ): nucleotide.Nucleotide[] | null {

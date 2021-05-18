@@ -1230,7 +1230,11 @@ export class Level extends entity.CompositeEntity {
     } else {
       this.setGoButtonText("SKIP");
     }
-    this.sequenceManager.updateHighlighting({ fromLeft: true, partial: true });
+    this.sequenceManager.updateHighlighting(
+      this.options.variant === "zen"
+        ? { fromRight: true, partial: true, reversible: true }
+        : { fromLeft: true, partial: true }
+    );
   }
 
   public fillHoles(): entity.EntitySequence {
