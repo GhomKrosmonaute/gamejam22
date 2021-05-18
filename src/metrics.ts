@@ -12,14 +12,76 @@ const firebaseConfig = {
   measurementId: "G-SYR8CJNSTP",
 };
 
-let analytics: firebase.analytics.Analytics;
+type ConnectionType = "web" | "android" | "ios";
+
 let didInit = false;
+let connectionType: ConnectionType;
+
+// Only set in case of web interface:
+let analytics: firebase.analytics.Analytics;
 let userId: string;
 
 export function init(): void {
   if (didInit) return;
 
-  // Get UUID from storage
+  connectionType = determineConnectionType();
+  console.log("metrics determined connection type", connectionType);
+
+  // Initialize Firebase and set user id
+  establishUserId();
+  if (connectionType === "web") {
+    firebase.initializeApp(firebaseConfig);
+    analytics = firebase.analytics();
+    analytics.setUserId(userId);
+  } else if (connectionType === "android") {
+    (window as any).AnalyticsWebInterface.setUserId(userId);
+  } else if (connectionType === "ios") {
+    // Call iOS interface
+    const message = {
+      command: "setUserId",
+      id: userId,
+    };
+    (window as any).webkit.messageHandlers.firebase.postMessage(message);
+  }
+
+  didInit = true;
+}
+
+export function logEvent(name: string, data?: { [k: string]: any }) {
+  init();
+
+  console.log("logEvent", name, data);
+
+  if (connectionType === "web") {
+    analytics.logEvent(name, data);
+  } else if (connectionType === "android") {
+    (window as any).AnalyticsWebInterface.logEvent(name, JSON.stringify(data));
+  } else if (connectionType === "ios") {
+    const message = {
+      command: "logEvent",
+      name: name,
+      parameters: data,
+    };
+    (window as any).webkit.messageHandlers.firebase.postMessage(message);
+  }
+}
+
+function determineConnectionType(): ConnectionType {
+  const w: any = window;
+  if (w.AnalyticsWebInterface) {
+    return "android";
+  } else if (
+    w.webkit &&
+    w.webkit.messageHandlers &&
+    w.webkit.messageHandlers.firebase
+  ) {
+    return "ios";
+  } else {
+    return "web";
+  }
+}
+
+function establishUserId() {
   if (localStorage.getItem("userId")) {
     userId = localStorage.getItem("userId");
     console.log("Found userId", userId);
@@ -28,18 +90,4 @@ export function init(): void {
     localStorage.setItem("userId", userId);
     console.log("Creating new userId", userId);
   }
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  analytics = firebase.analytics();
-  analytics.setUserId(userId);
-
-  didInit = true;
-}
-
-export function logEvent(name: string, data?: { [k: string]: any }) {
-  init();
-
-  analytics.logEvent(name, data);
-  console.log("logEvent", name, data);
 }
