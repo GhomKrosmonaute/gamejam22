@@ -57,103 +57,103 @@ export const levels = {
   //     };
   //   }),
 
-  Caribbean: () =>
-    new l.Level("Caribbean", (ctx) => ({
-      gridShape: "fourIslands",
-      forceMatching: false,
-      clipCount: 4,
-      sequenceLength: 4,
-      portalsCount: 4,
-      maxLife: 10,
-      crispyBonusRate: 0.6,
-      initialBonuses: [
-        {
-          bonus: (ctx) => ctx.swapBonus,
-          quantity: 2,
-        },
-      ],
-      hooks: [
-        new l.Hook({
-          id: "intro",
-          event: "init",
-          once: true,
-          entity: new entity.FunctionCallEntity(() => {
-            ctx.activate(
-              new popup.TutorialPopup({
-                title: "Land in sight!",
-                content: `Loot the Caribbean treasures, collect at least ${ctx.options.score.max}!`,
-                image: "images/crispy.png",
-                imageHeight: 200,
-                popupOptions: {
-                  minimizeOnClose: false,
-                  coolDown: 2000,
-                },
-              })
-            );
-          }),
-        }),
-      ],
-    })),
+  // Caribbean: () =>
+  //   new l.Level("Caribbean", (ctx) => ({
+  //     gridShape: "fourIslands",
+  //     forceMatching: false,
+  //     clipCount: 4,
+  //     sequenceLength: 4,
+  //     portalsCount: 4,
+  //     maxLife: 10,
+  //     crispyBonusRate: 0.6,
+  //     initialBonuses: [
+  //       {
+  //         bonus: (ctx) => ctx.swapBonus,
+  //         quantity: 2,
+  //       },
+  //     ],
+  //     hooks: [
+  //       new l.Hook({
+  //         id: "intro",
+  //         event: "init",
+  //         once: true,
+  //         entity: new entity.FunctionCallEntity(() => {
+  //           ctx.activate(
+  //             new popup.TutorialPopup({
+  //               title: "Land in sight!",
+  //               content: `Loot the Caribbean treasures, collect at least ${ctx.options.score.max}!`,
+  //               image: "images/crispy.png",
+  //               imageHeight: 200,
+  //               popupOptions: {
+  //                 minimizeOnClose: false,
+  //                 coolDown: 2000,
+  //               },
+  //             })
+  //           );
+  //         }),
+  //       }),
+  //     ],
+  //   })),
 
-  Hive: () =>
-    new l.Level("Hive", (context) => ({
-      gridShape: "hive",
-      maxLife: 3,
-      forceMatching: true,
-      sequenceLength: 8,
-      // canCrunchParts: {
-      //   fromLeft: true,
-      //   possibleParts: [
-      //     {
-      //       glowColor: 0x00ff00,
-      //       length: 4,
-      //     },
-      //     {
-      //       glowColor: 0x00ffff,
-      //       length: 6,
-      //     },
-      //   ],
-      // },
-      portalsCount: 4,
-    })),
+  // Hive: () =>
+  //   new l.Level("Hive", (context) => ({
+  //     gridShape: "hive",
+  //     maxLife: 3,
+  //     forceMatching: true,
+  //     sequenceLength: 8,
+  //     // canCrunchParts: {
+  //     //   fromLeft: true,
+  //     //   possibleParts: [
+  //     //     {
+  //     //       glowColor: 0x00ff00,
+  //     //       length: 4,
+  //     //     },
+  //     //     {
+  //     //       glowColor: 0x00ffff,
+  //     //       length: 6,
+  //     //     },
+  //     //   ],
+  //     // },
+  //     portalsCount: 4,
+  //   })),
 
-  Hole: () =>
-    new l.Level("Hole", (context) => ({
-      gridShape: "hole",
-      // gridCleaning: true,
-      // score: {
-      //   max: () => context.grid.nucleotides.length,
-      //   initial: 0,
-      //   color: crisp.yellowNumber,
-      //   get: () =>
-      //     context.grid.nucleotides.filter((n) => n.state === "inactive").length,
-      //   set: (value) => (context.killedViruses = value),
-      //   show: (value) => String(value) + " crh",
-      // },
-      forceMatching: true,
-    })),
+  // Hole: () =>
+  //   new l.Level("Hole", (context) => ({
+  //     gridShape: "hole",
+  //     // gridCleaning: true,
+  //     // score: {
+  //     //   max: () => context.grid.nucleotides.length,
+  //     //   initial: 0,
+  //     //   color: crisp.yellowNumber,
+  //     //   get: () =>
+  //     //     context.grid.nucleotides.filter((n) => n.state === "inactive").length,
+  //     //   set: (value) => (context.killedViruses = value),
+  //     //   show: (value) => String(value) + " crh",
+  //     // },
+  //     forceMatching: true,
+  //   })),
 
-  "Bow Tie": () =>
-    new l.Level("Bow Tie", (context) => ({
-      gridShape: "bowTie",
-      forceMatching: true,
-    })),
+  // "Bow Tie": () =>
+  //   new l.Level("Bow Tie", (context) => ({
+  //     gridShape: "bowTie",
+  //     forceMatching: true,
+  //   })),
 
-  "Little\nBridge": () =>
-    new l.Level("Little\nBridge", (context) => ({
-      gridShape: "littleBridge",
-      forceMatching: true,
-      portalsCount: 2,
-    })),
+  // "Little\nBridge": () =>
+  //   new l.Level("Little\nBridge", (context) => ({
+  //     gridShape: "littleBridge",
+  //     forceMatching: true,
+  //     portalsCount: 2,
+  //   })),
 
-  "Four\nIslands": () =>
-    new l.Level("Four\nIslands", (context) => ({
-      gridShape: "fourIslands",
-      forceMatching: true,
-      clipCount: 3,
-      sequenceLength: 5,
-      portalsCount: 4,
-    })),
+  // "Four\nIslands": () =>
+  //   new l.Level("Four\nIslands", (context) => ({
+  //     gridShape: "fourIslands",
+  //     forceMatching: true,
+  //     clipCount: 3,
+  //     sequenceLength: 5,
+  //     portalsCount: 4,
+  //   })),
 
   Boss: () =>
     new l.Level("Boss", (context) => ({
@@ -164,7 +164,7 @@ export const levels = {
       sequenceLength: 7,
       forceMatching: true,
       clipCount: 3,
-      portalsCount: 4,
+      // portalsCount: 4,
       gaugeRings: [
         (context) => {
           context.options.dropSpeed = 1.2;
@@ -275,44 +275,44 @@ export const levels = {
   //     ],
   //   }),
 
-  "Chrono\nPortal": () =>
-    new l.Level("Chrono\nPortal", (context) => ({
-      variant: "fall",
-      gridShape: "medium",
-      forceMatching: true,
-      clipCount: 3,
-      portalsCount: 2,
-      gaugeRings: [
-        (context) =>
-          context.bonusesManager.add(
-            context.swapBonus,
-            1,
-            new PIXI.Point(200, -2000)
-          ),
-        (context, ring) =>
-          context.activate(
-            new entity.EntitySequence([
-              new entity.FunctionCallEntity(() => {
-                context.bonusesManager.add(
-                  context.timeBonus,
-                  1,
-                  new PIXI.Point(500, -2000)
-                );
-              }),
-            ])
-          ),
-      ],
-      hooks: [
-        new l.Hook({
-          id: "go title",
-          event: "injectedSequence",
-          entity: new entity.FunctionCallEntity(() => {
-            if (context.isEnded && !context.finished)
-              context.activate(anim.title(context.container, "Go!"));
-          }),
-        }),
-      ],
-    })),
+  // "Chrono\nPortal": () =>
+  //   new l.Level("Chrono\nPortal", (context) => ({
+  //     variant: "fall",
+  //     gridShape: "medium",
+  //     forceMatching: true,
+  //     clipCount: 3,
+  //     portalsCount: 2,
+  //     gaugeRings: [
+  //       (context) =>
+  //         context.bonusesManager.add(
+  //           context.swapBonus,
+  //           1,
+  //           new PIXI.Point(200, -2000)
+  //         ),
+  //       (context, ring) =>
+  //         context.activate(
+  //           new entity.EntitySequence([
+  //             new entity.FunctionCallEntity(() => {
+  //               context.bonusesManager.add(
+  //                 context.timeBonus,
+  //                 1,
+  //                 new PIXI.Point(500, -2000)
+  //               );
+  //             }),
+  //           ])
+  //         ),
+  //     ],
+  //     hooks: [
+  //       new l.Hook({
+  //         id: "go title",
+  //         event: "injectedSequence",
+  //         entity: new entity.FunctionCallEntity(() => {
+  //           if (context.isEnded && !context.finished)
+  //             context.activate(anim.title(context.container, "Go!"));
+  //         }),
+  //       }),
+  //     ],
+  //   })),
 
   Chrono: () =>
     new l.Level("Chrono", (context) => ({
@@ -479,7 +479,7 @@ export const levels = {
       disablingAnimations: ["tutorial"],
       checks: {
         "Crunch a sequence": (context) => context.sequenceWasCrunched,
-        "Reach 200 pts": (context) => context.score >= 200,
+        "Defeat 2 viruses": (context) => context.killedViruses >= 2,
       },
       hooks: [
         new l.Hook({

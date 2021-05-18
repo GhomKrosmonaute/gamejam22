@@ -163,7 +163,7 @@ export abstract class Popup extends entity.CompositeEntity {
           this.entityConfigBackgroundContainer = new PIXI.Container();
 
           if (this.options.withBlackBackground) {
-            if (this.level.variant === "fall" || this.level.name === "Timed") {
+            if (this.level.variant === "fall") {
               const blackBackground = new PIXI.Graphics()
                 .beginFill()
                 .drawRect(0, 0, crispr.width, crispr.height)
