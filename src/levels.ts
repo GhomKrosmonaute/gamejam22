@@ -15,7 +15,6 @@ import * as level from "./scenes/level";
 
 import * as crispr from "./crispr";
 import * as anim from "./animations";
-import { LEVEL } from "../globals";
 import { ColorName, Nucleotide } from "./entities/nucleotide";
 
 export const levels = {
@@ -418,7 +417,7 @@ export const levels = {
       variant: "turn",
       minStarNeeded: 1,
       forceMatching: true,
-      gridShape: "test",
+      gridShape: "medium",
       clipCount: 3,
       gaugeRings: [
         (context, ring) =>

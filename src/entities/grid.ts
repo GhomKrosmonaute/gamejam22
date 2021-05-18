@@ -74,26 +74,6 @@ export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
     (y === 0 && (x < 2 || x > 4)) ||
     (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5)),
   hive: (x: number, y: number) => x % 2 !== 0 && y % 2 === 0,
-  test: {
-    shape: [
-      ["?", "?", "?", "?", "?", "?", "?"],
-      ["?", "?", null, "?", null, "?", "?"],
-      ["?", null, null, null, null, null, "?"],
-      ["?", null, null, null, null, null, "?"],
-      ["?", "?", "?", "?", "?", "?", "?"],
-      [null, "?", null, "?", null, "?", null],
-    ],
-    portals: [
-      { x: 3, y: 5 },
-      { x: 0, y: 2 },
-      { x: 3, y: 0 },
-      { x: 6, y: 2 },
-    ],
-    clips: [
-      { x: 3, y: 4 },
-      { x: 3, y: 1 },
-    ],
-  },
 };
 
 export type GridShape =

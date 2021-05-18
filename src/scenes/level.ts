@@ -22,7 +22,6 @@ import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
 import * as menu from "../scenes/menu";
-import { LEVEL } from "../../globals";
 
 export type LevelVariant = "turn" | "fall" | "zen" | ILevelVariant;
 
