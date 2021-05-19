@@ -16,11 +16,9 @@ import * as virus from "./virus";
 import * as level from "../scenes/level";
 
 export interface SequenceMatchingOptions {
+  sens?: "toRight" | "toLeft";
+  sticky?: "left" | "right" | "borders";
   minLength: number | ((ctx: level.Level) => number);
-  fromLeft?: boolean;
-  fromRight?: boolean;
-  reversible?: boolean;
-  partial?: boolean;
 }
 
 export const sequenceMatchingOptions: {
@@ -28,18 +26,16 @@ export const sequenceMatchingOptions: {
 } = {
   zen: {
     minLength: 3,
-    fromLeft: true,
-    fromRight: true,
-    partial: true,
-    reversible: true,
   },
   fall: {
     minLength: (ctx) => ctx.sequenceManager.first.baseLength,
-    fromLeft: true,
+    sticky: "left",
+    sens: "toRight",
   },
   turn: {
     minLength: (ctx) => ctx.sequenceManager.first.baseLength,
-    fromLeft: true,
+    sticky: "right",
+    sens: "toRight",
   },
 };
 
@@ -864,56 +860,42 @@ export class Sequence extends entity.CompositeEntity {
     const pathSignature = this.level.path.toString();
     const sequenceSignature = this.toString();
 
-    console.table({
-      fn: "validate",
-      path: pathSignature,
-      sequ: sequenceSignature,
-    });
-
     if (pathSignature.length < crispr.scrap(options.minLength, this.level))
       return false;
 
-    let result = false;
+    if (options.sticky !== "borders") {
+      const method = options.sticky
+        ? options.sticky === "left"
+          ? "startsWith"
+          : "endsWith"
+        : "includes";
 
-    if (options.partial) {
-      if (options.fromLeft) {
-        if (options.reversible) {
-          result =
-            sequenceSignature.startsWith(pathSignature) ||
-            sequenceSignature.startsWith(util.reverseString(pathSignature));
+      if (options.sens) {
+        if (options.sens === "toRight") {
+          return sequenceSignature[method](pathSignature);
         } else {
-          result = sequenceSignature.startsWith(pathSignature);
+          return sequenceSignature[method](util.reverseString(pathSignature));
         }
-      }
-
-      if (!result && options.fromRight) {
-        if (options.reversible) {
-          return (
-            sequenceSignature.endsWith(pathSignature) ||
-            sequenceSignature.endsWith(util.reverseString(pathSignature))
-          );
-        } else {
-          return sequenceSignature.endsWith(pathSignature);
-        }
+      } else {
+        return (
+          sequenceSignature[method](pathSignature) ||
+          sequenceSignature[method](util.reverseString(pathSignature))
+        );
       }
     } else {
-      if (options.reversible) {
+      if (options.sens) {
+        if (options.sens === "toRight") {
+          return sequenceSignature === pathSignature;
+        } else {
+          return sequenceSignature === util.reverseString(pathSignature);
+        }
+      } else {
         return (
           sequenceSignature === pathSignature ||
           sequenceSignature === util.reverseString(pathSignature)
         );
-      } else {
-        if (options.fromLeft) {
-          result = sequenceSignature === pathSignature;
-        }
-
-        if (!result && options.fromRight) {
-          return sequenceSignature === util.reverseString(pathSignature);
-        }
       }
     }
-
-    return result;
   }
 
   getMatchingSegment(
@@ -924,76 +906,102 @@ export class Sequence extends entity.CompositeEntity {
     const pathSignature = this.level.path.toString();
     const sequenceSignature = this.toString();
 
-    console.table({
-      fn: "getMatchingSegment",
-      path: pathSignature,
-      sequ: sequenceSignature,
-    });
-
     if (pathSignature.length < crispr.scrap(options.minLength, this.level))
       return null;
 
-    let result: nucleotide.Nucleotide[] | null;
-
-    if (options.partial) {
-      if (options.fromLeft) {
-        if (options.reversible) {
-          const validation =
-            sequenceSignature.startsWith(pathSignature) ||
-            sequenceSignature.startsWith(util.reverseString(pathSignature));
-          result = validation
-            ? this.nucleotides.slice(0, pathSignature.length)
-            : null;
+    if (options.sticky !== "borders") {
+      if (options.sticky) {
+        if (options.sticky === "right") {
+          if (options.sens) {
+            if (options.sens === "toRight") {
+              return sequenceSignature.endsWith(pathSignature)
+                ? this.nucleotides
+                    .slice()
+                    .reverse()
+                    .slice(0, pathSignature.length)
+                : null;
+            } else {
+              return sequenceSignature.endsWith(
+                util.reverseString(pathSignature)
+              )
+                ? this.nucleotides
+                    .slice()
+                    .reverse()
+                    .slice(0, pathSignature.length)
+                : null;
+            }
+          } else {
+            return sequenceSignature.endsWith(pathSignature) ||
+              sequenceSignature.endsWith(util.reverseString(pathSignature))
+              ? this.nucleotides
+                  .slice()
+                  .reverse()
+                  .slice(0, pathSignature.length)
+              : null;
+          }
         } else {
-          result = sequenceSignature.startsWith(pathSignature)
-            ? this.nucleotides.slice(0, pathSignature.length)
-            : null;
+          if (options.sens) {
+            if (options.sens === "toRight") {
+              return sequenceSignature.startsWith(pathSignature)
+                ? this.nucleotides.slice(0, pathSignature.length)
+                : null;
+            } else {
+              return sequenceSignature.startsWith(
+                util.reverseString(pathSignature)
+              )
+                ? this.nucleotides.slice(0, pathSignature.length)
+                : null;
+            }
+          } else {
+            return sequenceSignature.startsWith(pathSignature) ||
+              sequenceSignature.startsWith(util.reverseString(pathSignature))
+              ? this.nucleotides.slice(0, pathSignature.length)
+              : null;
+          }
         }
-      }
-
-      if (!result && options.fromRight) {
-        if (options.reversible) {
-          const validation =
-            sequenceSignature.endsWith(pathSignature) ||
-            sequenceSignature.endsWith(util.reverseString(pathSignature));
-          result = validation
-            ? this.nucleotides
-                .slice()
-                .reverse()
-                .slice(0, pathSignature.length)
-                .reverse()
+      } else {
+        // partial
+        if (options.sens) {
+          let index: number;
+          if (options.sens === "toRight") {
+            index = sequenceSignature.indexOf(pathSignature);
+          } else {
+            index = sequenceSignature.indexOf(
+              util.reverseString(pathSignature)
+            );
+          }
+          return index > -1
+            ? this.nucleotides.slice(index, index + pathSignature.length)
             : null;
         } else {
-          result = sequenceSignature.endsWith(pathSignature)
-            ? this.nucleotides
-                .slice()
-                .reverse()
-                .slice(0, pathSignature.length)
-                .reverse()
+          let index = sequenceSignature.indexOf(pathSignature);
+          if (index === -1) {
+            index = sequenceSignature.indexOf(
+              util.reverseString(pathSignature)
+            );
+          }
+          return index > -1
+            ? this.nucleotides.slice(index, index + pathSignature.length)
             : null;
         }
       }
     } else {
-      if (options.reversible) {
-        return sequenceSignature === pathSignature ||
-          sequenceSignature === util.reverseString(pathSignature)
-          ? this.nucleotides
-          : null;
-      } else {
-        if (options.fromLeft) {
-          result =
-            sequenceSignature === pathSignature ? this.nucleotides : null;
-        }
-
-        if (!result && options.fromRight) {
+      // full
+      if (options.sens) {
+        if (options.sens === "toRight") {
+          return sequenceSignature === pathSignature ? this.nucleotides : null;
+        } else {
           return sequenceSignature === util.reverseString(pathSignature)
             ? this.nucleotides
             : null;
         }
+      } else {
+        return sequenceSignature === pathSignature ||
+          sequenceSignature === util.reverseString(pathSignature)
+          ? this.nucleotides
+          : null;
       }
     }
-
-    return result;
   }
 
   /**
@@ -1022,7 +1030,7 @@ export class Sequence extends entity.CompositeEntity {
     const segment = this.getMatchingSegment({
       ...options,
       minLength: 1,
-      partial: true,
+      sticky: undefined,
     });
 
     for (const n of this.nucleotides)
