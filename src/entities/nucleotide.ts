@@ -27,7 +27,7 @@ export const fullColorNames: { [k in ColorName]: string } = {
   r: "red",
   g: "green",
   y: "yellow",
-  "?": "random"
+  "?": "random",
 };
 
 /**
@@ -71,7 +71,7 @@ export class Nucleotide extends entity.CompositeEntity {
     super();
     this.position = position.clone();
     this._radius = fullRadius;
-    if(this.colorName === "?") this.colorName = getRandomColorName()
+    if (this.colorName === "?") this.colorName = getRandomColorName();
   }
 
   get level(): level.Level {

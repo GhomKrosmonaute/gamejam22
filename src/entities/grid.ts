@@ -128,7 +128,7 @@ export class Grid extends entity.CompositeEntity {
     this.generateShape();
 
     this._on(this, "pointerup", () => {
-      if (this.level.options.variant !== "zen") {
+      if (this.level.options.crunchOnPointerUp) {
         const crunch = this.level.attemptCrunch();
         if (crunch) this._activateChildEntity(crunch);
       }
@@ -214,7 +214,7 @@ export class Grid extends entity.CompositeEntity {
 
   generateShape() {
     this.allNucleotides.length = colCount * rowCount;
-    
+
     // colors and shape
     const shape = this.level.options.gridShape;
     if (Array.isArray(shape)) {
@@ -223,11 +223,7 @@ export class Grid extends entity.CompositeEntity {
         if (row)
           row.forEach((col, x) => {
             if (col) {
-              this.addNucleotide(
-                x,
-                y,
-                col
-              );
+              this.addNucleotide(x, y, col);
             }
           });
       });
@@ -258,11 +254,7 @@ export class Grid extends entity.CompositeEntity {
               if (row)
                 row.forEach((col, x) => {
                   if (!col) return;
-                  this.addNucleotide(
-                    x,
-                    y,
-                    col
-                  );
+                  this.addNucleotide(x, y, col);
                 });
             });
           }
@@ -276,21 +268,17 @@ export class Grid extends entity.CompositeEntity {
           }
         }
       } else {
-      const sub = shape.shape;
-      if (typeof sub === "function") return;
-      sub.forEach((row, y) => {
-        if (row)
-          row.forEach((col, x) => {
-            if (!col) return;
-            this.addNucleotide(
-              x,
-              y,
-              col
-            );
-          });
-      });
+        const sub = shape.shape;
+        if (typeof sub === "function") return;
+        sub.forEach((row, y) => {
+          if (row)
+            row.forEach((col, x) => {
+              if (!col) return;
+              this.addNucleotide(x, y, col);
+            });
+        });
+      }
     }
-  }
 
     // finalize
     this.addSpecifics(
