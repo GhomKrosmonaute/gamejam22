@@ -142,7 +142,7 @@ export class SwapBonus extends Bonus {
   }
 
   swap(a: nucleotide.Nucleotide, b: nucleotide.Nucleotide) {
-    if (a.colorName === b.colorName && a.type === b.type && a.state === b.state)
+    if (a.colorName === b.colorName && a.type === b.type && a.state === b.state && a.crispyMultiplier === b.crispyMultiplier)
       return this.abort();
 
     if (a.type === "portal" || b.type === "portal") return this.abort();
