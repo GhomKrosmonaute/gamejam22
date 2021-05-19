@@ -214,7 +214,7 @@ export class Grid extends entity.CompositeEntity {
 
   generateShape() {
     this.allNucleotides.length = colCount * rowCount;
-
+    
     // colors and shape
     const shape = this.level.options.gridShape;
     if (Array.isArray(shape)) {
@@ -223,15 +223,7 @@ export class Grid extends entity.CompositeEntity {
         if (row)
           row.forEach((col, x) => {
             if (col) {
-              /*if (col === "?" || col === "h") {
-                this.addNucleotide(x, y);
-                if (col === "h") {
-                  const n = this.getNucleotideFromGridPosition(
-                    new PIXI.Point(x, y)
-                  );
-                  n.stayMissing = true;
-                }
-              } else */ this.addNucleotide(
+              this.addNucleotide(
                 x,
                 y,
                 col
@@ -239,7 +231,7 @@ export class Grid extends entity.CompositeEntity {
             }
           });
       });
-    } else if (typeof shape === "string" || typeof shape === "function") {
+    } else {
       // preset shape
       if (typeof shape === "string") {
         const resolvedShape = gridShapes[shape];
@@ -266,15 +258,7 @@ export class Grid extends entity.CompositeEntity {
               if (row)
                 row.forEach((col, x) => {
                   if (!col) return;
-                  /*if (col === "?" || col === "h") {
-                    this.addNucleotide(x, y);
-                    if (col === "h") {
-                      const n = this.getNucleotideFromGridPosition(
-                        new PIXI.Point(x, y)
-                      );
-                      n.stayMissing = true;
-                    }
-                  } else */ this.addNucleotide(
+                  this.addNucleotide(
                     x,
                     y,
                     col
@@ -291,23 +275,14 @@ export class Grid extends entity.CompositeEntity {
             this.addNucleotide(x, y);
           }
         }
-      }
-    } else {
+      } else {
       const sub = shape.shape;
       if (typeof sub === "function") return;
       sub.forEach((row, y) => {
         if (row)
           row.forEach((col, x) => {
             if (!col) return;
-            /*if (col === "?" || col === "h") {
-              this.addNucleotide(x, y);
-              if (col === "h") {
-                const n = this.getNucleotideFromGridPosition(
-                  new PIXI.Point(x, y)
-                );
-                n.stayMissing = true;
-              }
-            } else */ this.addNucleotide(
+            this.addNucleotide(
               x,
               y,
               col
@@ -315,6 +290,7 @@ export class Grid extends entity.CompositeEntity {
           });
       });
     }
+  }
 
     // finalize
     this.addSpecifics(
@@ -330,7 +306,6 @@ export class Grid extends entity.CompositeEntity {
       );
     this.allNucleotides.forEach((n) => {
       if (!n) return;
-      //if (n.stayMissing) n.state = "missing";
       else n.state = "present";
     });
   }
