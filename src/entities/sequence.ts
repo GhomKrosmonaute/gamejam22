@@ -857,8 +857,17 @@ export class Sequence extends entity.CompositeEntity {
       this.level.variant
     ]
   ): boolean {
-    const pathSignature = this.level.path.toString();
-    const sequenceSignature = this.toString();
+    let pathSignature = this.level.path.toString();
+    let sequenceSignature = this.toString();
+
+    for(let i=0; i < pathSignature.length && i < sequenceSignature.length; i++){
+      if(pathSignature[i] === "*") {
+        sequenceSignature = sequenceSignature.substring(0, i) + "*" + sequenceSignature.substring(i+1);
+      }
+      else if(sequenceSignature[i] === "*") {
+        pathSignature = pathSignature.substring(0, i) + "*" + pathSignature.substring(i+1);
+      }
+    }
 
     if (pathSignature.length < crispr.scrap(options.minLength, this.level))
       return false;
@@ -903,8 +912,17 @@ export class Sequence extends entity.CompositeEntity {
       this.level.variant
     ]
   ): nucleotide.Nucleotide[] | null {
-    const pathSignature = this.level.path.toString();
-    const sequenceSignature = this.toString();
+    let pathSignature = this.level.path.toString();
+    let sequenceSignature = this.toString();
+
+    for(let i=0; i < pathSignature.length && i < sequenceSignature.length; i++){
+      if(pathSignature[i] === "*") {
+        sequenceSignature = sequenceSignature.substring(0, i) + "*" + sequenceSignature.substring(i+1);
+      }
+      else if(sequenceSignature[i] === "*") {
+        pathSignature = pathSignature.substring(0, i) + "*" + pathSignature.substring(i+1);
+      }
+    }
 
     if (pathSignature.length < crispr.scrap(options.minLength, this.level))
       return null;
