@@ -16,7 +16,7 @@ export type NucleotideState = "missing" | "present" | "inactive";
 export type NucleotideType = "clip" | "normal" | "portal";
 
 // TODO: Use string enum here?
-export type ColorName = "b" | "r" | "g" | "y";
+export type ColorName = "b" | "r" | "g" | "y" | "?";
 export const colorNames: ColorName[] = ["b", "r", "g", "y"];
 export function getRandomColorName(): ColorName {
   return colorNames[Math.floor(Math.random() * colorNames.length)];
@@ -27,6 +27,7 @@ export const fullColorNames: { [k in ColorName]: string } = {
   r: "red",
   g: "green",
   y: "yellow",
+  "?": "random"
 };
 
 /**
@@ -68,9 +69,9 @@ export class Nucleotide extends entity.CompositeEntity {
     public colorName: ColorName = getRandomColorName()
   ) {
     super();
-
     this.position = position.clone();
     this._radius = fullRadius;
+    if(this.colorName === "?") this.colorName = getRandomColorName()
   }
 
   get level(): level.Level {
