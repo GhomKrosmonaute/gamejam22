@@ -438,6 +438,8 @@ export class Path extends entity.CompositeEntity {
       sound = "tile_blue";
     } else if (lastNucleotide.colorName === "y") {
       sound = "tile_yellow";
+    } else {
+      sound = "score_ring";
     }
     this._entityConfig.fxMachine.play(sound);
   }

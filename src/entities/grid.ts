@@ -30,6 +30,7 @@ export type GridArrowShape = (x: number, y: number) => boolean;
 export interface GridShapeOptions {
   portals?: PIXI.IPointData[] | number;
   clips?: PIXI.IPointData[] | number;
+  jokers?: PIXI.IPointData[] | number;
   shape: GridPreset<nucleotide.ColorName> | GridArrowShape;
 }
 
@@ -152,15 +153,17 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides = [];
   }
 
-  get shape(): (nucleotide.ColorName | "c")[][] {
-    const shape: (nucleotide.ColorName | "c")[][] = [];
+  get shape(): (nucleotide.ColorName | "c" | "p")[][] {
+    const shape: (nucleotide.ColorName | "c" | "p")[][] = [];
     for (let y = 0; y < colCount; y++) {
       shape.push([]);
       for (let x = 0; x < rowCount; x++) {
         const n = this.getNucleotideFromGridPosition(new PIXI.Point(x, y));
         if (n) {
-          if (n.type === "normal") {
+          if (n.type === "normal" || n.type === "joker") {
             shape[y][x] = n.colorName;
+          } else if (n.type === "portal") {
+            shape[y][x] = "p";
           } else {
             shape[y][x] = "c";
           }
@@ -202,7 +205,7 @@ export class Grid extends entity.CompositeEntity {
     n.floating.active.y = true;
     n.floating.speed.set(1.4, 2);
     n.floating.amplitude.set(0.3, 0.3);
-    n.type = "normal";
+    n.type = color === "*" ? "joker" : "normal";
     this._activateChildEntity(
       n,
       entity.extendConfig({
@@ -391,7 +394,8 @@ export class Grid extends entity.CompositeEntity {
         const resolvableOptions = gridShapes[shape];
 
         if (typeof resolvableOptions !== "function") {
-          const val = resolvableOptions[(type + "s") as "portals" | "clips"];
+          const val =
+            resolvableOptions[(type + "s") as "portals" | "clips" | "jokers"];
 
           if (val !== undefined) {
             if (typeof val === "number") {
@@ -401,7 +405,10 @@ export class Grid extends entity.CompositeEntity {
                 const n = this.getNucleotideFromGridPosition(
                   new PIXI.Point(x, y)
                 );
-                if (n) n.type = type;
+                if (n) {
+                  n.type = type;
+                  if (type === "joker") n.colorName = "*";
+                }
               });
             }
           }

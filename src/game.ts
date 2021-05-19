@@ -127,6 +127,7 @@ const graphicalAssets = [
   "images/cellule_background.png",
 
   // animated sprites
+  "images/nucleotide_joker.json",
   "images/nucleotide_red.json",
   "images/nucleotide_blue.json",
   "images/nucleotide_green.json",
