@@ -16,7 +16,7 @@ export type NucleotideState = "missing" | "present" | "inactive";
 export type NucleotideType = "clip" | "normal" | "portal" | "joker";
 
 // TODO: Use string enum here?
-export type ColorName = "b" | "r" | "g" | "y" | "*";
+export type ColorName = "b" | "r" | "g" | "y" | "?" | "*";
 export const colorNames: ColorName[] = ["b", "r", "g", "y", "*"];
 export function getRandomColorName(): ColorName {
   return colorNames[Math.floor(Math.random() * colorNames.length)];
@@ -28,6 +28,7 @@ export const fullColorNames: { [k in ColorName]: string } = {
   g: "green",
   y: "yellow",
   "*": "joker",
+  "?": "random"
 };
 
 /**
@@ -69,9 +70,9 @@ export class Nucleotide extends entity.CompositeEntity {
     public colorName: ColorName = getRandomColorName()
   ) {
     super();
-
     this.position = position.clone();
     this._radius = fullRadius;
+    if(this.colorName === "?") this.colorName = getRandomColorName()
   }
 
   get level(): level.Level {
@@ -438,7 +439,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   toString(): string {
-    if (this.type === "clip") return "";
+    if (this.type === "clip") return "c";
     switch (this._state) {
       case "inactive":
         return "i";
@@ -475,7 +476,7 @@ export class Nucleotide extends entity.CompositeEntity {
     const disablingAnimation = "nucleotide._refreshScale" + this.id;
 
     if (this.level.disablingAnimations.has(disablingAnimation)) {
-      return new entity.NullEntity();
+      return new entity.TransitoryEntity();
     }
 
     // Native sprite size is 136 x 129 px

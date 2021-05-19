@@ -35,9 +35,9 @@ export interface GridShapeOptions {
 }
 
 export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
-  mini: (x: number, y: number) =>
-    x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0),
-  medium: (x: number, y: number) =>
+  full: () => false,
+  mini: (x, y) => x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0),
+  medium: (x, y) =>
     x < 1 ||
     x > 5 ||
     y < 1 ||
@@ -52,31 +52,30 @@ export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
       { x: 1, y: 5 },
       { x: 5, y: 5 },
     ],
-    shape: (x: number, y: number) =>
+    shape: (x, y) =>
       (x > 2 || y < 4 || y > 6) &&
       (x < 4 || y < 4 || y > 6) &&
       (x > 2 || y > 2 || (y === 2 && (x === 0 || x === 2))) &&
       (x < 4 || y > 2 || (y === 2 && (x === 4 || x === 6))),
   },
-  littleBridge: (x: number, y: number) =>
+  littleBridge: (x, y) =>
     (x > 2 || y < 1 || y > 5 || (y === 5 && (x === 0 || x === 2))) &&
     (x !== 3 || y !== 3) &&
     (x < 4 || y < 1 || y > 5 || (y === 5 && (x === 4 || x === 6))),
-  bowTie: (x: number, y: number) =>
+  bowTie: (x, y) =>
     y < 1 ||
     y > 4 ||
     (y === 4 && x > 1 && x < 5) ||
     (y === 1 && x > 0 && x < 6) ||
     (x === 3 && y === 2),
-  hole: (x: number, y: number) =>
+  hole: (x, y) =>
     (x > 1 && x < 5 && y > 1 && y < 5 && !(y === 4 && (x === 2 || x === 4))) ||
     (y === 0 && (x < 2 || x > 4)) ||
     (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5)),
-  hive: (x: number, y: number) => x % 2 !== 0 && y % 2 === 0,
+  hive: (x, y) => x % 2 !== 0 && y % 2 === 0,
 };
 
 export type GridShape =
-  | "full"
   | GridPreset<nucleotide.ColorName>
   | GridArrowShape
   | GridShapeOptions;
@@ -218,7 +217,7 @@ export class Grid extends entity.CompositeEntity {
 
   generateShape() {
     this.allNucleotides.length = colCount * rowCount;
-
+    
     // colors and shape
     const shape = this.level.options.gridShape;
     if (Array.isArray(shape)) {
@@ -226,42 +225,75 @@ export class Grid extends entity.CompositeEntity {
       shape.forEach((row, y) => {
         if (row)
           row.forEach((col, x) => {
-            if (col) this.addNucleotide(x, y, col);
+            if (col) {
+              this.addNucleotide(
+                x,
+                y,
+                col
+              );
+            }
           });
       });
     } else {
       // preset shape
-      for (let x = 0; x < colCount; x++) {
-        for (let y = 0; y < rowCount; y++) {
-          if (x % 2 === 0 && y === rowCount - 1) continue;
-
-          if (shape !== "full") {
-            if (typeof shape === "string") {
-              const resolvedShape = gridShapes[shape];
-              if (typeof resolvedShape === "function") {
-                if (resolvedShape(x, y)) continue;
-              } else {
-                const sub = resolvedShape.shape;
-                if (typeof sub === "function") {
-                  if (sub(x, y)) continue;
-                } else {
-                  sub.forEach((row, y) => {
-                    if (row)
-                      row.forEach((col, x) => {
-                        if (col) this.addNucleotide(x, y, col);
-                      });
-                  });
-                }
-              }
-            } else if (typeof shape === "function") {
-              if (shape(x, y)) continue;
+      if (typeof shape === "string") {
+        const resolvedShape = gridShapes[shape];
+        if (typeof resolvedShape === "function") {
+          for (let x = 0; x < colCount; x++) {
+            for (let y = 0; y < rowCount; y++) {
+              if (resolvedShape(x, y)) continue;
+              if (x % 2 === 0 && y === rowCount - 1) continue;
+              this.addNucleotide(x, y);
             }
           }
-
-          this.addNucleotide(x, y);
+        } else {
+          const sub = resolvedShape.shape;
+          if (typeof sub === "function") {
+            for (let x = 0; x < colCount; x++) {
+              for (let y = 0; y < rowCount; y++) {
+                if (sub(x, y)) continue;
+                if (x % 2 === 0 && y === rowCount - 1) continue;
+                this.addNucleotide(x, y);
+              }
+            }
+          } else {
+            sub.forEach((row, y) => {
+              if (row)
+                row.forEach((col, x) => {
+                  if (!col) return;
+                  this.addNucleotide(
+                    x,
+                    y,
+                    col
+                  );
+                });
+            });
+          }
         }
-      }
+      } else if (typeof shape === "function") {
+        for (let x = 0; x < colCount; x++) {
+          for (let y = 0; y < rowCount; y++) {
+            if (shape(x, y)) continue;
+            if (x % 2 === 0 && y === rowCount - 1) continue;
+            this.addNucleotide(x, y);
+          }
+        }
+      } else {
+      const sub = shape.shape;
+      if (typeof sub === "function") return;
+      sub.forEach((row, y) => {
+        if (row)
+          row.forEach((col, x) => {
+            if (!col) return;
+            this.addNucleotide(
+              x,
+              y,
+              col
+            );
+          });
+      });
     }
+  }
 
     // finalize
     this.addSpecifics(
@@ -269,17 +301,16 @@ export class Grid extends entity.CompositeEntity {
       this.level.options.portalsCount,
       "portal"
     );
-    this.addSpecifics(
-      this.allNucleotides,
-      this.level.options.clipCount,
-      "clip"
-    );
-    this.addSpecifics(
-      this.allNucleotides,
-      this.level.options.jokerCount,
-      "joker"
-    );
-    this.allNucleotides.forEach((n) => (n ? (n.state = "present") : null));
+    if (!this.level.options.disableClips)
+      this.addSpecifics(
+        this.allNucleotides,
+        this.level.options.clipCount,
+        "clip"
+      );
+    this.allNucleotides.forEach((n) => {
+      if (!n) return;
+      else n.state = "present";
+    });
   }
 
   reset() {
@@ -440,7 +471,9 @@ export class Grid extends entity.CompositeEntity {
 
     while (output === null) {
       const island = crispr.random(
-        islands.filter((island) => island.some((n) => n.type === "clip"))
+        this.level.options.disableClips
+          ? islands
+          : islands.filter((island) => island.some((n) => n.type === "clip"))
       );
 
       if (!island) continue;
@@ -472,7 +505,13 @@ export class Grid extends entity.CompositeEntity {
       if (normals.length < length) length = normals.length;
 
       // chose an entry point
-      addAndFocus(crispr.random(island.filter((n) => is(n, "clip"))));
+      addAndFocus(
+        crispr.random(
+          island.filter((n) => {
+            return is(n, "clip", this.level.options.disableClips);
+          })
+        )
+      );
 
       // while path is not full
       while (true) {
@@ -512,7 +551,7 @@ export class Grid extends entity.CompositeEntity {
           // if path is full
           if (passed.colors.length >= length) {
             if (
-              this.level.options.clipCount === 0 ||
+              this.level.options.disableClips ||
               passed.nucleotides.filter((n) => is(n, "clip")).length > 0
             ) {
               // return it
@@ -657,7 +696,10 @@ export class Grid extends entity.CompositeEntity {
     }
 
     this.addSpecifics(oldHoles, this.level.options.portalsCount, "portal");
-    (() => this.addSpecifics(oldHoles, this.level.options.clipCount, "clip"))();
+    (() => {
+      if (!this.level.options.disableClips)
+        this.addSpecifics(oldHoles, this.level.options.clipCount, "clip");
+    })();
     // this.refresh();
   }
 
@@ -682,7 +724,10 @@ export class Grid extends entity.CompositeEntity {
       this.generateNucleotide(nucleotide);
     }
     this.addSpecifics(holes, this.level.options.portalsCount, "portal");
-    (() => this.addSpecifics(holes, this.level.options.clipCount, "clip"))();
+    (() => {
+      if (!this.level.options.disableClips)
+        this.addSpecifics(holes, this.level.options.clipCount, "clip");
+    })();
 
     holes.forEach((n) => (n.state = "present"));
 

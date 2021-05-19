@@ -406,11 +406,10 @@ export class ActionButton extends entity.CompositeEntity {
     this.sprite.position.copyFrom(this.disabledSprite.position);
 
     this._on(this.sprite, "pointertap", () => {
-      if (this.level.bonusesManager.selected) {
+      if (this.level.bonusesManager?.selected) {
         this.level.bonusesManager.selected.abort();
       }
-      const go = this.press();
-      if (go) this._activateChildEntity(go);
+      this._activateChildEntity(this.press());
     });
 
     this.container.addChild(this.sprite);
@@ -447,10 +446,6 @@ export class ActionButton extends entity.CompositeEntity {
   }
 
   private press(): entity.Entity {
-    if (typeof this.level.options.variant === "object") {
-      return this.level.options.variant.onActionButtonPressed?.(this.level);
-    }
-
     if (this.level.isDisablingAnimationInProgress) {
       return anim.tweenShaking(this.sprite, 300, 6);
     }

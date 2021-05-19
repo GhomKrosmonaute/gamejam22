@@ -42,8 +42,8 @@ export class Path extends entity.CompositeEntity {
     );
 
     this._on(this, "updated", () => {
-      this.level.emitLevelEvent("pathUpdated");
       this.refresh();
+      this.level.emitLevelEvent("pathUpdated");
     });
   }
 
@@ -53,10 +53,6 @@ export class Path extends entity.CompositeEntity {
 
   get level(): level.Level {
     return this._entityConfig.level;
-  }
-
-  get signature(): string {
-    return this.nucleotides.join("");
   }
 
   /** The real length without cuts */
@@ -101,12 +97,18 @@ export class Path extends entity.CompositeEntity {
 
     // check the cancellation & cancel to previous nucleotide
     const index = this.items.indexOf(n);
+
+    // if click in start of existing path
     if (index === 0) {
       // Clear path
       this.items = [];
+
+      // if click in existing path
     } else if (index > -1) {
       // Return to previous step in the path
       this.items = this.items.slice(0, index + 1);
+
+      // else
     } else {
       // Try adding to the path
       if (this.add(n)) return true;
@@ -124,9 +126,11 @@ export class Path extends entity.CompositeEntity {
     if (this.level.isDisablingAnimationInProgress) return false;
 
     // add clips on first position
-    if (this.first && this.first.type !== "clip") {
-      this.remove();
-      return false;
+    if (!this.level.options.disableClips) {
+      if (this.first && this.first.type !== "clip") {
+        this.remove();
+        return false;
+      }
     }
 
     // Ignore clips
@@ -410,7 +414,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   toString(reverse = false) {
-    return (reverse ? this.nucleotides.reverse() : this.nucleotides).join(",");
+    return (reverse ? this.nucleotides.reverse() : this.nucleotides).join("");
   }
 
   private _playNote(): void {
