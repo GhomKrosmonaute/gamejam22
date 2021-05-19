@@ -25,6 +25,19 @@ import * as menu from "../scenes/menu";
 
 export type LevelVariant = "turn" | "fall" | "zen";
 
+export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
+  zen: {
+    disableBonuses: true,
+    remainingMoves: true,
+    crunchOnPointerUp: false,
+    actionButtonSprite: "images/hud_action_button_crunch.png",
+  },
+  turn: {},
+  fall: {
+    falling: true,
+  },
+};
+
 export const baseDropSpeed = 0.001;
 
 export interface LevelResults {
@@ -53,15 +66,20 @@ export interface LevelOptions {
   disableExtraSequence: boolean;
   disableBonuses: boolean;
   disableButton: boolean;
+  disableJoker: boolean;
   disableGauge: boolean;
   disableScore: boolean;
   disableClips: boolean;
   gridCleaning: boolean;
   retryOnFail: boolean;
   infection: boolean;
+  falling: boolean;
+  remainingMoves: boolean;
+  crunchOnPointerUp: boolean;
   displayTurnTitles: boolean;
   variant: LevelVariant;
   virus: virus.VirusType;
+  actionButtonSprite: string;
   maxLife: number;
   crispyBonusRate: number;
   score: Partial<ScoreOptions>;
@@ -155,6 +173,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   gridCleaning: false,
   disablingAnimations: [],
   disableExtraSequence: false,
+  disableJoker: true,
   disableBonuses: false,
   disableButton: false,
   disableGauge: false,
@@ -162,6 +181,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableClips: false,
   retryOnFail: true,
   infection: true,
+  falling: false,
+  remainingMoves: false,
+  crunchOnPointerUp: true,
   displayTurnTitles: true,
   variant: "turn",
   virus: "mini",
@@ -178,7 +200,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
 
   clipCount: 4,
   portalsCount: 0,
-  jokerCount: 1,
+  jokerCount: 0,
+
+  actionButtonSprite: "images/hud_action_button.png",
 
   nucleotideRadius: crispr.width / 13.44,
   sequenceNucleotideRadius: crispr.width * 0.04,
@@ -382,7 +406,7 @@ export class Level extends entity.CompositeEntity {
   public path: path.Path;
   public grid: grid.Grid;
   public actionButton: hud.ActionButton;
-  public zenMovesIndicator: hud.ZenMovesIndicator;
+  public remainingMovesIndicator: hud.RemainingMovesIndicator;
   public menu: menu.Menu;
 
   // screen shake
@@ -427,11 +451,18 @@ export class Level extends entity.CompositeEntity {
       typeof optionsResolvable === "function"
         ? optionsResolvable(this)
         : optionsResolvable;
-    this.options = util.fillInOptions(options, defaultLevelOptions);
-    this.options.score = util.fillInOptions(
-      this.options.score,
-      defaultScoreOptions
-    );
+
+    this.options = {
+      ...defaultLevelOptions,
+      ...levelVariants[options.variant],
+      ...options,
+    };
+
+    this.options.score = {
+      ...defaultScoreOptions,
+      ...this.options.score,
+    };
+
     this.options.score.set(this.options.score.initial, this);
 
     // @ts-ignore
@@ -600,7 +631,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initBonuses() {
-    if (this.options.disableBonuses || this.options.variant === "zen") return;
+    if (this.options.disableBonuses) return;
     this.bonusesManager = new bonuses.BonusesManager(
       this.options.initialBonuses
     );
@@ -614,22 +645,22 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _disableBonuses() {
-    if (this.options.disableBonuses || this.options.variant === "zen") return;
+    if (this.options.disableBonuses) return;
 
     this._deactivateChildEntity(this.bonusesManager);
     this.bonusesManager = null;
   }
 
-  private _initZenMoves() {
-    if (this.options.variant !== "zen") return;
-    this.zenMovesIndicator = new hud.ZenMovesIndicator();
-    this._activateChildEntity(this.zenMovesIndicator, this.config);
+  private _initRemainingMoves() {
+    if (!this.options.remainingMoves) return;
+    this.remainingMovesIndicator = new hud.RemainingMovesIndicator();
+    this._activateChildEntity(this.remainingMovesIndicator, this.config);
   }
 
-  private _disableZenMoves() {
-    if (this.options.variant !== "zen") return;
-    this._deactivateChildEntity(this.zenMovesIndicator);
-    this.zenMovesIndicator = null;
+  private _disableRemainingMoves() {
+    if (!this.options.remainingMoves) return;
+    this._deactivateChildEntity(this.remainingMovesIndicator);
+    this.remainingMovesIndicator = null;
   }
 
   private _initGauge() {
@@ -713,7 +744,7 @@ export class Level extends entity.CompositeEntity {
 
       // remove a zen move
       this.onLevelEvent("pathCrunched", () => {
-        this.zenMovesIndicator.removeOne();
+        this.remainingMovesIndicator.removeOne();
       });
     }
 
@@ -764,7 +795,7 @@ export class Level extends entity.CompositeEntity {
     this.isInit = true;
 
     this._initLife();
-    this._initZenMoves();
+    this._initRemainingMoves();
     this._initGrid();
     this._initPath();
     this._initHairs();

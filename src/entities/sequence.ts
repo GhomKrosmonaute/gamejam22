@@ -860,12 +860,19 @@ export class Sequence extends entity.CompositeEntity {
     let pathSignature = this.level.path.toString();
     let sequenceSignature = this.toString();
 
-    for(let i=0; i < pathSignature.length && i < sequenceSignature.length; i++){
-      if(pathSignature[i] === "*") {
-        sequenceSignature = sequenceSignature.substring(0, i) + "*" + sequenceSignature.substring(i+1);
-      }
-      else if(sequenceSignature[i] === "*") {
-        pathSignature = pathSignature.substring(0, i) + "*" + pathSignature.substring(i+1);
+    for (
+      let i = 0;
+      i < pathSignature.length && i < sequenceSignature.length;
+      i++
+    ) {
+      if (pathSignature[i] === "*") {
+        sequenceSignature =
+          sequenceSignature.substring(0, i) +
+          "*" +
+          sequenceSignature.substring(i + 1);
+      } else if (sequenceSignature[i] === "*") {
+        pathSignature =
+          pathSignature.substring(0, i) + "*" + pathSignature.substring(i + 1);
       }
     }
 
@@ -915,12 +922,19 @@ export class Sequence extends entity.CompositeEntity {
     let pathSignature = this.level.path.toString();
     let sequenceSignature = this.toString();
 
-    for(let i=0; i < pathSignature.length && i < sequenceSignature.length; i++){
-      if(pathSignature[i] === "*") {
-        sequenceSignature = sequenceSignature.substring(0, i) + "*" + sequenceSignature.substring(i+1);
-      }
-      else if(sequenceSignature[i] === "*") {
-        pathSignature = pathSignature.substring(0, i) + "*" + pathSignature.substring(i+1);
+    for (
+      let i = 0;
+      i < pathSignature.length && i < sequenceSignature.length;
+      i++
+    ) {
+      if (pathSignature[i] === "*") {
+        sequenceSignature =
+          sequenceSignature.substring(0, i) +
+          "*" +
+          sequenceSignature.substring(i + 1);
+      } else if (sequenceSignature[i] === "*") {
+        pathSignature =
+          pathSignature.substring(0, i) + "*" + pathSignature.substring(i + 1);
       }
     }
 
