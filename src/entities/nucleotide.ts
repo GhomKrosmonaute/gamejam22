@@ -463,7 +463,7 @@ export class Nucleotide extends entity.CompositeEntity {
     const disablingAnimation = "nucleotide._refreshScale" + this.id;
 
     if (this.level.disablingAnimations.has(disablingAnimation)) {
-      return new entity.NullEntity();
+      return new entity.TransitoryEntity();
     }
 
     // Native sprite size is 136 x 129 px

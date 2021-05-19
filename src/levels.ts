@@ -241,16 +241,31 @@ export const levels = {
     new l.Level("Zen", {
       variant: "zen",
       gridShape: "full",
-      forceMatching: false,
+      disableClips: true,
+      forceMatching: true,
       disableBonuses: true,
+      crispyBonusRate: 0.4,
       portalsCount: 4,
       zenMoves: 10,
-      clipCount: 0,
+      score: {
+        max: 1000,
+        initial: 0,
+        color: crispr.yellowNumber,
+        get: (ctx) => ctx.score,
+        set: (val, ctx) => (ctx.score = val),
+        show: (val) => String(Math.floor(val)),
+        devise: (val, ctx) =>
+          crispr.sprite(ctx, "images/crispy.png", (it) => {
+            it.anchor.set(0.5);
+            it.scale.set(0.6);
+            it.x = 65;
+          }),
+      },
       checks: {
-        "One shot sequence": (context) => context.oneShotLongSequence,
-        "Win in 5 moves or less": (context) =>
-          context.options.zenMoves - context.zenMovesIndicator.count <= 5,
-        "All virus killed": (level) =>
+        "One shot sequence": (level) => level.oneShotLongSequence,
+        "Win in 5 moves or less": (level) =>
+          level.options.zenMoves - level.zenMovesIndicator.count <= 5,
+        "Max score reached": (level) =>
           level.options.score.get(level) >=
           crispr.scrap(level.options.score.max, level),
       },

@@ -1133,12 +1133,12 @@ export class Level extends entity.CompositeEntity {
       this.path.items.length === 0 ||
       this.sequenceManager.matchesSequence() !== true
     ) {
-      return new entity.NullEntity();
+      return new entity.TransitoryEntity();
     }
 
     const sequenceCrunch = this.sequenceManager.crunch();
 
-    if (!sequenceCrunch) return new entity.NullEntity();
+    if (!sequenceCrunch) return new entity.TransitoryEntity();
 
     this.disablingAnimation("level.attemptCrunch", true);
 
@@ -1146,48 +1146,48 @@ export class Level extends entity.CompositeEntity {
       new entity.ParallelEntity([this.path.crunch(), sequenceCrunch]),
     ];
 
-    if (this.options.gridCleaning) {
-      console.log("coucou");
-      // remove isolated little islands
-      context.push(() =>
-        anim.sequenced({
-          items: this.grid
-            .getIslands()
-            .filter(
-              (island) =>
-                island.length < 4 || island.every((n) => n.type !== "clip")
-            )
-            .flat(),
-          waitForAllSteps: true,
-          timeBetween: 250,
-          onStep: (n, index, all, finish) => {
-            this.activate(
-              anim.sink(n.bonusContainer, 1000, () => {
-                n.state = "inactive";
-                finish();
-              })
-            );
-          },
-        })
-      );
-
-      // regenerate clips and portals
-      context.push(
-        new entity.FunctionCallEntity(() => {
-          this.grid.addSpecifics(
-            this.grid.nucleotides.filter((n) => n.state !== "inactive"),
-            this.options.clipCount,
-            "clip"
-          );
-          (() =>
-            this.grid.addSpecifics(
-              this.grid.nucleotides.filter((n) => n.state !== "inactive"),
-              this.options.portalsCount,
-              "portal"
-            ))();
-        })
-      );
-    }
+    // if (this.options.gridCleaning) {
+    //   console.log("coucou");
+    //   // remove isolated little islands
+    //   context.push(() =>
+    //     anim.sequenced({
+    //       items: this.grid
+    //         .getIslands()
+    //         .filter(
+    //           (island) =>
+    //             island.length < 4 || island.every((n) => n.type !== "clip")
+    //         )
+    //         .flat(),
+    //       waitForAllSteps: true,
+    //       timeBetween: 250,
+    //       onStep: (n, index, all, finish) => {
+    //         this.activate(
+    //           anim.sink(n.bonusContainer, 1000, () => {
+    //             n.state = "inactive";
+    //             finish();
+    //           })
+    //         );
+    //       },
+    //     })
+    //   );
+    //
+    //   // regenerate clips and portals
+    //   context.push(
+    //     new entity.FunctionCallEntity(() => {
+    //       this.grid.addSpecifics(
+    //         this.grid.nucleotides.filter((n) => n.state !== "inactive"),
+    //         this.options.clipCount,
+    //         "clip"
+    //       );
+    //       (() =>
+    //         this.grid.addSpecifics(
+    //           this.grid.nucleotides.filter((n) => n.state !== "inactive"),
+    //           this.options.portalsCount,
+    //           "portal"
+    //         ))();
+    //     })
+    //   );
+    // }
 
     if (this.options.variant === "turn") {
       context.push(
@@ -1197,7 +1197,7 @@ export class Level extends entity.CompositeEntity {
       );
     }
 
-    const first = [...this.sequenceManager.sequences][0];
+    const first = this.sequenceManager.first;
 
     if (this.options.variant === "zen") {
       // In the case that some holes exist, remove the sequence
@@ -1238,11 +1238,7 @@ export class Level extends entity.CompositeEntity {
     } else {
       this.setActionButtonText("SKIP");
     }
-    this.sequenceManager.updateHighlighting(
-      this.options.variant === "zen"
-        ? { fromRight: true, partial: true, reversible: true }
-        : { fromLeft: true, partial: true }
-    );
+    this.sequenceManager.updateHighlighting();
   }
 
   public fillHoles(): entity.EntitySequence {

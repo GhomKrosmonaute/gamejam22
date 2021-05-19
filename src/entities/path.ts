@@ -42,8 +42,8 @@ export class Path extends entity.CompositeEntity {
     );
 
     this._on(this, "updated", () => {
-      this.level.emitLevelEvent("pathUpdated");
       this.refresh();
+      this.level.emitLevelEvent("pathUpdated");
     });
   }
 

@@ -34,9 +34,9 @@ export interface GridShapeOptions {
 }
 
 export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
-  mini: (x: number, y: number) =>
-    x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0),
-  medium: (x: number, y: number) =>
+  full: () => false,
+  mini: (x, y) => x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0),
+  medium: (x, y) =>
     x < 1 ||
     x > 5 ||
     y < 1 ||
@@ -51,31 +51,30 @@ export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
       { x: 1, y: 5 },
       { x: 5, y: 5 },
     ],
-    shape: (x: number, y: number) =>
+    shape: (x, y) =>
       (x > 2 || y < 4 || y > 6) &&
       (x < 4 || y < 4 || y > 6) &&
       (x > 2 || y > 2 || (y === 2 && (x === 0 || x === 2))) &&
       (x < 4 || y > 2 || (y === 2 && (x === 4 || x === 6))),
   },
-  littleBridge: (x: number, y: number) =>
+  littleBridge: (x, y) =>
     (x > 2 || y < 1 || y > 5 || (y === 5 && (x === 0 || x === 2))) &&
     (x !== 3 || y !== 3) &&
     (x < 4 || y < 1 || y > 5 || (y === 5 && (x === 4 || x === 6))),
-  bowTie: (x: number, y: number) =>
+  bowTie: (x, y) =>
     y < 1 ||
     y > 4 ||
     (y === 4 && x > 1 && x < 5) ||
     (y === 1 && x > 0 && x < 6) ||
     (x === 3 && y === 2),
-  hole: (x: number, y: number) =>
+  hole: (x, y) =>
     (x > 1 && x < 5 && y > 1 && y < 5 && !(y === 4 && (x === 2 || x === 4))) ||
     (y === 0 && (x < 2 || x > 4)) ||
     (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5)),
-  hive: (x: number, y: number) => x % 2 !== 0 && y % 2 === 0,
+  hive: (x, y) => x % 2 !== 0 && y % 2 === 0,
 };
 
 export type GridShape =
-  | "full"
   | GridPreset<nucleotide.ColorName>
   | GridArrowShape
   | GridShapeOptions;
@@ -242,56 +241,54 @@ export class Grid extends entity.CompositeEntity {
       });
     } else if (typeof shape === "string" || typeof shape === "function") {
       // preset shape
-      if (shape !== "full") {
-        if (typeof shape === "string") {
-          const resolvedShape = gridShapes[shape];
-          if (typeof resolvedShape === "function") {
+      if (typeof shape === "string") {
+        const resolvedShape = gridShapes[shape];
+        if (typeof resolvedShape === "function") {
+          for (let x = 0; x < colCount; x++) {
+            for (let y = 0; y < rowCount; y++) {
+              if (resolvedShape(x, y)) continue;
+              if (x % 2 === 0 && y === rowCount - 1) continue;
+              this.addNucleotide(x, y);
+            }
+          }
+        } else {
+          const sub = resolvedShape.shape;
+          if (typeof sub === "function") {
             for (let x = 0; x < colCount; x++) {
               for (let y = 0; y < rowCount; y++) {
-                if (resolvedShape(x, y)) continue;
+                if (sub(x, y)) continue;
                 if (x % 2 === 0 && y === rowCount - 1) continue;
                 this.addNucleotide(x, y);
               }
             }
           } else {
-            const sub = resolvedShape.shape;
-            if (typeof sub === "function") {
-              for (let x = 0; x < colCount; x++) {
-                for (let y = 0; y < rowCount; y++) {
-                  if (sub(x, y)) continue;
-                  if (x % 2 === 0 && y === rowCount - 1) continue;
-                  this.addNucleotide(x, y);
-                }
-              }
-            } else {
-              sub.forEach((row, y) => {
-                if (row)
-                  row.forEach((col, x) => {
-                    if (!col) return;
-                    /*if (col === "?" || col === "h") {
-                      this.addNucleotide(x, y);
-                      if (col === "h") {
-                        const n = this.getNucleotideFromGridPosition(
-                          new PIXI.Point(x, y)
-                        );
-                        n.stayMissing = true;
-                      }
-                    } else */ this.addNucleotide(
-                      x,
-                      y,
-                      col
-                    );
-                  });
-              });
-            }
+            sub.forEach((row, y) => {
+              if (row)
+                row.forEach((col, x) => {
+                  if (!col) return;
+                  /*if (col === "?" || col === "h") {
+                    this.addNucleotide(x, y);
+                    if (col === "h") {
+                      const n = this.getNucleotideFromGridPosition(
+                        new PIXI.Point(x, y)
+                      );
+                      n.stayMissing = true;
+                    }
+                  } else */ this.addNucleotide(
+                    x,
+                    y,
+                    col
+                  );
+                });
+            });
           }
-        } else if (typeof shape === "function") {
-          for (let x = 0; x < colCount; x++) {
-            for (let y = 0; y < rowCount; y++) {
-              if (shape(x, y)) continue;
-              if (x % 2 === 0 && y === rowCount - 1) continue;
-              this.addNucleotide(x, y);
-            }
+        }
+      } else if (typeof shape === "function") {
+        for (let x = 0; x < colCount; x++) {
+          for (let y = 0; y < rowCount; y++) {
+            if (shape(x, y)) continue;
+            if (x % 2 === 0 && y === rowCount - 1) continue;
+            this.addNucleotide(x, y);
           }
         }
       }
