@@ -2,61 +2,29 @@ import * as PIXI from "pixi.js";
 
 import { OutlineFilter } from "@pixi/filter-outline";
 
-import * as easing from "booyah/src/easing";
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
-import * as util from "booyah/src/util";
+import * as easing from "booyah/src/easing";
 
 import * as popup from "./entities/popup";
 
-import * as crispr from "./crispr";
-import * as anim from "./animations";
-
 import * as l from "./scenes/level";
+
+import * as anim from "./animations";
+import * as crispr from "./crispr";
 
 declare var level: l.Level;
 
 export const levels = {
-  // Timed: () =>
-  //   new l.Level("Timed", (ctx) => {
-  //     ctx.playTime = 0;
-  //
-  //     ctx.onLevelEvent("update", () => {
-  //       if (ctx.playTime >= ctx.options.score.max) {
-  //         ctx.finished = true;
-  //         ctx.activate(
-  //           new entity.EntitySequence([
-  //             new entity.WaitingEntity(2000),
-  //             new popup.FailedLevelPopup(),
-  //           ])
-  //         );
-  //       }
-  //     });
-  //
-  //     return {
-  //       gridShape: "hole",
-  //       virus: "mini",
-  //       checks: {
-  //         "Reach 1000pts": (ctx) => ctx.score > 1000,
-  //       },
-  //       score: {
-  //         max: 120000,
-  //         devise: (score, ctx) =>
-  //           crispr.sprite(ctx, "images/bonus_time.png", (it) => {
-  //             it.anchor.set(0.5);
-  //             it.scale.set(0.5);
-  //             it.position.x = 90;
-  //             //it.tint = 0xff4141
-  //           }),
-  //         show: (score) => `${Math.round(score / 1000)} s`,
-  //         get: (ctx) => 120000 - ctx.playTime,
-  //         set: (value, ctx) => (ctx.playTime = 120000 - value),
-  //         color: 0xff4141,
-  //         initial: 120000,
-  //       },
-  //     };
-  //   }),
-
+  // Hard
+  "Big\nBoss": () =>
+    new l.Level("Big\nBoss", (ctx) => ({
+      gridShape: "mini",
+      forceMatching: false,
+      jokerCount: 1,
+      maxLife: 5,
+      portalsCount: 2,
+    })),
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
       gridShape: "fourIslands",
@@ -64,6 +32,7 @@ export const levels = {
       clipCount: 4,
       sequenceLength: 4,
       portalsCount: 4,
+      jokerCount: 3,
       maxLife: 10,
       crispyBonusRate: 0.6,
       initialBonuses: [
@@ -94,58 +63,88 @@ export const levels = {
         }),
       ],
     })),
+  // Timed: () =>
+  //   new l.Level("Timed", (ctx) => {
+  //     ctx.playTime = 0;
+  //
+  //     ctx.onLevelEvent("update", () => {
+  //       if (ctx.playTime >= ctx.options.score.max) {
+  //         ctx.finished = true;
+  //         ctx.activate(
+  //           new entity.EntitySequence([
+  //             new entity.WaitingEntity(2000),
+  //             new popup.FailedLevelPopup(),
+  //           ])
+  //         );
+  //       }
+  //     });
+  //
+  //     return {
+  //       forceMatching: false,
+  //       mustBeHiddenOnPause: true,
+  //       gridShape: "hole",
+  //       virus: "mini",
+  //       checks: {
+  //         "Reach 1000pts": (ctx) => ctx.score > 1000,
+  //       },
+  //       score: {
+  //         max: 120000,
+  //         devise: (score, ctx) =>
+  //           crispr.sprite(ctx, "images/bonus_time.png", (it) => {
+  //             it.anchor.set(0.5);
+  //             it.scale.set(0.5);
+  //             it.position.x = 90;
+  //             //it.tint = 0xff4141
+  //           }),
+  //         show: (score) => `${Math.round(score / 1000)} s`,
+  //         get: (ctx) => 120000 - ctx.playTime,
+  //         set: (value, ctx) => (ctx.playTime = 120000 - value),
+  //         color: 0xff4141,
+  //         initial: 120000,
+  //       },
+  //     };
+  //   }),
 
-  Hive: () =>
-    new l.Level("Hive", (context) => ({
-      gridShape: "hive",
-      maxLife: 3,
-      forceMatching: true,
-      sequenceLength: 8,
-      // canCrunchParts: {
-      //   fromLeft: true,
-      //   possibleParts: [
-      //     {
-      //       glowColor: 0x00ff00,
-      //       length: 4,
-      //     },
-      //     {
-      //       glowColor: 0x00ffff,
-      //       length: 6,
-      //     },
-      //   ],
-      // },
-      portalsCount: 4,
-    })),
-
-  Hole: () =>
-    new l.Level("Hole", (context) => ({
-      gridShape: "hole",
-      // gridCleaning: true,
-      // score: {
-      //   max: () => context.grid.nucleotides.length,
-      //   initial: 0,
-      //   color: crisp.yellowNumber,
-      //   get: () =>
-      //     context.grid.nucleotides.filter((n) => n.state === "inactive").length,
-      //   set: (value) => (context.killedViruses = value),
-      //   show: (value) => String(value) + " crh",
-      // },
-      forceMatching: true,
-    })),
-
-  "Bow Tie": () =>
-    new l.Level("Bow Tie", (context) => ({
-      gridShape: "bowTie",
-      forceMatching: true,
-    })),
-
-  "Little\nBridge": () =>
-    new l.Level("Little\nBridge", (context) => ({
-      gridShape: "littleBridge",
+  // Medium
+  "Medium\nBoss": () => new l.Level("Medium\nBoss", {}),
+  "Chrono\nPortal": () =>
+    new l.Level("Chrono\nPortal", (context) => ({
+      variant: "fall",
+      gridShape: "medium",
       forceMatching: true,
       portalsCount: 2,
+      clipCount: 3,
+      gaugeRings: [
+        (context) =>
+          context.bonusesManager.add(
+            context.swapBonus,
+            1,
+            new PIXI.Point(200, -2000)
+          ),
+        (context, ring) =>
+          context.activate(
+            new entity.EntitySequence([
+              new entity.FunctionCallEntity(() => {
+                context.bonusesManager.add(
+                  context.timeBonus,
+                  1,
+                  new PIXI.Point(500, -2000)
+                );
+              }),
+            ])
+          ),
+      ],
+      hooks: [
+        new l.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            if (context.isEnded && !context.finished)
+              context.activate(anim.title(context.container, "Go!"));
+          }),
+        }),
+      ],
     })),
-
   "Four\nIslands": () =>
     new l.Level("Four\nIslands", (context) => ({
       gridShape: "fourIslands",
@@ -155,19 +154,19 @@ export const levels = {
       portalsCount: 4,
     })),
 
+  // Easy
   Boss: () =>
     new l.Level("Boss", (context) => ({
       virus: "big",
       variant: "fall",
-      dropSpeed: 1,
+      fallingSpeed: 1,
       gridShape: "medium",
       sequenceLength: 7,
       forceMatching: true,
       clipCount: 3,
-      portalsCount: 4,
       gaugeRings: [
         (context) => {
-          context.options.dropSpeed = 1.2;
+          context.options.fallingSpeed = 1.2;
           context.activate(
             anim.title(context.container, "Speed 120%", 2000, (t) => t, 2)
           );
@@ -179,7 +178,7 @@ export const levels = {
             new PIXI.Point(500, -2000)
           ),
         (context) => {
-          context.options.dropSpeed = 1.3;
+          context.options.fallingSpeed = 1.3;
           context.activate(
             anim.title(context.container, "Speed 130%", 2000, (t) => t, 2)
           );
@@ -234,9 +233,6 @@ export const levels = {
         }),
       ],
     })),
-
-  // todo: intermediary levels with medium virus
-
   Zen: () =>
     new l.Level("Zen", {
       variant: "zen",
@@ -245,7 +241,6 @@ export const levels = {
       forceMatching: true,
       disableBonuses: true,
       crispyBonusRate: 0.2,
-      portalsCount: 4,
       zenMoves: 10,
       score: {
         max: 1000,
@@ -286,46 +281,6 @@ export const levels = {
         }),
       ],
     }),
-
-  "Chrono\nPortal": () =>
-    new l.Level("Chrono\nPortal", (context) => ({
-      variant: "fall",
-      gridShape: "medium",
-      forceMatching: true,
-      clipCount: 3,
-      portalsCount: 2,
-      gaugeRings: [
-        (context) =>
-          context.bonusesManager.add(
-            context.swapBonus,
-            1,
-            new PIXI.Point(200, -2000)
-          ),
-        (context, ring) =>
-          context.activate(
-            new entity.EntitySequence([
-              new entity.FunctionCallEntity(() => {
-                context.bonusesManager.add(
-                  context.timeBonus,
-                  1,
-                  new PIXI.Point(500, -2000)
-                );
-              }),
-            ])
-          ),
-      ],
-      hooks: [
-        new l.Hook({
-          id: "go title",
-          event: "injectedSequence",
-          entity: new entity.FunctionCallEntity(() => {
-            if (context.isEnded && !context.finished)
-              context.activate(anim.title(context.container, "Go!"));
-          }),
-        }),
-      ],
-    })),
-
   Chrono: () =>
     new l.Level("Chrono", (context) => ({
       variant: "fall",
@@ -368,14 +323,6 @@ export const levels = {
       ],
       hooks: [
         new l.Hook({
-          id: "minimized popup ring 1",
-          event: "minimizedPopup",
-          filter: (p) => p.id === "popup ring 1",
-          entity: new entity.FunctionCallEntity(() => {
-            context.timeBonus.highlight = false;
-          }),
-        }),
-        new l.Hook({
           id: "intro",
           event: "init",
           once: true,
@@ -388,11 +335,20 @@ export const levels = {
                 popupOptions: {
                   id: "intro popup",
                   logo: "images/icon_timed.png",
+                  withBlackBackground: false,
                   minimizeOnClose: false,
                   coolDown: 2000,
                 },
               })
             );
+          }),
+        }),
+        new l.Hook({
+          id: "minimized popup ring 1",
+          event: "minimizedPopup",
+          filter: (p) => p.id === "popup ring 1",
+          entity: new entity.FunctionCallEntity(() => {
+            context.timeBonus.highlight = false;
           }),
         }),
         new l.Hook({
@@ -413,12 +369,12 @@ export const levels = {
         }),
       ],
     })),
-
   Classic: () =>
     new l.Level("Classic", (context) => ({
       variant: "turn",
       minStarNeeded: 1,
       forceMatching: true,
+      noCrispyBonus: true,
       gridShape: "medium",
       clipCount: 3,
       gaugeRings: [
@@ -477,6 +433,7 @@ export const levels = {
       ],
     })),
 
+  // Intro
   Tutorial: () =>
     new l.Level("Tutorial", {
       variant: "turn",
@@ -788,3 +745,64 @@ export const levels = {
 export const levelNames = Object.keys(levels);
 export type LevelName = keyof Levels;
 export type Levels = typeof levels;
+
+export const sections = {
+  Intro: [levels.Tutorial],
+  Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
+  Medium: [
+    levels["Four\nIslands"],
+    levels["Chrono\nPortal"],
+    levels["Medium\nBoss"],
+  ],
+  Hard: [levels.Caribbean, levels["Big\nBoss"]],
+};
+
+export type SectionName = keyof typeof sections;
+
+export function getSectionNameOfLevel(
+  levelName: LevelName
+): keyof typeof sections | null {
+  for (const sectionName in sections) {
+    const section = sections[sectionName as keyof typeof sections];
+    if (section.some((level) => levels[levelName] === level))
+      return sectionName as keyof typeof sections;
+  }
+
+  return null;
+}
+
+export function getLevelNamesOfSection(sectionName: SectionName): LevelName[] {
+  const section = sections[sectionName];
+  const levelNames = section.map((l) => {
+    const entries = Object.entries(levels);
+    const entry = entries.find((e) => e[1] === l);
+    return entry[0];
+  });
+  return levelNames as LevelName[];
+}
+
+export function levelIsPassed(levelName: LevelName): boolean {
+  return !!localStorage.getItem(levelName);
+}
+
+export function countStars() {
+  let starCount = 0;
+
+  for (const levelName of Object.keys(levels) as LevelName[]) {
+    if (levelIsPassed(levelName)) {
+      const raw = localStorage.getItem(levelName);
+      const data = JSON.parse(raw) as l.LevelResults;
+      starCount += data.starCount;
+    }
+  }
+
+  return starCount;
+}
+
+export function getNeededStars(levelName: LevelName): number {
+  if (!levelName.includes("Boss")) return 0;
+
+  return Math.floor(
+    (levelNames.slice().reverse().indexOf(levelName) - 1) * 3 * 0.85
+  );
+}

@@ -3,13 +3,12 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
-import * as util from "booyah/src/util";
 
 import * as crispr from "../crispr";
 import * as levels from "../levels";
 import * as anim from "../animations";
 
-import * as minimap from "./minimap";
+import * as minimap from "./main";
 
 import * as nucleotide from "../entities/nucleotide";
 import * as sequence from "../entities/sequence";
@@ -27,13 +26,17 @@ export type LevelVariant = "turn" | "fall" | "zen";
 
 export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
   zen: {
+    showMatchMatchOnCrunch: false,
     disableBonuses: true,
     remainingMoves: true,
+    disableViruses: true,
     crunchOnPointerUp: false,
     actionButtonSprite: "images/hud_action_button_crunch.png",
   },
   turn: {},
   fall: {
+    showMatchMatchOnCrunch: false,
+    mustBeHiddenOnPause: true,
     falling: true,
   },
 };
@@ -63,8 +66,11 @@ export interface ScoreOptions {
 
 export interface LevelOptions {
   disablingAnimations: string[];
+  mustBeHiddenOnPause: boolean;
+  showMatchMatchOnCrunch: boolean;
   disableExtraSequence: boolean;
   disableBonuses: boolean;
+  disableViruses: boolean;
   disableButton: boolean;
   disableGauge: boolean;
   disableScore: boolean;
@@ -91,7 +97,7 @@ export interface LevelOptions {
     fromRight?: boolean;
     possibleParts: { length: number | string; glowColor: number }[];
   } | null;
-  dropSpeed: number;
+  fallingSpeed: number;
   baseCrispyGain: number;
   minStarNeeded: number;
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
@@ -170,9 +176,12 @@ export const defaultScoreOptions: Readonly<ScoreOptions> = {
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
   gridCleaning: false,
+  mustBeHiddenOnPause: false,
   disablingAnimations: [],
   disableExtraSequence: false,
+  showMatchMatchOnCrunch: true,
   disableBonuses: false,
+  disableViruses: false,
   disableButton: false,
   disableGauge: false,
   disableScore: false,
@@ -186,7 +195,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   variant: "turn",
   virus: "mini",
   maxLife: 5,
-  dropSpeed: 1,
+  fallingSpeed: 1,
   canCrunchParts: null,
   score: defaultScoreOptions,
   baseCrispyGain: 10,
@@ -231,8 +240,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
 };
 
 export type LevelEventName = keyof LevelEvents;
-export type LevelEventParams<EventName extends LevelEventName> =
-  LevelEvents[EventName];
+export type LevelEventParams<
+  EventName extends LevelEventName
+> = LevelEvents[EventName];
 
 export interface LevelEvents {
   end: [];
@@ -499,7 +509,7 @@ export class Level extends entity.CompositeEntity {
     this._once(this, event, callback);
   }
 
-  get minimap(): minimap.Minimap {
+  get minimap(): minimap.Main {
     return this._entityConfig.minimap;
   }
 
@@ -931,7 +941,7 @@ export class Level extends entity.CompositeEntity {
     // if falling sequence is down, infect
     if (
       this.sequenceManager.advanceSequences(
-        this.options.dropSpeed * baseDropSpeed
+        this.options.fallingSpeed * baseDropSpeed
       ).length > 0
     ) {
       this.emitLevelEvent("fallingDown");

@@ -441,7 +441,9 @@ export class Grid extends entity.CompositeEntity {
     return position.x % 2 === 0;
   }
 
-  getForcedMatchingPath(givenLength: number): {
+  getForcedMatchingPath(
+    givenLength: number
+  ): {
     colors: nucleotide.ColorName[];
     nucleotides: nucleotide.Nucleotide[];
   } {
@@ -632,10 +634,13 @@ export class Grid extends entity.CompositeEntity {
   // }
 
   getAbsolutePositionFromGridPosition(gridPos: PIXI.Point): PIXI.Point {
-    const { width, height, dist } =
-      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-        this.level.options.nucleotideRadius
-      );
+    const {
+      width,
+      height,
+      dist,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      this.level.options.nucleotideRadius
+    );
     const x = width / 2 + gridPos.x * dist.x;
     const y =
       gridPos.y * height -

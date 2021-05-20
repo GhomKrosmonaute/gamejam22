@@ -59,6 +59,21 @@ export class Menu extends entity.CompositeEntity {
     this.container.visible = false;
 
     {
+      // @ts-ignore
+      if (window.level) {
+        // @ts-ignore
+        if (window.level.options.mustBeHiddenOnPause) {
+          const blackBackground = new PIXI.Graphics()
+            .beginFill()
+            .drawRect(0, 0, crispr.width, crispr.height)
+            .endFill();
+
+          this.container.addChild(blackBackground);
+        }
+      }
+    }
+
+    {
       this.menuButton = crispr.sprite(this, "images/hud_menu_button.png");
       this.menuButton.anchor.set(1, 0);
       this.menuButton.position.set(crispr.width, 0);

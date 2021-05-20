@@ -4,14 +4,14 @@ import * as booyah from "booyah/src/booyah";
 import * as audio from "booyah/src/audio";
 import * as entity from "booyah/src/entity";
 
-import * as minimap from "./scenes/minimap";
+import * as _main from "./scenes/main";
 
 import * as crispr from "./crispr";
 import * as levels from "./levels";
 
-const main = new minimap.Minimap();
+const main = new _main.Main();
 
-const gameStates = {
+let gameStates: { [k: string]: entity.EntityResolvable } = {
   start: main,
   default: main,
   ...levels.levels,
