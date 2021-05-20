@@ -3,6 +3,7 @@ import * as PIXI from "pixi.js";
 import * as booyah from "booyah/src/booyah";
 import * as audio from "booyah/src/audio";
 import * as entity from "booyah/src/entity";
+import * as narration from "booyah/src/narration";
 
 import * as minimap from "./scenes/minimap";
 
@@ -10,12 +11,26 @@ import * as crispr from "./crispr";
 import * as levels from "./levels";
 import * as metrics from "./metrics";
 
-const main = new minimap.Minimap();
+const minimapScene = new minimap.Minimap();
+
+const introVideoScene = new narration.VideoScene({
+  video: "intro",
+  videoOptions: { scale: 2 },
+  music: "intro",
+  musicVolume: 1,
+  skipButtonOptions: {
+    position: { x: crispr.width - 150, y: crispr.height - 150 },
+  },
+});
 
 const gameStates = {
-  start: main,
-  default: main,
+  start: introVideoScene,
+  default: minimapScene,
   ...levels.levels,
+};
+
+const gameTransitions = {
+  start: entity.makeTransition("default"),
 };
 
 const graphicalAssets = [
@@ -202,7 +217,9 @@ const fxAssets = [
   "tile_clips",
 ];
 
-const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen"];
+const videoAssets = ["intro"];
+
+const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen", "intro"];
 
 const entityInstallers: ((
   rootConfig: entity.EntityConfig,
@@ -219,9 +236,11 @@ metrics.init();
 
 booyah.go({
   states: gameStates,
+  transitions: gameTransitions,
   entityInstallers,
   screenSize: new PIXI.Point(crispr.width, crispr.height),
   graphicalAssets,
+  videoAssets,
   musicAssets,
   fontAssets,
   fxAssets,
@@ -229,6 +248,7 @@ booyah.go({
   graphics: {
     //menu: "images/hud_menu_button.png",
     play: "images/titlescreen_play_button.png",
+    skip: "images/hud_action_button.png",
   },
   loadingGauge: {
     position: {

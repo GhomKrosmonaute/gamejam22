@@ -76,6 +76,10 @@ module.exports = {
           from: "audio",
           to: "audio",
         },
+        {
+          from: "video",
+          to: "video",
+        },
       ],
     }),
     // //opimize all image file
