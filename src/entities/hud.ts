@@ -458,6 +458,8 @@ export class ActionButton extends entity.CompositeEntity {
       return anim.tweenShaking(this.sprite, 300, 6);
     }
 
+    // Skip case ↓
+
     const context: entity.Entity[] = [
       new entity.FunctionCallEntity(() => {
         this._entityConfig.fxMachine.play("skip");
@@ -484,7 +486,8 @@ export class ActionButton extends entity.CompositeEntity {
           this.level.sequenceManager.dropSequences(),
           this.level.removeHalfScore(),
           new entity.FunctionCallEntity(() => {
-            this.level.remainingMovesIndicator.removeOne();
+            if (this.level.options.remainingMoves)
+              this.level.remainingMovesIndicator.removeOne();
           })
         );
         break;

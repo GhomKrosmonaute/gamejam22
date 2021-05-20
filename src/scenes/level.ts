@@ -66,7 +66,6 @@ export interface LevelOptions {
   disableExtraSequence: boolean;
   disableBonuses: boolean;
   disableButton: boolean;
-  disableJoker: boolean;
   disableGauge: boolean;
   disableScore: boolean;
   disableClips: boolean;
@@ -173,7 +172,6 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   gridCleaning: false,
   disablingAnimations: [],
   disableExtraSequence: false,
-  disableJoker: true,
   disableBonuses: false,
   disableButton: false,
   disableGauge: false,
@@ -1153,6 +1151,34 @@ export class Level extends entity.CompositeEntity {
       starCount,
       failed,
     };
+  }
+
+  resolveSignatures(): {
+    sequenceSignature: string;
+    pathSignature: string;
+  } | null {
+    let pathSignature = this.path.toString();
+    let sequenceSignature = this.sequenceManager.first?.toString();
+
+    if (!pathSignature || !sequenceSignature) return null;
+
+    for (
+      let i = 0;
+      i < pathSignature.length && i < sequenceSignature.length;
+      i++
+    ) {
+      if (pathSignature[i] === "*") {
+        sequenceSignature =
+          sequenceSignature.substring(0, i) +
+          "*" +
+          sequenceSignature.substring(i + 1);
+      } else if (sequenceSignature[i] === "*") {
+        pathSignature =
+          pathSignature.substring(0, i) + "*" + pathSignature.substring(i + 1);
+      }
+    }
+
+    return { pathSignature, sequenceSignature };
   }
 
   exit(save: boolean = false) {

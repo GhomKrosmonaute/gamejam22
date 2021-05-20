@@ -258,7 +258,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
         partialCrunch = true;
 
-        if (sequence.isInactive()) {
+        if (sequence.isFullInactive() || sequence.maxActiveLength < 3) {
           removedSequences.push(sequence);
         }
       }
@@ -316,6 +316,7 @@ export class SequenceManager extends entity.CompositeEntity {
     context.push(
       new entity.FunctionCallEntity(() => {
         this.adjustment.adjust();
+        this.level.grid.fillHoles();
         if (partialCrunch) {
           this.level.emitLevelEvent("partialCrunched");
         }
@@ -628,17 +629,13 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   down(addScore: boolean, notACrunchResult = false) {
-    let isZen: boolean,
-      fully: boolean,
-      shots: number,
-      scoreAnimationFinished = !addScore,
-      length: number;
+    let isZen: boolean, fully: boolean, shots: number, length: number;
 
     const pathSignature = this.level.path.toString();
     const pathItems = this.level.path.items.map((n) => n.toJSON());
     const allDownNucleotides = pathItems.filter((n) => n.type !== "portal"); //[...this.nucleotides, ...pathItems];
     const multiplier = allDownNucleotides.reduce(
-      (accumulator, n) => accumulator * n.crispyMultiplier,
+      (accumulator, n) => accumulator + (n.crispyMultiplier - 1),
       1
     );
 
@@ -753,14 +750,7 @@ export class Sequence extends entity.CompositeEntity {
                     );
                   },
                   onTeardown: () => {
-                    this.level.activate(
-                      anim.down(
-                        text,
-                        500,
-                        text.scale.x,
-                        () => (scoreAnimationFinished = true)
-                      )
-                    );
+                    this.level.activate(anim.down(text, 500, text.scale.x));
                   },
                 }),
             ])
@@ -805,7 +795,7 @@ export class Sequence extends entity.CompositeEntity {
               this.level.score += score;
             }
 
-            this._activateChildEntity(
+            this.level.activate(
               new entity.EntitySequence([
                 // new tween.Tween({
                 //   from: n.position.y,
@@ -853,24 +843,11 @@ export class Sequence extends entity.CompositeEntity {
       this.level.variant
     ]
   ): boolean {
-    let pathSignature = this.level.path.toString();
-    let sequenceSignature = this.toString();
+    const signatures = this.level.resolveSignatures();
 
-    for (
-      let i = 0;
-      i < pathSignature.length && i < sequenceSignature.length;
-      i++
-    ) {
-      if (pathSignature[i] === "*") {
-        sequenceSignature =
-          sequenceSignature.substring(0, i) +
-          "*" +
-          sequenceSignature.substring(i + 1);
-      } else if (sequenceSignature[i] === "*") {
-        pathSignature =
-          pathSignature.substring(0, i) + "*" + pathSignature.substring(i + 1);
-      }
-    }
+    if (!signatures) return false;
+
+    const { pathSignature, sequenceSignature } = signatures;
 
     if (pathSignature.length < crispr.scrap(options.minLength, this.level))
       return false;
@@ -915,24 +892,11 @@ export class Sequence extends entity.CompositeEntity {
       this.level.variant
     ]
   ): nucleotide.Nucleotide[] | null {
-    let pathSignature = this.level.path.toString();
-    let sequenceSignature = this.toString();
+    const signatures = this.level.resolveSignatures();
 
-    for (
-      let i = 0;
-      i < pathSignature.length && i < sequenceSignature.length;
-      i++
-    ) {
-      if (pathSignature[i] === "*") {
-        sequenceSignature =
-          sequenceSignature.substring(0, i) +
-          "*" +
-          sequenceSignature.substring(i + 1);
-      } else if (sequenceSignature[i] === "*") {
-        pathSignature =
-          pathSignature.substring(0, i) + "*" + pathSignature.substring(i + 1);
-      }
-    }
+    if (!signatures) return null;
+
+    const { pathSignature, sequenceSignature } = signatures;
 
     if (pathSignature.length < crispr.scrap(options.minLength, this.level))
       return null;
@@ -1065,7 +1029,7 @@ export class Sequence extends entity.CompositeEntity {
       n.isHighlighted = segment?.includes(n) ?? false;
   }
 
-  isInactive(): boolean {
+  isFullInactive(): boolean {
     return this.nucleotides.every((n) => n.state === "inactive");
   }
 

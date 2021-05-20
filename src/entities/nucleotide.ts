@@ -17,7 +17,7 @@ export type NucleotideType = "clip" | "normal" | "portal" | "joker";
 
 // TODO: Use string enum here?
 export type ColorName = "b" | "r" | "g" | "y" | "?" | "*";
-export const colorNames: ColorName[] = ["b", "r", "g", "y", "*"];
+export const colorNames: ColorName[] = ["b", "r", "g", "y"];
 export function getRandomColorName(): ColorName {
   return colorNames[Math.floor(Math.random() * colorNames.length)];
 }

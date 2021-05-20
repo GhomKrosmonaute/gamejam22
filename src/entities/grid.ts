@@ -289,6 +289,11 @@ export class Grid extends entity.CompositeEntity {
       this.level.options.portalsCount,
       "portal"
     );
+    this.addSpecifics(
+      this.allNucleotides,
+      this.level.options.jokerCount,
+      "joker"
+    );
     if (!this.level.options.disableClips)
       this.addSpecifics(
         this.allNucleotides,
@@ -366,6 +371,10 @@ export class Grid extends entity.CompositeEntity {
 
   get portals(): nucleotide.Nucleotide[] {
     return this.allNucleotides.filter((n) => n?.type === "portal");
+  }
+
+  get jokers(): nucleotide.Nucleotide[] {
+    return this.allNucleotides.filter((n) => n?.type === "joker");
   }
 
   addSpecifics(

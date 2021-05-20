@@ -260,32 +260,35 @@ export class Path extends entity.CompositeEntity {
 
             this._activateChildEntity(
               new entity.EntitySequence([
-                new entity.ParallelEntity([
-                  () =>
-                    anim.move(
-                      n.position,
-                      n.position.clone(),
-                      new PIXI.Point(
-                        items[index].position.x -
-                          this.level.grid.nucleotideContainer.x +
-                          seq.container.x,
-                        items[index].position.y -
-                          this.level.grid.nucleotideContainer.y +
-                          seq.container.y +
-                          60
-                      ),
-                      1000,
-                      easing.easeOutBounce
-                    ),
-                  () =>
-                    new tween.Tween({
-                      from: n.shakingContainer.scale.x,
-                      to: items[index].shakingContainer.scale.x,
-                      easing: easing.easeOutBounce,
-                      duration: 1000,
-                      onUpdate: (value) => n.shakingContainer.scale.set(value),
-                    }),
-                ]),
+                this.level.variant === "zen"
+                  ? new entity.TransitoryEntity()
+                  : new entity.ParallelEntity([
+                      () =>
+                        anim.move(
+                          n.position,
+                          n.position.clone(),
+                          new PIXI.Point(
+                            items[index].position.x -
+                              this.level.grid.nucleotideContainer.x +
+                              seq.container.x,
+                            items[index].position.y -
+                              this.level.grid.nucleotideContainer.y +
+                              seq.container.y +
+                              60
+                          ),
+                          1000,
+                          easing.easeOutBounce
+                        ),
+                      () =>
+                        new tween.Tween({
+                          from: n.shakingContainer.scale.x,
+                          to: items[index].shakingContainer.scale.x,
+                          easing: easing.easeOutBounce,
+                          duration: 1000,
+                          onUpdate: (value) =>
+                            n.shakingContainer.scale.set(value),
+                        }),
+                    ]),
                 new entity.FunctionCallEntity(() => finish()),
               ])
             );
