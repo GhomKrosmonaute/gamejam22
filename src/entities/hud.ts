@@ -484,7 +484,7 @@ export class ActionButton extends entity.CompositeEntity {
           this.level.sequenceManager.dropSequences(),
           this.level.removeHalfScore(),
           new entity.FunctionCallEntity(() => {
-            this.level.zenMovesIndicator.removeOne();
+            this.level.remainingMovesIndicator.removeOne();
           })
         );
         break;
@@ -509,7 +509,7 @@ export class ActionButton extends entity.CompositeEntity {
   }
 }
 
-export class ZenMovesIndicator extends entity.CompositeEntity {
+export class RemainingMovesIndicator extends entity.CompositeEntity {
   protected init = false;
   private _count: number;
   private text: PIXI.Text;

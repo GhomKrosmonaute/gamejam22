@@ -264,7 +264,7 @@ export const levels = {
       checks: {
         "One shot sequence": (level) => level.oneShotLongSequence,
         "Win in 5 moves or less": (level) =>
-          level.options.zenMoves - level.zenMovesIndicator.count <= 5,
+          level.options.zenMoves - level.remainingMovesIndicator.count <= 5,
         "Max score reached": (level) =>
           level.options.score.get(level) >=
           crispr.scrap(level.options.score.max, level),
