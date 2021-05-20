@@ -26,12 +26,6 @@ export class Main extends entity.CompositeEntity {
   private layer2: PIXI.Sprite;
   private links: PIXI.Graphics;
   private scrollBox: scroll.Scrollbox;
-  // private sections: { [key in keyof typeof levels.sections]: PIXI.Sprite[] } = {
-  //   Intro: [],
-  //   Easy: [],
-  //   Medium: [],
-  //   Hard: [],
-  // };
 
   protected _setup() {
     this._entityConfig.jukebox.play("menu");
@@ -53,22 +47,16 @@ export class Main extends entity.CompositeEntity {
     this.container.addChild(this.layer2);
     this.container.addChild(this.links);
 
+    const starCount = levels.countStars();
+
     for (const levelName of Object.keys(levels.levels) as levels.LevelName[]) {
       const index = Object.keys(levels.levels).indexOf(levelName);
       const data = localStorage.getItem(levelName);
       const even = index % 2 === 0;
-
-      /**
-       * If previous level is done or Boss level is done.
-       */
-      const isAccessible = this.isSectionAccessible(
-        levels.getSectionNameOfLevel(levelName)
-      ); // &&
-      //   (Object.entries(levels.levels)
-      //     .slice(index + 1)
-      //     .every(([key]) => {
-      //       return !!localStorage.getItem(key);
-      //     })))
+      const neededStars = levels.getNeededStars(levelName);
+      const isAccessible =
+        this.isSectionAccessible(levels.getSectionNameOfLevel(levelName)) &&
+        starCount >= neededStars;
 
       // make a button
       const position = new PIXI.Point(
@@ -104,6 +92,19 @@ export class Main extends entity.CompositeEntity {
         preview.anchor.set(0.5);
 
         levelSprite.addChild(preview);
+      } else if (neededStars > 0) {
+        const text = crispr.makeText(
+          `${Math.min(neededStars, starCount)} / ${neededStars}`,
+          {
+            fontFamily: "Optimus",
+            fill: crispr.yellow,
+          }
+        );
+
+        text.anchor.set(0.5);
+        text.scale.set(0.8);
+
+        levelSprite.addChild(text);
       }
 
       if (levelName === Main.lastLevel) {
@@ -134,7 +135,7 @@ export class Main extends entity.CompositeEntity {
 
       levelSprite.addChild(text);
 
-      this._on(levelSprite, "pointerup", () => {
+      this._on(levelSprite, "pointertap", () => {
         this._entityConfig.fxMachine.play("validate");
 
         Main.savedScroll = this.scrollBox.currentScroll.y;
@@ -272,7 +273,7 @@ export class Main extends entity.CompositeEntity {
 
     if (previousSectionEntry) {
       return levels
-        .getSectionLevelNames(previousSectionEntry[0] as levels.SectionName)
+        .getLevelNamesOfSection(previousSectionEntry[0] as levels.SectionName)
         .every((name) => {
           return levels.levelIsPassed(name);
         });

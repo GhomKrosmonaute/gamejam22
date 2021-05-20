@@ -745,6 +745,7 @@ export const levels = {
 export const levelNames = Object.keys(levels);
 export type LevelName = keyof Levels;
 export type Levels = typeof levels;
+
 export const sections = {
   Intro: [levels.Tutorial],
   Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
@@ -755,6 +756,7 @@ export const sections = {
   ],
   Hard: [levels.Caribbean, levels["Big\nBoss"]],
 };
+
 export type SectionName = keyof typeof sections;
 
 export function getSectionNameOfLevel(
@@ -769,7 +771,7 @@ export function getSectionNameOfLevel(
   return null;
 }
 
-export function getSectionLevelNames(sectionName: SectionName): LevelName[] {
+export function getLevelNamesOfSection(sectionName: SectionName): LevelName[] {
   const section = sections[sectionName];
   const levelNames = section.map((l) => {
     const entries = Object.entries(levels);
@@ -781,4 +783,26 @@ export function getSectionLevelNames(sectionName: SectionName): LevelName[] {
 
 export function levelIsPassed(levelName: LevelName): boolean {
   return !!localStorage.getItem(levelName);
+}
+
+export function countStars() {
+  let starCount = 0;
+
+  for (const levelName of Object.keys(levels) as LevelName[]) {
+    if (levelIsPassed(levelName)) {
+      const raw = localStorage.getItem(levelName);
+      const data = JSON.parse(raw) as l.LevelResults;
+      starCount += data.starCount;
+    }
+  }
+
+  return starCount;
+}
+
+export function getNeededStars(levelName: LevelName): number {
+  if (!levelName.includes("Boss")) return 0;
+
+  return Math.floor(
+    (levelNames.slice().reverse().indexOf(levelName) - 1) * 3 * 0.85
+  );
 }
