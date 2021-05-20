@@ -217,7 +217,7 @@ export class Grid extends entity.CompositeEntity {
 
   generateShape() {
     this.allNucleotides.length = colCount * rowCount;
-    
+
     // colors and shape
     const shape = this.level.options.gridShape;
     if (Array.isArray(shape)) {
@@ -226,11 +226,7 @@ export class Grid extends entity.CompositeEntity {
         if (row)
           row.forEach((col, x) => {
             if (col) {
-              this.addNucleotide(
-                x,
-                y,
-                col
-              );
+              this.addNucleotide(x, y, col);
             }
           });
       });
@@ -261,11 +257,7 @@ export class Grid extends entity.CompositeEntity {
               if (row)
                 row.forEach((col, x) => {
                   if (!col) return;
-                  this.addNucleotide(
-                    x,
-                    y,
-                    col
-                  );
+                  this.addNucleotide(x, y, col);
                 });
             });
           }
@@ -279,21 +271,17 @@ export class Grid extends entity.CompositeEntity {
           }
         }
       } else {
-      const sub = shape.shape;
-      if (typeof sub === "function") return;
-      sub.forEach((row, y) => {
-        if (row)
-          row.forEach((col, x) => {
-            if (!col) return;
-            this.addNucleotide(
-              x,
-              y,
-              col
-            );
-          });
-      });
+        const sub = shape.shape;
+        if (typeof sub === "function") return;
+        sub.forEach((row, y) => {
+          if (row)
+            row.forEach((col, x) => {
+              if (!col) return;
+              this.addNucleotide(x, y, col);
+            });
+        });
+      }
     }
-  }
 
     // finalize
     this.addSpecifics(
@@ -444,9 +432,7 @@ export class Grid extends entity.CompositeEntity {
     return position.x % 2 === 0;
   }
 
-  getForcedMatchingPath(
-    givenLength: number
-  ): {
+  getForcedMatchingPath(givenLength: number): {
     colors: nucleotide.ColorName[];
     nucleotides: nucleotide.Nucleotide[];
   } {
@@ -637,13 +623,10 @@ export class Grid extends entity.CompositeEntity {
   // }
 
   getAbsolutePositionFromGridPosition(gridPos: PIXI.Point): PIXI.Point {
-    const {
-      width,
-      height,
-      dist,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.nucleotideRadius
-    );
+    const { width, height, dist } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        this.level.options.nucleotideRadius
+      );
     const x = width / 2 + gridPos.x * dist.x;
     const y =
       gridPos.y * height -

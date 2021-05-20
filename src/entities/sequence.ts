@@ -198,11 +198,10 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   set(colors: nucleotide.ColorName[]) {
-    const {
-      width: nucleotideWidth,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.sequenceNucleotideRadius
-    );
+    const { width: nucleotideWidth } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        this.level.options.sequenceNucleotideRadius
+      );
     const sequence = new Sequence(
       colors,
       new PIXI.Point(
@@ -222,11 +221,10 @@ export class SequenceManager extends entity.CompositeEntity {
 
   add(length?: number) {
     length = length ?? this._pickSequenceLength();
-    const {
-      width: nucleotideWidth,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.sequenceNucleotideRadius
-    );
+    const { width: nucleotideWidth } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        this.level.options.sequenceNucleotideRadius
+      );
     const sequence = new Sequence(
       length,
       new PIXI.Point(
@@ -476,12 +474,10 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _initNucleotides() {
-    const {
-      width,
-      height,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.sequenceNucleotideRadius
-    );
+    const { width, height } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        this.level.options.sequenceNucleotideRadius
+      );
 
     let forcedSequence: nucleotide.ColorName[] = [];
 
@@ -860,12 +856,19 @@ export class Sequence extends entity.CompositeEntity {
     let pathSignature = this.level.path.toString();
     let sequenceSignature = this.toString();
 
-    for(let i=0; i < pathSignature.length && i < sequenceSignature.length; i++){
-      if(pathSignature[i] === "*") {
-        sequenceSignature = sequenceSignature.substring(0, i) + "*" + sequenceSignature.substring(i+1);
-      }
-      else if(sequenceSignature[i] === "*") {
-        pathSignature = pathSignature.substring(0, i) + "*" + pathSignature.substring(i+1);
+    for (
+      let i = 0;
+      i < pathSignature.length && i < sequenceSignature.length;
+      i++
+    ) {
+      if (pathSignature[i] === "*") {
+        sequenceSignature =
+          sequenceSignature.substring(0, i) +
+          "*" +
+          sequenceSignature.substring(i + 1);
+      } else if (sequenceSignature[i] === "*") {
+        pathSignature =
+          pathSignature.substring(0, i) + "*" + pathSignature.substring(i + 1);
       }
     }
 
@@ -915,12 +918,19 @@ export class Sequence extends entity.CompositeEntity {
     let pathSignature = this.level.path.toString();
     let sequenceSignature = this.toString();
 
-    for(let i=0; i < pathSignature.length && i < sequenceSignature.length; i++){
-      if(pathSignature[i] === "*") {
-        sequenceSignature = sequenceSignature.substring(0, i) + "*" + sequenceSignature.substring(i+1);
-      }
-      else if(sequenceSignature[i] === "*") {
-        pathSignature = pathSignature.substring(0, i) + "*" + pathSignature.substring(i+1);
+    for (
+      let i = 0;
+      i < pathSignature.length && i < sequenceSignature.length;
+      i++
+    ) {
+      if (pathSignature[i] === "*") {
+        sequenceSignature =
+          sequenceSignature.substring(0, i) +
+          "*" +
+          sequenceSignature.substring(i + 1);
+      } else if (sequenceSignature[i] === "*") {
+        pathSignature =
+          pathSignature.substring(0, i) + "*" + pathSignature.substring(i + 1);
       }
     }
 

@@ -209,9 +209,8 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
 };
 
 export type LevelEventName = keyof LevelEvents;
-export type LevelEventParams<
-  EventName extends LevelEventName
-> = LevelEvents[EventName];
+export type LevelEventParams<EventName extends LevelEventName> =
+  LevelEvents[EventName];
 
 export interface LevelEvents {
   end: [];
