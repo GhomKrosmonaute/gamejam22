@@ -448,7 +448,7 @@ export const levels = {
       disablingAnimations: ["tutorial"],
       checks: {
         "Crunch a sequence": (context) => context.sequenceWasCrunched,
-        "Reach 200 pts": (context) => context.score >= 200,
+        "Defeat 2 viruses": (context) => context.killedViruses >= 2,
       },
       hooks: [
         new l.Hook({

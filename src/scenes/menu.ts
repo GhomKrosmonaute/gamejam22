@@ -147,7 +147,8 @@ export class Menu extends entity.CompositeEntity {
       this.container.addChild(this.title);
     }
 
-    {
+    if (util.supportsFullscreen()) {
+      // if (false) {
       this.fullscreenSwitcher = new SpriteSwitcher(
         {
           on: "images/menu_fullscreen_button.png",
@@ -212,7 +213,8 @@ export class Menu extends entity.CompositeEntity {
       this.musicVolumeSwitcher.container.position.y += 200;
       this.musicVolumeSwitcher.onStateChange((state) => {
         this._entityConfig.playOptions.setOption("musicOn", state !== "0");
-        const volume = Number(state);
+        // Set volume to be 0.5 max
+        const volume = Number(state) / 2;
         this.settings.music = volume;
         this._entityConfig.jukebox.changeVolume(volume);
         this.saveSettings();
@@ -254,12 +256,15 @@ export class Menu extends entity.CompositeEntity {
       });
     }
 
-    this._activateChildEntity(
-      this.fullscreenSwitcher,
-      entity.extendConfig({
-        container: this.popupBackground,
-      })
-    );
+    if (this.fullscreenSwitcher) {
+      this._activateChildEntity(
+        this.fullscreenSwitcher,
+        entity.extendConfig({
+          container: this.popupBackground,
+        })
+      );
+    }
+
     this._activateChildEntity(
       this.subTitleSwitcher,
       entity.extendConfig({

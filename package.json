@@ -4,9 +4,11 @@
   "description": "Just another Booyah game",
   "main": "",
   "dependencies": {
+    "@types/uuid": "^8.3.0",
     "booyah": "play-curious/booyah#crispr-crunch",
     "csv-parse": "^4.4.1",
     "del": "^4.1.0",
+    "firebase": "^8.6.1",
     "gulp": "^4.0.0",
     "gulp-cli": "^2.0.1",
     "gulp-concat": "^2.6.1",
@@ -20,15 +22,17 @@
     "pixi-filters": "^4.0.0",
     "pixi.js": "5.3.9",
     "pump": "^3.0.0",
-    "underscore": "~1.10"
+    "underscore": "~1.10",
+    "uuid": "^8.3.2"
   },
   "scripts": {
     "format": "prettier --write ./src",
     "serve": "webpack-dev-server --config webpack.dev.js",
-    "start": "npm run serve",
+    "start": "yarn serve",
     "build": "webpack --config webpack.dev.js",
     "dist": "webpack --config webpack.prod.js",
-    "deploy": "yarn dist && rclone --progress sync --s3-acl public-read dist digitalocean:play-curious-crispr-crunch && node deploy-webhook.js"
+    "copyToApp": "yarn build && rm -r ../../crispr-crunch-android-app/app/src/main/assets/* && cp -r dist ../../crispr-crunch-android-app/app/src/main/assets/",
+    "buildText": "gulp"
   },
   "license": "MIT",
   "devDependencies": {
@@ -44,5 +48,13 @@
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.11.0",
     "webpack-merge": "^4.2.2"
+  },
+  "textAssets": {
+    "en": {
+      "spreadsheet": "1-XyjeV0XpRd7KuZ6sMCtEMu_qJpCk2tIphnGT2CHoHs",
+      "sheets": {
+        "subtitles": 0
+      }
+    }
   }
 }
