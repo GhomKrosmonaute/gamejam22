@@ -26,12 +26,12 @@ export class Main extends entity.CompositeEntity {
   private layer2: PIXI.Sprite;
   private links: PIXI.Graphics;
   private scrollBox: scroll.Scrollbox;
-  private sections: { [key in keyof typeof levels.sections]: PIXI.Sprite[] } = {
-    Intro: [],
-    Easy: [],
-    Medium: [],
-    Hard: [],
-  };
+  // private sections: { [key in keyof typeof levels.sections]: PIXI.Sprite[] } = {
+  //   Intro: [],
+  //   Easy: [],
+  //   Medium: [],
+  //   Hard: [],
+  // };
 
   protected _setup() {
     this._entityConfig.jukebox.play("menu");
@@ -53,24 +53,22 @@ export class Main extends entity.CompositeEntity {
     this.container.addChild(this.layer2);
     this.container.addChild(this.links);
 
-    for (const levelName of Object.keys(levels.levels)) {
+    for (const levelName of Object.keys(levels.levels) as levels.LevelName[]) {
       const index = Object.keys(levels.levels).indexOf(levelName);
-      const even = index % 2 === 0;
       const data = localStorage.getItem(levelName);
+      const even = index % 2 === 0;
 
       /**
        * If previous level is done or Boss level is done.
        */
-      const isAccessible =
-        (this.isSectionAccessible(
-          levels.getSectionNameOfLevel(levelName as levels.LevelName)
-        ) &&
-          Object.entries(levels.levels)
-            .slice(index + 1)
-            .every(([key]) => {
-              return !!localStorage.getItem(key);
-            })) ||
-        !!localStorage.getItem("Boss");
+      const isAccessible = this.isSectionAccessible(
+        levels.getSectionNameOfLevel(levelName)
+      ); // &&
+      //   (Object.entries(levels.levels)
+      //     .slice(index + 1)
+      //     .every(([key]) => {
+      //       return !!localStorage.getItem(key);
+      //     })))
 
       // make a button
       const position = new PIXI.Point(
@@ -267,11 +265,10 @@ export class Main extends entity.CompositeEntity {
   }
 
   private isSectionAccessible(sectionName: levels.SectionName): boolean {
-    const previousSectionEntry = Object.entries(levels.sections).find(
-      (entry, i, arr) => {
-        return arr[i + 1]?.[0] === sectionName;
-      }
-    );
+    const entries = Object.entries(levels.sections);
+    const previousSectionEntry = entries.find((entry, i, arr) => {
+      return arr[i + 1]?.[0] === sectionName;
+    });
 
     if (previousSectionEntry) {
       return levels
@@ -279,7 +276,13 @@ export class Main extends entity.CompositeEntity {
         .every((name) => {
           return levels.levelIsPassed(name);
         });
-    } else return true;
+    } else {
+      // is not last section
+      return (
+        entries.findIndex(([name]) => name === sectionName) !==
+        entries.length - 1
+      );
+    }
   }
 
   public setLevel(levelName: levels.LevelName) {

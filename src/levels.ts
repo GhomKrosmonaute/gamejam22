@@ -17,7 +17,14 @@ declare var level: l.Level;
 
 export const levels = {
   // Hard
-  "Medium\nBoss": () => new l.Level("Medium\nBoss", {}),
+  "Big\nBoss": () =>
+    new l.Level("Big\nBoss", (ctx) => ({
+      gridShape: "mini",
+      forceMatching: false,
+      jokerCount: 1,
+      maxLife: 5,
+      portalsCount: 2,
+    })),
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
       gridShape: "fourIslands",
@@ -25,6 +32,7 @@ export const levels = {
       clipCount: 4,
       sequenceLength: 4,
       portalsCount: 4,
+      jokerCount: 3,
       maxLife: 10,
       crispyBonusRate: 0.6,
       initialBonuses: [
@@ -72,6 +80,7 @@ export const levels = {
   //     });
   //
   //     return {
+  //       forceMatching: false,
   //       mustBeHiddenOnPause: true,
   //       gridShape: "hole",
   //       virus: "mini",
@@ -97,7 +106,7 @@ export const levels = {
   //   }),
 
   // Medium
-  "Big\nBoss": () => new l.Level("Big\nBoss", {}),
+  "Medium\nBoss": () => new l.Level("Medium\nBoss", {}),
   "Chrono\nPortal": () =>
     new l.Level("Chrono\nPortal", (context) => ({
       variant: "fall",
@@ -150,15 +159,14 @@ export const levels = {
     new l.Level("Boss", (context) => ({
       virus: "big",
       variant: "fall",
-      dropSpeed: 1,
+      fallingSpeed: 1,
       gridShape: "medium",
       sequenceLength: 7,
       forceMatching: true,
       clipCount: 3,
-      portalsCount: 4,
       gaugeRings: [
         (context) => {
-          context.options.dropSpeed = 1.2;
+          context.options.fallingSpeed = 1.2;
           context.activate(
             anim.title(context.container, "Speed 120%", 2000, (t) => t, 2)
           );
@@ -170,7 +178,7 @@ export const levels = {
             new PIXI.Point(500, -2000)
           ),
         (context) => {
-          context.options.dropSpeed = 1.3;
+          context.options.fallingSpeed = 1.3;
           context.activate(
             anim.title(context.container, "Speed 130%", 2000, (t) => t, 2)
           );
@@ -233,7 +241,6 @@ export const levels = {
       forceMatching: true,
       disableBonuses: true,
       crispyBonusRate: 0.2,
-      portalsCount: 4,
       zenMoves: 10,
       score: {
         max: 1000,
@@ -362,7 +369,6 @@ export const levels = {
         }),
       ],
     })),
-
   Classic: () =>
     new l.Level("Classic", (context) => ({
       variant: "turn",
@@ -428,7 +434,6 @@ export const levels = {
     })),
 
   // Intro
-
   Tutorial: () =>
     new l.Level("Tutorial", {
       variant: "turn",
@@ -748,7 +753,7 @@ export const sections = {
     levels["Chrono\nPortal"],
     levels["Medium\nBoss"],
   ],
-  Hard: [levels["Big\nBoss"]],
+  Hard: [levels.Caribbean, levels["Big\nBoss"]],
 };
 export type SectionName = keyof typeof sections;
 

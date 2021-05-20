@@ -97,7 +97,7 @@ export interface LevelOptions {
     fromRight?: boolean;
     possibleParts: { length: number | string; glowColor: number }[];
   } | null;
-  dropSpeed: number;
+  fallingSpeed: number;
   baseCrispyGain: number;
   minStarNeeded: number;
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
@@ -195,7 +195,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   variant: "turn",
   virus: "mini",
   maxLife: 5,
-  dropSpeed: 1,
+  fallingSpeed: 1,
   canCrunchParts: null,
   score: defaultScoreOptions,
   baseCrispyGain: 10,
@@ -941,7 +941,7 @@ export class Level extends entity.CompositeEntity {
     // if falling sequence is down, infect
     if (
       this.sequenceManager.advanceSequences(
-        this.options.dropSpeed * baseDropSpeed
+        this.options.fallingSpeed * baseDropSpeed
       ).length > 0
     ) {
       this.emitLevelEvent("fallingDown");
