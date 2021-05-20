@@ -66,7 +66,6 @@ export interface LevelOptions {
   disableExtraSequence: boolean;
   disableBonuses: boolean;
   disableButton: boolean;
-  disableJoker: boolean;
   disableGauge: boolean;
   disableScore: boolean;
   disableClips: boolean;
@@ -173,7 +172,6 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   gridCleaning: false,
   disablingAnimations: [],
   disableExtraSequence: false,
-  disableJoker: true,
   disableBonuses: false,
   disableButton: false,
   disableGauge: false,
