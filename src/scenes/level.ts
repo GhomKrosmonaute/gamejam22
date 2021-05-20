@@ -3,13 +3,12 @@ import * as PIXI from "pixi.js";
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
-import * as util from "booyah/src/util";
 
 import * as crispr from "../crispr";
 import * as levels from "../levels";
 import * as anim from "../animations";
 
-import * as minimap from "./minimap";
+import * as minimap from "./main";
 
 import * as nucleotide from "../entities/nucleotide";
 import * as sequence from "../entities/sequence";
@@ -510,7 +509,7 @@ export class Level extends entity.CompositeEntity {
     this._once(this, event, callback);
   }
 
-  get minimap(): minimap.Minimap {
+  get minimap(): minimap.Main {
     return this._entityConfig.minimap;
   }
 

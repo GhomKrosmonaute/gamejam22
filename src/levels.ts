@@ -2,21 +2,59 @@ import * as PIXI from "pixi.js";
 
 import { OutlineFilter } from "@pixi/filter-outline";
 
-import * as easing from "booyah/src/easing";
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
-import * as util from "booyah/src/util";
+import * as easing from "booyah/src/easing";
 
 import * as popup from "./entities/popup";
 
-import * as crispr from "./crispr";
-import * as anim from "./animations";
-
 import * as l from "./scenes/level";
+
+import * as anim from "./animations";
+import * as crispr from "./crispr";
 
 declare var level: l.Level;
 
 export const levels = {
+  // Hard
+  "Medium\nBoss": () => new l.Level("Medium\nBoss", {}),
+  Caribbean: () =>
+    new l.Level("Caribbean", (ctx) => ({
+      gridShape: "fourIslands",
+      forceMatching: false,
+      clipCount: 4,
+      sequenceLength: 4,
+      portalsCount: 4,
+      maxLife: 10,
+      crispyBonusRate: 0.6,
+      initialBonuses: [
+        {
+          bonus: (ctx) => ctx.swapBonus,
+          quantity: 2,
+        },
+      ],
+      hooks: [
+        new l.Hook({
+          id: "intro",
+          event: "init",
+          once: true,
+          entity: new entity.FunctionCallEntity(() => {
+            ctx.activate(
+              new popup.TutorialPopup({
+                title: "Land in sight!",
+                content: `Loot the Caribbean treasures, collect at least ${ctx.options.score.max}!`,
+                image: "images/crispy.png",
+                imageHeight: 200,
+                popupOptions: {
+                  minimizeOnClose: false,
+                  coolDown: 2000,
+                },
+              })
+            );
+          }),
+        }),
+      ],
+    })),
   // Timed: () =>
   //   new l.Level("Timed", (ctx) => {
   //     ctx.playTime = 0;
@@ -58,95 +96,46 @@ export const levels = {
   //     };
   //   }),
 
-  Caribbean: () =>
-    new l.Level("Caribbean", (ctx) => ({
-      gridShape: "fourIslands",
-      forceMatching: false,
-      clipCount: 4,
-      sequenceLength: 4,
-      portalsCount: 4,
-      maxLife: 10,
-      crispyBonusRate: 0.6,
-      initialBonuses: [
-        {
-          bonus: (ctx) => ctx.swapBonus,
-          quantity: 2,
-        },
+  // Medium
+  "Big\nBoss": () => new l.Level("Big\nBoss", {}),
+  "Chrono\nPortal": () =>
+    new l.Level("Chrono\nPortal", (context) => ({
+      variant: "fall",
+      gridShape: "medium",
+      forceMatching: true,
+      portalsCount: 2,
+      clipCount: 3,
+      gaugeRings: [
+        (context) =>
+          context.bonusesManager.add(
+            context.swapBonus,
+            1,
+            new PIXI.Point(200, -2000)
+          ),
+        (context, ring) =>
+          context.activate(
+            new entity.EntitySequence([
+              new entity.FunctionCallEntity(() => {
+                context.bonusesManager.add(
+                  context.timeBonus,
+                  1,
+                  new PIXI.Point(500, -2000)
+                );
+              }),
+            ])
+          ),
       ],
       hooks: [
         new l.Hook({
-          id: "intro",
-          event: "init",
-          once: true,
+          id: "go title",
+          event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
-            ctx.activate(
-              new popup.TutorialPopup({
-                title: "Land in sight!",
-                content: `Loot the Caribbean treasures, collect at least ${ctx.options.score.max}!`,
-                image: "images/crispy.png",
-                imageHeight: 200,
-                popupOptions: {
-                  minimizeOnClose: false,
-                  coolDown: 2000,
-                },
-              })
-            );
+            if (context.isEnded && !context.finished)
+              context.activate(anim.title(context.container, "Go!"));
           }),
         }),
       ],
     })),
-
-  Hive: () =>
-    new l.Level("Hive", (context) => ({
-      gridShape: "hive",
-      maxLife: 3,
-      forceMatching: true,
-      sequenceLength: 8,
-      // canCrunchParts: {
-      //   fromLeft: true,
-      //   possibleParts: [
-      //     {
-      //       glowColor: 0x00ff00,
-      //       length: 4,
-      //     },
-      //     {
-      //       glowColor: 0x00ffff,
-      //       length: 6,
-      //     },
-      //   ],
-      // },
-      portalsCount: 4,
-    })),
-
-  Hole: () =>
-    new l.Level("Hole", (context) => ({
-      gridShape: "hole",
-      // gridCleaning: true,
-      // score: {
-      //   max: () => context.grid.nucleotides.length,
-      //   initial: 0,
-      //   color: crisp.yellowNumber,
-      //   get: () =>
-      //     context.grid.nucleotides.filter((n) => n.state === "inactive").length,
-      //   set: (value) => (context.killedViruses = value),
-      //   show: (value) => String(value) + " crh",
-      // },
-      forceMatching: true,
-    })),
-
-  "Bow Tie": () =>
-    new l.Level("Bow Tie", (context) => ({
-      gridShape: "bowTie",
-      forceMatching: true,
-    })),
-
-  "Little\nBridge": () =>
-    new l.Level("Little\nBridge", (context) => ({
-      gridShape: "littleBridge",
-      forceMatching: true,
-      portalsCount: 2,
-    })),
-
   "Four\nIslands": () =>
     new l.Level("Four\nIslands", (context) => ({
       gridShape: "fourIslands",
@@ -156,6 +145,7 @@ export const levels = {
       portalsCount: 4,
     })),
 
+  // Easy
   Boss: () =>
     new l.Level("Boss", (context) => ({
       virus: "big",
@@ -235,9 +225,6 @@ export const levels = {
         }),
       ],
     })),
-
-  // todo: intermediary levels with medium virus
-
   Zen: () =>
     new l.Level("Zen", {
       variant: "zen",
@@ -287,46 +274,6 @@ export const levels = {
         }),
       ],
     }),
-
-  "Chrono\nPortal": () =>
-    new l.Level("Chrono\nPortal", (context) => ({
-      variant: "fall",
-      gridShape: "medium",
-      forceMatching: true,
-      clipCount: 3,
-      portalsCount: 2,
-      gaugeRings: [
-        (context) =>
-          context.bonusesManager.add(
-            context.swapBonus,
-            1,
-            new PIXI.Point(200, -2000)
-          ),
-        (context, ring) =>
-          context.activate(
-            new entity.EntitySequence([
-              new entity.FunctionCallEntity(() => {
-                context.bonusesManager.add(
-                  context.timeBonus,
-                  1,
-                  new PIXI.Point(500, -2000)
-                );
-              }),
-            ])
-          ),
-      ],
-      hooks: [
-        new l.Hook({
-          id: "go title",
-          event: "injectedSequence",
-          entity: new entity.FunctionCallEntity(() => {
-            if (context.isEnded && !context.finished)
-              context.activate(anim.title(context.container, "Go!"));
-          }),
-        }),
-      ],
-    })),
-
   Chrono: () =>
     new l.Level("Chrono", (context) => ({
       variant: "fall",
@@ -479,6 +426,8 @@ export const levels = {
         }),
       ],
     })),
+
+  // Intro
 
   Tutorial: () =>
     new l.Level("Tutorial", {
@@ -791,3 +740,40 @@ export const levels = {
 export const levelNames = Object.keys(levels);
 export type LevelName = keyof Levels;
 export type Levels = typeof levels;
+export const sections = {
+  Intro: [levels.Tutorial],
+  Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
+  Medium: [
+    levels["Four\nIslands"],
+    levels["Chrono\nPortal"],
+    levels["Medium\nBoss"],
+  ],
+  Hard: [levels["Big\nBoss"]],
+};
+export type SectionName = keyof typeof sections;
+
+export function getSectionNameOfLevel(
+  levelName: LevelName
+): keyof typeof sections | null {
+  for (const sectionName in sections) {
+    const section = sections[sectionName as keyof typeof sections];
+    if (section.some((level) => levels[levelName] === level))
+      return sectionName as keyof typeof sections;
+  }
+
+  return null;
+}
+
+export function getSectionLevelNames(sectionName: SectionName): LevelName[] {
+  const section = sections[sectionName];
+  const levelNames = section.map((l) => {
+    const entries = Object.entries(levels);
+    const entry = entries.find((e) => e[1] === l);
+    return entry[0];
+  });
+  return levelNames as LevelName[];
+}
+
+export function levelIsPassed(levelName: LevelName): boolean {
+  return !!localStorage.getItem(levelName);
+}

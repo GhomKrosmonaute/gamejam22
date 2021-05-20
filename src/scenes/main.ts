@@ -14,7 +14,7 @@ import * as menu from "./menu";
 import * as anim from "../animations";
 import * as crispr from "../crispr";
 
-export class Minimap extends entity.CompositeEntity {
+export class Main extends entity.CompositeEntity {
   static savedScroll = -9999999;
   static lastLevel: levels.LevelName = null;
 
@@ -26,6 +26,12 @@ export class Minimap extends entity.CompositeEntity {
   private layer2: PIXI.Sprite;
   private links: PIXI.Graphics;
   private scrollBox: scroll.Scrollbox;
+  private sections: { [key in keyof typeof levels.sections]: PIXI.Sprite[] } = {
+    Intro: [],
+    Easy: [],
+    Medium: [],
+    Hard: [],
+  };
 
   protected _setup() {
     this._entityConfig.jukebox.play("menu");
@@ -56,11 +62,15 @@ export class Minimap extends entity.CompositeEntity {
        * If previous level is done or Boss level is done.
        */
       const isAccessible =
-        Object.entries(levels.levels)
-          .slice(index + 1)
-          .every(([key]) => {
-            return !!localStorage.getItem(key);
-          }) || !!localStorage.getItem("Boss");
+        (this.isSectionAccessible(
+          levels.getSectionNameOfLevel(levelName as levels.LevelName)
+        ) &&
+          Object.entries(levels.levels)
+            .slice(index + 1)
+            .every(([key]) => {
+              return !!localStorage.getItem(key);
+            })) ||
+        !!localStorage.getItem("Boss");
 
       // make a button
       const position = new PIXI.Point(
@@ -98,7 +108,7 @@ export class Minimap extends entity.CompositeEntity {
         levelSprite.addChild(preview);
       }
 
-      if (levelName === Minimap.lastLevel) {
+      if (levelName === Main.lastLevel) {
         const circle = new PIXI.Graphics()
           .lineStyle(10, crispr.yellowNumber)
           .drawCircle(0, 25, 165);
@@ -129,8 +139,8 @@ export class Minimap extends entity.CompositeEntity {
       this._on(levelSprite, "pointerup", () => {
         this._entityConfig.fxMachine.play("validate");
 
-        Minimap.savedScroll = this.scrollBox.currentScroll.y;
-        Minimap.lastLevel = levelName as levels.LevelName;
+        Main.savedScroll = this.scrollBox.currentScroll.y;
+        Main.lastLevel = levelName as levels.LevelName;
 
         this._activateChildEntity(
           new tween.Tween({
@@ -210,7 +220,7 @@ export class Minimap extends entity.CompositeEntity {
         container: this.container,
       })
     );
-    this.scrollBox.scrollTo(new PIXI.Point(0, Minimap.savedScroll));
+    this.scrollBox.scrollTo(new PIXI.Point(0, Main.savedScroll));
     this.scrollBox.refresh();
 
     this._entityConfig.container.addChild(this.container);
@@ -254,6 +264,22 @@ export class Minimap extends entity.CompositeEntity {
     this.background = null;
     this.layer1 = null;
     this.links = null;
+  }
+
+  private isSectionAccessible(sectionName: levels.SectionName): boolean {
+    const previousSectionEntry = Object.entries(levels.sections).find(
+      (entry, i, arr) => {
+        return arr[i + 1]?.[0] === sectionName;
+      }
+    );
+
+    if (previousSectionEntry) {
+      return levels
+        .getSectionLevelNames(previousSectionEntry[0] as levels.SectionName)
+        .every((name) => {
+          return levels.levelIsPassed(name);
+        });
+    } else return true;
   }
 
   public setLevel(levelName: levels.LevelName) {
