@@ -18,8 +18,9 @@ const introVideoScene = new narration.VideoScene({
   videoOptions: { scale: 2 },
   music: "intro",
   musicVolume: 1,
+  narration: "intro",
   skipButtonOptions: {
-    position: { x: crispr.width - 150, y: crispr.height - 150 },
+    position: { x: crispr.width - 150, y: 150 },
   },
 });
 
@@ -221,12 +222,27 @@ const videoAssets = ["intro"];
 
 const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen", "intro"];
 
+const jsonAssets = [{ key: "subtitles", url: "text/subtitles_en.json" }];
+
+const subtitleNarratorOptions = {
+  position: {
+    x: crispr.width / 2,
+    y: crispr.height - 300,
+  },
+  textStyle: {
+    fontFamily: "Optimus",
+    fontSize: 80,
+    wordWrapWidth: crispr.width - 100,
+  },
+};
+
 const entityInstallers: ((
   rootConfig: entity.EntityConfig,
   rootEntity: entity.Entity
 ) => unknown)[] = [
   audio.installJukebox,
   audio.installFxMachine,
+  narration.makeInstallSubtitleNarrator(subtitleNarratorOptions),
   // booyah.makeInstallMenu({
   //   menuButtonPosition: new PIXI.Point(crispr.width - 111, 106),
   // }),
@@ -244,6 +260,7 @@ booyah.go({
   musicAssets,
   fontAssets,
   fxAssets,
+  jsonAssets,
   splashScreen: "images/titlescreen_background.png",
   graphics: {
     //menu: "images/hud_menu_button.png",

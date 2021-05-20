@@ -31,7 +31,8 @@
     "start": "yarn serve",
     "build": "webpack --config webpack.dev.js",
     "dist": "webpack --config webpack.prod.js",
-    "copyToApp": "yarn build && rm -r ../../crispr-crunch-android-app/app/src/main/assets/* && cp -r dist ../../crispr-crunch-android-app/app/src/main/assets/"
+    "copyToApp": "yarn build && rm -r ../../crispr-crunch-android-app/app/src/main/assets/* && cp -r dist ../../crispr-crunch-android-app/app/src/main/assets/",
+    "buildText": "gulp"
   },
   "license": "MIT",
   "devDependencies": {
@@ -47,5 +48,13 @@
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.11.0",
     "webpack-merge": "^4.2.2"
+  },
+  "textAssets": {
+    "en": {
+      "spreadsheet": "1-XyjeV0XpRd7KuZ6sMCtEMu_qJpCk2tIphnGT2CHoHs",
+      "sheets": {
+        "subtitles": 0
+      }
+    }
   }
 }
