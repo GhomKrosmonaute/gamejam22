@@ -847,7 +847,11 @@ export class Sequence extends entity.CompositeEntity {
       this.level.variant
     ]
   ): boolean {
-    const { pathSignature, sequenceSignature } = this.level.resolveSignatures();
+    const signatures = this.level.resolveSignatures();
+
+    if (!signatures) return false;
+
+    const { pathSignature, sequenceSignature } = signatures;
 
     if (pathSignature.length < crispr.scrap(options.minLength, this.level))
       return false;
@@ -892,7 +896,11 @@ export class Sequence extends entity.CompositeEntity {
       this.level.variant
     ]
   ): nucleotide.Nucleotide[] | null {
-    const { pathSignature, sequenceSignature } = this.level.resolveSignatures();
+    const signatures = this.level.resolveSignatures();
+
+    if (!signatures) return null;
+
+    const { pathSignature, sequenceSignature } = signatures;
 
     if (pathSignature.length < crispr.scrap(options.minLength, this.level))
       return null;
