@@ -100,6 +100,7 @@ export class Path extends entity.CompositeEntity {
 
     // if click in start of existing path
     if (index === 0) {
+      debugger;
       // Clear path
       this.items = [];
 
@@ -134,7 +135,7 @@ export class Path extends entity.CompositeEntity {
     }
 
     // Ignore clips
-    if (n.type === "clip") return false;
+    if (n.type === "clip" && this.first !== n) return false;
 
     // Ignore holes
     if (n.state === "missing") return false;
