@@ -1154,6 +1154,34 @@ export class Level extends entity.CompositeEntity {
     };
   }
 
+  resolveSignatures(): {
+    sequenceSignature: string;
+    pathSignature: string;
+  } | null {
+    let pathSignature = this.path.toString();
+    let sequenceSignature = this.sequenceManager.first?.toString();
+
+    if (!pathSignature || !sequenceSignature) return null;
+
+    for (
+      let i = 0;
+      i < pathSignature.length && i < sequenceSignature.length;
+      i++
+    ) {
+      if (pathSignature[i] === "*") {
+        sequenceSignature =
+          sequenceSignature.substring(0, i) +
+          "*" +
+          sequenceSignature.substring(i + 1);
+      } else if (sequenceSignature[i] === "*") {
+        pathSignature =
+          pathSignature.substring(0, i) + "*" + pathSignature.substring(i + 1);
+      }
+    }
+
+    return { pathSignature, sequenceSignature };
+  }
+
   exit(save: boolean = false) {
     if (save) this.minimap.saveResults(this);
     this._transition = entity.makeTransition();
