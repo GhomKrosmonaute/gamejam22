@@ -244,7 +244,7 @@ export const levels = {
       disableClips: true,
       forceMatching: true,
       disableBonuses: true,
-      crispyBonusRate: 0.35,
+      crispyBonusRate: 0.2,
       portalsCount: 4,
       zenMoves: 10,
       score: {
