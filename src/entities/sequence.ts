@@ -617,7 +617,7 @@ export class Sequence extends entity.CompositeEntity {
       this._entityConfig.level.sequenceManager.emit("click", this);
     });
 
-    if (this.level.options.variant === "zen") {
+    if (this.level.options.disableViruses) {
       this._initNucleotides();
     } else {
       this._activateChildEntity(this._initVirus());

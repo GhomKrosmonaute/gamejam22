@@ -30,6 +30,7 @@ export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
     showMatchMatchOnCrunch: false,
     disableBonuses: true,
     remainingMoves: true,
+    disableViruses: true,
     crunchOnPointerUp: false,
     actionButtonSprite: "images/hud_action_button_crunch.png",
   },
@@ -70,6 +71,7 @@ export interface LevelOptions {
   showMatchMatchOnCrunch: boolean;
   disableExtraSequence: boolean;
   disableBonuses: boolean;
+  disableViruses: boolean;
   disableButton: boolean;
   disableGauge: boolean;
   disableScore: boolean;
@@ -180,6 +182,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   disableExtraSequence: false,
   showMatchMatchOnCrunch: true,
   disableBonuses: false,
+  disableViruses: false,
   disableButton: false,
   disableGauge: false,
   disableScore: false,
