@@ -198,10 +198,11 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   set(colors: nucleotide.ColorName[]) {
-    const { width: nucleotideWidth } =
-      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-        this.level.options.sequenceNucleotideRadius
-      );
+    const {
+      width: nucleotideWidth,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      this.level.options.sequenceNucleotideRadius
+    );
     const sequence = new Sequence(
       colors,
       new PIXI.Point(
@@ -221,10 +222,11 @@ export class SequenceManager extends entity.CompositeEntity {
 
   add(length?: number) {
     length = length ?? this._pickSequenceLength();
-    const { width: nucleotideWidth } =
-      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-        this.level.options.sequenceNucleotideRadius
-      );
+    const {
+      width: nucleotideWidth,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      this.level.options.sequenceNucleotideRadius
+    );
     const sequence = new Sequence(
       length,
       new PIXI.Point(
@@ -448,6 +450,7 @@ export class Sequence extends entity.CompositeEntity {
 
     const requestTransition = () =>
       this.virus.isSetup &&
+      !this.level.finished &&
       this.level.isInit &&
       !this.level.isEnded &&
       !this.level.disablingAnimations.has("preventVirus") &&
@@ -475,10 +478,12 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _initNucleotides() {
-    const { width, height } =
-      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-        this.level.options.sequenceNucleotideRadius
-      );
+    const {
+      width,
+      height,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      this.level.options.sequenceNucleotideRadius
+    );
 
     let forcedSequence: nucleotide.ColorName[] = [];
 

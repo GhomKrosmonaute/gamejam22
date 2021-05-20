@@ -260,7 +260,7 @@ export class Path extends entity.CompositeEntity {
 
             this._activateChildEntity(
               new entity.EntitySequence([
-                this.level.variant === "zen"
+                !this.level.options.showMatchMatchOnCrunch
                   ? new entity.TransitoryEntity()
                   : new entity.ParallelEntity([
                       () =>

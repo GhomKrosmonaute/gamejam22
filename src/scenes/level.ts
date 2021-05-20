@@ -27,6 +27,7 @@ export type LevelVariant = "turn" | "fall" | "zen";
 
 export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
   zen: {
+    showMatchMatchOnCrunch: false,
     disableBonuses: true,
     remainingMoves: true,
     crunchOnPointerUp: false,
@@ -34,6 +35,8 @@ export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
   },
   turn: {},
   fall: {
+    showMatchMatchOnCrunch: false,
+    mustBeHiddenOnPause: true,
     falling: true,
   },
 };
@@ -63,6 +66,8 @@ export interface ScoreOptions {
 
 export interface LevelOptions {
   disablingAnimations: string[];
+  mustBeHiddenOnPause: boolean;
+  showMatchMatchOnCrunch: boolean;
   disableExtraSequence: boolean;
   disableBonuses: boolean;
   disableButton: boolean;
@@ -170,8 +175,10 @@ export const defaultScoreOptions: Readonly<ScoreOptions> = {
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
   gridCleaning: false,
+  mustBeHiddenOnPause: false,
   disablingAnimations: [],
   disableExtraSequence: false,
+  showMatchMatchOnCrunch: true,
   disableBonuses: false,
   disableButton: false,
   disableGauge: false,
@@ -231,8 +238,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
 };
 
 export type LevelEventName = keyof LevelEvents;
-export type LevelEventParams<EventName extends LevelEventName> =
-  LevelEvents[EventName];
+export type LevelEventParams<
+  EventName extends LevelEventName
+> = LevelEvents[EventName];
 
 export interface LevelEvents {
   end: [];

@@ -34,6 +34,7 @@ export const levels = {
   //     });
   //
   //     return {
+  //       mustBeHiddenOnPause: true,
   //       gridShape: "hole",
   //       virus: "mini",
   //       checks: {
@@ -368,14 +369,6 @@ export const levels = {
       ],
       hooks: [
         new l.Hook({
-          id: "minimized popup ring 1",
-          event: "minimizedPopup",
-          filter: (p) => p.id === "popup ring 1",
-          entity: new entity.FunctionCallEntity(() => {
-            context.timeBonus.highlight = false;
-          }),
-        }),
-        new l.Hook({
           id: "intro",
           event: "init",
           once: true,
@@ -388,11 +381,20 @@ export const levels = {
                 popupOptions: {
                   id: "intro popup",
                   logo: "images/icon_timed.png",
+                  withBlackBackground: false,
                   minimizeOnClose: false,
                   coolDown: 2000,
                 },
               })
             );
+          }),
+        }),
+        new l.Hook({
+          id: "minimized popup ring 1",
+          event: "minimizedPopup",
+          filter: (p) => p.id === "popup ring 1",
+          entity: new entity.FunctionCallEntity(() => {
+            context.timeBonus.highlight = false;
           }),
         }),
         new l.Hook({
@@ -419,6 +421,7 @@ export const levels = {
       variant: "turn",
       minStarNeeded: 1,
       forceMatching: true,
+      noCrispyBonus: true,
       gridShape: "medium",
       clipCount: 3,
       gaugeRings: [
