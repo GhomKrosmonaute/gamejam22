@@ -229,10 +229,17 @@ export class Grid extends entity.CompositeEntity {
   generateShape() {
     this.allNucleotides.length = colCount * rowCount;
 
-    // colors and shape
-    const shape = this.level.options.gridShape;
-    if (Array.isArray(shape)) {
-      // preset grid colors and shape
+    const applyArrowShape = (shape: GridArrowShape) => {
+      for (let x = 0; x < colCount; x++) {
+        for (let y = 0; y < rowCount; y++) {
+          if (shape(x, y)) continue;
+          if (x % 2 === 0 && y === rowCount - 1) continue;
+          this.addNucleotide(x, y);
+        }
+      }
+    };
+
+    const applyArrayShape = (shape: GridPreset<nucleotide.ColorName>) => {
       shape.forEach((row, y) => {
         if (row)
           row.forEach((col, x) => {
@@ -241,56 +248,42 @@ export class Grid extends entity.CompositeEntity {
             }
           });
       });
-    } else {
-      // preset shape
-      if (typeof shape === "string") {
-        const resolvedShape = gridShapes[shape];
-        if (typeof resolvedShape === "function") {
-          for (let x = 0; x < colCount; x++) {
-            for (let y = 0; y < rowCount; y++) {
-              if (resolvedShape(x, y)) continue;
-              if (x % 2 === 0 && y === rowCount - 1) continue;
-              this.addNucleotide(x, y);
-            }
-          }
-        } else {
-          const sub = resolvedShape.shape;
-          if (typeof sub === "function") {
-            for (let x = 0; x < colCount; x++) {
-              for (let y = 0; y < rowCount; y++) {
-                if (sub(x, y)) continue;
-                if (x % 2 === 0 && y === rowCount - 1) continue;
-                this.addNucleotide(x, y);
-              }
-            }
-          } else {
-            sub.forEach((row, y) => {
-              if (row)
-                row.forEach((col, x) => {
-                  if (!col) return;
-                  this.addNucleotide(x, y, col);
-                });
-            });
-          }
-        }
-      } else if (typeof shape === "function") {
-        for (let x = 0; x < colCount; x++) {
-          for (let y = 0; y < rowCount; y++) {
-            if (shape(x, y)) continue;
-            if (x % 2 === 0 && y === rowCount - 1) continue;
-            this.addNucleotide(x, y);
-          }
-        }
+    };
+
+    const applyShape = (
+      shape: GridArrowShape | GridPreset<nucleotide.ColorName>
+    ) => {
+      if (typeof shape === "function") {
+        applyArrowShape(shape);
       } else {
-        const sub = shape.shape;
-        if (typeof sub === "function") return;
-        sub.forEach((row, y) => {
+        shape.forEach((row, y) => {
           if (row)
             row.forEach((col, x) => {
               if (!col) return;
               this.addNucleotide(x, y, col);
             });
         });
+      }
+    };
+
+    // colors and shape
+    const shape = this.level.options.gridShape;
+    if (Array.isArray(shape)) {
+      // preset grid colors and shape
+      applyArrayShape(shape);
+    } else {
+      // preset shape
+      if (typeof shape === "string") {
+        const resolvedShape = gridShapes[shape];
+        if (typeof resolvedShape === "function") {
+          applyArrowShape(resolvedShape);
+        } else {
+          applyShape(resolvedShape.shape);
+        }
+      } else if (typeof shape === "function") {
+        applyArrowShape(shape);
+      } else {
+        applyShape(shape.shape);
       }
     }
 

@@ -7,6 +7,7 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as popup from "./entities/popup";
+import * as grid from "./entities/grid";
 
 import * as l from "./scenes/level";
 
@@ -112,10 +113,17 @@ export const levels = {
   "Chrono\nPortal": () =>
     new l.Level("Chrono\nPortal", (context) => ({
       variant: "fall",
-      gridShape: "medium",
+      gridShape: {
+        portals: [
+          { x: 1, y: 3 },
+          { x: 5, y: 3 },
+        ],
+        clips: [{ x: 3, y: 3 }],
+        shape: grid.gridShapes.medium as grid.GridArrowShape,
+      },
       forceMatching: true,
       portalsCount: 2,
-      clipCount: 3,
+      clipCount: 1,
       gaugeRings: [
         (context) =>
           context.bonusesManager.add(
