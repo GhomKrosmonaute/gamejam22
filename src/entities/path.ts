@@ -100,7 +100,6 @@ export class Path extends entity.CompositeEntity {
 
     // if click in start of existing path
     if (index === 0) {
-      debugger;
       // Clear path
       this.items = [];
 

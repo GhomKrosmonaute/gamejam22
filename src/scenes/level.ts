@@ -27,6 +27,8 @@ export type LevelVariant = "turn" | "fall" | "zen";
 export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
   zen: {
     showMatchMatchOnCrunch: false,
+    sequenceRounded: true,
+    sequenceLength: 13,
     disableBonuses: true,
     remainingMoves: true,
     disableViruses: true,
@@ -37,6 +39,7 @@ export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
   fall: {
     showMatchMatchOnCrunch: false,
     mustBeHiddenOnPause: true,
+    sequenceLength: () => crispr.random(3, 5),
     falling: true,
   },
 };
@@ -101,7 +104,7 @@ export interface LevelOptions {
   baseCrispyGain: number;
   minStarNeeded: number;
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
-  sequenceLength: number | null;
+  sequenceLength: number | ((level: Level) => number);
 
   clipCount: number;
   portalsCount: number;
@@ -202,7 +205,15 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   minStarNeeded: 0,
   crispyBonusRate: 0.1,
   gaugeRings: [],
-  sequenceLength: null,
+  sequenceLength: (level) =>
+    crispr.random(
+      4,
+      Math.min(
+        8,
+        level.grid.getIslands().sort((a, b) => a.length - b.length)[0]
+          ?.length ?? 8
+      )
+    ),
   sequences: null,
 
   clipCount: 4,

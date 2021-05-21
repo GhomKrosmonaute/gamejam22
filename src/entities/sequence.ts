@@ -183,20 +183,6 @@ export class SequenceManager extends entity.CompositeEntity {
     }
   }
 
-  private _pickSequenceLength(): number {
-    if (this.level.options.sequenceLength !== null)
-      return this.level.options.sequenceLength;
-
-    switch (this.level.options.variant) {
-      case "turn":
-        return crispr.random(4, 7);
-      case "fall":
-        return crispr.random(3, 5);
-      case "zen":
-        return 13;
-    }
-  }
-
   set(colors: nucleotide.ColorName[]) {
     const {
       width: nucleotideWidth,
@@ -220,8 +206,7 @@ export class SequenceManager extends entity.CompositeEntity {
     this.adjustment.adjust();
   }
 
-  add(length?: number) {
-    length = length ?? this._pickSequenceLength();
+  add(length = crispr.scrap(this.level.options.sequenceLength, this.level)) {
     const {
       width: nucleotideWidth,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(

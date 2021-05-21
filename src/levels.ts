@@ -21,9 +21,11 @@ export const levels = {
     new l.Level("Big\nBoss", (ctx) => ({
       gridShape: "mini",
       forceMatching: false,
+      sequenceLength: 6,
       jokerCount: 1,
-      maxLife: 5,
       portalsCount: 2,
+      clipCount: 1,
+      maxLife: 5,
     })),
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
@@ -152,6 +154,32 @@ export const levels = {
       clipCount: 3,
       sequenceLength: 5,
       portalsCount: 4,
+    })),
+  "Two Islands": () =>
+    new l.Level("Two Islands", (context) => ({
+      gridShape: "twoIslands",
+      forceMatching: true,
+      portalsCount: 6,
+      hooks: [
+        new l.Hook({
+          id: "tuto portal",
+          event: "init",
+          once: true,
+          entity: new popup.TutorialPopup({
+            title: "Portals",
+            content:
+              "The portals are all linked together by quantum entanglement, you can use them to reach the unbeatable! ",
+            image: "images/portal.json",
+            imageHeight: 300,
+            imageAnimationSpeed: 15 / 60,
+            popupOptions: {
+              id: "popup tuto portal",
+              logo: "images/icon.png",
+              minimizeOnClose: true,
+            },
+          }),
+        }),
+      ],
     })),
 
   // Easy
@@ -750,6 +778,7 @@ export const sections = {
   Intro: [levels.Tutorial],
   Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
   Medium: [
+    levels["Two Islands"],
     levels["Four\nIslands"],
     levels["Chrono\nPortal"],
     levels["Medium\nBoss"],

@@ -356,6 +356,7 @@ export class BonusesManager extends entity.CompositeEntity {
       this,
       "images/hud_bonus_background.png"
     );
+    this.bonusBackground.alpha = 0;
     this.container.addChild(this.bonusBackground);
 
     this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
@@ -408,6 +409,21 @@ export class BonusesManager extends entity.CompositeEntity {
         ((disable || !bonus.count) && !bonus.highlight);
       bonus.sprite.buttonMode = !bonusDisable;
       bonus.sprite.tint = bonusDisable ? 0x9f9f9f : 0xffffff;
+    }
+    if (this.bonuses.size > 0) {
+      if (this.bonusBackground.alpha < 1) {
+        this.bonusBackground.alpha = Math.min(
+          1,
+          this.bonusBackground.alpha + 0.01
+        );
+      }
+    } else {
+      if (this.bonusBackground.alpha > 0) {
+        this.bonusBackground.alpha = Math.max(
+          0,
+          this.bonusBackground.alpha - 0.01
+        );
+      }
     }
   }
 
