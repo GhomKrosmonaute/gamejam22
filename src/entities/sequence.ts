@@ -489,6 +489,8 @@ export class Sequence extends entity.CompositeEntity {
       i < this.baseLength;
       i++
     ) {
+      if (forcedSequence.length > 0 && !forcedSequence[i] && i > -1) continue;
+
       const position = new PIXI.Point();
 
       if (

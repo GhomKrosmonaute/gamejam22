@@ -39,7 +39,7 @@ export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
   fall: {
     showMatchMatchOnCrunch: false,
     mustBeHiddenOnPause: true,
-    sequenceLength: () => crispr.random(3, 5),
+    sequenceLength: () => Math.ceil(crispr.random(3, 5)),
     falling: true,
   },
 };
@@ -206,12 +206,14 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   crispyBonusRate: 0.1,
   gaugeRings: [],
   sequenceLength: (level) =>
-    crispr.random(
-      4,
-      Math.min(
-        8,
-        level.grid.getIslands().sort((a, b) => a.length - b.length)[0]
-          ?.length ?? 8
+    Math.ceil(
+      crispr.random(
+        4,
+        Math.min(
+          8,
+          level.grid.getIslands().sort((a, b) => a.length - b.length)[0]
+            ?.length ?? 8
+        )
       )
     ),
   sequences: null,
