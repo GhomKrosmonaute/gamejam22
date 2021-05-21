@@ -7,6 +7,7 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as popup from "./entities/popup";
+import * as grid from "./entities/grid";
 
 import * as l from "./scenes/level";
 
@@ -16,55 +17,55 @@ import * as crispr from "./crispr";
 declare var level: l.Level;
 
 export const levels = {
-  // TODO: Joker doesn't work yet
-
-  // // Hard
-  // "Big\nBoss": () =>
-  //   new l.Level("Big\nBoss", (ctx) => ({
-  //     gridShape: "mini",
-  //     forceMatching: false,
-  //     jokerCount: 1,
-  //     maxLife: 5,
-  //     portalsCount: 2,
-  //   })),
-  // Caribbean: () =>
-  //   new l.Level("Caribbean", (ctx) => ({
-  //     gridShape: "fourIslands",
-  //     forceMatching: false,
-  //     clipCount: 4,
-  //     sequenceLength: 4,
-  //     portalsCount: 4,
-  //     jokerCount: 3,
-  //     maxLife: 10,
-  //     crispyBonusRate: 0.6,
-  //     initialBonuses: [
-  //       {
-  //         bonus: (ctx) => ctx.swapBonus,
-  //         quantity: 2,
-  //       },
-  //     ],
-  //     hooks: [
-  //       new l.Hook({
-  //         id: "intro",
-  //         event: "init",
-  //         once: true,
-  //         entity: new entity.FunctionCallEntity(() => {
-  //           ctx.activate(
-  //             new popup.TutorialPopup({
-  //               title: "Land in sight!",
-  //               content: `Loot the Caribbean treasures, collect at least ${ctx.options.score.max}!`,
-  //               image: "images/crispy.png",
-  //               imageHeight: 200,
-  //               popupOptions: {
-  //                 minimizeOnClose: false,
-  //                 coolDown: 2000,
-  //               },
-  //             })
-  //           );
-  //         }),
-  //       }),
-  //     ],
-  //   })),
+  // Hard
+  "Big\nBoss": () =>
+    new l.Level("Big\nBoss", (ctx) => ({
+      gridShape: "mini",
+      forceMatching: false,
+      sequenceLength: 6,
+      jokerCount: 1,
+      portalsCount: 2,
+      clipCount: 1,
+      maxLife: 5,
+    })),
+  Caribbean: () =>
+    new l.Level("Caribbean", (ctx) => ({
+      gridShape: "fourIslands",
+      forceMatching: false,
+      clipCount: 4,
+      sequenceLength: 4,
+      portalsCount: 4,
+      jokerCount: 3,
+      maxLife: 10,
+      crispyBonusRate: 0.6,
+      initialBonuses: [
+        {
+          bonus: (ctx) => ctx.swapBonus,
+          quantity: 2,
+        },
+      ],
+      hooks: [
+        new l.Hook({
+          id: "intro",
+          event: "init",
+          once: true,
+          entity: new entity.FunctionCallEntity(() => {
+            ctx.activate(
+              new popup.TutorialPopup({
+                title: "Land in sight!",
+                content: `Loot the Caribbean treasures, collect at least ${ctx.options.score.max}!`,
+                image: "images/crispy.png",
+                imageHeight: 200,
+                popupOptions: {
+                  minimizeOnClose: false,
+                  coolDown: 2000,
+                },
+              })
+            );
+          }),
+        }),
+      ],
+    })),
   // Timed: () =>
   //   new l.Level("Timed", (ctx) => {
   //     ctx.playTime = 0;
@@ -108,55 +109,86 @@ export const levels = {
   //   }),
 
   // Medium
-  // TODO: Doesn't look like a boss
-  // "Medium\nBoss": () => new l.Level("Medium\nBoss", {}),
-
-  // "Chrono\nPortal": () =>
-  //   new l.Level("Chrono\nPortal", (context) => ({
-  //     variant: "fall",
-  //     gridShape: "medium",
-  //     forceMatching: true,
-  //     portalsCount: 2,
-  //     clipCount: 3,
-  //     gaugeRings: [
-  //       (context) =>
-  //         context.bonusesManager.add(
-  //           context.swapBonus,
-  //           1,
-  //           new PIXI.Point(200, -2000)
-  //         ),
-  //       (context, ring) =>
-  //         context.activate(
-  //           new entity.EntitySequence([
-  //             new entity.FunctionCallEntity(() => {
-  //               context.bonusesManager.add(
-  //                 context.timeBonus,
-  //                 1,
-  //                 new PIXI.Point(500, -2000)
-  //               );
-  //             }),
-  //           ])
-  //         ),
-  //     ],
-  //     hooks: [
-  //       new l.Hook({
-  //         id: "go title",
-  //         event: "injectedSequence",
-  //         entity: new entity.FunctionCallEntity(() => {
-  //           if (context.isEnded && !context.finished)
-  //             context.activate(anim.title(context.container, "Go!"));
-  //         }),
-  //       }),
-  //     ],
-  //   })),
-  // "Four\nIslands": () =>
-  //   new l.Level("Four\nIslands", (context) => ({
-  //     gridShape: "fourIslands",
-  //     forceMatching: true,
-  //     clipCount: 3,
-  //     sequenceLength: 5,
-  //     portalsCount: 4,
-  //   })),
+  "Medium\nBoss": () => new l.Level("Medium\nBoss", {}),
+  "Chrono\nPortal": () =>
+    new l.Level("Chrono\nPortal", (context) => ({
+      variant: "fall",
+      gridShape: {
+        portals: [
+          { x: 1, y: 3 },
+          { x: 5, y: 3 },
+        ],
+        clips: [{ x: 3, y: 3 }],
+        shape: grid.gridShapes.medium as grid.GridArrowShape,
+      },
+      forceMatching: true,
+      portalsCount: 2,
+      clipCount: 1,
+      gaugeRings: [
+        (context) =>
+          context.bonusesManager.add(
+            context.swapBonus,
+            1,
+            new PIXI.Point(200, -2000)
+          ),
+        (context, ring) =>
+          context.activate(
+            new entity.EntitySequence([
+              new entity.FunctionCallEntity(() => {
+                context.bonusesManager.add(
+                  context.timeBonus,
+                  1,
+                  new PIXI.Point(500, -2000)
+                );
+              }),
+            ])
+          ),
+      ],
+      hooks: [
+        new l.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            if (context.isEnded && !context.finished)
+              context.activate(anim.title(context.container, "Go!"));
+          }),
+        }),
+      ],
+    })),
+  "Four\nIslands": () =>
+    new l.Level("Four\nIslands", (context) => ({
+      gridShape: "fourIslands",
+      forceMatching: true,
+      clipCount: 3,
+      sequenceLength: 5,
+      portalsCount: 4,
+    })),
+  "Two Islands": () =>
+    new l.Level("Two Islands", (context) => ({
+      gridShape: "twoIslands",
+      forceMatching: true,
+      portalsCount: 6,
+      hooks: [
+        new l.Hook({
+          id: "tuto portal",
+          event: "init",
+          once: true,
+          entity: new popup.TutorialPopup({
+            title: "Portals",
+            content:
+              "The portals are all linked together by quantum entanglement, you can use them to reach the unbeatable! ",
+            image: "images/portal.json",
+            imageHeight: 300,
+            imageAnimationSpeed: 15 / 60,
+            popupOptions: {
+              id: "popup tuto portal",
+              logo: "images/icon.png",
+              minimizeOnClose: true,
+            },
+          }),
+        }),
+      ],
+    })),
 
   // Easy
   Boss: () =>
@@ -753,12 +785,13 @@ export type Levels = typeof levels;
 export const sections = {
   Intro: [levels.Tutorial],
   Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
-  // Medium: [
-  //   levels["Four\nIslands"],
-  //   levels["Chrono\nPortal"],
-  // levels["Medium\nBoss"],
-  // ],
-  // Hard: [levels.Caribbean, levels["Big\nBoss"]],
+  Medium: [
+    levels["Two Islands"],
+    levels["Four\nIslands"],
+    levels["Chrono\nPortal"],
+    levels["Medium\nBoss"],
+  ],
+  Hard: [levels.Caribbean, levels["Big\nBoss"]],
 };
 
 export type SectionName = keyof typeof sections;
