@@ -173,16 +173,6 @@ export class SequenceManager extends entity.CompositeEntity {
     return [...this.sequences].map((s) => s.virus).filter((v) => v.isSetup);
   }
 
-  get sequenceCountLimit(): number {
-    switch (this.level.options.variant) {
-      case "turn":
-        return 3;
-      case "fall":
-      case "zen":
-        return 1;
-    }
-  }
-
   set(colors: nucleotide.ColorName[]) {
     const {
       width: nucleotideWidth,
@@ -398,6 +388,7 @@ export class SequenceManager extends entity.CompositeEntity {
 export class Sequence extends entity.CompositeEntity {
   public readonly baseLength: number;
   public nucleotides: nucleotide.Nucleotide[] = [];
+  public nucleotideCache: nucleotide.NucleotideJSON[] = [];
   public container = new PIXI.Container();
   public virus?: virus.Virus;
 
@@ -625,11 +616,19 @@ export class Sequence extends entity.CompositeEntity {
 
     const pathSignature = this.level.path.toString();
     const pathItems = this.level.path.items.map((n) => n.toJSON());
-    const allDownNucleotides = pathItems.filter((n) => n.type !== "portal"); //[...this.nucleotides, ...pathItems];
+    const allDownNucleotides = (this.nucleotideCache.length > 0
+      ? this.nucleotideCache
+      : pathItems
+    ).filter((n) => n.type !== "portal"); //[...this.nucleotides, ...pathItems];
     const multiplier = allDownNucleotides.reduce(
       (accumulator, n) => accumulator + (n.crispyMultiplier - 1),
       1
     );
+
+    const signatureLength = (this.nucleotideCache.length > 0
+      ? this.nucleotideCache.filter((n) => n.type !== "portal")
+      : pathSignature
+    ).length;
 
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
@@ -783,7 +782,7 @@ export class Sequence extends entity.CompositeEntity {
             //   }
             // }
 
-            if (addScore && pathSignature.length >= index) {
+            if (addScore && pathSignature.length + signatureLength >= index) {
               this.level.score += score;
             }
 
@@ -1001,7 +1000,10 @@ export class Sequence extends entity.CompositeEntity {
 
     if (!segment) return false;
 
-    segment.forEach((n) => (n.state = "inactive"));
+    segment.forEach((n) => {
+      this.nucleotideCache.push(n.toJSON());
+      n.state = "inactive";
+    });
 
     return true;
   }
