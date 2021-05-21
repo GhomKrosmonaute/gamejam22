@@ -1,19 +1,19 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>CRISPR Crunch - Play Curious</title>
-  <link href="game.css" rel="stylesheet">
+  <head>
+    <meta charset="utf-8" />
+    <title>CRISPR Crunch - Play Curious</title>
+    <link href="game.css" rel="stylesheet" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <meta name='description' content="">
+    <meta name="description" content="" />
 
-  <!-- Twitter and FB metadata -->
-  <meta name="twitter:card" content="player" />
-  <meta name="twitter:site" content="@PlayCuriousGame" />
-  
-<!--   <meta property="og:type" content="game" />
+    <!-- Twitter and FB metadata -->
+    <meta name="twitter:card" content="player" />
+    <meta name="twitter:site" content="@PlayCuriousGame" />
+
+    <!--   <meta property="og:type" content="game" />
   <meta property="og:title" content="Fish & Ships" />
   <meta property="og:description" content="Why is it so hard to not take more than our environment can give? To find out why, play a game about three sassy ships, a school of frisky fish, and some moolah moolah moolah..." />
   <meta property="og:url" content="https://playcurious.games/games/fishandships" />
@@ -29,18 +29,22 @@
   <meta property="og:video:width" content="560" />
   <meta property="og:video:height" content="315" />
  -->
+  </head>
+  <body>
+    <div id="game-parent">
+      <canvas id="pixi-canvas"></canvas>
+    </div>
 
-</head>
-<body>
-  <div id="game-parent">
-    <canvas id="pixi-canvas"></canvas>
-  </div>
-
-  <div id="descriptive-content">
-    <h3>CRISPR Crunch</h3>
-    <p></p>
-    <p>A game (in development) by <a href="https://playcurious.games/">Play Curious</a></p>
-    <p class="build-info">Built on <%= date.toUTCString() %>, version <%= commit %> <%= branch %></p>
-  
-</body>
+    <div id="descriptive-content">
+      <h3>CRISPR Crunch</h3>
+      <p></p>
+      <p>
+        A game (in development) by
+        <a href="https://playcurious.games/">Play Curious</a>
+      </p>
+      <p class="build-info">
+        Built on <%= date.toUTCString() %>, version <%= commit %> <%= branch %>
+      </p>
+    </div>
+  </body>
 </html>

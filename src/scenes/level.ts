@@ -21,6 +21,7 @@ import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
 import * as menu from "../scenes/menu";
+import * as metrics from "../metrics";
 
 export type LevelVariant = "turn" | "fall" | "zen";
 
@@ -253,9 +254,8 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
 };
 
 export type LevelEventName = keyof LevelEvents;
-export type LevelEventParams<
-  EventName extends LevelEventName
-> = LevelEvents[EventName];
+export type LevelEventParams<EventName extends LevelEventName> =
+  LevelEvents[EventName];
 
 export interface LevelEvents {
   end: [];
@@ -725,7 +725,7 @@ export class Level extends entity.CompositeEntity {
       }
     }
 
-    this._entityConfig.jukebox.changeMusic(music);
+    this._entityConfig.jukebox.play(music);
   }
 
   _setup() {
@@ -733,6 +733,8 @@ export class Level extends entity.CompositeEntity {
     this.container.sortableChildren = true;
     this._entityConfig.level = this;
     this._entityConfig.container.addChild(this.container);
+
+    metrics.logEvent("level_start", { level_name: this.name });
 
     // this._on(this,"deactivatedChildEntity", (e) => {
     //   if (e instanceof Hook) {
