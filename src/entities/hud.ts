@@ -152,7 +152,7 @@ export class Gauge extends entity.CompositeEntity {
     }
 
     this._text = crispr.makeText("", {
-      fill: this.level.options.scoreOptions.color,
+      fill: this.level.options.gaugeOptions.color,
       fontSize: 50,
       fontStyle: "italic bold",
       fontFamily: "Alien League",
@@ -191,13 +191,13 @@ export class Gauge extends entity.CompositeEntity {
       });
     });
 
-    this.setTint(this.level.options.scoreOptions.color);
+    this.setTint(this.level.options.gaugeOptions.color);
   }
 
   _update(frameInfo: entity.FrameInfo) {
     if (
-      this.level.options.scoreOptions.get(this.level) <
-      this.level.options.scoreOptions.max
+      this.level.options.gaugeOptions.get(this.level) <
+      this.level.options.gaugeOptions.max
     ) {
       const reachedScorePosition = this.reachedScoreXPosition;
       this._rings.children.forEach((ring: Ring) => {
@@ -251,11 +251,11 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   refreshValue() {
-    const score = this.level.options.scoreOptions.get(this.level);
+    const score = this.level.options.gaugeOptions.get(this.level);
     this._bar.width = this.barWidth;
-    this._text.text = this.level.options.scoreOptions.show(score, this.level);
+    this._text.text = this.level.options.gaugeOptions.show(score, this.level);
 
-    const devise = this.level.options.scoreOptions.devise;
+    const devise = this.level.options.gaugeOptions.devise;
 
     if (devise !== undefined) {
       const resolved =
@@ -285,21 +285,6 @@ export class Gauge extends entity.CompositeEntity {
         })
       );
     }
-
-    if (score >= this.level.options.scoreOptions.max && !this.level.finished) {
-      this.level.finished = true;
-      this.level.options.scoreOptions.set(
-        crispr.scrap(this.level.options.scoreOptions.max, this.level),
-        this.level
-      );
-      this.level.finished = true;
-      this.level.activate(
-        new entity.EntitySequence([
-          new entity.WaitingEntity(2000),
-          new popup.TerminatedLevelPopup(),
-        ])
-      );
-    }
   }
 
   setTint(tint: number) {
@@ -313,9 +298,9 @@ export class Gauge extends entity.CompositeEntity {
 
   get barWidth(): number {
     return crispr.proportion(
-      this.level.options.scoreOptions.get(this.level),
+      this.level.options.gaugeOptions.get(this.level),
       0,
-      crispr.scrap(this.level.options.scoreOptions.max, this.level),
+      crispr.scrap(this.level.options.gaugeOptions.max, this.level),
       0,
       this._barBaseWidth,
       true
@@ -582,7 +567,7 @@ export class RemainingMovesIndicator extends entity.CompositeEntity {
     this._activateChildEntity(
       anim.sequenced({
         timeBetween: 100,
-        items: this.level.options.zenMoves,
+        items: this.level.options.remainingMoveCount,
         onStep: () => {
           this.addOne();
         },

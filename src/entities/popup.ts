@@ -757,7 +757,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
         `Score: ${this.level.crispies} pts (${crispr.proportion(
           this.level.crispies,
           0,
-          crispr.scrap(this.level.options.scoreOptions.max, this.level),
+          crispr.scrap(this.level.options.gaugeOptions.max, this.level),
           0,
           100,
           true
@@ -786,7 +786,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
               crispr.proportion(
                 value,
                 0,
-                crispr.scrap(this.level.options.scoreOptions.max, this.level),
+                crispr.scrap(this.level.options.gaugeOptions.max, this.level),
                 0,
                 100,
                 true
@@ -912,8 +912,8 @@ export class StatePopup extends ChecksPopup {
 
     const score = crispr.makeText(
       `Progress: ${Math.floor(
-        this.level.options.scoreOptions.get(this.level)
-      )} / ${crispr.scrap(this.level.options.scoreOptions.max, this.level)}`,
+        this.level.options.gaugeOptions.get(this.level)
+      )} / ${crispr.scrap(this.level.options.gaugeOptions.max, this.level)}`,
       {
         fontSize: 100,
         fill: 0xffffff,
