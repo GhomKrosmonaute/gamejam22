@@ -10,7 +10,6 @@ import * as crispr from "../crispr";
 import * as anim from "../animations";
 
 import * as nucleotide from "./nucleotide";
-import * as path from "./path";
 import * as virus from "./virus";
 
 import * as level from "../scenes/level";
@@ -219,90 +218,6 @@ export class SequenceManager extends entity.CompositeEntity {
     this.adjustment.adjust();
   }
 
-  /** remove all validated sequences */
-  crunch(): entity.Entity | void {
-    const path = this.level.path;
-
-    if (path && this.matchesSequence() !== true) return;
-
-    const sequence = this.first;
-    const removedSequences: Sequence[] = [];
-    let partialCrunch = false;
-
-    if (this.level.options.variant === "zen") {
-      if (sequence.validate()) {
-        sequence.deactivateSegment();
-
-        partialCrunch = true;
-
-        if (sequence.isFullInactive() || sequence.maxActiveLength < 3) {
-          removedSequences.push(sequence);
-        }
-      }
-    } else if (this.level.options.canCrunchParts) {
-      removedSequences.push(sequence);
-    } else if (sequence.validate()) {
-      partialCrunch = true;
-
-      removedSequences.push(sequence);
-    }
-
-    // for (const s of this.sequences) {
-    //   if (this.level.options.variant === "zen") {
-    //     if (s.validate(signature, "partial")) {
-    //       s.deactivateSegment(_path.signature);
-
-    //       partialCrunch = true;
-
-    //       if (s.isInactive()) {
-    //         removedSequences.push(s);
-    //       }
-    //     }
-    //   } else if (s.validate(signature)) {
-    //     partialCrunch = true;
-
-    //     removedSequences.push(s);
-    //   }
-    // }
-
-    const context: entity.Entity[] = [];
-
-    if (removedSequences.length > 0 || partialCrunch) {
-      this.level.path.crunchCountBeforeSequenceDown++;
-
-      if (crispr.debug) {
-        console.log(
-          "updated",
-          "crunchCountBeforeSequenceDown",
-          this.level.path.crunchCountBeforeSequenceDown
-        );
-      }
-
-      for (const s of removedSequences) {
-        context.push(
-          new entity.FunctionCallEntity(() => {
-            this.emit("crunch", s);
-          }),
-          this.removeSequence(!this.level.options.disableScore, false, s)
-        );
-      }
-    }
-
-    // if (crunched) path.items.forEach((n) => (n.state = "missing"));
-
-    context.push(
-      new entity.FunctionCallEntity(() => {
-        this.adjustment.adjust();
-        this.level.grid.fillHoles();
-        if (partialCrunch) {
-          this.level.emitLevelEvent("partialCrunched");
-        }
-      })
-    );
-
-    return new entity.EntitySequence(context);
-  }
-
   removeSequence(
     addScore: boolean,
     isNotCrunchResult = false,
@@ -357,18 +272,6 @@ export class SequenceManager extends entity.CompositeEntity {
     );
   }
 
-  matchesSequence(): path.PathState {
-    const path = this.level.path;
-
-    if (!this.first?.validate()) {
-      return "no match";
-    }
-    if (!this.level.options.disableClips && !path.correctlyContainsClips()) {
-      return "missing clips";
-    }
-    return true;
-  }
-
   updateHighlighting(
     options: SequenceMatchingOptions = sequenceMatchingOptions[
       this.level.variant
@@ -382,15 +285,23 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 }
 
+export interface SequenceScoring {
+  multiplier: number;
+  nucleotides: nucleotide.NucleotideJSON[];
+}
+
 /**
  * Represent a sequence dropped by virus
  */
 export class Sequence extends entity.CompositeEntity {
   public readonly baseLength: number;
   public nucleotides: nucleotide.Nucleotide[] = [];
-  public nucleotideCache: nucleotide.NucleotideJSON[] = [];
   public container = new PIXI.Container();
   public virus?: virus.Virus;
+  public scoring: SequenceScoring = {
+    multiplier: 1,
+    nucleotides: [],
+  };
 
   constructor(
     public readonly base: number | nucleotide.ColorName[],
@@ -611,142 +522,136 @@ export class Sequence extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this.container);
   }
 
-  down(addScore: boolean, notACrunchResult = false) {
-    let isZen: boolean, fully: boolean, shots: number, length: number;
-
-    const pathSignature = this.level.path.toString();
-    const pathItems = this.level.path.items.map((n) => n.toJSON());
-    const allDownNucleotides = (this.nucleotideCache.length > 0
-      ? this.nucleotideCache
-      : pathItems
-    ).filter((n) => n.type !== "portal"); //[...this.nucleotides, ...pathItems];
-    const multiplier = allDownNucleotides.reduce(
-      (accumulator, n) => accumulator + (n.crispyMultiplier - 1),
-      1
+  resolveScoring(): number {
+    return (
+      this.scoring.nucleotides.length *
+      this.scoring.multiplier *
+      this.level.options.baseCrispyGain
     );
+  }
 
-    const signatureLength = (this.nucleotideCache.length > 0
-      ? this.nucleotideCache.filter((n) => n.type !== "portal")
-      : pathSignature
-    ).length;
+  resetScoring() {
+    this.scoring = {
+      multiplier: 1,
+      nucleotides: [],
+    };
+  }
 
+  addScoring(nucleotides: nucleotide.NucleotideJSON[]) {
+    this.scoring.multiplier +=
+      nucleotides.reduce((acc, val) => acc + (val.crispyMultiplier - 1), 1) - 1;
+    this.scoring.nucleotides.push(...nucleotides);
+  }
+
+  applyScoring(duration = 1500) {
+    const addedScore = this.resolveScoring();
+    return new tween.Tween({
+      duration,
+      from: this.level.crispies,
+      to: this.level.crispies + addedScore,
+      easing: easing.easeInOutCubic,
+      onUpdate: (value) => {
+        this.level.crispies = value;
+      },
+      onTeardown: () => {
+        this.resetScoring();
+      },
+    });
+  }
+
+  displayScoring(): entity.EntitySequence {
+    let scoring: SequenceScoring, scoringText: PIXI.Text, total: number;
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        scoring = this.scoring;
+        total = this.resolveScoring();
+
+        scoringText = crispr.makeText(
+          `${this.level.options.baseCrispyGain} x ${scoring.nucleotides.length}`,
+          {
+            fontFamily: "Waffle Crisp",
+            fill: crispr.yellow,
+            fontSize: 80,
+            stroke: 0x000000,
+            strokeThickness: 4,
+          }
+        );
+
+        scoringText.anchor.set(0.5);
+        scoringText.alpha = 0;
+        scoringText.position.x = crispr.width / 2 - this.container.position.x;
+
+        this.container.addChild(scoringText);
+      }),
+      new entity.ParallelEntity([
+        () =>
+          anim.move(
+            scoringText.position,
+            scoringText.position.clone(),
+            new PIXI.Point(
+              scoringText.position.x,
+              scoringText.position.y - 100
+            ),
+            1000,
+            easing.easeOutBounce
+          ),
+        new tween.Tween({
+          from: 0,
+          to: 1,
+          duration: 1000,
+          easing: easing.easeInOutQuart,
+          onUpdate: (value) => (scoringText.alpha = value),
+        }),
+      ]),
+      () =>
+        scoring.multiplier > 1
+          ? anim.bubble(scoringText, 1.5, 500, {
+              onTop: () => {
+                scoringText.text = `${
+                  this.level.options.baseCrispyGain * scoring.nucleotides.length
+                } x ${scoring.multiplier}`;
+              },
+            })
+          : new entity.TransitoryEntity(),
+      () =>
+        new entity.ParallelEntity([
+          new entity.FunctionCallEntity(() => {
+            this.level.screenShake(8, 1.05, 1000);
+            this._entityConfig.fxMachine.play("score_ring");
+          }),
+          new tween.Tween({
+            from: this.level.options.baseCrispyGain,
+            to: total,
+            onUpdate: (value) => {
+              scoringText.text = String(Math.round(value));
+              scoringText.style.fontSize = scoringText.style.fontSize + 2;
+            },
+            easing: easing.easeInCubic,
+            duration: 1000,
+          }),
+          anim.bubble(scoringText, 1.25, 1000, {
+            onTop: () => {
+              //this.level.screenShake(5, 1.05, 100);
+            },
+          }),
+        ]),
+      () =>
+        anim.bubble(scoringText, 1.25, 200, {
+          onTop: () => {
+            scoringText.text = String(total);
+          },
+        }),
+      () => anim.down(scoringText, 500, scoringText.scale.x),
+      new entity.FunctionCallEntity(() => {
+        this.container.removeChild(scoringText);
+      }),
+    ]);
+  }
+
+  down(addScore: boolean, notACrunchResult = false) {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("sequence.down", true);
-        this.level.sequenceWasCrunched = true;
-        this.level.crunchedSequenceCount++;
-
-        if (crispr.debug) {
-          console.log(
-            "updated",
-            "crunchedSequenceCount",
-            this.level.crunchedSequenceCount
-          );
-        }
-
-        isZen = this.level.options.variant === "zen";
-        fully = this.nucleotides.every((n) => n.state === "inactive");
-        shots = this.level.path.crunchCountBeforeSequenceDown;
-        length = allDownNucleotides.length;
-
-        if (isZen && fully && shots === 1) {
-          this.level.oneShotLongSequence = true;
-
-          if (crispr.debug) {
-            console.log(
-              "updated",
-              "oneShotLongSequence",
-              this.level.oneShotLongSequence
-            );
-          }
-        }
-
-        this.level.path.crunchCountBeforeSequenceDown = 0;
-      }),
-      new entity.FunctionCallEntity(() => {
-        if (addScore) {
-          const text = crispr.makeText(
-            `${this.level.options.baseCrispyGain} x ${length}`,
-            {
-              fontFamily: "Waffle Crisp",
-              fill: crispr.yellow,
-              fontSize: 80,
-              stroke: fully ? "#ffa200" : "#000000",
-              strokeThickness: 4,
-            }
-          );
-
-          text.anchor.set(0.5);
-          text.alpha = 0;
-          text.position.x = crispr.width / 2 - this.container.position.x;
-
-          this.container.addChild(text);
-
-          this.level.activate(
-            new entity.EntitySequence([
-              new entity.ParallelEntity([
-                () =>
-                  anim.move(
-                    text.position,
-                    text.position.clone(),
-                    new PIXI.Point(text.position.x, text.position.y - 100),
-                    1000,
-                    easing.easeOutBounce
-                  ),
-                new tween.Tween({
-                  from: 0,
-                  to: 1,
-                  duration: 1000,
-                  easing: easing.easeInOutQuart,
-                  onUpdate: (value) => (text.alpha = value),
-                }),
-              ]),
-              () =>
-                multiplier > 1
-                  ? anim.bubble(text, 1.5, 500, {
-                      onTop: () => {
-                        text.text = `${
-                          this.level.options.baseCrispyGain * length
-                        } x ${multiplier}`;
-                      },
-                    })
-                  : new entity.TransitoryEntity(),
-              () =>
-                new entity.ParallelEntity([
-                  new entity.FunctionCallEntity(() => {
-                    this.level.screenShake(8, 1.05, 1000);
-                    this._entityConfig.fxMachine.play("score_ring");
-                  }),
-                  new tween.Tween({
-                    from: this.level.options.baseCrispyGain,
-                    to: this.level.options.baseCrispyGain * length * multiplier,
-                    onUpdate: (value) => {
-                      text.text = String(Math.round(value));
-                      text.style.fontSize = text.style.fontSize + 2;
-                    },
-                    easing: easing.easeInCubic,
-                    duration: 1000,
-                  }),
-                  anim.bubble(text, 1.25, 1000, {
-                    onTop: () => {
-                      //this.level.screenShake(5, 1.05, 100);
-                    },
-                  }),
-                ]),
-              () =>
-                anim.bubble(text, 1.25, 200, {
-                  onTop: () => {
-                    text.text = String(
-                      this.level.options.baseCrispyGain * length * multiplier
-                    );
-                  },
-                  onTeardown: () => {
-                    this.level.activate(anim.down(text, 500, text.scale.x));
-                  },
-                }),
-            ])
-          );
-        }
       }),
       new entity.FunctionalEntity({
         requestTransition: () => {
@@ -756,76 +661,45 @@ export class Sequence extends entity.CompositeEntity {
           );
         },
       }),
-      () =>
-        anim.sequenced({
-          items: this.nucleotides,
-          timeBetween: 50,
-          waitForAllSteps: true,
-          onStep: (n, index, all, finish) => {
-            n.shakes.removeShake("highlight");
+      anim.sequenced({
+        items: this.nucleotides.slice(),
+        timeBetween: 50,
+        waitForAllSteps: true,
+        onStep: (item) => anim.down(item.sprite, 100, item.sprite.scale.x),
+      }),
+      addScore
+        ? new entity.ParallelEntity([
+            this.applyScoring(),
+            this.displayScoring(),
+          ])
+        : new entity.TransitoryEntity(),
+      new entity.FunctionCallEntity(() => {
+        const end = () => {
+          this.level.disablingAnimation("path.crunch.down", false);
+          this.level.disablingAnimation("sequence.down", false);
+          this.level.emitLevelEvent("sequenceDown");
+          this.level.sequenceManager.adjustment.adjust();
+          this._transition = entity.makeTransition();
+        };
 
-            this._playNote(index);
-
-            let score = this.level.options.baseCrispyGain;
-
-            score *= multiplier;
-
-            // if (crispr.debug) {
-            //   console.log("Multiplier:", multiplier, "Score:", score);
-            // }
-
-            // if (isLong) {
-            //   if (n.state !== "inactive") {
-            //     score *= -1;
-            //   } else if (fully) {
-            //     score *= 2;
-            //   }
-            // }
-
-            if (addScore && pathSignature.length + signatureLength >= index) {
-              this.level.score += score;
-            }
-
-            this.level.activate(
-              new entity.EntitySequence([
-                // new tween.Tween({
-                //   from: n.position.y,
-                //   to: n.position.y + 30,
-                //   onUpdate: (v) => n.position.y = v,
-                //   duration: 250
-                // }),
-                anim.down(n.sprite, 500, 1, finish),
-              ])
-            );
-          },
-          callback: () => {
-            const end = () => {
-              this.level.disablingAnimation("path.crunch.down", false);
-              this.level.disablingAnimation("sequence.down", false);
-              this.level.emitLevelEvent("sequenceDown");
-              this.level.sequenceManager.adjustment.adjust();
-              this._transition = entity.makeTransition();
-            };
-
-            if (this.virus && this.virus.isSetup) {
-              this._activateChildEntity(
-                new entity.EntitySequence([
-                  new entity.ParallelEntity([
-                    new entity.FunctionCallEntity(() => {
-                      this.level.activate(
-                        addScore ? this.virus.kill() : this.virus.leave()
-                      );
-                    }),
-                    new entity.WaitingEntity(1000),
-                  ]),
-                  new entity.FunctionCallEntity(end),
-                ])
-              );
-            } else {
-              end();
-            }
-          },
-        }),
+        if (this.virus && this.virus.isSetup) {
+          this._activateChildEntity(
+            new entity.EntitySequence([
+              new entity.ParallelEntity([
+                new entity.FunctionCallEntity(() => {
+                  this.level.activate(
+                    addScore ? this.virus.kill() : this.virus.leave()
+                  );
+                }),
+                new entity.WaitingEntity(1000),
+              ]),
+              new entity.FunctionCallEntity(end),
+            ])
+          );
+        } else {
+          end();
+        }
+      }),
     ]);
   }
 
@@ -1001,7 +875,6 @@ export class Sequence extends entity.CompositeEntity {
     if (!segment) return false;
 
     segment.forEach((n) => {
-      this.nucleotideCache.push(n.toJSON());
       n.state = "inactive";
     });
 

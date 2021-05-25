@@ -17,7 +17,7 @@ export type PathState =
   | true
   | "crunch"
   | "matching"
-  | "SKIP";
+  | "skip";
 
 /**
  * Represent the user path to validate sequences
@@ -88,7 +88,10 @@ export class Path extends entity.CompositeEntity {
   }
 
   correctlyContainsClips(): boolean {
-    return this.clips.length === 1 && this.first.type === "clip";
+    return (
+      this.level.options.disableClips ||
+      (this.clips.length === 1 && this.first.type === "clip")
+    );
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
@@ -242,10 +245,7 @@ export class Path extends entity.CompositeEntity {
           this._playExplosion();
           this.level.screenShake(10, 1.02, 50);
 
-          //const score = 10;
           originalPositions.push(n.position.clone());
-
-          //this.level.addScore(score);
 
           const seq = [...this.level.sequenceManager.sequences][0];
           const items = seq.nucleotides.slice();
@@ -259,7 +259,7 @@ export class Path extends entity.CompositeEntity {
 
             this._activateChildEntity(
               new entity.EntitySequence([
-                !this.level.options.showMatchMatchOnCrunch
+                !this.level.options.showMatchOnCrunch
                   ? new entity.TransitoryEntity()
                   : new entity.ParallelEntity([
                       () =>

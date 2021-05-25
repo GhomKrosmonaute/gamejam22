@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
 import * as tween from "booyah/src/tween";
+import * as easing from "booyah/src/easing";
 
 import * as popup from "./popup";
 import * as path from "./path";
@@ -56,11 +57,11 @@ export class Gauge extends entity.CompositeEntity {
   refreshValue() {
     if (this.level.finished) return;
 
-    const score = this.level.options.score.get(this.level);
+    const score = this.level.options.scoreOptions.get(this.level);
     this._bar.width = this.barWidth;
-    this._text.text = this.level.options.score.show(score, this.level);
+    this._text.text = this.level.options.scoreOptions.show(score, this.level);
 
-    const devise = this.level.options.score.devise;
+    const devise = this.level.options.scoreOptions.devise;
 
     if (devise !== undefined) {
       const resolved =
@@ -91,10 +92,10 @@ export class Gauge extends entity.CompositeEntity {
       );
     }
 
-    if (score >= this.level.options.score.max) {
+    if (score >= this.level.options.scoreOptions.max) {
       this.level.finished = true;
-      this.level.options.score.set(
-        crispr.scrap(this.level.options.score.max, this.level),
+      this.level.options.scoreOptions.set(
+        crispr.scrap(this.level.options.scoreOptions.max, this.level),
         this.level
       );
       this.level.finished = true;
@@ -118,9 +119,9 @@ export class Gauge extends entity.CompositeEntity {
 
   get barWidth(): number {
     return crispr.proportion(
-      this.level.options.score.get(this.level),
+      this.level.options.scoreOptions.get(this.level),
       0,
-      crispr.scrap(this.level.options.score.max, this.level),
+      crispr.scrap(this.level.options.scoreOptions.max, this.level),
       0,
       this._barBaseWidth,
       true
@@ -265,7 +266,7 @@ export class Gauge extends entity.CompositeEntity {
     }
 
     this._text = crispr.makeText("", {
-      fill: this.level.options.score.color,
+      fill: this.level.options.scoreOptions.color,
       fontSize: 50,
       fontStyle: "italic bold",
       fontFamily: "Alien League",
@@ -304,12 +305,13 @@ export class Gauge extends entity.CompositeEntity {
       });
     });
 
-    this.setTint(this.level.options.score.color);
+    this.setTint(this.level.options.scoreOptions.color);
   }
 
   _update(frameInfo: entity.FrameInfo) {
     if (
-      this.level.options.score.get(this.level) < this.level.options.score.max
+      this.level.options.scoreOptions.get(this.level) <
+      this.level.options.scoreOptions.max
     ) {
       const reachedScorePosition = this.reachedScoreXPosition;
       this._rings.children.forEach((ring: Ring) => {
@@ -396,11 +398,7 @@ export class ActionButton extends entity.CompositeEntity {
       this._entityConfig.app.view.height - 150
     );
 
-    if (this.level.variant === "zen") {
-      this.sprite = crispr.sprite(this, "images/hud_action_button_crunch.png");
-    } else {
-      this.sprite = crispr.sprite(this, "images/hud_action_button.png");
-    }
+    this.sprite = crispr.sprite(this, this.level.options.actionButtonSprite);
 
     this.sprite.anchor.set(0.5);
     this.sprite.position.copyFrom(this.disabledSprite.position);
@@ -445,9 +443,42 @@ export class ActionButton extends entity.CompositeEntity {
     // this.text.text = text;
   }
 
+  public errorAnimation() {
+    return new entity.ParallelEntity([
+      anim.tweenShaking(this.sprite, 300, 6),
+      anim.tweenShaking(this.disabledSprite, 300, 6),
+    ]);
+  }
+
+  public clickAnimation() {
+    const sprite: PIXI.Sprite = crispr.sprite(
+      this,
+      this.level.options.actionButtonSprite,
+      (it) => {
+        it.anchor.set(0.5);
+        it.position.copyFrom(this.sprite.position);
+        it.scale.set(this.sprite.scale.x);
+      }
+    );
+    return new entity.EntitySequence([
+      new tween.Tween({
+        from: 0,
+        to: 1,
+        duration: 300,
+        easing: easing.easeOutCirc,
+        onSetup: () => this.container.addChild(sprite),
+        onUpdate: (value) => {
+          sprite.scale.set(value + 1);
+          sprite.alpha = 1 - value;
+        },
+        onTeardown: () => this.container.removeChild(sprite),
+      }),
+    ]);
+  }
+
   private press(): entity.Entity {
     if (this.level.isDisablingAnimationInProgress) {
-      return anim.tweenShaking(this.sprite, 300, 6);
+      return this.errorAnimation();
     }
 
     if (this.level.options.variant === "zen") {
@@ -455,7 +486,7 @@ export class ActionButton extends entity.CompositeEntity {
         return this.level.attemptCrunch();
       }
     } else if (this.level.path.items.length > 0) {
-      return anim.tweenShaking(this.sprite, 300, 6);
+      return this.errorAnimation();
     }
 
     // Skip case ↓
@@ -508,7 +539,10 @@ export class ActionButton extends entity.CompositeEntity {
       })
     );
 
-    return new entity.EntitySequence(context);
+    return new entity.ParallelEntity([
+      this.clickAnimation(),
+      new entity.EntitySequence(context),
+    ]);
   }
 }
 
