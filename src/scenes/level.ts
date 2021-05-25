@@ -29,6 +29,7 @@ export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
     showMatchMatchOnCrunch: false,
     sequenceRounded: true,
     sequenceLength: 13,
+    disableClips: true,
     disableBonuses: true,
     remainingMoves: true,
     disableViruses: true,

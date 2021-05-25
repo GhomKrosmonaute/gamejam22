@@ -273,9 +273,7 @@ export const levels = {
     new l.Level("Zen", {
       variant: "zen",
       gridShape: "full",
-      disableClips: true,
       forceMatching: true,
-      disableBonuses: true,
       crispyBonusRate: 0.2,
       zenMoves: 10,
       score: {
