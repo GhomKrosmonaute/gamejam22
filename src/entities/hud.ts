@@ -46,120 +46,6 @@ export class Gauge extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  get bar(): PIXI.Sprite {
-    return this._bar;
-  }
-
-  get container(): PIXI.Container {
-    return this._container;
-  }
-
-  refreshValue() {
-    if (this.level.finished) return;
-
-    const score = this.level.options.scoreOptions.get(this.level);
-    this._bar.width = this.barWidth;
-    this._text.text = this.level.options.scoreOptions.show(score, this.level);
-
-    const devise = this.level.options.scoreOptions.devise;
-
-    if (devise !== undefined) {
-      const resolved =
-        typeof devise === "function" ? devise(score, this.level) : devise;
-      if (typeof resolved === "string") {
-        this._text.text += " " + resolved;
-      } else {
-        this._text.removeChildren();
-        this._text.addChild(resolved);
-      }
-    }
-
-    if (this._wave)
-      this._wave.x = Math.min(
-        this.reachedScoreXPosition,
-        this._background.position.x + this._background.width - 125
-      );
-
-    if (!this._triggered && this._lastText !== this._text.text) {
-      this._lastText = this._text.text;
-      this._triggered = true;
-      this._activateChildEntity(
-        anim.bubble(this._text, 1.4, 100, {
-          onTop: () => {
-            this._triggered = false;
-          },
-        })
-      );
-    }
-
-    if (score >= this.level.options.scoreOptions.max) {
-      this.level.finished = true;
-      this.level.options.scoreOptions.set(
-        crispr.scrap(this.level.options.scoreOptions.max, this.level),
-        this.level
-      );
-      this.level.finished = true;
-      this.level.activate(
-        new entity.EntitySequence([
-          new entity.WaitingEntity(2000),
-          new popup.TerminatedLevelPopup(),
-        ])
-      );
-    }
-  }
-
-  setTint(tint: number) {
-    this._bar.tint = tint;
-    this._particles.children.forEach((child) => {
-      if (child instanceof PIXI.Sprite) child.tint = tint;
-    });
-    this._wave.tint = tint;
-    this._text.style.fill = tint;
-  }
-
-  get barWidth(): number {
-    return crispr.proportion(
-      this.level.options.scoreOptions.get(this.level),
-      0,
-      crispr.scrap(this.level.options.scoreOptions.max, this.level),
-      0,
-      this._barBaseWidth,
-      true
-    );
-  }
-
-  get baseXOfBar(): number {
-    return this._bar.x;
-  }
-
-  get reachedScoreXPosition(): number {
-    return this.baseXOfBar + this.barWidth;
-  }
-
-  bubbleRings(options?: {
-    delay?: number;
-    timeBetween?: number;
-    forEach?: (ring: Ring, index: number) => any;
-    callback?: () => any;
-  }) {
-    this._activateChildEntity(
-      anim.sequenced({
-        waitForAllSteps: true,
-        delay: options.delay ?? 200,
-        timeBetween: options.timeBetween ?? 150,
-        items: this._rings.children as Ring[],
-        callback: () => options.callback?.(),
-        onStep: (ring) => {
-          return anim.bubble(ring, 1.2, 300, {
-            onTop: () => {
-              options?.forEach?.(ring, ring.index);
-            },
-          });
-        },
-      })
-    );
-  }
-
   _setup() {
     this._container.position.set(100, 50);
 
@@ -354,6 +240,118 @@ export class Gauge extends entity.CompositeEntity {
 
   _teardown() {
     this._entityConfig.container.removeChild(this._container);
+  }
+
+  get bar(): PIXI.Sprite {
+    return this._bar;
+  }
+
+  get container(): PIXI.Container {
+    return this._container;
+  }
+
+  refreshValue() {
+    const score = this.level.options.scoreOptions.get(this.level);
+    this._bar.width = this.barWidth;
+    this._text.text = this.level.options.scoreOptions.show(score, this.level);
+
+    const devise = this.level.options.scoreOptions.devise;
+
+    if (devise !== undefined) {
+      const resolved =
+        typeof devise === "function" ? devise(score, this.level) : devise;
+      if (typeof resolved === "string") {
+        this._text.text += " " + resolved;
+      } else {
+        this._text.removeChildren();
+        this._text.addChild(resolved);
+      }
+    }
+
+    if (this._wave)
+      this._wave.x = Math.min(
+        this.reachedScoreXPosition,
+        this._background.position.x + this._background.width - 125
+      );
+
+    if (!this._triggered && this._lastText !== this._text.text) {
+      this._lastText = this._text.text;
+      this._triggered = true;
+      this._activateChildEntity(
+        anim.bubble(this._text, 1.4, 100, {
+          onTop: () => {
+            this._triggered = false;
+          },
+        })
+      );
+    }
+
+    if (score >= this.level.options.scoreOptions.max && !this.level.finished) {
+      this.level.finished = true;
+      this.level.options.scoreOptions.set(
+        crispr.scrap(this.level.options.scoreOptions.max, this.level),
+        this.level
+      );
+      this.level.finished = true;
+      this.level.activate(
+        new entity.EntitySequence([
+          new entity.WaitingEntity(2000),
+          new popup.TerminatedLevelPopup(),
+        ])
+      );
+    }
+  }
+
+  setTint(tint: number) {
+    this._bar.tint = tint;
+    this._particles.children.forEach((child) => {
+      if (child instanceof PIXI.Sprite) child.tint = tint;
+    });
+    this._wave.tint = tint;
+    this._text.style.fill = tint;
+  }
+
+  get barWidth(): number {
+    return crispr.proportion(
+      this.level.options.scoreOptions.get(this.level),
+      0,
+      crispr.scrap(this.level.options.scoreOptions.max, this.level),
+      0,
+      this._barBaseWidth,
+      true
+    );
+  }
+
+  get baseXOfBar(): number {
+    return this._bar.x;
+  }
+
+  get reachedScoreXPosition(): number {
+    return this.baseXOfBar + this.barWidth;
+  }
+
+  bubbleRings(options?: {
+    delay?: number;
+    timeBetween?: number;
+    forEach?: (ring: Ring, index: number) => any;
+    callback?: () => any;
+  }) {
+    this._activateChildEntity(
+      anim.sequenced({
+        waitForAllSteps: true,
+        delay: options.delay ?? 200,
+        timeBetween: options.timeBetween ?? 150,
+        items: this._rings.children as Ring[],
+        callback: () => options.callback?.(),
+        onStep: (ring) => {
+          return anim.bubble(ring, 1.2, 300, {
+            onTop: () => {
+              options?.forEach?.(ring, ring.index);
+            },
+          });
+        },
+      })
+    );
   }
 }
 
