@@ -676,7 +676,10 @@ export class Sequence extends entity.CompositeEntity {
         items: this.nucleotides.slice(),
         timeBetween: 50,
         waitForAllSteps: true,
-        onStep: (item) => anim.down(item.sprite, 100, item.sprite.scale.x),
+        onStep: (item) => {
+          item.isHighlighted = false;
+          return anim.down(item.sprite, 500, item.sprite.scale.x);
+        },
       }),
       addScore
         ? new entity.EntitySequence([
