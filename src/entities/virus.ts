@@ -207,11 +207,16 @@ export class Virus extends entity.CompositeEntity {
   kill(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        this.level.killedViruses++;
-
         this.setAnimatedSprite("dead", false);
 
         this._entityConfig.fxMachine.play("virus_death");
+      }),
+      new tween.Tween({
+        from: this.level.killedViruses,
+        to: this.level.killedViruses + 1,
+        duration: 1000,
+        easing: easing.easeOutQuint,
+        onUpdate: (value) => (this.level.killedViruses = value),
       }),
       new entity.WaitForEvent(this, "terminatedAnimation"),
       new entity.FunctionCallEntity(() => {

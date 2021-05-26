@@ -668,9 +668,9 @@ export class Sequence extends entity.CompositeEntity {
         onStep: (item) => anim.down(item.sprite, 100, item.sprite.scale.x),
       }),
       addScore
-        ? new entity.ParallelEntity([
-            this.applyScoring(),
+        ? new entity.EntitySequence([
             this.displayScoring(),
+            this.applyScoring(),
           ])
         : new entity.TransitoryEntity(),
       new entity.FunctionCallEntity(() => {
