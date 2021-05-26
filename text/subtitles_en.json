@@ -1,0 +1,6 @@
+{
+  "intro": {
+    "id": "intro",
+    "text": "--[:4500] Bacteria are the most common form of life on earth.   --[:10000] A bacterium is made of just one cell.   --[:14000] Within each cell is a genome,  --[:15800] the DNA instructions for copying the bacterium.   --[:19000] But bacteria are constantly menaced by viruses.  --[:22000] Viruses inject their own DNA into the cells they land on.   --[:27000] This is a nasty trick,  --[:28500] because the bacterium will start replicating viruses  --[:30800] instead of itself.   --[:33500] Eventually, the viruses overwhelm the bacterium,  --[:36000] exploding it and releasing new viruses into the environment.  --[:42000] That is where CRISPR comes in.   --[:44000] The CRISPR system can recognize DNA sequences  --[:46800] that are specific to viruses and destroy them.  --[:50500] Special proteins in the CRISPR complex  --[:53000] inspect the DNA they bump into,  --[:55000] and match it against sequences they are programmed to detect.   --[:59000] If the sequences match, the CRISPR complex will stick to the invading DNA,  --[:63000] and then use a scissor-like protein to cut it in two!   --[:67000] Now you are the CRISPR designer.  --[:70000] Can you save your bacterium from the incoming viruses? "
+  }
+}

@@ -459,6 +459,7 @@ export const levels = {
       checks: {
         "Crunch a sequence": (context) => context.sequenceWasCrunched,
         "Reach 200 pts": (context) => context.crispies >= 200,
+        "Defeat 2 viruses": (context) => context.killedViruses >= 2,
       },
       hooks: [
         new l.Hook({
