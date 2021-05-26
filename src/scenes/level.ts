@@ -27,7 +27,7 @@ export type LevelVariant = "turn" | "fall" | "zen";
 export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
   zen: {
     endConditionText: (ctx) =>
-      `Reach min ${ctx.options.remainingMoveCount} crispies in ${ctx.options.remainingMoveCount} moves`,
+      `Reach min 1000 crispies\nin ${ctx.options.remainingMoveCount} moves`,
     loseCondition: (ctx: Level) =>
       ctx.remainingMoves.count <= 0 && ctx.crispies < 1000,
     winCondition: (ctx) =>
