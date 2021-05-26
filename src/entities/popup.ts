@@ -911,9 +911,7 @@ export class StatePopup extends ChecksPopup {
     text.position.y = 100;
 
     const score = crispr.makeText(
-      `Progress: ${Math.floor(
-        this.level.options.gaugeOptions.get(this.level)
-      )} / ${crispr.scrap(this.level.options.gaugeOptions.final, this.level)}`,
+      crispr.scrap(this.level.options.endConditionText, this.level),
       {
         fontSize: 100,
         fill: 0xffffff,
