@@ -446,6 +446,7 @@ export const levels = {
   // Intro
   Tutorial: () =>
     new l.Level("Tutorial", {
+      endConditionText: "Defeat 2 viruses\nwithout infection",
       variant: "turn",
       noCrispyBonus: true,
       disableClips: true,
@@ -457,9 +458,7 @@ export const levels = {
       disableScore: true,
       disablingAnimations: ["tutorial"],
       checks: {
-        "Crunch a sequence": (context) => context.sequenceWasCrunched,
-        "Reach 200 pts": (context) => context.crispies >= 200,
-        "Defeat 2 viruses": (context) => context.killedViruses >= 2,
+        "Not infected": (context) => context.wasInfected,
       },
       hooks: [
         new l.Hook({
@@ -676,6 +675,7 @@ export const levels = {
                               context.disablingAnimation("preventVirus", false);
                               context.emitLevelEvent("canReset");
                               context.wasInfected = false;
+                              context.killedViruses = 0;
                             }),
                           }),
                           new l.Hook({
