@@ -6,7 +6,6 @@ import * as tween from "booyah/src/tween";
 
 import * as level from "../scenes/level";
 import * as nucleotide from "./nucleotide";
-import * as sequence from "./sequence";
 import * as anim from "../animations";
 import * as crispUtil from "../crispr";
 import * as crispr from "../crispr";

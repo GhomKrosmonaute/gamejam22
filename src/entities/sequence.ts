@@ -538,6 +538,11 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   addScoring(nucleotides: nucleotide.NucleotideJSON[]) {
+    if (
+      nucleotides.filter((n) => n.type !== "portal").length === this.baseLength
+    ) {
+      this.level.oneShotSequence = true;
+    }
     this.scoring.multiplier +=
       nucleotides.reduce((acc, val) => acc + (val.crispyMultiplier - 1), 1) - 1;
     this.scoring.nucleotides.push(...nucleotides);

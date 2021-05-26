@@ -274,8 +274,6 @@ export const levels = {
       variant: "zen",
       gridShape: "full",
       forceMatching: true,
-      crispyBonusRate: 0.2,
-      remainingMoveCount: 10,
       hooks: [
         new l.Hook({
           id: "intro",

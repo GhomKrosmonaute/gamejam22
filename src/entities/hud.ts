@@ -530,7 +530,6 @@ export class ActionButton extends entity.CompositeEntity {
 }
 
 export class RemainingMovesIndicator extends entity.CompositeEntity {
-  protected init = false;
   private _count: number;
   private text: PIXI.Text;
   private animation: entity.Entity;
@@ -550,7 +549,7 @@ export class RemainingMovesIndicator extends entity.CompositeEntity {
   }
 
   protected _setup() {
-    this._count = 0;
+    this._count = this.level.options.remainingMoveCount;
     this.text = crispr.makeText("", {
       align: "right",
       fontSize: 80,
@@ -563,24 +562,10 @@ export class RemainingMovesIndicator extends entity.CompositeEntity {
     this.resetText();
     this.updateText();
     this._entityConfig.container.addChild(this.text);
-
-    this._activateChildEntity(
-      anim.sequenced({
-        timeBetween: 100,
-        items: this.level.options.remainingMoveCount,
-        onStep: () => {
-          this.addOne();
-        },
-        callback: () => {
-          this.init = true;
-        },
-      })
-    );
   }
 
   protected _teardown() {
     this._entityConfig.container.removeChild(this.text);
-    this.init = false;
     this.text = null;
   }
 

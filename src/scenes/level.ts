@@ -27,7 +27,7 @@ export type LevelVariant = "turn" | "fall" | "zen";
 export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
   zen: {
     endConditionText: (ctx) =>
-      `Reach min ${ctx.options.remainingMoveCount} crispies in 5 moves`,
+      `Reach min ${ctx.options.remainingMoveCount} crispies in ${ctx.options.remainingMoveCount} moves`,
     loseCondition: (ctx: Level) =>
       ctx.remainingMovesIndicator.count <= 0 && ctx.crispies < 1000,
     winCondition: (ctx) =>
@@ -38,7 +38,8 @@ export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
     disableClips: true,
     disableBonuses: true,
     remainingMoves: true,
-    remainingMoveCount: 5,
+    crispyBonusRate: 0.1,
+    remainingMoveCount: 3,
     disableViruses: true,
     crunchOnPointerUp: false,
     actionButtonSprite: "images/hud_action_button_crunch.png",
@@ -485,7 +486,6 @@ export class Level extends entity.CompositeEntity {
   public sequenceWasCrunched = false;
   public clipsWasIncludes = false;
   public oneShotSequence = false;
-  public crunchedSequenceCount = 0;
   public isInit = false;
   public isEnded = false;
   public playTime = 0;
