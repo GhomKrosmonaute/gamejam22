@@ -53,7 +53,7 @@ export const levels = {
             ctx.activate(
               new popup.TutorialPopup({
                 title: "Land in sight!",
-                content: `Loot the Caribbean treasures, collect at least ${ctx.options.score.max}!`,
+                content: `Loot the Caribbean treasures, collect at least ${ctx.options.gaugeOptions.final}!`,
                 image: "images/crispy.png",
                 imageHeight: 200,
                 popupOptions: {
@@ -273,33 +273,7 @@ export const levels = {
     new l.Level("Zen", {
       variant: "zen",
       gridShape: "full",
-      disableClips: true,
       forceMatching: true,
-      disableBonuses: true,
-      crispyBonusRate: 0.2,
-      zenMoves: 10,
-      score: {
-        max: 1000,
-        initial: 0,
-        color: crispr.yellowNumber,
-        get: (ctx) => ctx.score,
-        set: (val, ctx) => (ctx.score = val),
-        show: (val) => String(Math.floor(val)),
-        devise: (val, ctx) =>
-          crispr.sprite(ctx, "images/crispy.png", (it) => {
-            it.anchor.set(0.5);
-            it.scale.set(0.6);
-            it.x = 65;
-          }),
-      },
-      checks: {
-        "One shot sequence": (level) => level.oneShotLongSequence,
-        "Win in 5 moves or less": (level) =>
-          level.options.zenMoves - level.remainingMovesIndicator.count <= 5,
-        "Max score reached": (level) =>
-          level.options.score.get(level) >=
-          crispr.scrap(level.options.score.max, level),
-      },
       hooks: [
         new l.Hook({
           id: "intro",
@@ -367,7 +341,7 @@ export const levels = {
             context.activate(
               new popup.TutorialPopup({
                 title: "Time attack!",
-                content: `Crunch the sequences before they hit the grid!\n\nReach ${context.options.score.max} points to continue`,
+                content: `Crunch the sequences before they hit the grid!\n\nReach ${context.options.gaugeOptions.final} points to continue`,
                 popupOptions: {
                   id: "intro popup",
                   logo: "images/icon_timed.png",
@@ -457,7 +431,7 @@ export const levels = {
             context.activate(
               new popup.TutorialPopup({
                 title: "Turn by turn",
-                content: `Now you know the basics, try with some longer sequences.\n\nKill ${context.options.score.max} viruses to continue!`,
+                content: `Now you know the basics, try with some longer sequences.\n\nKill ${context.options.gaugeOptions.final} viruses to continue!`,
                 popupOptions: {
                   minimizeOnClose: false,
                   coolDown: 2000,
@@ -484,6 +458,7 @@ export const levels = {
       disablingAnimations: ["tutorial"],
       checks: {
         "Crunch a sequence": (context) => context.sequenceWasCrunched,
+        "Reach 200 pts": (context) => context.crispies >= 200,
         "Defeat 2 viruses": (context) => context.killedViruses >= 2,
       },
       hooks: [
@@ -718,9 +693,9 @@ export const levels = {
                               disableScore: false,
                               disableGauge: false,
                               forceMatching: true,
-                              score: {
+                              gaugeOptions: {
                                 initial: 0,
-                                max: 2,
+                                final: 2,
                               },
                               hooks: [
                                 new l.Hook({

@@ -6,7 +6,6 @@ import * as tween from "booyah/src/tween";
 
 import * as level from "../scenes/level";
 import * as nucleotide from "./nucleotide";
-import * as sequence from "./sequence";
 import * as anim from "../animations";
 import * as crispUtil from "../crispr";
 import * as crispr from "../crispr";
@@ -290,36 +289,6 @@ export class HealBonus extends Bonus {
         ])
       );
     });
-  }
-}
-
-export class SyringeBonus extends Bonus {
-  name = "syringe";
-
-  protected _setup() {
-    this.level.sequenceManager.container.buttonMode = true;
-
-    this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
-      this.level.disablingAnimation(this.name, true);
-      this._activateChildEntity(
-        new entity.EntitySequence([
-          this.level.sequenceManager.removeSequence(
-            !this.level.options.disableScore,
-            true,
-            s
-          ),
-          new entity.FunctionCallEntity(() => {
-            this.level.sequenceManager.add();
-            this.level.disablingAnimation(this.name, false);
-            this.end();
-          }),
-        ])
-      );
-    });
-  }
-
-  protected _teardown() {
-    this.level.sequenceManager.container.buttonMode = false;
   }
 }
 

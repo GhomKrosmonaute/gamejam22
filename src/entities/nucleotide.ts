@@ -14,6 +14,13 @@ import * as path from "./path";
 
 export type NucleotideState = "missing" | "present" | "inactive";
 export type NucleotideType = "clip" | "normal" | "portal" | "joker";
+export interface NucleotideJSON {
+  type: NucleotideType;
+  state: NucleotideState;
+  color: string;
+  crispyMultiplier: number;
+  position: PIXI.IPointData;
+}
 
 // TODO: Use string enum here?
 export type ColorName = "b" | "r" | "g" | "y" | "?" | "*";
@@ -450,7 +457,7 @@ export class Nucleotide extends entity.CompositeEntity {
     }
   }
 
-  toJSON() {
+  toJSON(): NucleotideJSON {
     return {
       type: this.type,
       state: this.state,

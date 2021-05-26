@@ -190,7 +190,7 @@ export class Grid extends entity.CompositeEntity {
         this.level.path.remove();
       }),
       anim.sequenced({
-        items: this.solution,
+        items: this.solution.slice(),
         timeBetween: 100,
         waitForAllSteps: true,
         onStep: (n, i) => {

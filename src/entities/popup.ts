@@ -762,10 +762,10 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
     // add score
     if (!this.level.options.disableScore) {
       const score = crispr.makeText(
-        `Score: ${this.level.score} pts (${crispr.proportion(
-          this.level.score,
+        `Score: ${this.level.crispies} pts (${crispr.proportion(
+          this.level.crispies,
           0,
-          crispr.scrap(this.level.options.score.max, this.level),
+          crispr.scrap(this.level.options.gaugeOptions.final, this.level),
           0,
           100,
           true
@@ -786,7 +786,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
       this._activateChildEntity(
         new tween.Tween({
           from: 0,
-          to: this.level.score,
+          to: this.level.crispies,
           easing: easing.easeInQuad,
           duration: 1000,
           onUpdate: (value) =>
@@ -794,7 +794,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
               crispr.proportion(
                 value,
                 0,
-                crispr.scrap(this.level.options.score.max, this.level),
+                crispr.scrap(this.level.options.gaugeOptions.final, this.level),
                 0,
                 100,
                 true
@@ -925,9 +925,7 @@ export class StatePopup extends ChecksPopup {
     text.position.y = 100;
 
     const score = crispr.makeText(
-      `Progress: ${Math.floor(
-        this.level.options.score.get(this.level)
-      )} / ${crispr.scrap(this.level.options.score.max, this.level)}`,
+      crispr.scrap(this.level.options.endConditionText, this.level),
       {
         fontSize: 100,
         fill: 0xffffff,
