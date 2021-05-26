@@ -68,6 +68,8 @@ export class Virus extends entity.CompositeEntity {
   public scale = 1;
   public filters: PIXI.Filter[] = [];
 
+  animationRunning = false;
+
   constructor(public type: VirusType) {
     super();
   }
@@ -207,7 +209,7 @@ export class Virus extends entity.CompositeEntity {
   kill(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        this.setAnimatedSprite("dead", false);
+        this.setAnimatedSprite("dead", false, true);
 
         this._entityConfig.fxMachine.play("virus_death");
       }),
@@ -218,7 +220,9 @@ export class Virus extends entity.CompositeEntity {
         easing: easing.easeOutQuint,
         onUpdate: (value) => (this.level.killedViruses = value),
       }),
-      new entity.WaitForEvent(this, "terminatedAnimation"),
+      new entity.FunctionalEntity({
+        requestTransition: () => !this.animationRunning,
+      }),
       new entity.FunctionCallEntity(() => {
         this.level.emitLevelEvent("virusLeaves", this);
         this._transition = entity.makeTransition();
@@ -303,9 +307,15 @@ export class Virus extends entity.CompositeEntity {
     this._container.position.y += this.position.y;
   }
 
-  private setAnimatedSprite(animationName: VirusAnimation, loop = true) {
+  private setAnimatedSprite(
+    animationName: VirusAnimation,
+    loop = true,
+    runningFLag = false
+  ) {
     if (this._previousAnimationName === animationName) return;
     else this._previousAnimationName = animationName;
+
+    if (runningFLag) this.animationRunning = true;
 
     if (this._animation && this._animation.isSetup)
       this._deactivateChildEntity(this._animation);
@@ -360,6 +370,7 @@ export class Virus extends entity.CompositeEntity {
     this._animation.sprite.filters = this.filters;
     this._animation.sprite.loop = loop;
     this._animation.options.transitionOnComplete = () => {
+      this.animationRunning = false;
       this.emit("terminatedAnimation");
       if (animationName !== "dead") {
         this.setAnimatedSprite("idle");

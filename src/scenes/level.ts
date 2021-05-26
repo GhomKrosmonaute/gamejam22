@@ -314,6 +314,7 @@ export interface LevelEvents {
   pathCrunched: [];
   partialCrunched: [];
   cleanedInfection: [];
+  actionButtonPressed: [level: Level];
   pathUpdated: [];
   ringReached: [ring: hud.Ring];
   sequenceDown: [];

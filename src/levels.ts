@@ -109,7 +109,65 @@ export const levels = {
   //   }),
 
   // Medium
-  "Medium\nBoss": () => new l.Level("Medium\nBoss", {}),
+  "Medium\nBoss": () =>
+    new l.Level("Medium\nBoss", (context) => ({
+      virus: "big",
+      variant: "turn",
+      portalsCount: 4,
+      fallingSpeed: 1,
+      gridShape: "hole",
+      sequenceLength: 7,
+      forceMatching: true,
+      clipCount: 3,
+      hooks: [
+        new l.Hook({
+          id: "intro animation",
+          event: "init",
+          once: true,
+          entity: new entity.EntitySequence([
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", true);
+            }),
+            new anim.VirusSequence([
+              (v) =>
+                new entity.FunctionCallEntity(() => {
+                  v.type = "big";
+                  v.scale = 4.5;
+                  v.rounded = false;
+                  v.angle = 0;
+                  v.position = { x: crispr.width / 2, y: crispr.height * 2 };
+                  v.filters = [new OutlineFilter(20, 0x000000) as any];
+                }),
+              (v) => v.stingIn(),
+              (v) =>
+                new tween.Tween({
+                  duration: 500,
+                  from: crispr.height * 2,
+                  to: crispr.height,
+                  easing: easing.easeOutCubic,
+                  onUpdate: (value) => {
+                    v.position = { x: crispr.width / 2, y: value };
+                  },
+                }),
+              (v) => v.stingOut(),
+              () => new entity.WaitingEntity(500),
+              (v) => v.leave(),
+            ]),
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", false);
+            }),
+          ]),
+        }),
+        new l.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            if (context.isEnded && !context.finished)
+              context.activate(anim.title(context.container, "Go!"));
+          }),
+        }),
+      ],
+    })),
   "Chrono\nPortal": () =>
     new l.Level("Chrono\nPortal", (context) => ({
       variant: "fall",
@@ -636,17 +694,19 @@ export const levels = {
                             }),
                           }),
                           new l.Hook({
+                            id: "press button and infect",
+                            event: "actionButtonPressed",
+                            once: true,
+                            entity: new entity.FunctionCallEntity(() => {
+                              context.disablingAnimation("tutorial", true);
+                              context.disablingAnimation("preventVirus", true);
+                            }),
+                          }),
+                          new l.Hook({
                             id: "step 4.1",
                             event: "infected",
                             once: true,
                             entity: new entity.EntitySequence([
-                              new entity.FunctionCallEntity(() => {
-                                context.disablingAnimation("tutorial", true);
-                                context.disablingAnimation(
-                                  "preventVirus",
-                                  true
-                                );
-                              }),
                               new entity.WaitingEntity(1500),
                               new entity.FunctionCallEntity(() => {
                                 context.activate(

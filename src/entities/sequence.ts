@@ -518,7 +518,6 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _teardown() {
-    if (this.virus?.isSetup) this.level.deactivate(this.virus);
     this.level.sequenceManager.sequences.delete(this);
     this.nucleotides = [];
     this.container.removeChildren();
@@ -689,7 +688,7 @@ export class Sequence extends entity.CompositeEntity {
         : new entity.FunctionCallEntity(() => null),
       new entity.FunctionCallEntity(() => {
         const end = () => {
-          if (this.virus?.isSetup) this.level.deactivate(this.virus);
+          //if (this.virus?.isSetup) this.level.deactivate(this.virus);
           this.level.disablingAnimation("path.crunch.down", false);
           this.level.disablingAnimation("sequence.down", false);
           this.level.emitLevelEvent("sequenceDown");

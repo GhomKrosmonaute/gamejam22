@@ -467,6 +467,8 @@ export class ActionButton extends entity.CompositeEntity {
   }
 
   private press(): entity.Entity {
+    this.level.emitLevelEvent("actionButtonPressed", this.level);
+
     if (this.level.isDisablingAnimationInProgress) {
       return this.errorAnimation();
     }
