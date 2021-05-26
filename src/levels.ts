@@ -53,7 +53,7 @@ export const levels = {
             ctx.activate(
               new popup.TutorialPopup({
                 title: "Land in sight!",
-                content: `Loot the Caribbean treasures, collect at least ${ctx.options.gaugeOptions.max}!`,
+                content: `Loot the Caribbean treasures, collect at least ${ctx.options.gaugeOptions.final}!`,
                 image: "images/crispy.png",
                 imageHeight: 200,
                 popupOptions: {
@@ -341,7 +341,7 @@ export const levels = {
             context.activate(
               new popup.TutorialPopup({
                 title: "Time attack!",
-                content: `Crunch the sequences before they hit the grid!\n\nReach ${context.options.gaugeOptions.max} points to continue`,
+                content: `Crunch the sequences before they hit the grid!\n\nReach ${context.options.gaugeOptions.final} points to continue`,
                 popupOptions: {
                   id: "intro popup",
                   logo: "images/icon_timed.png",
@@ -431,7 +431,7 @@ export const levels = {
             context.activate(
               new popup.TutorialPopup({
                 title: "Turn by turn",
-                content: `Now you know the basics, try with some longer sequences.\n\nKill ${context.options.gaugeOptions.max} viruses to continue!`,
+                content: `Now you know the basics, try with some longer sequences.\n\nKill ${context.options.gaugeOptions.final} viruses to continue!`,
                 popupOptions: {
                   minimizeOnClose: false,
                   coolDown: 2000,
@@ -694,7 +694,7 @@ export const levels = {
                               forceMatching: true,
                               gaugeOptions: {
                                 initial: 0,
-                                max: 2,
+                                final: 2,
                               },
                               hooks: [
                                 new l.Hook({

@@ -197,7 +197,7 @@ export class Gauge extends entity.CompositeEntity {
   _update(frameInfo: entity.FrameInfo) {
     if (
       this.level.options.gaugeOptions.get(this.level) <
-      this.level.options.gaugeOptions.max
+      this.level.options.gaugeOptions.final
     ) {
       const reachedScorePosition = this.reachedScoreXPosition;
       this._rings.children.forEach((ring: Ring) => {
@@ -297,10 +297,17 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   get barWidth(): number {
+    const initial = this.level.options.gaugeOptions.initial;
+    const final = crispr.scrap(
+      this.level.options.gaugeOptions.final,
+      this.level
+    );
+    const reverse = !!this.level.options.gaugeOptions.reverse;
+    const [a, b] = initial < final ? [initial, final] : [final, initial];
     return crispr.proportion(
       this.level.options.gaugeOptions.get(this.level),
-      0,
-      crispr.scrap(this.level.options.gaugeOptions.max, this.level),
+      reverse ? b : a,
+      reverse ? a : b,
       0,
       this._barBaseWidth,
       true
@@ -482,38 +489,16 @@ export class ActionButton extends entity.CompositeEntity {
       }),
     ];
 
-    switch (this.level.options.variant) {
-      case "turn":
-        // ? has holes
-        //    : => fill holes
-        if (this.level.grid.containsHoles()) {
-          context.push(this.level.fillHoles(), this.level.infect());
-        } else {
-          context.push(
-            this.level.sequenceManager.dropSequences(1),
-            this.level.infect()
-          );
-        }
-        break;
-      case "zen":
-        context.push(
-          this.level.sequenceManager.dropSequences(),
-          this.level.removeHalfScore(),
-          new entity.FunctionCallEntity(() => {
-            if (this.level.options.remainingMoves)
-              this.level.remainingMovesIndicator.removeOne();
-          })
-        );
-        break;
-      case "fall":
-        // => down all sequences
-        // => infect
-        context.push(
-          this.level.sequenceManager.dropSequences(),
-          this.level.infect()
-        );
-        break;
-    }
+    if (this.level.options.dropSequenceOnSkip)
+      context.push(this.level.sequenceManager.dropSequences(1));
+
+    if (this.level.options.removeHalfScoreOnSkip)
+      context.push(this.level.removeHalfScore());
+
+    if (this.level.options.infection) context.push(this.level.infect());
+
+    if (this.level.options.remainingMoves)
+      context.push(this.level.remainingMoves.removeOne());
 
     context.push(
       new entity.FunctionCallEntity(() => {
@@ -529,11 +514,8 @@ export class ActionButton extends entity.CompositeEntity {
   }
 }
 
-export class RemainingMovesIndicator extends entity.CompositeEntity {
+export class RemainingMoves extends entity.CompositeEntity {
   private _count: number;
-  private text: PIXI.Text;
-  private animation: entity.Entity;
-  private position = new PIXI.Point(50, crispr.height - 100);
 
   get level(): level.Level {
     return this._entityConfig.level;
@@ -545,90 +527,42 @@ export class RemainingMovesIndicator extends entity.CompositeEntity {
 
   set count(n: number) {
     this._count = n;
-    this.updateText();
   }
 
   protected _setup() {
     this._count = this.level.options.remainingMoveCount;
-    this.text = crispr.makeText("", {
-      align: "right",
-      fontSize: 80,
-      stroke: "#000000",
-      strokeThickness: 5,
-      fill: crispr.yellow,
-      fontStyle: "bold italic",
-      fontFamily: "Alien League",
-    });
-    this.resetText();
-    this.updateText();
-    this._entityConfig.container.addChild(this.text);
   }
 
-  protected _teardown() {
-    this._entityConfig.container.removeChild(this.text);
-    this.text = null;
+  addOne(duration = 1000) {
+    const result = this._count + 1;
+    return new entity.ParallelEntity([
+      new tween.Tween({
+        from: this._count,
+        to: result,
+        duration,
+        easing: easing.easeInOutQuad,
+        onUpdate: (value) => (this._count = value),
+        onTeardown: () => (this._count = result),
+      }),
+    ]);
   }
 
-  addOne() {
-    if (!this.isSetup) return;
-
-    this._count++;
-    this.animate(
-      anim.bubble(this.text, 1.2, 150, { onTop: this.updateText.bind(this) })
-    );
-  }
-
-  removeOne() {
-    if (!this.isSetup) return;
-
-    this._count--;
+  removeOne(duration = 1000) {
     if (this._count === 0) {
       this.level.emitLevelEvent("outOfZenMoves");
+      return new entity.TransitoryEntity();
     } else {
-      this.animate(
-        new entity.ParallelEntity([
-          anim.tweenShaking(this.text, 600, 10, 0),
-          new entity.EntitySequence([
-            new tween.Tween({
-              from: 0xffda6b,
-              to: 0xff0000,
-              duration: 300,
-              onUpdate: (value) => (this.text.tint = value),
-              onTeardown: this.updateText.bind(this),
-              interpolate: tween.interpolation.color,
-            }),
-            new tween.Tween({
-              from: 0xff0000,
-              to: 0xffda6b,
-              duration: 300,
-              onUpdate: (value) => (this.text.tint = value),
-              interpolate: tween.interpolation.color,
-            }),
-          ]),
-        ])
-      );
+      const result = this._count - 1;
+      return new entity.ParallelEntity([
+        new tween.Tween({
+          from: this._count,
+          to: result,
+          duration,
+          easing: easing.easeInOutQuad,
+          onUpdate: (value) => (this._count = value),
+          onTeardown: () => (this._count = result),
+        }),
+      ]);
     }
-  }
-
-  private updateText() {
-    this.text.text = `${this._count} moves remaining`;
-  }
-
-  private resetText() {
-    this.text.scale.set(1);
-    this.text.tint = 0xffffff;
-    this.text.position.copyFrom(this.position);
-    this.text.anchor.x = 0;
-  }
-
-  private animate(e: entity.Entity) {
-    if (this.animation && this.animation.isSetup) {
-      this._deactivateChildEntity(this.animation);
-      this.resetText();
-    }
-
-    this.animation = e;
-
-    this._activateChildEntity(this.animation);
   }
 }
