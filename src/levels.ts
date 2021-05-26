@@ -517,7 +517,7 @@ export const levels = {
                 event: "init",
                 delay: 2000,
                 entity: new entity.FunctionCallEntity(() => {
-                  level.disablingAnimation("tutorial", false);
+                  level.disablingAnimations.clear();
 
                   const gridPos = level.grid.nucleotideContainer.position;
 

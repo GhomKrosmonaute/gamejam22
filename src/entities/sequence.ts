@@ -173,6 +173,7 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   set(colors: nucleotide.ColorName[]) {
+    if (this.sequenceCount > 0) return;
     const {
       width: nucleotideWidth,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
@@ -196,6 +197,7 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   add(length = crispr.scrap(this.level.options.sequenceLength, this.level)) {
+    if (this.sequenceCount > 0) return;
     const {
       width: nucleotideWidth,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
@@ -516,6 +518,7 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _teardown() {
+    if (this.virus?.isSetup) this.level.deactivate(this.virus);
     this.level.sequenceManager.sequences.delete(this);
     this.nucleotides = [];
     this.container.removeChildren();
@@ -617,7 +620,7 @@ export class Sequence extends entity.CompositeEntity {
                 } x ${scoring.multiplier}`;
               },
             })
-          : new entity.TransitoryEntity(),
+          : new entity.FunctionCallEntity(() => null),
       () =>
         new entity.ParallelEntity([
           new entity.FunctionCallEntity(() => {
@@ -654,13 +657,16 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   down(addScore: boolean, notACrunchResult = false) {
+    let startedAt: number;
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("sequence.down", true);
+        startedAt = Date.now();
       }),
       new entity.FunctionalEntity({
         requestTransition: () => {
           return (
+            Date.now() > startedAt + 3000 ||
             notACrunchResult ||
             this.level.disablingAnimations.has("path.crunch.down")
           );
@@ -677,9 +683,10 @@ export class Sequence extends entity.CompositeEntity {
             this.displayScoring(),
             this.applyScoring(),
           ])
-        : new entity.TransitoryEntity(),
+        : new entity.FunctionCallEntity(() => null),
       new entity.FunctionCallEntity(() => {
         const end = () => {
+          if (this.virus?.isSetup) this.level.deactivate(this.virus);
           this.level.disablingAnimation("path.crunch.down", false);
           this.level.disablingAnimation("sequence.down", false);
           this.level.emitLevelEvent("sequenceDown");

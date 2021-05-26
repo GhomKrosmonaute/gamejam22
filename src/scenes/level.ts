@@ -218,12 +218,12 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
     ctx.options.gaugeOptions.get(ctx) >=
     crispr.scrap(ctx.options.gaugeOptions.final, ctx),
   loseCondition: (ctx) => ctx.life <= 0,
+  gridCleaning: false,
   dropSequenceOnSkip: true,
   removeHalfScoreOnSkip: false,
-  gridCleaning: false,
+  disableExtraSequence: false,
   mustBeHiddenOnPause: false,
   disablingAnimations: [],
-  disableExtraSequence: false,
   showMatchOnCrunch: true,
   disableBonuses: false,
   disableViruses: false,
@@ -258,6 +258,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
         )
       )
     ),
+
   sequences: null,
 
   clipCount: 4,
@@ -295,8 +296,9 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
 };
 
 export type LevelEventName = keyof LevelEvents;
-export type LevelEventParams<EventName extends LevelEventName> =
-  LevelEvents[EventName];
+export type LevelEventParams<
+  EventName extends LevelEventName
+> = LevelEvents[EventName];
 
 export interface LevelEvents {
   end: [];
@@ -1257,8 +1259,12 @@ export class Level extends entity.CompositeEntity {
     const context: entity.EntityResolvable[] = [];
     const parallel: entity.EntityResolvable[] = [];
 
-    if (!sequence.validate()) return this.actionButton.errorAnimation();
-    else parallel.push(this.actionButton.clickAnimation());
+    if (this.path.length === 0 || !sequence.validate())
+      return !this.options.disableButton
+        ? this.actionButton.errorAnimation()
+        : new entity.FunctionCallEntity(() => null);
+    else if (!this.options.disableButton)
+      parallel.push(this.actionButton.clickAnimation());
 
     this.disablingAnimation("level.attemptCrunch", true);
 
@@ -1269,16 +1275,16 @@ export class Level extends entity.CompositeEntity {
       sequence.deactivateSegment();
 
       if (sequence.maxActiveLength < 3) {
-        parallel.push(sequence.down(true));
+        parallel.push(sequence.down(!this.options.disableScore));
       }
     } else {
-      parallel.push(sequence.down(true));
+      parallel.push(sequence.down(!this.options.disableScore));
     }
 
     context.push(
       this.options.remainingMoves
         ? this.remainingMoves.removeOne()
-        : new entity.TransitoryEntity(),
+        : new entity.FunctionCallEntity(() => null),
       new entity.ParallelEntity(parallel),
       new entity.FunctionCallEntity(() => {
         this.sequenceManager.adjustment.adjust();

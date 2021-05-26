@@ -550,7 +550,7 @@ export class RemainingMoves extends entity.CompositeEntity {
   removeOne(duration = 1000) {
     if (this._count === 0) {
       this.level.emitLevelEvent("outOfZenMoves");
-      return new entity.TransitoryEntity();
+      return new entity.FunctionCallEntity(() => null);
     } else {
       const result = this._count - 1;
       return new entity.ParallelEntity([

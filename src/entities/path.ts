@@ -228,13 +228,14 @@ export class Path extends entity.CompositeEntity {
 
   crunch() {
     let originalPositions: PIXI.Point[] = [];
+    if (this.length === 0) return new entity.FunctionCallEntity(() => null);
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("path.crunch", true);
 
         if (this.correctlyContainsClips()) {
           this.level.clipsWasIncludes = true;
-          this.items[0].type = "normal";
+          if (!this.level.options.disableClips) this.first.type = "normal";
         }
       }),
       anim.sequenced({
@@ -260,7 +261,7 @@ export class Path extends entity.CompositeEntity {
             this._activateChildEntity(
               new entity.EntitySequence([
                 !this.level.options.showMatchOnCrunch
-                  ? new entity.TransitoryEntity()
+                  ? new entity.FunctionCallEntity(() => null)
                   : new entity.ParallelEntity([
                       () =>
                         anim.move(
