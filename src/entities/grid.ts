@@ -369,13 +369,18 @@ export class Grid extends entity.CompositeEntity {
   }
 
   addSpecifics(
-    among: (nucleotide.Nucleotide | undefined)[],
+    among: (nucleotide.Nucleotide | undefined)[] = [],
     count: number,
     type: nucleotide.NucleotideType
-  ): (nucleotide.Nucleotide | undefined)[] {
+  ) {
     let countOption: number = null;
 
     const shape = this.level.options.gridShape;
+
+    const applyType = (n: nucleotide.Nucleotide) => {
+      n.type = type;
+      if (type === "joker") n.colorName = "*";
+    };
 
     if (typeof shape === "string") {
       if (shape in gridShapes) {
@@ -389,16 +394,12 @@ export class Grid extends entity.CompositeEntity {
             if (typeof val === "number") {
               countOption = val;
             } else {
-              val.forEach(({ x, y }) => {
+              return val.forEach(({ x, y }) => {
                 const n = this.getNucleotideFromGridPosition(
                   new PIXI.Point(x, y)
                 );
-                if (n) {
-                  n.type = type;
-                  if (type === "joker") n.colorName = "*";
-                }
+                if (n) applyType(n);
               });
-              return among;
             }
           }
         }
@@ -421,22 +422,27 @@ export class Grid extends entity.CompositeEntity {
       // change tous les normaux en specifics
       normals.forEach((n) => (n.type = type));
     } else {
-      _.shuffle(normals)
-        .slice(0, neededCount)
-        .forEach((n) => {
-          n.type = type;
-          if (type === "joker") n.colorName = "*";
-        });
+      _.shuffle(normals).slice(0, neededCount).forEach(applyType);
     }
-
-    return among;
   }
 
-  addAllSpecifics(among: (nucleotide.Nucleotide | undefined)[]) {
-    among = this.addSpecifics(among, this.level.options.portalsCount, "portal");
-    among = this.addSpecifics(among, this.level.options.jokerCount, "joker");
+  addAllSpecifics(among: (nucleotide.Nucleotide | undefined)[] = []) {
+    this.addSpecifics(
+      this.allNucleotides,
+      this.level.options.portalsCount,
+      "portal"
+    );
+    this.addSpecifics(
+      this.allNucleotides,
+      this.level.options.jokerCount,
+      "joker"
+    );
     if (!this.level.options.disableClips)
-      this.addSpecifics(among, this.level.options.clipCount, "clip");
+      this.addSpecifics(
+        this.allNucleotides,
+        this.level.options.clipCount,
+        "clip"
+      );
   }
 
   isOnEvenCol(n: nucleotide.Nucleotide): boolean {
@@ -720,8 +726,8 @@ export class Grid extends entity.CompositeEntity {
 
     if (holes.length === 0) return;
 
-    for (const nucleotide of holes) {
-      this.generateNucleotide(nucleotide);
+    for (const hole of holes) {
+      this.generateNucleotide(hole);
     }
 
     this.addAllSpecifics(holes);
