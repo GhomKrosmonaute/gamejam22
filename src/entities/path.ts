@@ -55,14 +55,13 @@ export class Path extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  /** The real length without cuts */
+  /** The path signature length without portals */
   get length(): number {
-    return this.nucleotides.length;
+    return this.toString().length;
   }
 
-  /** only nucleotides */
-  get nucleotides(): nucleotide.Nucleotide[] {
-    return this.items.filter((n) => !/^(?:clips|portal)$/.test(n.type));
+  get normals(): nucleotide.Nucleotide[] {
+    return this.items.filter((n) => n.type === "normal");
   }
 
   get clips(): nucleotide.Nucleotide[] {
@@ -73,10 +72,8 @@ export class Path extends entity.CompositeEntity {
     return this.items.filter((n) => n.type === "portal");
   }
 
-  get maxLength(): number {
-    return Math.max(
-      ...[...this.level.sequenceManager.sequences].map((s) => s.baseLength)
-    );
+  get jokers(): nucleotide.Nucleotide[] {
+    return this.items.filter((n) => n.type === "joker");
   }
 
   get first(): nucleotide.Nucleotide | null {
@@ -256,7 +253,7 @@ export class Path extends entity.CompositeEntity {
           n.pathArrow.visible = false;
 
           if (n.type === "normal") {
-            const index = this.nucleotides.indexOf(n);
+            const index = this.normals.indexOf(n);
 
             this._activateChildEntity(
               new entity.EntitySequence([
@@ -335,7 +332,7 @@ export class Path extends entity.CompositeEntity {
               ])
             );
           } else {
-            const index = this.nucleotides.indexOf(n);
+            const index = this.normals.indexOf(n);
 
             this._activateChildEntity(
               new entity.EntitySequence([
@@ -417,8 +414,11 @@ export class Path extends entity.CompositeEntity {
     ]);
   }
 
-  toString(reverse = false) {
-    return (reverse ? this.nucleotides.reverse() : this.nucleotides).join("");
+  /**
+   * Returns signature of path
+   */
+  toString() {
+    return this.items.join("");
   }
 
   private _playNote(): void {

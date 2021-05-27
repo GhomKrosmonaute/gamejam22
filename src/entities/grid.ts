@@ -435,7 +435,10 @@ export class Grid extends entity.CompositeEntity {
     } else {
       _.shuffle(normals)
         .slice(0, neededCount)
-        .forEach((n) => (n.type = type));
+        .forEach((n) => {
+          n.type = type;
+          if (type === "joker") n.colorName = "*";
+        });
     }
   }
 

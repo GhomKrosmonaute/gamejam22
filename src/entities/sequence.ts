@@ -914,8 +914,11 @@ export class Sequence extends entity.CompositeEntity {
     return this.nucleotides.every((n) => n.state === "inactive");
   }
 
+  /**
+   * Returns signature of sequence
+   */
   toString(): string {
-    return this.nucleotides.map((n) => n.toString()).join("");
+    return this.nucleotides.join("");
   }
 
   private _playNote(index: number) {
