@@ -233,6 +233,9 @@ export class Path extends entity.CompositeEntity {
         if (this.correctlyContainsClips()) {
           this.level.clipsWasIncludes = true;
           if (!this.level.options.disableClips) this.first.type = "normal";
+          this.items.forEach((n) => {
+            if (n.type === "joker") n.type = "normal";
+          });
         }
       }),
       anim.sequenced({
