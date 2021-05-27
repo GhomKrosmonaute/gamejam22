@@ -60,9 +60,7 @@ export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
     },
     checks: {
       "One shot sequence": (level) => level.oneShotSequence,
-      "Min score reached": (level) =>
-        level.options.gaugeOptions.value(level) >=
-        crispr.scrap(level.options.gaugeOptions.final, level),
+      "Min score reached": (level) => level.crispies >= 1000,
     },
   },
   turn: {},
