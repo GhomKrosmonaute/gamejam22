@@ -53,7 +53,7 @@ export const levels = {
             ctx.activate(
               new popup.TutorialPopup({
                 title: "Land in sight!",
-                content: `Loot the Caribbean treasures, collect at least ${ctx.options.gaugeOptions.final}!`,
+                content: `Loot the Caribbean treasures, collect the maximum!`,
                 image: "images/crispy.png",
                 imageHeight: 200,
                 popupOptions: {

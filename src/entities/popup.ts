@@ -935,6 +935,8 @@ export class StatePopup extends ChecksPopup {
     score.position.x = this.center.x;
     score.position.y = 75;
 
-    this.addRow(text, 200).addRow(score, 150).addCheckRows();
+    this.addRow(text, 300)
+      .addRow(score, 100 * score.text.split("\n").length)
+      .addCheckRows();
   }
 }

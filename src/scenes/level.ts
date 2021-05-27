@@ -28,7 +28,7 @@ export type LevelVariant = "turn" | "fall" | "zen";
 export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
   zen: {
     endConditionText: (ctx) =>
-      `Reach min 1000 crispies\nin ${ctx.options.remainingMoveCount} moves`,
+      `Reach min 1000 crispies\nin ${ctx.options.remainingMoveCount} moves\n(${ctx.crispies}/1000 crispies)`,
     loseCondition: (ctx: Level) =>
       ctx.remainingMoves.count <= 0 && ctx.crispies < 1000,
     winCondition: (ctx) =>
@@ -49,7 +49,7 @@ export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
       initial: 5,
       reverse: true,
       color: crispr.yellowNumber,
-      get: (ctx) => ctx.remainingMoves.count,
+      value: (ctx) => ctx.remainingMoves.count,
       show: (val, ctx) => String(Math.floor(ctx.crispies)),
       devise: (val, ctx) =>
         crispr.sprite(ctx, "images/crispy.png", (it) => {
@@ -61,7 +61,7 @@ export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
     checks: {
       "One shot sequence": (level) => level.oneShotSequence,
       "Min score reached": (level) =>
-        level.options.gaugeOptions.get(level) >=
+        level.options.gaugeOptions.value(level) >=
         crispr.scrap(level.options.gaugeOptions.final, level),
     },
   },
@@ -89,7 +89,7 @@ export interface ScoreOptions {
   final: number | ((level: Level) => number);
   initial: number;
   color: number;
-  get: (level: Level) => number;
+  value: (level: Level) => number;
   show: (score: number, level: Level) => string;
   devise?: (
     score: number,
@@ -186,7 +186,7 @@ export const defaultScoreOptions: Readonly<ScoreOptions> = {
   final: 5,
   initial: 0,
   color: crispr.yellowNumber,
-  get: (context) => context.killedViruses,
+  value: (context) => context.killedViruses,
   show: (value, context) => String(Math.round(context.crispies)),
   devise: (val, ctx) =>
     crispr.sprite(ctx, "images/crispy.png", (it) => {
@@ -213,9 +213,12 @@ export const defaultScoreOptions: Readonly<ScoreOptions> = {
 
 export const defaultLevelOptions: Readonly<LevelOptions> = {
   endConditionText: (ctx) =>
-    `Reach ${crispr.scrap(ctx.options.gaugeOptions.final, ctx)} crispies`,
+    `Kill ${ctx.options.gaugeOptions.value(ctx)}/${crispr.scrap(
+      ctx.options.gaugeOptions.final,
+      ctx
+    )} viruses`,
   winCondition: (ctx) =>
-    ctx.options.gaugeOptions.get(ctx) >=
+    ctx.options.gaugeOptions.value(ctx) >=
     crispr.scrap(ctx.options.gaugeOptions.final, ctx),
   loseCondition: (ctx) => ctx.life <= 0,
   gridCleaning: false,
@@ -279,7 +282,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
     "Not infected": (level) => !level.wasInfected,
     "No bonus used": (level) => !level.bonusesManager.wasBonusUsed,
     "All virus killed": (level) =>
-      level.options.gaugeOptions.get(level) >=
+      level.options.gaugeOptions.value(level) >=
       crispr.scrap(level.options.gaugeOptions.final, level),
   },
   music: null,
