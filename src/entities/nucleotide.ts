@@ -446,6 +446,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   toString(): string {
+    if (this.state === "inactive" || this.state === "missing") return "x";
     if (this.type === "clip") return "c";
     if (this.type === "portal") return "";
     return this.colorName;

@@ -228,6 +228,7 @@ export class Path extends entity.CompositeEntity {
     if (this.length === 0) return new entity.FunctionCallEntity(() => null);
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
+        this.level.screenShake(10, 1.02, 100);
         this.level.disablingAnimation("path.crunch", true);
 
         if (this.correctlyContainsClips()) {
@@ -243,9 +244,6 @@ export class Path extends entity.CompositeEntity {
         timeBetween: 50,
         waitForAllSteps: true,
         onStep: (n, i, src, finish) => {
-          this._playExplosion();
-          this.level.screenShake(10, 1.02, 50);
-
           originalPositions.push(n.position.clone());
 
           const seq = [...this.level.sequenceManager.sequences][0];
@@ -349,7 +347,15 @@ export class Path extends entity.CompositeEntity {
                 //   onUpdate: (v) => n.position.y = v,
                 //   duration: 250
                 // }),
-                () => anim.down(n.sprite, 500, 1),
+                new entity.ParallelEntity([
+                  () => anim.down(n.sprite, 500, 1),
+                  new entity.EntitySequence([
+                    new entity.WaitingEntity(250),
+                    new entity.FunctionCallEntity(() => {
+                      this._playExplosion();
+                    }),
+                  ]),
+                ]),
                 () =>
                   new tween.Tween({
                     from: n.shakingContainer.scale.x,

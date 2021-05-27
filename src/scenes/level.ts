@@ -785,24 +785,12 @@ export class Level extends entity.CompositeEntity {
     //   }
     // });
 
-    if (this.options.remainingMoves) {
-      // remove a zen move
-      this.onLevelEvent("pathCrunched", () => {});
-    }
-
-    if (this.options.variant === "zen" || this.options.variant === "fall") {
-      // directly fill holes after crunch
-      this.onLevelEvent("pathCrunched", () => {
-        this._activateChildEntity(this.fillHoles());
-      });
-    }
-
     this.onLevelEvent("pathUpdated", this.refresh.bind(this));
 
     this.onLevelEvent("sequenceDown", () => {
       this._activateChildEntity(
         new entity.EntitySequence([
-          this.fillHoles(),
+          this.fillHolesEntity(),
           new entity.FunctionCallEntity(() => {
             this.sequenceManager.add();
           }),
@@ -1293,7 +1281,6 @@ export class Level extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         this.sequenceManager.adjustment.adjust();
       }),
-      this.fillHoles(),
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.attemptCrunch", false);
       })
@@ -1320,12 +1307,8 @@ export class Level extends entity.CompositeEntity {
     this.sequenceManager.updateHighlighting();
   }
 
-  public fillHoles(): entity.EntitySequence {
+  public fillHolesEntity(): entity.EntitySequence {
     return new entity.EntitySequence([
-      new entity.FunctionalEntity({
-        requestTransition: () =>
-          !this.disablingAnimations.has("path.crunch.down"),
-      }),
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.fillHoles", true);
         this.grid.fillHoles();

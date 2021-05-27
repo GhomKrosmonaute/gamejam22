@@ -148,6 +148,8 @@ export class Grid extends entity.CompositeEntity {
   }
 
   _update() {
+    if (!this.level.isDisablingAnimationInProgress) this.fillHoles();
+
     if (!this.isPointerDown) return;
 
     const currentHovered = this.getHovered();
@@ -288,22 +290,7 @@ export class Grid extends entity.CompositeEntity {
     }
 
     // finalize
-    this.addSpecifics(
-      this.allNucleotides,
-      this.level.options.portalsCount,
-      "portal"
-    );
-    this.addSpecifics(
-      this.allNucleotides,
-      this.level.options.jokerCount,
-      "joker"
-    );
-    if (!this.level.options.disableClips)
-      this.addSpecifics(
-        this.allNucleotides,
-        this.level.options.clipCount,
-        "clip"
-      );
+    this.addAllSpecifics(this.allNucleotides);
     this.allNucleotides.forEach((n) => {
       if (!n) return;
       else n.state = "present";
@@ -385,7 +372,7 @@ export class Grid extends entity.CompositeEntity {
     among: (nucleotide.Nucleotide | undefined)[],
     count: number,
     type: nucleotide.NucleotideType
-  ) {
+  ): (nucleotide.Nucleotide | undefined)[] {
     let countOption: number = null;
 
     const shape = this.level.options.gridShape;
@@ -402,7 +389,7 @@ export class Grid extends entity.CompositeEntity {
             if (typeof val === "number") {
               countOption = val;
             } else {
-              return val.forEach(({ x, y }) => {
+              val.forEach(({ x, y }) => {
                 const n = this.getNucleotideFromGridPosition(
                   new PIXI.Point(x, y)
                 );
@@ -411,6 +398,7 @@ export class Grid extends entity.CompositeEntity {
                   if (type === "joker") n.colorName = "*";
                 }
               });
+              return among;
             }
           }
         }
@@ -440,6 +428,15 @@ export class Grid extends entity.CompositeEntity {
           if (type === "joker") n.colorName = "*";
         });
     }
+
+    return among;
+  }
+
+  addAllSpecifics(among: (nucleotide.Nucleotide | undefined)[]) {
+    among = this.addSpecifics(among, this.level.options.portalsCount, "portal");
+    among = this.addSpecifics(among, this.level.options.jokerCount, "joker");
+    if (!this.level.options.disableClips)
+      this.addSpecifics(among, this.level.options.clipCount, "clip");
   }
 
   isOnEvenCol(n: nucleotide.Nucleotide): boolean {
@@ -699,11 +696,7 @@ export class Grid extends entity.CompositeEntity {
       }
     }
 
-    this.addSpecifics(oldHoles, this.level.options.portalsCount, "portal");
-    (() => {
-      if (!this.level.options.disableClips)
-        this.addSpecifics(oldHoles, this.level.options.clipCount, "clip");
-    })();
+    this.addAllSpecifics(oldHoles);
     // this.refresh();
   }
 
@@ -724,14 +717,14 @@ export class Grid extends entity.CompositeEntity {
     // todo: use changeState(): entity.Sequence instead of state accessor and returns it
 
     const holes = this.nucleotides.filter((n) => n.state === "missing");
+
+    if (holes.length === 0) return;
+
     for (const nucleotide of holes) {
       this.generateNucleotide(nucleotide);
     }
-    this.addSpecifics(holes, this.level.options.portalsCount, "portal");
-    (() => {
-      if (!this.level.options.disableClips)
-        this.addSpecifics(holes, this.level.options.clipCount, "clip");
-    })();
+
+    this.addAllSpecifics(holes);
 
     holes.forEach((n) => (n.state = "present"));
 
