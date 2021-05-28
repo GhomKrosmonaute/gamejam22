@@ -205,7 +205,7 @@ export class Path extends entity.CompositeEntity {
       } else {
         n.highlighted = false;
 
-        n.pathArrow.visible = false;
+        n.pathArrowSprite.visible = false;
       }
     }
 

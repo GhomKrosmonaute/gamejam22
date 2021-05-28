@@ -101,8 +101,8 @@ const graphicalAssets = [
   "images/clip_sequence.png",
   "images/clip_grid.png",
 
-  "images/nucleotide_glow.png",
-  "images/nucleotide_bright.png",
+  "images/nucleotide_glow_sequence.png",
+  "images/nucleotide_glow_grid.png",
   "images/nucleotide_gold_border.png",
 
   "images/particle.png",

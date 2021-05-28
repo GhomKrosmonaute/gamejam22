@@ -388,7 +388,7 @@ export class Grid extends entity.CompositeEntity {
     const applyType = (n: nucleotide.Nucleotide) => {
       n.type = type;
       if (type === "joker") n.colorName = "*";
-      n.refreshSprite();
+      n.refreshSprites();
       // if(n.state !== "missing") {
       //   this._once(n, "stateChanged", () => {
       //     n.state = "present";
@@ -725,14 +725,14 @@ export class Grid extends entity.CompositeEntity {
 
   pointTo(n: nucleotide.Nucleotide, index: NeighborIndex | -1) {
     if (index !== -1) {
-      n.pathArrow.angle = index * (360 / 6);
-      n.pathArrow.visible = true;
-      n.pathArrow.play();
-      n.level.path.container.addChildAt(n.pathArrow, 0);
+      n.pathArrowSprite.angle = index * (360 / 6);
+      n.pathArrowSprite.visible = true;
+      n.pathArrowSprite.play();
+      n.level.path.container.addChildAt(n.pathArrowSprite, 0);
     } else {
-      n.pathArrow.visible = false;
-      n.pathArrow.stop();
-      n.level.path.container.removeChild(n.pathArrow);
+      n.pathArrowSprite.visible = false;
+      n.pathArrowSprite.stop();
+      n.level.path.container.removeChild(n.pathArrowSprite);
     }
   }
 
