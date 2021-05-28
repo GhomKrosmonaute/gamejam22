@@ -297,17 +297,25 @@ export class Menu extends entity.CompositeEntity {
   open() {
     if (this.opened) throw new Error("nope");
     booyah.changeGameState("paused");
-    this.opened = true;
-    this.menuButton.visible = false;
-    this.container.visible = true;
+    // Displaying the menu will be done in _onSignal()
   }
 
   close() {
     if (!this.opened) throw new Error("nope");
     booyah.changeGameState("playing");
-    this.opened = false;
-    this.menuButton.visible = true;
-    this.container.visible = false;
+    // Hiding the menu will be done in _onSignal()
+  }
+
+  _onSignal(frameInfo: entity.FrameInfo, signal: string, data?: any): void {
+    if (signal === "pause" && !this.opened) {
+      this.opened = true;
+      this.menuButton.visible = false;
+      this.container.visible = true;
+    } else if (signal === "play" && this.opened) {
+      this.opened = false;
+      this.menuButton.visible = true;
+      this.container.visible = false;
+    }
   }
 }
 
