@@ -50,6 +50,13 @@ body {
   font-family: /*"Roboto Condensed",*/ sans-serif;
 }
 
+body.embedded {
+  /* This background color will be overridden by the image */
+  background-color: #1d1d32;
+
+  background-image: url(images/cellule_background.png);
+}
+
 #sharing .fb_iframe_widget span {
   vertical-align: baseline !important;
 }
@@ -86,9 +93,12 @@ body {
   -ms-user-select: none;
 }
 
-#game-parent.embedded {
-  height: 100vh;
-  max-height: unset;
+.embedded #game-parent {
+  height: calc((16 / 9) * 100vw);
+  max-height: 100vh;
+
+  background-color: unset;
+  background-image: unset;
 }
 
 #game-parent:fullscreen {
@@ -127,9 +137,9 @@ body {
   background-color: black;
 }
 
-#game-parent.embedded canvas {
-  height: 100vh;
-  max-height: unset;
+.embedded #game-parent canvas {
+  height: calc((16 / 9) * 100vw);
+  max-height: 100vh;
 }
 
 #game-parent:fullscreen {
