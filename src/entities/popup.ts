@@ -331,7 +331,7 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get center(): PIXI.Point {

@@ -9,7 +9,6 @@ import * as levels from "../levels";
 import * as level from "./level";
 
 import * as popup from "../entities/popup";
-import * as menu from "./menu";
 
 import * as anim from "../animations";
 import * as crispr from "../crispr";
@@ -18,7 +17,6 @@ export class Main extends entity.CompositeEntity {
   static savedScroll = -9999999;
   static lastLevel: levels.LevelName = null;
 
-  private menu: menu.Menu;
   private container: PIXI.Container;
   private background: PIXI.Sprite;
   private buttons: PIXI.Container;
@@ -33,8 +31,6 @@ export class Main extends entity.CompositeEntity {
     this.links = new PIXI.Graphics();
     this.container = new PIXI.Container();
     this.buttons = new PIXI.Container();
-
-    this.menu = new menu.Menu();
 
     this.background = crispr.sprite(this, "images/minimap_background.png");
 
@@ -224,13 +220,6 @@ export class Main extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this.container);
     this._entityConfig.minimap = this;
-
-    this._activateChildEntity(
-      this.menu,
-      entity.extendConfig({
-        container: this.container,
-      })
-    );
   }
 
   protected _update() {

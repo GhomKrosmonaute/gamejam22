@@ -43,7 +43,7 @@ export abstract class Bonus extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get isDisable(): boolean {
@@ -344,7 +344,7 @@ export class BonusesManager extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   _setup() {

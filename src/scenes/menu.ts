@@ -26,6 +26,7 @@ export class Menu extends entity.CompositeEntity {
   private opened: boolean;
   private container: PIXI.Container;
 
+  private blackBackground: PIXI.Graphics;
   private background: PIXI.Sprite;
   private popupBackground: PIXI.Sprite;
   private homeButton: PIXI.Sprite;
@@ -59,18 +60,11 @@ export class Menu extends entity.CompositeEntity {
     this.container.visible = false;
 
     {
-      // @ts-ignore
-      if (window.level) {
-        // @ts-ignore
-        if (window.level.options.mustBeHiddenOnPause) {
-          const blackBackground = new PIXI.Graphics()
-            .beginFill()
-            .drawRect(0, 0, crispr.width, crispr.height)
-            .endFill();
-
-          this.container.addChild(blackBackground);
-        }
-      }
+      this.blackBackground = new PIXI.Graphics()
+        .beginFill()
+        .drawRect(0, 0, crispr.width, crispr.height)
+        .endFill();
+      this.container.addChild(this.blackBackground);
     }
 
     {
@@ -79,7 +73,7 @@ export class Menu extends entity.CompositeEntity {
       this.menuButton.position.set(crispr.width, 0);
       this.menuButton.buttonMode = true;
       this.menuButton.interactive = true;
-      this._on(this.menuButton, "pointerup", this.open.bind(this));
+      this._on(this.menuButton, "pointerup", this.open);
     }
 
     {
@@ -114,13 +108,13 @@ export class Menu extends entity.CompositeEntity {
       this.container.addChild(this.creditButton);
     }
 
-    if (this._entityConfig.level) {
+    {
       this.homeButton = crispr.sprite(this, "images/menu_home_button.png");
       this.homeButton.buttonMode = true;
       this.homeButton.interactive = true;
       this._on(this.homeButton, "pointerup", () => {
         this.close();
-        this._entityConfig.level.exit();
+        this._entityConfig.currentLevelHolder.level.exit();
       });
       this.container.addChild(this.homeButton);
     }
@@ -131,7 +125,7 @@ export class Menu extends entity.CompositeEntity {
       this.backButton.interactive = true;
       this.backButton.anchor.set(1, 0);
       this.backButton.position.set(crispr.width, 0);
-      this._on(this.backButton, "pointerup", this.close.bind(this));
+      this._on(this.backButton, "pointerup", this.close);
       this.container.addChild(this.backButton);
     }
 
@@ -311,12 +305,31 @@ export class Menu extends entity.CompositeEntity {
       this.opened = true;
       this.menuButton.visible = false;
       this.container.visible = true;
+
+      this._onOpen();
     } else if (signal === "play" && this.opened) {
       this.opened = false;
       this.menuButton.visible = true;
       this.container.visible = false;
     }
   }
+
+  private _onOpen() {
+    this.blackBackground.visible =
+      !!this._entityConfig.currentLevelHolder.level?.options
+        .mustBeHiddenOnPause;
+    this.homeButton.visible = !!this._entityConfig.currentLevelHolder.level;
+  }
+}
+
+export function makeInstallMenu() {
+  return (
+    rootConfig: entity.EntityConfig,
+    rootEntity: entity.ParallelEntity
+  ) => {
+    rootConfig.menu = new Menu();
+    rootEntity.addChildEntity(rootConfig.menu);
+  };
 }
 
 /**

@@ -15,6 +15,30 @@ import * as crispr from "./crispr";
 
 declare var level: l.Level;
 
+export class CurrentLevelHolder {
+  private _level: l.Level = null;
+
+  get level(): l.Level {
+    return this._level;
+  }
+
+  set level(level: l.Level) {
+    this._level = level;
+
+    // Store the level in window for convenience
+    (window as any).level = level;
+  }
+}
+
+export function makeInstallCurrentLevelHolder() {
+  return (
+    rootConfig: entity.EntityConfig,
+    rootEntity: entity.ParallelEntity
+  ) => {
+    rootConfig.currentLevelHolder = new CurrentLevelHolder();
+  };
+}
+
 export const levels = {
   // TODO: Joker doesn't work yet
 

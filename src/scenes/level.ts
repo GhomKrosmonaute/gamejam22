@@ -20,7 +20,6 @@ import * as path from "../entities/path";
 import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
-import * as menu from "../scenes/menu";
 import * as metrics from "../metrics";
 
 export type LevelVariant = "turn" | "fall" | "zen";
@@ -292,7 +291,7 @@ export class Hook<
   }
 
   get level(): Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   protected _setup() {
@@ -414,7 +413,6 @@ export class Level extends entity.CompositeEntity {
   public grid: grid.Grid;
   public actionButton: hud.ActionButton;
   public remainingMovesIndicator: hud.RemainingMovesIndicator;
-  public menu: menu.Menu;
 
   // screen shake
   public screenShakeAmplitude: number;
@@ -471,9 +469,6 @@ export class Level extends entity.CompositeEntity {
     };
 
     this.options.score.set(this.options.score.initial, this);
-
-    // @ts-ignore
-    window.level = this;
   }
 
   get variant(): LevelVariant {
@@ -529,24 +524,6 @@ export class Level extends entity.CompositeEntity {
 
   private _initScreenShake() {
     this.screenShake(0, 0, 0);
-    // this.screenShakeComponents = [
-    //   ...this.backgroundLayers,
-    //   this.grid.container
-    // ]
-  }
-
-  private _initMenu() {
-    this.menu = new menu.Menu();
-    this._activateChildEntity(
-      this.menu,
-      entity.extendConfig({
-        container: this._entityConfig.app.stage,
-      })
-    );
-  }
-
-  private _disableMenu() {
-    this._deactivateChildEntity(this.menu);
   }
 
   private _initHooks() {
@@ -718,7 +695,7 @@ export class Level extends entity.CompositeEntity {
   _setup() {
     this.isInit = false;
     this.container.sortableChildren = true;
-    this._entityConfig.level = this;
+    this._entityConfig.currentLevelHolder.level = this;
     this._entityConfig.container.addChild(this.container);
 
     metrics.logEvent("level_start", { level_name: this.name });
@@ -811,7 +788,6 @@ export class Level extends entity.CompositeEntity {
     this._initBonuses();
     this._initButton();
     this._initGauge();
-    this._initMenu();
 
     this._activateChildEntity(
       new entity.EntitySequence([
@@ -955,11 +931,13 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.container.removeChildren();
     this.disablingAnimations.clear();
     this.removeAllListeners();
+
+    this._entityConfig.currentLevelHolder.level = null;
   }
 
   reset(options: LevelOptions) {
     this.isInit = false;
-    this._entityConfig.level = this;
+    this._entityConfig.currentLevelHolder.level = this;
 
     // assign flags
     for (const key in options) {
@@ -1046,12 +1024,6 @@ export class Level extends entity.CompositeEntity {
       this.options.hooks = options.hooks.slice(0);
 
       this._initHooks();
-    }
-
-    // Menu
-    {
-      this._disableMenu();
-      this._initMenu();
     }
 
     this.refresh();

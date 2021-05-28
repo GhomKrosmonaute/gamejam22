@@ -6,6 +6,7 @@ import * as entity from "booyah/src/entity";
 import * as narration from "booyah/src/narration";
 
 import * as _main from "./scenes/main";
+import * as menu from "./scenes/menu";
 
 import * as crispr from "./crispr";
 import * as levels from "./levels";
@@ -20,7 +21,7 @@ const introVideoScene = new narration.VideoScene({
   musicVolume: 2,
   narration: "intro",
   skipButtonOptions: {
-    position: { x: crispr.width - 150, y: 150 },
+    position: { x: 150, y: 150 },
   },
 });
 
@@ -244,9 +245,8 @@ const entityInstallers: ((
   audio.installJukebox,
   audio.installFxMachine,
   narration.makeInstallSubtitleNarrator(subtitleNarratorOptions),
-  // booyah.makeInstallMenu({
-  //   menuButtonPosition: new PIXI.Point(crispr.width - 111, 106),
-  // }),
+  levels.makeInstallCurrentLevelHolder(),
+  menu.makeInstallMenu(),
 ];
 
 metrics.init();

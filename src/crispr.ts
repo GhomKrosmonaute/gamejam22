@@ -170,7 +170,7 @@ export function leveled<T extends Function>(
 ): con is T & { level: level.Level } {
   Object.defineProperty(con.prototype, "level", {
     get: (): level.Level => {
-      return this._entityConfig.level;
+      return this._entityConfig.currentLevelHolder.level;
     },
   });
   return true;
