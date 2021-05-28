@@ -37,7 +37,7 @@ export class Menu extends entity.CompositeEntity {
   private title: PIXI.Text;
 
   private fullscreenSwitcher: SpriteSwitcher;
-  private subTitleSwitcher: SpriteSwitcher;
+  // private subTitleSwitcher: SpriteSwitcher;
   private musicVolumeSwitcher: SpriteSwitcher<
     Record<"0" | "0.5" | "1", string>
   >;
@@ -160,24 +160,25 @@ export class Menu extends entity.CompositeEntity {
       });
     }
 
-    {
-      this.subTitleSwitcher = new SpriteSwitcher(
-        {
-          on: "images/menu_subtitles_button.png",
-          off: "images/menu_subtitles_button_disabled.png",
-        },
-        this.settings.subTitles ? "on" : "off"
-      );
-      this.subTitleSwitcher.container.position.set(200, -200);
-      this.subTitleSwitcher.onStateChange((state) => {
-        this._entityConfig.playOptions.setOption(
-          "showSubtitles",
-          state === "on"
-        );
-        this.settings.subTitles = state === "on";
-        this.saveSettings();
-      });
-    }
+    // Currently subtitles can't be controlled
+    // {
+    //   this.subTitleSwitcher = new SpriteSwitcher(
+    //     {
+    //       on: "images/menu_subtitles_button.png",
+    //       off: "images/menu_subtitles_button_disabled.png",
+    //     },
+    //     this.settings.subTitles ? "on" : "off"
+    //   );
+    //   this.subTitleSwitcher.container.position.set(200, -200);
+    //   this.subTitleSwitcher.onStateChange((state) => {
+    //     this._entityConfig.playOptions.setOption(
+    //       "showSubtitles",
+    //       state === "on"
+    //     );
+    //     this.settings.subTitles = state === "on";
+    //     this.saveSettings();
+    //   });
+    // }
 
     {
       this.musicVolumeSwitcher = new SpriteSwitcher(
@@ -259,12 +260,12 @@ export class Menu extends entity.CompositeEntity {
       );
     }
 
-    this._activateChildEntity(
-      this.subTitleSwitcher,
-      entity.extendConfig({
-        container: this.popupBackground,
-      })
-    );
+    // this._activateChildEntity(
+    //   this.subTitleSwitcher,
+    //   entity.extendConfig({
+    //     container: this.popupBackground,
+    //   })
+    // );
     this._activateChildEntity(
       this.musicVolumeSwitcher,
       entity.extendConfig({
