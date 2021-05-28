@@ -907,7 +907,7 @@ export class Sequence extends entity.CompositeEntity {
     });
 
     for (const n of this.nucleotides)
-      n.isHighlighted = segment?.includes(n) ?? false;
+      n.highlighted = segment?.includes(n) ?? false;
   }
 
   isFullInactive(): boolean {

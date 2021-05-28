@@ -98,8 +98,8 @@ const graphicalAssets = [
   "images/hole.png",
   "images/bubble.png",
   "images/clip.png",
-  "images/clip_top.png",
-  "images/clip_bottom.png",
+  "images/clip_sequence.png",
+  "images/clip_grid.png",
 
   "images/nucleotide_glow.png",
   "images/nucleotide_bright.png",

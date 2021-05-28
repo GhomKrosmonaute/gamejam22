@@ -32,10 +32,12 @@ export const levels = {
     new l.Level("Caribbean", (ctx) => ({
       gridShape: "fourIslands",
       forceMatching: false,
-      clipCount: 4,
       sequenceLength: 4,
+
       portalsCount: 4,
       jokerCount: 3,
+      clipCount: 4,
+
       maxLife: 10,
       crispyBonusRate: 0.6,
       initialBonuses: [

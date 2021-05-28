@@ -23,7 +23,7 @@ export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
 export const colCount = 7;
 export const rowCount = 7;
 
-export type GridPreset<T = true> = ((T | null)[] | null)[];
+export type GridArrayShape<T = true> = ((T | null)[] | null)[];
 
 export type GridArrowShape = (x: number, y: number) => boolean;
 
@@ -31,7 +31,7 @@ export interface GridShapeOptions {
   portals?: PIXI.IPointData[] | number;
   clips?: PIXI.IPointData[] | number;
   jokers?: PIXI.IPointData[] | number;
-  shape: GridPreset<nucleotide.ColorName> | GridArrowShape;
+  shape: GridArrayShape<nucleotide.ColorName> | GridArrowShape;
 }
 
 export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
@@ -87,7 +87,7 @@ export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
 };
 
 export type GridShape =
-  | GridPreset<nucleotide.ColorName>
+  | GridArrayShape<nucleotide.ColorName>
   | GridArrowShape
   | GridShapeOptions;
 
@@ -113,6 +113,8 @@ export class Grid extends entity.CompositeEntity {
   }
 
   _setup() {
+    this.level.disablingAnimation("grid._setup", true);
+
     this.container = new PIXI.Graphics();
     this.container
       .beginFill(0x000000, 0.001)
@@ -138,6 +140,8 @@ export class Grid extends entity.CompositeEntity {
     this.container.addChild(this.nucleotideContainer);
 
     this.generateShape();
+
+    this.level.disablingAnimation("grid._setup", false);
 
     this._on(this, "pointerup", () => {
       if (this.level.options.crunchOnPointerUp) {
@@ -228,69 +232,69 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides[y * colCount + x] = n;
   }
 
-  generateShape() {
-    this.allNucleotides.length = colCount * rowCount;
-
-    const applyArrowShape = (shape: GridArrowShape) => {
-      for (let x = 0; x < colCount; x++) {
-        for (let y = 0; y < rowCount; y++) {
-          if (shape(x, y)) continue;
-          if (x % 2 === 0 && y === rowCount - 1) continue;
-          this.addNucleotide(x, y);
-        }
+  static forArrowShape(
+    shape: GridArrowShape,
+    fn: (x: number, y: number) => unknown
+  ) {
+    for (let x = 0; x < colCount; x++) {
+      for (let y = 0; y < rowCount; y++) {
+        if (shape(x, y)) continue;
+        if (x % 2 === 0 && y === rowCount - 1) continue;
+        fn(x, y);
       }
-    };
+    }
+  }
 
-    const applyArrayShape = (shape: GridPreset<nucleotide.ColorName>) => {
-      shape.forEach((row, y) => {
-        if (row)
-          row.forEach((col, x) => {
-            if (col) {
-              this.addNucleotide(x, y, col);
-            }
-          });
-      });
-    };
-
-    const applyShape = (
-      shape: GridArrowShape | GridPreset<nucleotide.ColorName>
-    ) => {
-      if (typeof shape === "function") {
-        applyArrowShape(shape);
-      } else {
-        shape.forEach((row, y) => {
-          if (row)
-            row.forEach((col, x) => {
-              if (!col) return;
-              this.addNucleotide(x, y, col);
-            });
+  static forArrayShape<T = nucleotide.ColorName>(
+    shape: GridArrayShape<T>,
+    fn: (x: number, y: number, color: T) => unknown
+  ) {
+    shape.forEach((row, y) => {
+      if (row)
+        row.forEach((col, x) => {
+          if (col) {
+            fn(x, y, col);
+          }
         });
-      }
-    };
+    });
+  }
 
-    // colors and shape
-    const shape = this.level.options.gridShape;
+  static forShape(
+    shape: GridShape | string,
+    fn: (x: number, y: number, color?: nucleotide.ColorName) => unknown
+  ) {
     if (Array.isArray(shape)) {
       // preset grid colors and shape
-      applyArrayShape(shape);
+      Grid.forArrayShape(shape, fn);
     } else {
       // preset shape
       if (typeof shape === "string") {
         const resolvedShape = gridShapes[shape];
         if (typeof resolvedShape === "function") {
-          applyArrowShape(resolvedShape);
+          Grid.forArrowShape(resolvedShape, fn);
+        } else if (typeof resolvedShape.shape === "function") {
+          Grid.forArrowShape(resolvedShape.shape, fn);
         } else {
-          applyShape(resolvedShape.shape);
+          Grid.forArrayShape(resolvedShape.shape, fn);
         }
       } else if (typeof shape === "function") {
-        applyArrowShape(shape);
+        Grid.forArrowShape(shape, fn);
+      } else if (typeof shape.shape === "function") {
+        Grid.forArrowShape(shape.shape, fn);
       } else {
-        applyShape(shape.shape);
+        Grid.forArrayShape(shape.shape, fn);
       }
     }
+  }
+
+  generateShape() {
+    this.allNucleotides.length = colCount * rowCount;
+
+    // colors and shape
+    Grid.forShape(this.level.options.gridShape, this.addNucleotide.bind(this));
 
     // finalize
-    this.addAllSpecifics(this.allNucleotides);
+    this.addAllSpecifics();
     this.allNucleotides.forEach((n) => {
       if (!n) return;
       else n.state = "present";
@@ -368,6 +372,10 @@ export class Grid extends entity.CompositeEntity {
     return this.allNucleotides.filter((n) => n?.type === "joker");
   }
 
+  get holes(): nucleotide.Nucleotide[] {
+    return this.allNucleotides.filter((n) => n?.state === "missing");
+  }
+
   addSpecifics(
     among: (nucleotide.Nucleotide | undefined)[] = [],
     count: number,
@@ -380,6 +388,15 @@ export class Grid extends entity.CompositeEntity {
     const applyType = (n: nucleotide.Nucleotide) => {
       n.type = type;
       if (type === "joker") n.colorName = "*";
+      n.refreshSprite();
+      // if(n.state !== "missing") {
+      //   this._once(n, "stateChanged", () => {
+      //     n.state = "present";
+      //   })
+      //   n.state = "missing";
+      // }else {
+      //   n.state = "present";
+      // }
     };
 
     if (typeof shape === "string") {
@@ -426,7 +443,7 @@ export class Grid extends entity.CompositeEntity {
     }
   }
 
-  addAllSpecifics(among: (nucleotide.Nucleotide | undefined)[] = []) {
+  addAllSpecifics() {
     this.addSpecifics(
       this.allNucleotides,
       this.level.options.portalsCount,
@@ -702,7 +719,7 @@ export class Grid extends entity.CompositeEntity {
       }
     }
 
-    this.addAllSpecifics(oldHoles);
+    this.addAllSpecifics();
     // this.refresh();
   }
 
@@ -719,10 +736,10 @@ export class Grid extends entity.CompositeEntity {
     }
   }
 
-  fillHoles(): nucleotide.Nucleotide[] {
+  fillHoles() {
     // todo: use changeState(): entity.Sequence instead of state accessor and returns it
 
-    const holes = this.nucleotides.filter((n) => n.state === "missing");
+    const holes = this.holes;
 
     if (holes.length === 0) return;
 
@@ -730,13 +747,11 @@ export class Grid extends entity.CompositeEntity {
       this.generateNucleotide(hole);
     }
 
-    this.addAllSpecifics(holes);
+    this.addAllSpecifics();
 
     holes.forEach((n) => (n.state = "present"));
 
     this._entityConfig.fxMachine.play("spawn");
-
-    return holes;
   }
 
   swap(

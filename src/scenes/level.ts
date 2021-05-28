@@ -143,9 +143,7 @@ export interface LevelOptions {
   portalsCount: number;
   jokerCount: number;
 
-  nucleotideRadius: number;
   sequenceRounded: boolean;
-  sequenceNucleotideRadius: number;
   gridShape: grid.GridShape | string;
   sequences: nucleotide.ColorName[][] | null;
   forceMatching: boolean;
@@ -268,8 +266,6 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
 
   actionButtonSprite: "images/hud_action_button.png",
 
-  nucleotideRadius: crispr.width / 13.44,
-  sequenceNucleotideRadius: crispr.width * 0.04,
   sequenceRounded: false,
   gridShape: "full",
   forceMatching: false,

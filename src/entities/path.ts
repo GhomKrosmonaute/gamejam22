@@ -188,7 +188,7 @@ export class Path extends entity.CompositeEntity {
       return this.items.indexOf(a) - this.items.indexOf(b);
     })) {
       if (this.items.includes(n)) {
-        n.isHighlighted = true;
+        n.highlighted = true;
 
         if (last) {
           this.level.grid.pointTo(
@@ -203,7 +203,7 @@ export class Path extends entity.CompositeEntity {
 
         last = n;
       } else {
-        n.isHighlighted = false;
+        n.highlighted = false;
 
         n.pathArrow.visible = false;
       }
@@ -217,7 +217,7 @@ export class Path extends entity.CompositeEntity {
     ) {
       this.level.grid.nucleotides.forEach((n) => {
         if (n.type === "portal" && n !== this.last) {
-          n.isHighlighted = true;
+          n.highlighted = true;
         }
       });
     }
