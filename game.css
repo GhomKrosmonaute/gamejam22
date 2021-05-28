@@ -51,10 +51,7 @@ body {
 }
 
 body.embedded {
-  /* This background color will be overridden by the image */
-  background-color: #1d1d32;
-
-  background-image: url(images/cellule_background.png);
+  background-color: black;
 }
 
 #sharing .fb_iframe_widget span {
