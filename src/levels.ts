@@ -20,23 +20,23 @@ export const levels = {
   // Hard
   "Big\nBoss": () =>
     new l.Level("Big\nBoss", (ctx) => ({
-      gridShape: "mini",
+      gridShape: [],
       forceMatching: false,
       sequenceLength: 6,
-      jokerCount: 1,
-      portalsCount: 2,
-      clipCount: 1,
+      // jokers: 1,
+      // portals: 2,
+      // clips: 1,
       maxLife: 5,
     })),
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
-      gridShape: "fourIslands",
+      gridShape: [],
       forceMatching: false,
       sequenceLength: 4,
 
-      portalsCount: 4,
-      jokerCount: 3,
-      clipCount: 4,
+      // portals: 4,
+      // jokers: 3,
+      // clips: 4,
 
       maxLife: 10,
       crispyBonusRate: 0.6,
@@ -115,12 +115,12 @@ export const levels = {
     new l.Level("Medium\nBoss", (context) => ({
       virus: "big",
       variant: "turn",
-      portalsCount: 4,
       fallingSpeed: 1,
-      gridShape: "hole",
+      gridShape: [],
       sequenceLength: 7,
       forceMatching: true,
-      clipCount: 3,
+      //portals: 4,
+      //clips: 3,
       hooks: [
         new l.Hook({
           id: "intro animation",
@@ -173,17 +173,10 @@ export const levels = {
   "Chrono\nPortal": () =>
     new l.Level("Chrono\nPortal", (context) => ({
       variant: "fall",
-      gridShape: {
-        portals: [
-          { x: 1, y: 3 },
-          { x: 5, y: 3 },
-        ],
-        clips: [{ x: 3, y: 3 }],
-        shape: grid.gridShapes.medium as grid.GridArrowShape,
-      },
+      gridShape: [],
       forceMatching: true,
-      portalsCount: 2,
-      clipCount: 1,
+      // portals: 2,
+      // clips: 1,
       gaugeRings: [
         (context) =>
           context.bonusesManager.add(
@@ -217,17 +210,17 @@ export const levels = {
     })),
   "Four\nIslands": () =>
     new l.Level("Four\nIslands", (context) => ({
-      gridShape: "fourIslands",
+      gridShape: [],
       forceMatching: true,
-      clipCount: 3,
+      // clips: 3,
+      // portals: 4,
       sequenceLength: 5,
-      portalsCount: 4,
     })),
   "Two Islands": () =>
     new l.Level("Two Islands", (context) => ({
-      gridShape: "twoIslands",
+      gridShape: [],
       forceMatching: true,
-      portalsCount: 6,
+      //portals: 6,
       hooks: [
         new l.Hook({
           id: "tuto portal",
@@ -256,10 +249,10 @@ export const levels = {
       virus: "big",
       variant: "fall",
       fallingSpeed: 1,
-      gridShape: "medium",
+      gridShape: [],
       sequenceLength: 7,
       forceMatching: true,
-      clipCount: 3,
+      //clips: 3,
       gaugeRings: [
         (context) => {
           context.options.fallingSpeed = 1.2;
@@ -332,7 +325,7 @@ export const levels = {
   Zen: () =>
     new l.Level("Zen", {
       variant: "zen",
-      gridShape: "full",
+      gridShape: [],
       forceMatching: true,
       hooks: [
         new l.Hook({
@@ -354,10 +347,10 @@ export const levels = {
   Chrono: () =>
     new l.Level("Chrono", (context) => ({
       variant: "fall",
-      gridShape: "medium",
+      gridShape: [],
       forceMatching: true,
       crispyBonusRate: 0.3,
-      clipCount: 3,
+      //clips: 3,
       gaugeRings: [
         (context) =>
           context.bonusesManager.add(
@@ -445,8 +438,8 @@ export const levels = {
       minStarNeeded: 1,
       forceMatching: true,
       noCrispyBonus: true,
-      gridShape: "medium",
-      clipCount: 3,
+      gridShape: [],
+      //clips: 3,
       gaugeRings: [
         (context, ring) =>
           context.activate(
@@ -594,12 +587,12 @@ export const levels = {
                 id: "step 2 => step 3",
                 event: "sequenceDown",
                 reset: {
-                  gridShape: "mini",
+                  gridShape: [],
                   resetGrid: true,
                   resetSequences: true,
                   forceMatching: true,
                   disableButton: true,
-                  clipCount: 1,
+                  //clips: 1,
                   sequenceLength: 4,
                   hooks: [
                     new l.Hook({
@@ -650,7 +643,7 @@ export const levels = {
                           [null, null, null, "y"],
                         ],
                         sequences: [["g", "r", "g", "r", "r"]],
-                        clipCount: 1,
+                        clips: 1,
                         sequenceLength: 6,
                         forceMatching: true,
                         disableButton: false,
@@ -744,13 +737,13 @@ export const levels = {
                             id: "step 4 => step 5",
                             event: "canReset",
                             reset: {
-                              gridShape: "medium",
+                              gridShape: [],
                               resetGrid: true,
                               resetScore: true,
                               resetSequences: true,
                               sequenceLength: 5,
                               maxLife: 5,
-                              clipCount: 3,
+                              //clips: 3,
                               sequences: null,
                               disableScore: false,
                               disableGauge: false,

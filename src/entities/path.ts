@@ -92,7 +92,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
-    if (n.state === "missing" || this.level.isDisablingAnimationInProgress)
+    if (n.type === "hole" || this.level.isDisablingAnimationInProgress)
       return false;
 
     // check the cancellation & cancel to previous nucleotide
@@ -137,7 +137,7 @@ export class Path extends entity.CompositeEntity {
     if (n.type === "clip" && this.first !== n) return false;
 
     // Ignore holes
-    if (n.state === "missing") return false;
+    if (n.type === "hole") return false;
 
     // Don't start new paths
     if (this.items.length === 0) return false;
@@ -251,7 +251,7 @@ export class Path extends entity.CompositeEntity {
 
           //n.isHighlighted = false;
           n.sprite.scale.set(1);
-          n.pathArrow.visible = false;
+          n.pathArrowSprite.visible = false;
 
           if (n.type === "normal") {
             const index = this.normals.indexOf(n);
@@ -279,12 +279,12 @@ export class Path extends entity.CompositeEntity {
                         ),
                       () =>
                         new tween.Tween({
-                          from: n.shakingContainer.scale.x,
-                          to: items[index].shakingContainer.scale.x,
+                          from: n.shakeContainer.scale.x,
+                          to: items[index].shakeContainer.scale.x,
                           easing: easing.easeOutBounce,
                           duration: 1000,
                           onUpdate: (value) =>
-                            n.shakingContainer.scale.set(value),
+                            n.shakeContainer.scale.set(value),
                         }),
                     ]),
                 new entity.FunctionCallEntity(() => finish()),
@@ -319,67 +319,50 @@ export class Path extends entity.CompositeEntity {
         items: this.items,
         timeBetween: 50,
         waitForAllSteps: true,
-        onStep: (n, i, all, finish) => {
+        onStep: (n, i) => {
           if (n.type !== "normal") {
-            this._activateChildEntity(
-              new entity.EntitySequence([
-                () => anim.down(n.shakingContainer, 500, 1),
-                new entity.FunctionCallEntity(() => {
-                  n.once("stateChanged", finish);
-                  n.state = this.level.options.gridCleaning
-                    ? "inactive"
-                    : "missing";
-                }),
-              ])
-            );
+            return n.spriteSwitchAnimation(n.holeSprite);
           } else {
             const index = this.normals.indexOf(n);
 
-            this._activateChildEntity(
-              new entity.EntitySequence([
-                new entity.FunctionCallEntity(() => {
-                  if (index === 0)
-                    this.level.disablingAnimation("path.crunch.down", true);
-                }),
-                // () => new tween.Tween({
-                //   from: n.position.y,
-                //   to: n.position.y - 30,
-                //   onUpdate: (v) => n.position.y = v,
-                //   duration: 250
-                // }),
-                new entity.ParallelEntity([
-                  () => anim.down(n.sprite, 500, 1),
-                  new entity.EntitySequence([
-                    new entity.WaitingEntity(250),
-                    new entity.FunctionCallEntity(() => {
-                      this._playExplosion();
-                    }),
-                  ]),
-                ]),
-                () =>
-                  new tween.Tween({
-                    from: n.shakingContainer.scale.x,
-                    to: 1,
-                    easing: easing.linear,
-                    duration: 1,
-                    onUpdate: (value) => n.shakingContainer.scale.set(value),
+            return new entity.EntitySequence([
+              new entity.FunctionCallEntity(() => {
+                if (index === 0)
+                  this.level.disablingAnimation("path.crunch.down", true);
+              }),
+              // () => new tween.Tween({
+              //   from: n.position.y,
+              //   to: n.position.y - 30,
+              //   onUpdate: (v) => n.position.y = v,
+              //   duration: 250
+              // }),
+              new entity.ParallelEntity([
+                () => anim.down(n.sprite, 500, 1),
+                new entity.EntitySequence([
+                  new entity.WaitingEntity(250),
+                  new entity.FunctionCallEntity(() => {
+                    this._playExplosion();
                   }),
-                () =>
-                  anim.move(
-                    n.position,
-                    n.position.clone(),
-                    originalPositions[i],
-                    1,
-                    easing.linear
-                  ),
-                new entity.FunctionCallEntity(() => {
-                  n.once("stateChanged", finish);
-                  n.state = this.level.options.gridCleaning
-                    ? "inactive"
-                    : "missing";
+                ]),
+              ]),
+              () =>
+                new tween.Tween({
+                  from: n.shakeContainer.scale.x,
+                  to: 1,
+                  easing: easing.linear,
+                  duration: 1,
+                  onUpdate: (value) => n.shakeContainer.scale.set(value),
                 }),
-              ])
-            );
+              () =>
+                anim.move(
+                  n.position,
+                  n.position.clone(),
+                  originalPositions[i],
+                  1,
+                  easing.linear
+                ),
+              n.spriteSwitchAnimation(n.holeSprite),
+            ]);
           }
 
           // if (!this.level.options.disableScore) {
@@ -443,14 +426,8 @@ export class Path extends entity.CompositeEntity {
     let sound: string;
     if (lastNucleotide.type === "clip") {
       sound = "tile_clips";
-    } else if (lastNucleotide.colorName === "r") {
-      sound = "tile_red";
-    } else if (lastNucleotide.colorName === "g") {
-      sound = "tile_green";
-    } else if (lastNucleotide.colorName === "b") {
-      sound = "tile_blue";
-    } else if (lastNucleotide.colorName === "y") {
-      sound = "tile_yellow";
+    } else if (lastNucleotide.type === "normal") {
+      sound = "tile_" + lastNucleotide.color;
     } else {
       sound = "score_ring";
     }

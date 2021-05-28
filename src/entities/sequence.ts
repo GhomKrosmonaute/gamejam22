@@ -172,12 +172,12 @@ export class SequenceManager extends entity.CompositeEntity {
     return [...this.sequences].map((s) => s.virus).filter((v) => v.isSetup);
   }
 
-  set(colors: nucleotide.ColorName[]) {
+  set(colors: nucleotide.NucleotideSignature[]) {
     if (this.sequenceCount > 0) return;
     const {
       width: nucleotideWidth,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.sequenceNucleotideRadius
+      nucleotide.nucleotideRadius.sequence
     );
     const sequence = new Sequence(
       colors,
@@ -201,7 +201,7 @@ export class SequenceManager extends entity.CompositeEntity {
     const {
       width: nucleotideWidth,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.sequenceNucleotideRadius
+      nucleotide.nucleotideRadius.sequence
     );
     const sequence = new Sequence(
       length,
@@ -306,7 +306,7 @@ export class Sequence extends entity.CompositeEntity {
   };
 
   constructor(
-    public readonly base: number | nucleotide.ColorName[],
+    public readonly base: number | nucleotide.NucleotideSignature[],
     private readonly basePosition: PIXI.Point
   ) {
     super();
@@ -322,7 +322,7 @@ export class Sequence extends entity.CompositeEntity {
     const activeLength: number[] = [0];
     let nbr = 0;
     for (const n of this.nucleotides) {
-      if (n.state !== "inactive") {
+      if (n.active) {
         nbr++;
       } else {
         nbr = 0;
@@ -371,10 +371,10 @@ export class Sequence extends entity.CompositeEntity {
       width,
       height,
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.sequenceNucleotideRadius
+      nucleotide.nucleotideRadius.sequence
     );
 
-    let forcedSequence: nucleotide.ColorName[] = [];
+    let forcedSequence: nucleotide.NucleotideSignature[] = [];
 
     this.level.grid.solution = [];
 
@@ -420,13 +420,12 @@ export class Sequence extends entity.CompositeEntity {
         position.y = crispr.approximate(0, height * 0.05);
       }
 
-      const n = new nucleotide.Nucleotide(
-        this.level.options.sequenceNucleotideRadius,
-        "sequence",
+      const n = new nucleotide.Nucleotide({
+        parent: "sequence",
         position,
-        i === -1 ? 0 : Math.random(),
-        forcedSequence[i]
-      );
+        rotation: i === -1 ? 0 : Math.random(),
+        ...nucleotide.Nucleotide.fromSignature(forcedSequence[i]),
+      });
 
       if (i === -1) n.type = "clip";
 
@@ -447,34 +446,20 @@ export class Sequence extends entity.CompositeEntity {
         })
       );
 
-      n.state = "present";
-
-      if (this.level.options.canCrunchParts) {
-        const options = this.level.options.canCrunchParts;
-        for (const possiblePart of options.possibleParts.sort((a, b) => {
-          const lengthA = crispr.resolvePossiblePartLength(
-            a.length,
-            this.baseLength
-          );
-          const lengthB = crispr.resolvePossiblePartLength(
-            b.length,
-            this.baseLength
-          );
-          return lengthA - lengthB;
-        })) {
-          const length = crispr.resolvePossiblePartLength(
-            possiblePart.length,
-            this.baseLength
-          );
-
-          if (n.glowColor === null && i + 1 < length) {
-            n.glowColor = possiblePart.glowColor;
-          }
-        }
-      }
-
       this.nucleotides.push(n);
     }
+
+    this._activateChildEntity(
+      anim.sequenced({
+        items: this.nucleotides,
+        waitForAllSteps: true,
+        timeBetween: 50,
+        onStep: (item) => {
+          console.log(item);
+          return item.spriteSwitchAnimation(item.sprite);
+        },
+      })
+    );
 
     if (this.virus) {
       this._activateChildEntity(
@@ -676,7 +661,7 @@ export class Sequence extends entity.CompositeEntity {
         timeBetween: 50,
         waitForAllSteps: true,
         onStep: (item) => {
-          item.isHighlighted = false;
+          item.highlighted = false;
           return anim.down(item.sprite, 500, item.sprite.scale.x);
         },
       }),
@@ -889,7 +874,7 @@ export class Sequence extends entity.CompositeEntity {
     if (!segment) return false;
 
     segment.forEach((n) => {
-      n.state = "inactive";
+      this._activateChildEntity(n.turn(false));
     });
 
     return true;
@@ -911,7 +896,7 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   isFullInactive(): boolean {
-    return this.nucleotides.every((n) => n.state === "inactive");
+    return this.nucleotides.every((n) => !n.active);
   }
 
   /**

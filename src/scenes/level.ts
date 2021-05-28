@@ -124,28 +124,14 @@ export interface LevelOptions {
   maxLife: number;
   crispyBonusRate: number;
   gaugeOptions: Partial<ScoreOptions>;
-  /**
-   * If canCrunchParts.possibleParts.length is a string,
-   * it is a percent of current sequence length.
-   */
-  canCrunchParts: {
-    fromLeft?: boolean;
-    fromRight?: boolean;
-    possibleParts: { length: number | string; glowColor: number }[];
-  } | null;
   fallingSpeed: number;
   baseCrispyGain: number;
   minStarNeeded: number;
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
   sequenceLength: number | ((level: Level) => number);
-
-  clipCount: number;
-  portalsCount: number;
-  jokerCount: number;
-
   sequenceRounded: boolean;
-  gridShape: grid.GridShape | string;
-  sequences: nucleotide.ColorName[][] | null;
+  gridShape: grid.GridArrayShape<nucleotide.NucleotideSignature>;
+  sequences: nucleotide.NucleotideSignature[][] | null;
   forceMatching: boolean;
   hooks: Hook[];
   initialBonuses: bonuses.InitialBonuses;
@@ -240,7 +226,6 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   virus: "mini",
   maxLife: 5,
   fallingSpeed: 1,
-  canCrunchParts: null,
   gaugeOptions: defaultScoreOptions,
   baseCrispyGain: 10,
   minStarNeeded: 0,
@@ -260,14 +245,10 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
 
   sequences: null,
 
-  clipCount: 4,
-  portalsCount: 0,
-  jokerCount: 0,
-
   actionButtonSprite: "images/hud_action_button.png",
 
   sequenceRounded: false,
-  gridShape: "full",
+  gridShape: [],
   forceMatching: false,
   hooks: [],
   initialBonuses: [],
@@ -694,7 +675,6 @@ export class Level extends entity.CompositeEntity {
       this.options.initialBonuses
     );
 
-    this.healBonus = new bonuses.HealBonus(this.bonusesManager);
     this.swapBonus = new bonuses.SwapBonus(this.bonusesManager);
     this.timeBonus = new bonuses.TimeBonus(this.bonusesManager);
 
@@ -1054,12 +1034,8 @@ export class Level extends entity.CompositeEntity {
 
     // grid rebuild
     if (options.resetGrid) {
-      console.table({
-        oldOptions: this.options.clipCount,
-        newOptions: options.clipCount,
-      });
       this.options.gridShape = options.gridShape;
-      this.grid.reset();
+      this.activate(this.grid.reset());
     }
 
     // Sequence manager

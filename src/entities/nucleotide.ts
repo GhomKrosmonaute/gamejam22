@@ -10,26 +10,41 @@ import * as level from "../scenes/level";
 import * as anim from "../animations";
 import * as crispr from "../crispr";
 
+export type NucleotideParent = "grid" | "sequence";
 export type NucleotideType = "clip" | "normal" | "portal" | "joker" | "hole";
+export type NucleotideSignature =
+  | "x"
+  | "c"
+  | "*"
+  | " "
+  | "?"
+  | ""
+  | NucleotideColorLetter;
 
-export type NucleotideSignature = "x" | "c" | "" | "*" | " " | ColorName;
+export interface NucleotideInformation {
+  type: NucleotideType;
+  color: NucleotideColor;
+  active: boolean;
+}
 
 export interface NucleotideJSON {
   type: NucleotideType;
   active: boolean;
   color: string;
   crispyMultiplier: number;
-  position: PIXI.IPointData;
+  position?: PIXI.IPointData;
 }
 
-// TODO: Use string enum here?
-export type ColorName = "blue" | "red" | "green" | "yellow";
-export const colorNames: ColorName[] = ["blue", "red", "green", "yellow"];
-export function getRandomColorName(): ColorName {
-  return colorNames[Math.floor(Math.random() * colorNames.length)];
-}
+export type NucleotideColorLetter = "b" | "r" | "g" | "y";
+export type NucleotideColor = "blue" | "red" | "green" | "yellow";
+export const nucleotideColors: NucleotideColor[] = [
+  "blue",
+  "red",
+  "green",
+  "yellow",
+];
 
-const nucleotideRadius = {
+export const nucleotideRadius = {
   grid: crispr.width / 13.44,
   sequence: crispr.width * 0.04,
 };
@@ -41,21 +56,22 @@ const nucleotideRadius = {
  * - stateChanged( NucleotideState )
  */
 export class Nucleotide extends entity.CompositeEntity {
-  private _container = new PIXI.Container();
-  private _shakeContainer = new PIXI.Container();
-  private _backContainer = new PIXI.Container();
-  private _middleContainer = new PIXI.Container();
-  private _foreContainer = new PIXI.Container();
+  public container = new PIXI.Container();
+  public shakeContainer = new PIXI.Container();
+  public backContainer = new PIXI.Container();
+  public middleContainer = new PIXI.Container();
+  public foreContainer = new PIXI.Container();
 
-  private _type: NucleotideType = "normal";
+  public type: NucleotideType = "normal";
+  public color: NucleotideColor;
+
   private _active = false;
   private _highlighted = false;
   private _crispyMultiplier = 1;
-  private _radius: number;
 
   private _pathArrowAnimatedSpriteEntity: entity.AnimatedSpriteEntity;
   private _colorsAnimatedSpriteEntities: {
-    [key in ColorName]: entity.AnimatedSpriteEntity;
+    [key in NucleotideColor]: entity.AnimatedSpriteEntity;
   };
   private _portalAnimatedSpriteEntity: entity.AnimatedSpriteEntity;
   private _jokerAnimatedSpriteEntity: entity.AnimatedSpriteEntity;
@@ -64,27 +80,54 @@ export class Nucleotide extends entity.CompositeEntity {
   private _clipSprite: PIXI.Sprite;
   private _glowSprite: PIXI.Sprite;
 
+  public shakes: anim.ShakesManager;
+
   public readonly position = new PIXI.Point();
-
   public readonly floating = anim.makeFloatingOptions();
-  public readonly shakes = new anim.ShakesManager(this._shakeContainer);
+  public readonly radius: number;
+  public readonly parent: NucleotideParent;
 
-  constructor(
-    public parent: "grid" | "sequence",
-    position = new PIXI.Point(),
-    public rotation = 0,
-    public colorName: ColorName = getRandomColorName()
-  ) {
+  constructor(config: {
+    parent: NucleotideParent;
+    position?: PIXI.Point;
+    rotation?: number;
+    type?: NucleotideType;
+    color?: NucleotideColor;
+  }) {
     super();
+
+    const position = config.position ?? new PIXI.Point();
+
     this.position.copyFrom(position);
-    this._container.position.copyFrom(position);
-    this._container.rotation = rotation;
-    this._container.scale.set(0);
-    this._radius = nucleotideRadius[parent];
+
+    this.container.position.copyFrom(position);
+    this.container.rotation = config.rotation ?? 0;
+    this.container.scale.set(0);
+
+    this.shakes = new anim.ShakesManager(this.shakeContainer);
+
+    this.radius = nucleotideRadius[config.parent];
+    this.parent = config.parent;
+
+    this.type = config.type ?? "normal";
+    this.color = config.color ?? Nucleotide.getRandomColor();
+
+    this.floating.active.x = true;
+    this.floating.active.y = true;
+    this.floating.speed.set(1.4, 2);
+    this.floating.amplitude.set(0.3, 0.3);
   }
 
   get level(): level.Level {
     return this._entityConfig.level;
+  }
+
+  get active(): boolean {
+    return this._active;
+  }
+
+  get colorLetter(): NucleotideColorLetter {
+    return this.color[0] as NucleotideColorLetter;
   }
 
   get pathArrowSprite(): PIXI.AnimatedSprite {
@@ -92,7 +135,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   get colorSprite(): PIXI.AnimatedSprite {
-    return this._colorsAnimatedSpriteEntities[this.colorName].sprite;
+    return this._colorsAnimatedSpriteEntities[this.color].sprite;
   }
 
   get portalSprite(): PIXI.AnimatedSprite {
@@ -125,11 +168,35 @@ export class Nucleotide extends entity.CompositeEntity {
     ];
   }
 
-  get sprites(): (PIXI.AnimatedSprite | PIXI.Sprite)[] {
-    return [this.pathArrowSprite, this.glowSprite, ...this.middleSprites];
+  get foreSprites() {
+    return this.foreContainer.children as (PIXI.AnimatedSprite | PIXI.Sprite)[];
   }
 
-  switchMiddleSprite(target?: PIXI.Sprite | PIXI.AnimatedSprite) {
+  get sprites(): (PIXI.AnimatedSprite | PIXI.Sprite)[] {
+    return [
+      this.pathArrowSprite,
+      this.glowSprite,
+      ...this.middleSprites,
+      ...this.foreSprites,
+    ];
+  }
+
+  get sprite(): PIXI.Sprite | PIXI.AnimatedSprite {
+    switch (this.type) {
+      case "hole":
+        return this.holeSprite;
+      case "clip":
+        return this.clipSprite;
+      case "joker":
+        return this.jokerSprite;
+      case "normal":
+        return this.colorSprite;
+      case "portal":
+        return this.portalSprite;
+    }
+  }
+
+  switchSprite(target?: PIXI.Sprite | PIXI.AnimatedSprite) {
     this.middleSprites.forEach((sprite) => {
       sprite.visible = sprite === target;
     });
@@ -137,9 +204,8 @@ export class Nucleotide extends entity.CompositeEntity {
 
   spriteSwitchAnimation(target?: PIXI.Sprite | PIXI.AnimatedSprite) {
     return new entity.EntitySequence([
-      // todo: make an animation and switch sprite on top (on middle of animation)
       this.turn(false),
-      new entity.FunctionCallEntity(() => this.switchMiddleSprite(target)),
+      new entity.FunctionCallEntity(() => this.switchSprite(target)),
       this.turn(true),
     ]);
   }
@@ -161,7 +227,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this._activateChildEntity(
         this._pathArrowAnimatedSpriteEntity,
         entity.extendConfig({
-          container: this._backContainer,
+          container: this.backContainer,
         })
       );
     }
@@ -188,7 +254,7 @@ export class Nucleotide extends entity.CompositeEntity {
       };
 
       for (const color in this._colorsAnimatedSpriteEntities) {
-        const e = this._colorsAnimatedSpriteEntities[color as ColorName];
+        const e = this._colorsAnimatedSpriteEntities[color as NucleotideColor];
 
         e.sprite.loop = true;
         e.sprite.anchor.set(0.5);
@@ -198,7 +264,7 @@ export class Nucleotide extends entity.CompositeEntity {
         this._activateChildEntity(
           e,
           entity.extendConfig({
-            container: this._middleContainer,
+            container: this.middleContainer,
           })
         );
       }
@@ -210,34 +276,39 @@ export class Nucleotide extends entity.CompositeEntity {
         this._entityConfig.app.loader.resources[`images/portal.json`]
       );
 
-      this._portalAnimatedSpriteEntity.sprite.anchor.set(0.5);
-      this._portalAnimatedSpriteEntity.sprite.loop = true;
-      this._portalAnimatedSpriteEntity.sprite.visible = false;
-      this._portalAnimatedSpriteEntity.sprite.animationSpeed = 20 / 60;
+      this.portalSprite.anchor.set(0.5);
+      this.portalSprite.loop = true;
+      this.portalSprite.visible = false;
+      this.portalSprite.animationSpeed = 20 / 60;
 
       this._activateChildEntity(
         this._portalAnimatedSpriteEntity,
         entity.extendConfig({
-          container: this._middleContainer,
+          container: this.middleContainer,
         })
       );
     }
 
     // joker
     {
-      this._jokerAnimatedSpriteEntity = util.makeAnimatedSprite(
-        this._entityConfig.app.loader.resources[`images/joker.json`]
-      );
+      // this._jokerAnimatedSpriteEntity = util.makeAnimatedSprite(
+      //   this._entityConfig.app.loader.resources[`images/joker.json`]
+      // );
 
-      this._jokerAnimatedSpriteEntity.sprite.anchor.set(0.5);
-      this._jokerAnimatedSpriteEntity.sprite.loop = true;
-      this._jokerAnimatedSpriteEntity.sprite.visible = false;
-      this._jokerAnimatedSpriteEntity.sprite.animationSpeed = 20 / 60;
+      this._jokerAnimatedSpriteEntity = util.makeAnimatedSprite(
+        this._entityConfig.app.loader.resources[`images/nucleotide_blue.json`]
+      );
+      this._jokerAnimatedSpriteEntity.sprite.tint = 0xdc09ff;
+
+      this.jokerSprite.anchor.set(0.5);
+      this.jokerSprite.loop = true;
+      this.jokerSprite.visible = false;
+      this.jokerSprite.animationSpeed = 20 / 60;
 
       this._activateChildEntity(
         this._jokerAnimatedSpriteEntity,
         entity.extendConfig({
-          container: this._middleContainer,
+          container: this.middleContainer,
         })
       );
     }
@@ -267,56 +338,41 @@ export class Nucleotide extends entity.CompositeEntity {
       this._clipSprite.visible = false;
     }
 
-    this._backContainer.addChild(this._glowSprite);
-    this._middleContainer.addChild(this._holeSprite, this._clipSprite);
-    this._shakeContainer.addChild(
-      this._backContainer,
-      this._middleContainer,
-      this._foreContainer
+    this.backContainer.addChild(this._glowSprite);
+    this.middleContainer.addChild(this._holeSprite, this._clipSprite);
+    this.shakeContainer.addChild(
+      this.backContainer,
+      this.middleContainer,
+      this.foreContainer
     );
 
-    this._container.addChild(this._shakeContainer);
+    this.container.addChild(this.shakeContainer);
 
-    this._entityConfig.container.addChild(this._container);
+    this._entityConfig.container.addChild(this.container);
   }
 
   _update() {
-    this._container.position.copyFrom(this.position);
+    this.container.position.copyFrom(this.position);
   }
 
   _teardown() {
-    this._entityConfig.container.removeChild(this._container);
+    this._entityConfig.container.removeChild(this.container);
   }
-
   get highlighted(): boolean {
     return this._highlighted;
   }
+
   set highlighted(isHighlighted: boolean) {
     if (isHighlighted && !this._highlighted) {
       this.shakes.setShake("highlight", 2);
-      this._shakeContainer.scale.set(this.scale + 0.2);
+      this.shakeContainer.scale.set(this.scale + 0.2);
       this.glowSprite.visible = true;
     } else if (!isHighlighted && this._highlighted) {
       this.shakes.removeShake("highlight");
-      this._shakeContainer.scale.set(this.scale);
+      this.shakeContainer.scale.set(this.scale);
       this.glowSprite.visible = false;
     }
     this._highlighted = isHighlighted;
-  }
-
-  get sprite(): PIXI.Sprite | PIXI.AnimatedSprite {
-    switch (this._type) {
-      case "hole":
-        return this.holeSprite;
-      case "clip":
-        return this.clipSprite;
-      case "joker":
-        return this.jokerSprite;
-      case "normal":
-        return this.colorSprite;
-      case "portal":
-        return this.portalSprite;
-    }
   }
 
   get width(): number {
@@ -331,10 +387,6 @@ export class Nucleotide extends entity.CompositeEntity {
     return new PIXI.Point(this.width * (3 / 4), this.height);
   }
 
-  get radius(): number {
-    return this._radius;
-  }
-
   get scale(): number {
     return (0.85 * this.width) / 136;
   }
@@ -346,27 +398,27 @@ export class Nucleotide extends entity.CompositeEntity {
     this._active = value;
 
     return new tween.Tween({
-      from: value ? 0 : 1,
-      to: value ? 1 : 0,
+      from: value ? 0 : this.scale,
+      to: value ? this.scale : 0,
       duration,
       easing: value ? easing.easeOutBack : easing.easeInBack,
-      onUpdate: (value) => this._shakeContainer.scale.set(value),
+      onUpdate: (value) => this.container.scale.set(value),
     });
   }
 
   public set crispyMultiplier(n: number) {
     if (this.level.options.noCrispyBonus) n = 1;
-    this._foreContainer.removeChildren();
+    this.foreContainer.removeChildren();
     this._crispyMultiplier = n;
     if (n > 1 && n < 6)
-      this._foreContainer.addChild(
+      this.foreContainer.addChild(
         crispr.sprite(this, "images/nucleotide_gold_border.png", (it) => {
           it.anchor.set(0.5);
-          it.scale.set(this._shakeContainer.scale.x);
+          it.scale.set(this.shakeContainer.scale.x);
         }),
         crispr.sprite(this, `images/crispy_x${n}.png`, (it) => {
           it.anchor.set(0.5, 0);
-          it.scale.set(this._shakeContainer.scale.x);
+          it.scale.set(this.shakeContainer.scale.x);
         })
       );
   }
@@ -386,7 +438,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   public refreshSprites(animated = false) {
-    if (this._type === "normal" || this._type === "joker")
+    if (this.type === "normal" || this.type === "joker")
       this.setRandomCrispyMultiplier();
     else this.crispyMultiplier = 1;
 
@@ -395,23 +447,25 @@ export class Nucleotide extends entity.CompositeEntity {
 
   toString(): NucleotideSignature {
     if (!this._active) return "x";
-    if (this._type === "clip") return "c";
-    if (this._type === "portal") return "";
-    if (this._type === "joker") return "*";
-    if (this._type === "hole") return " ";
-    return this.colorName;
+    if (this.type === "clip") return "c";
+    if (this.type === "portal") return "";
+    if (this.type === "joker") return "*";
+    if (this.type === "hole") return " ";
+    return this.colorLetter;
   }
 
-  toJSON(): NucleotideJSON {
+  toJSON(withoutPosition = false): NucleotideJSON {
     return {
-      type: this._type,
+      type: this.type,
       active: this._active,
-      color: this.colorName,
+      color: this.colorLetter,
       crispyMultiplier: this.crispyMultiplier,
-      position: {
-        x: this.position.x,
-        y: this.position.y,
-      },
+      position: withoutPosition
+        ? undefined
+        : {
+            x: this.position.x,
+            y: this.position.y,
+          },
     };
   }
 
@@ -420,5 +474,59 @@ export class Nucleotide extends entity.CompositeEntity {
     const height = Math.sqrt(3) * radius;
     const dist = new PIXI.Point(width * (3 / 4), height);
     return { width, height, dist };
+  }
+
+  static getRandomColor(): NucleotideColor {
+    return nucleotideColors[
+      Math.floor(Math.random() * nucleotideColors.length)
+    ];
+  }
+
+  static fromSignature(signature: NucleotideSignature): NucleotideInformation {
+    const result: NucleotideInformation = {
+      active: signature !== "x",
+      type: "normal",
+      color: "blue",
+    };
+
+    if (!result.active) return result;
+
+    if (!/[rgby?]/.test(signature)) {
+      switch (signature) {
+        case " ":
+          result.type = "hole";
+          break;
+        case "*":
+          result.type = "joker";
+          break;
+        case "c":
+          result.type = "clip";
+          break;
+        case "":
+          result.type = "portal";
+          break;
+      }
+    } else {
+      result.type = "normal";
+      switch (signature) {
+        case "?":
+          result.color = Nucleotide.getRandomColor();
+          break;
+        case "b":
+          result.color = "blue";
+          break;
+        case "g":
+          result.color = "green";
+          break;
+        case "r":
+          result.color = "red";
+          break;
+        case "y":
+          result.color = "yellow";
+          break;
+      }
+    }
+
+    return result;
   }
 }
