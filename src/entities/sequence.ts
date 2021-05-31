@@ -29,7 +29,7 @@ export const sequenceMatchingOptions: {
   },
   fall: {
     minLength: (ctx) => ctx.sequenceManager.first.baseLength,
-    sticky: "left",
+    sticky: "right",
     sens: "toRight",
   },
   turn: {
