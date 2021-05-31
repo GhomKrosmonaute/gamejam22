@@ -300,13 +300,13 @@ export class Hook<
       this.options.event,
       this.listener.bind(this)
     );
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("hook setup:", this.options.id);
     }
   }
 
   protected _teardown() {
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("hook teardown:", this.options.id);
     }
   }
@@ -326,7 +326,7 @@ export class Hook<
       const delay = this.options.delay ?? 0;
 
       if (this.options.reset) {
-        if (crispr.debug) {
+        if (crispr.inDebugMode()) {
           console.log("hook reset:", this.options.id);
         }
 
@@ -363,7 +363,7 @@ export class Hook<
           ])
         );
       } else if (this.options.entity) {
-        if (crispr.debug) {
+        if (crispr.inDebugMode()) {
           console.log("hook activate:", this.options.id, this.options.entity);
         }
 
@@ -380,7 +380,7 @@ export class Hook<
           ])
         );
       } else {
-        if (crispr.debug) {
+        if (crispr.inDebugMode()) {
           console.error("hook called but not triggered:", this.options.id);
         }
       }
@@ -527,7 +527,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   private _initHooks() {
-    if (crispr.debug)
+    if (crispr.inDebugMode())
       console.log(
         "hooks to init",
         this.options.hooks.map((h) => h.options.id)
@@ -1011,7 +1011,7 @@ export class Level extends entity.CompositeEntity {
 
     // Hooks
     {
-      if (crispr.debug) {
+      if (crispr.inDebugMode()) {
         console.log(
           "hooks to deactivate",
           this.options.hooks.map((h) => h.options.id)
@@ -1031,7 +1031,7 @@ export class Level extends entity.CompositeEntity {
     this.emitLevelEvent("init");
     this.isInit = true;
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("--> DONE", "level.reset()");
     }
   }
@@ -1060,7 +1060,7 @@ export class Level extends entity.CompositeEntity {
   disablingAnimation(name: string, state: boolean) {
     const oldLength = this.disablingAnimations.size;
     this.disablingAnimations[state ? "add" : "delete"](name);
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       const newLength = this.disablingAnimations.size;
       if (oldLength !== newLength) {
         console.log("updated disabling animations:", newLength, [

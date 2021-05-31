@@ -204,7 +204,7 @@ export class Main extends entity.CompositeEntity {
         levelSprite.addChild(viruses);
       }
 
-      if (!isAccessible && !crispr.debug) {
+      if (!isAccessible && !crispr.inDebugMode()) {
         text.visible = false;
 
         levelSprite.tint = 0xb0b0b0;

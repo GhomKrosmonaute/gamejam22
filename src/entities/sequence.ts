@@ -150,7 +150,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
     this.generateFirstSequences();
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("--> DONE", "sequenceManager.reset()");
     }
   }
@@ -293,7 +293,7 @@ export class SequenceManager extends entity.CompositeEntity {
     if (removedSequences.length > 0 || partialCrunch) {
       this.level.path.crunchCountBeforeSequenceDown++;
 
-      if (crispr.debug) {
+      if (crispr.inDebugMode()) {
         console.log(
           "updated",
           "crunchCountBeforeSequenceDown",
@@ -649,7 +649,7 @@ export class Sequence extends entity.CompositeEntity {
         this.level.sequenceWasCrunched = true;
         this.level.crunchedSequenceCount++;
 
-        if (crispr.debug) {
+        if (crispr.inDebugMode()) {
           console.log(
             "updated",
             "crunchedSequenceCount",
@@ -665,7 +665,7 @@ export class Sequence extends entity.CompositeEntity {
         if (isZen && fully && shots === 1) {
           this.level.oneShotLongSequence = true;
 
-          if (crispr.debug) {
+          if (crispr.inDebugMode()) {
             console.log(
               "updated",
               "oneShotLongSequence",
@@ -783,7 +783,7 @@ export class Sequence extends entity.CompositeEntity {
 
             score *= multiplier;
 
-            // if (crispr.debug) {
+            // if (crispr.inDebugMode()) {
             //   console.log("Multiplier:", multiplier, "Score:", score);
             // }
 

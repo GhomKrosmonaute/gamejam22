@@ -387,7 +387,7 @@ export class Path extends entity.CompositeEntity {
           //
           //   this.level.score += score;
           //
-          //   if (crispr.debug) {
+          //   if (crispr.inDebugMode()) {
           //     console.log("Multiplier:", multiplier, "Score:", score);
           //   }
           //

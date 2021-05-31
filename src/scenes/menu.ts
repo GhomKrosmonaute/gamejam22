@@ -65,6 +65,8 @@ export class Menu extends entity.CompositeEntity {
     Record<"0" | "0.5" | "1", string>
   >;
 
+  private debugPressCount: number;
+
   private saveSettings() {
     localStorage.setItem("settings", JSON.stringify(this.settings));
   }
@@ -169,6 +171,10 @@ export class Menu extends entity.CompositeEntity {
       this.title.anchor.set(0.5);
       this.title.position.set(crispr.width / 2, crispr.height / 6);
       this.container.addChild(this.title);
+
+      // Put in "debug mode" easter egg
+      this.title.interactive = true;
+      this._on(this.title, "pointertap", this._onDebugPress);
     }
 
     if (util.supportsFullscreen()) {
@@ -323,6 +329,8 @@ export class Menu extends entity.CompositeEntity {
     if (this.opened) return;
 
     booyah.changeGameState("paused");
+    this.debugPressCount = 0;
+
     // Displaying the menu will be done in _onSignal()
   }
 
@@ -370,6 +378,13 @@ export class Menu extends entity.CompositeEntity {
 
   private _onTapPCLogo() {
     window.open("https://playcurious.games", "_blank");
+  }
+
+  private _onDebugPress() {
+    if (++this.debugPressCount === 9) {
+      crispr.setInDebugMode(true);
+      this._entityConfig.fxMachine.play("score_ring");
+    }
   }
 }
 

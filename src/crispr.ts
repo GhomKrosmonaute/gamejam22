@@ -2,6 +2,7 @@ import * as PIXI from "pixi.js";
 
 import * as geom from "booyah/src/geom";
 import * as entity from "booyah/src/entity";
+import * as util from "booyah/src/util";
 
 import * as level from "./scenes/level";
 
@@ -11,13 +12,17 @@ export const width = 1080;
 export const height = 1920;
 
 const searchParams = new URL(window.location.href).searchParams;
-const _hasDebug = searchParams.has("debug");
-const _debugValue = searchParams.get("debug");
-export const debug = _hasDebug
-  ? _debugValue === ""
-    ? true
-    : !/^(?:false|0|null)$/i.test(_debugValue)
-  : false;
+let _inDebugMode =
+  searchParams.has("debug") && util.stringToBool(searchParams.get("debug"));
+
+export function inDebugMode() {
+  return _inDebugMode;
+}
+
+export function setInDebugMode(value: boolean) {
+  _inDebugMode = value;
+  console.log("setInDebugMode", value);
+}
 
 export function dist(a: number, b: number): number;
 export function dist(a: PIXI.Point, b: PIXI.Point): number;

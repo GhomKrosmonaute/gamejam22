@@ -166,7 +166,7 @@ export class Grid extends entity.CompositeEntity {
     this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointermove", this._onPointerMove);
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       this._on(this, "drag", (n: nucleotide.Nucleotide) => {
         console.log(this.getGridPositionOf(n));
       });
@@ -367,7 +367,7 @@ export class Grid extends entity.CompositeEntity {
 
     this.generateShape();
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("--> DONE", "grid.reset()");
     }
   }
