@@ -116,6 +116,10 @@ export class Menu extends entity.CompositeEntity {
       );
       this.playCuriousLogo.anchor.set(0.5);
       this.playCuriousLogo.position.set(crispr.width / 2, crispr.height * 0.85);
+
+      this.playCuriousLogo.interactive = true;
+      this.playCuriousLogo.buttonMode = true;
+      this._on(this.playCuriousLogo, "pointertap", this._onTapPCLogo);
       this.container.addChild(this.playCuriousLogo);
     }
 
@@ -360,6 +364,10 @@ export class Menu extends entity.CompositeEntity {
   private _showCredits() {
     this.creditsEntity = new booyah.CreditsEntity(creditsOptions);
     this._activateChildEntity(this.creditsEntity);
+  }
+
+  private _onTapPCLogo() {
+    window.open("https://playcurious.games", "_blank");
   }
 }
 
