@@ -1,6 +1,7 @@
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
+import * as booyah from "booyah/src/booyah";
 
 import * as crispr from "../crispr";
 import * as popup from "../entities/popup";
@@ -11,7 +12,7 @@ const twitterUrl =
 const fbUrl =
   "https://www.facebook.com/sharer/sharer.php?u=https%3A//playcurious.games/games/crispr-crunch/";
 const emailUrl =
-  "mailto:hello@playcurious.games?subject=When%20are%20you%20making%20new%20levels%20for%20CRISPR%20Crunch%3F&body=%3C%3Cplease%20let%20us%20know%20what%20you%20think%3E%3E";
+  "mailto:hello@playcurious.games?subject=When%20are%20you%20making%20new%20levels%20for%20CRISPR%20Crunch%3F&body=So%2C%20what%20do%20you%20think%20of%20our%20game%3F";
 
 export class WriteUsPopup extends entity.EntityBase {
   private _container: PIXI.Container;
@@ -63,6 +64,13 @@ export class WriteUsPopup extends entity.EntityBase {
   _teardown() {
     this._entityConfig.container.removeChild(this._container);
     this._container = null;
+  }
+
+  _onSignal(frameInfo: entity.FrameInfo, signal: string): void {
+    if (signal === "gainedVisibility") {
+      // Don't show the menu, just start playing
+      booyah.changeGameState("playing");
+    }
   }
 
   private _makeLinkButton(

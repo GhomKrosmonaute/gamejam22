@@ -320,13 +320,15 @@ export class Menu extends entity.CompositeEntity {
   }
 
   open() {
-    if (this.opened) throw new Error("nope");
+    if (this.opened) return;
+
     booyah.changeGameState("paused");
     // Displaying the menu will be done in _onSignal()
   }
 
   close() {
-    if (!this.opened) throw new Error("nope");
+    if (!this.opened) return;
+
     booyah.changeGameState("playing");
     // Hiding the menu will be done in _onSignal()
   }
