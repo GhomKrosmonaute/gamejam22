@@ -20,6 +20,25 @@ const defaultSettings: Settings = {
   fullscreen: util.inFullscreen(),
 };
 
+const creditsOptions: Partial<booyah.CreditsEntityOptions> = {
+  credits: {
+    Programming: "Camille Abella",
+    "Game Design": "Jesse Himmelstein",
+    "Graphic Design": [
+      "Naëlane Lefebvre Thillier",
+      "Nawel Nenrhannou",
+      "Mathieu Lim",
+    ],
+    Animation: ["Dilane Kerfanto", "Anthony Bastide"],
+    Science: "Jake Wintermute",
+    "Sound Design": "Jean-Baptiste Mar",
+    QA: ["Ilyes Khamassi", "Eliot Marechal"],
+    "Creative Direction": "JC Letraublon",
+  },
+  fontFamily: "Optimus",
+  textSize: 40,
+};
+
 export class Menu extends entity.CompositeEntity {
   private settings: Settings;
 
@@ -34,6 +53,7 @@ export class Menu extends entity.CompositeEntity {
   private backButton: PIXI.Sprite;
   private playCuriousLogo: PIXI.Sprite;
   private creditButton: PIXI.Text;
+  private creditsEntity: booyah.CreditsEntity;
   private title: PIXI.Text;
 
   private fullscreenSwitcher: SpriteSwitcher;
@@ -105,7 +125,13 @@ export class Menu extends entity.CompositeEntity {
         fill: crispr.yellow,
       });
       this.creditButton.position.set(crispr.width / 2, crispr.height * 0.74);
+      this.creditButton.interactive = true;
+      this.creditButton.buttonMode = true;
+      this._on(this.creditButton, "pointertap", this._showCredits);
       this.container.addChild(this.creditButton);
+
+      // Credits entity starts null, and is created only when the button is pressed
+      this.creditsEntity = null;
     }
 
     {
@@ -315,11 +341,25 @@ export class Menu extends entity.CompositeEntity {
     }
   }
 
+  _update(frameInfo: entity.FrameInfo) {
+    if (this.creditsEntity) {
+      if (this.creditsEntity.transition) {
+        this._deactivateChildEntity(this.creditsEntity);
+        this.creditsEntity = null;
+      }
+    }
+  }
+
   private _onOpen() {
     this.blackBackground.visible =
       !!this._entityConfig.currentLevelHolder.level?.options
         .mustBeHiddenOnPause;
     this.homeButton.visible = !!this._entityConfig.currentLevelHolder.level;
+  }
+
+  private _showCredits() {
+    this.creditsEntity = new booyah.CreditsEntity(creditsOptions);
+    this._activateChildEntity(this.creditsEntity);
   }
 }
 
