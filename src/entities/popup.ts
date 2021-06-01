@@ -251,7 +251,7 @@ export abstract class Popup extends entity.CompositeEntity {
                   }),
                   new entity.EntitySequence([
                     new entity.WaitingEntity(
-                      crispr.debug ? 0 : this.options.coolDown ?? 0
+                      crispr.inDebugMode() ? 0 : this.options.coolDown ?? 0
                     ),
                     new entity.FunctionCallEntity(() => {
                       // use transparent background as closure button
@@ -331,7 +331,7 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get center(): PIXI.Point {
@@ -382,7 +382,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
   defaultClosure = () => {
     if (
-      !crispr.debug &&
+      !crispr.inDebugMode() &&
       this.options.coolDown &&
       Date.now() < this._setupAt + this.options.coolDown
     )

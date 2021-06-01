@@ -42,7 +42,7 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get bar(): PIXI.Sprite {
@@ -364,7 +364,7 @@ export class ActionButton extends entity.CompositeEntity {
   public text: PIXI.Text;
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   protected _setup() {
@@ -520,7 +520,7 @@ export class RemainingMovesIndicator extends entity.CompositeEntity {
   private position = new PIXI.Point(50, crispr.height - 100);
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get count(): number {

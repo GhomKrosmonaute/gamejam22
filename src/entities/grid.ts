@@ -73,6 +73,58 @@ export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
     (y === 0 && (x < 2 || x > 4)) ||
     (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5)),
   hive: (x, y) => x % 2 !== 0 && y % 2 === 0,
+  mediumPortal: {
+    shape: [
+      [null, null, "?", null, "?", null, null],
+      ["?", "?", "?", null, "?", "?", "?"],
+      ["?", "?", "?", null, "?", "?", "?"],
+      ["?", "?", "?", null, "?", "?", "?"],
+      [null, "?", "?", null, "?", "?", null],
+      [null, null, null, null, null, null, null],
+    ],
+    portals: [
+      { x: 2, y: 2 },
+      { x: 4, y: 2 },
+    ],
+    clips: 2,
+  },
+  bone: {
+    shape: [
+      ["?", "?", "?", null, "?", "?", "?"],
+      ["?", "?", "?", null, null, "?", "?"],
+      [null, "?", "?", "?", "?", null, null],
+      ["?", null, null, "?", "?", "?", "?"],
+      ["?", "?", "?", null, "?", "?", "?"],
+      [null, "?", null, null, null, "?", null],
+    ],
+    portals: [
+      { x: 1, y: 4 },
+      { x: 5, y: 1 },
+      { x: 1, y: 1 },
+      { x: 5, y: 4 },
+    ],
+    clips: 2,
+  },
+  around: {
+    shape: [
+      ["?", "?", "?", "?", "?", "?", "?"],
+      ["?", "?", null, "?", null, "?", "?"],
+      ["?", null, null, null, null, null, "?"],
+      ["?", null, null, null, null, null, "?"],
+      ["?", "?", "?", "?", "?", "?", "?"],
+      [null, "?", null, "?", null, "?", null],
+    ],
+    portals: [
+      { x: 3, y: 5 },
+      { x: 0, y: 2 },
+      { x: 3, y: 0 },
+      { x: 6, y: 2 },
+    ],
+    clips: [
+      { x: 3, y: 4 },
+      { x: 3, y: 1 },
+    ],
+  },
 };
 
 export type GridShape =
@@ -98,7 +150,7 @@ export class Grid extends entity.CompositeEntity {
   public lastHovered: nucleotide.Nucleotide | null;
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   _setup() {
@@ -114,7 +166,7 @@ export class Grid extends entity.CompositeEntity {
     this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointermove", this._onPointerMove);
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       this._on(this, "drag", (n: nucleotide.Nucleotide) => {
         console.log(this.getGridPositionOf(n));
       });
@@ -315,7 +367,7 @@ export class Grid extends entity.CompositeEntity {
 
     this.generateShape();
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("--> DONE", "grid.reset()");
     }
   }
@@ -441,9 +493,7 @@ export class Grid extends entity.CompositeEntity {
     return position.x % 2 === 0;
   }
 
-  getForcedMatchingPath(
-    givenLength: number
-  ): {
+  getForcedMatchingPath(givenLength: number): {
     colors: nucleotide.ColorName[];
     nucleotides: nucleotide.Nucleotide[];
   } {
@@ -634,13 +684,10 @@ export class Grid extends entity.CompositeEntity {
   // }
 
   getAbsolutePositionFromGridPosition(gridPos: PIXI.Point): PIXI.Point {
-    const {
-      width,
-      height,
-      dist,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.nucleotideRadius
-    );
+    const { width, height, dist } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        this.level.options.nucleotideRadius
+      );
     const x = width / 2 + gridPos.x * dist.x;
     const y =
       gridPos.y * height -

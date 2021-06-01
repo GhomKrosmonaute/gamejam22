@@ -29,7 +29,7 @@ export const sequenceMatchingOptions: {
   },
   fall: {
     minLength: (ctx) => ctx.sequenceManager.first.baseLength,
-    sticky: "left",
+    sticky: "right",
     sens: "toRight",
   },
   turn: {
@@ -43,7 +43,7 @@ export class SequenceAdjustment extends entity.CompositeEntity {
   private readonly disablingAnimation = "adjustSequences";
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   adjust() {
@@ -150,7 +150,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
     this.generateFirstSequences();
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("--> DONE", "sequenceManager.reset()");
     }
   }
@@ -166,7 +166,7 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get viruses(): virus.Virus[] {
@@ -198,11 +198,10 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   set(colors: nucleotide.ColorName[]) {
-    const {
-      width: nucleotideWidth,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.sequenceNucleotideRadius
-    );
+    const { width: nucleotideWidth } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        this.level.options.sequenceNucleotideRadius
+      );
     const sequence = new Sequence(
       colors,
       new PIXI.Point(
@@ -222,11 +221,10 @@ export class SequenceManager extends entity.CompositeEntity {
 
   add(length?: number) {
     length = length ?? this._pickSequenceLength();
-    const {
-      width: nucleotideWidth,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.sequenceNucleotideRadius
-    );
+    const { width: nucleotideWidth } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        this.level.options.sequenceNucleotideRadius
+      );
     const sequence = new Sequence(
       length,
       new PIXI.Point(
@@ -295,7 +293,7 @@ export class SequenceManager extends entity.CompositeEntity {
     if (removedSequences.length > 0 || partialCrunch) {
       this.level.path.crunchCountBeforeSequenceDown++;
 
-      if (crispr.debug) {
+      if (crispr.inDebugMode()) {
         console.log(
           "updated",
           "crunchCountBeforeSequenceDown",
@@ -426,7 +424,7 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get maxActiveLength(): number {
@@ -478,12 +476,10 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _initNucleotides() {
-    const {
-      width,
-      height,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      this.level.options.sequenceNucleotideRadius
-    );
+    const { width, height } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        this.level.options.sequenceNucleotideRadius
+      );
 
     let forcedSequence: nucleotide.ColorName[] = [];
 
@@ -614,7 +610,10 @@ export class Sequence extends entity.CompositeEntity {
     this.container.interactive = true;
 
     this._on(this.container, "pointerup", () => {
-      this._entityConfig.level.sequenceManager.emit("click", this);
+      this._entityConfig.currentLevelHolder.level.sequenceManager.emit(
+        "click",
+        this
+      );
     });
 
     if (this.level.options.disableViruses) {
@@ -650,7 +649,7 @@ export class Sequence extends entity.CompositeEntity {
         this.level.sequenceWasCrunched = true;
         this.level.crunchedSequenceCount++;
 
-        if (crispr.debug) {
+        if (crispr.inDebugMode()) {
           console.log(
             "updated",
             "crunchedSequenceCount",
@@ -666,7 +665,7 @@ export class Sequence extends entity.CompositeEntity {
         if (isZen && fully && shots === 1) {
           this.level.oneShotLongSequence = true;
 
-          if (crispr.debug) {
+          if (crispr.inDebugMode()) {
             console.log(
               "updated",
               "oneShotLongSequence",
@@ -784,7 +783,7 @@ export class Sequence extends entity.CompositeEntity {
 
             score *= multiplier;
 
-            // if (crispr.debug) {
+            // if (crispr.inDebugMode()) {
             //   console.log("Multiplier:", multiplier, "Score:", score);
             // }
 

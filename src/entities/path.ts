@@ -52,7 +52,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   /** The real length without cuts */
@@ -387,7 +387,7 @@ export class Path extends entity.CompositeEntity {
           //
           //   this.level.score += score;
           //
-          //   if (crispr.debug) {
+          //   if (crispr.inDebugMode()) {
           //     console.log("Multiplier:", multiplier, "Score:", score);
           //   }
           //

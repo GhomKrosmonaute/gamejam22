@@ -6,10 +6,12 @@ import * as entity from "booyah/src/entity";
 import * as narration from "booyah/src/narration";
 
 import * as _main from "./scenes/main";
+import * as menu from "./scenes/menu";
 
 import * as crispr from "./crispr";
 import * as levels from "./levels";
 import * as metrics from "./metrics";
+import * as writeUs from "./scenes/writeUs";
 
 const main = new _main.Main();
 
@@ -20,18 +22,20 @@ const introVideoScene = new narration.VideoScene({
   musicVolume: 2,
   narration: "intro",
   skipButtonOptions: {
-    position: { x: crispr.width - 150, y: 150 },
+    position: { x: 150, y: 150 },
   },
 });
 
 const gameStates: { [k: string]: entity.EntityResolvable } = {
   start: introVideoScene,
   default: main,
+  writeUs: new writeUs.WriteUsPopup(),
   ...levels.levels,
 };
 
 const gameTransitions = {
   start: entity.makeTransition("default"),
+  writeUs: entity.makeTransition("default"),
 };
 
 const graphicalAssets = [
@@ -63,6 +67,9 @@ const graphicalAssets = [
   "images/minimap_virus_3.png",
   "images/minimap_virus_4.png",
   "images/test_preview.png",
+  "images/minimap_write_us.png",
+  "images/minimap_watch_trailer.png",
+  "images/minimap_want_more_levels.png",
 
   "images/menu_home_button.png",
   "images/menu_music_range_full.png",
@@ -244,9 +251,8 @@ const entityInstallers: ((
   audio.installJukebox,
   audio.installFxMachine,
   narration.makeInstallSubtitleNarrator(subtitleNarratorOptions),
-  // booyah.makeInstallMenu({
-  //   menuButtonPosition: new PIXI.Point(crispr.width - 111, 106),
-  // }),
+  levels.makeInstallCurrentLevelHolder(),
+  menu.makeInstallMenu(),
 ];
 
 metrics.init();

@@ -54,7 +54,8 @@ export class Nucleotide extends entity.CompositeEntity {
   private _spriteEntity:
     | entity.AnimatedSpriteEntity
     | entity.DisplayObjectEntity<PIXI.Sprite> = null;
-  private _infectionSpriteEntity: entity.DisplayObjectEntity<PIXI.Sprite> = null;
+  private _infectionSpriteEntity: entity.DisplayObjectEntity<PIXI.Sprite> =
+    null;
   private _highlightSprite: PIXI.Sprite = null;
   private _pathArrowEntity: entity.AnimatedSpriteEntity;
   private _crispyMultiplier = 1;
@@ -76,7 +77,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get pathArrow(): PIXI.AnimatedSprite {
