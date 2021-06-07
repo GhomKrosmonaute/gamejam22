@@ -337,7 +337,7 @@ export class Path extends entity.CompositeEntity {
               //   duration: 250
               // }),
               new entity.ParallelEntity([
-                () => anim.down(n.container, 500, items[index].scale),
+                () => anim.down(n.container, 500, n.container.scale.x),
                 new entity.EntitySequence([
                   new entity.WaitingEntity(250),
                   new entity.FunctionCallEntity(() => {

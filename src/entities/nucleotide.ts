@@ -219,8 +219,11 @@ export class Nucleotide extends entity.CompositeEntity {
     this.middleSprites.forEach((sprite) => {
       sprite.visible = false;
     });
-    if (type === "normal" || type === "joker") this.setRandomCrispyMultiplier();
+
+    if (this.parent === "grid" && (type === "normal" || type === "joker"))
+      this.setRandomCrispyMultiplier();
     else this.crispyMultiplier = 1;
+
     this.getSpriteByType(type).visible = true;
   }
 

@@ -215,6 +215,7 @@ export class Grid extends entity.CompositeEntity {
     );
 
     this._on(this, "pointerup", () => {
+      if (this.level.isDisablingAnimationInProgress) return;
       if (this.level.options.crunchOnPointerUp) {
         const crunch = this.level.attemptCrunch();
         if (crunch) this._activateChildEntity(crunch);
