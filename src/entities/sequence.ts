@@ -676,7 +676,7 @@ export class Sequence extends entity.CompositeEntity {
         waitForAllSteps: true,
         onStep: (item) => {
           item.highlighted = false;
-          return anim.down(item.sprite, 500, item.sprite.scale.x);
+          return anim.down(item.container, 500, item.scale);
         },
       }),
       addScore

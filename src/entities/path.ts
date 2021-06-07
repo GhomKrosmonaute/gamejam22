@@ -246,51 +246,50 @@ export class Path extends entity.CompositeEntity {
         items: this.items,
         timeBetween: 50,
         waitForAllSteps: true,
-        onStep: (n, i, src, finish) => {
+        onStep: (n) => {
           originalPositions.push(n.position.clone());
 
           n.highlighted = false;
-          n.sprite.scale.set(1);
+          n.container.scale.set(n.scale);
           n.pathArrowSprite.visible = false;
 
-          if (n.type === "normal" || n.type === "clip") {
+          if (n.type === "normal") {
             const index = this.normals.indexOf(n);
 
             items[index].highlighted = false;
 
-            this._activateChildEntity(
-              new entity.EntitySequence([
-                !this.level.options.showMatchOnCrunch
-                  ? new entity.FunctionCallEntity(() => null)
-                  : new entity.ParallelEntity([
-                      () =>
-                        anim.move(
-                          n.position,
-                          n.position.clone(),
-                          new PIXI.Point(
-                            items[index].position.x -
-                              this.level.grid.nucleotideContainer.x +
-                              seq.container.x,
-                            items[index].position.y -
-                              this.level.grid.nucleotideContainer.y +
-                              seq.container.y +
-                              60
-                          ),
-                          1000,
-                          easing.easeOutBounce
+            return new entity.EntitySequence([
+              !this.level.options.showMatchOnCrunch
+                ? new entity.FunctionCallEntity(() => null)
+                : new entity.ParallelEntity([
+                    () =>
+                      anim.move(
+                        n.position,
+                        n.position.clone(),
+                        new PIXI.Point(
+                          items[index].position.x -
+                            this.level.grid.nucleotideContainer.x +
+                            seq.container.x,
+                          items[index].position.y -
+                            this.level.grid.nucleotideContainer.y +
+                            seq.container.y +
+                            60
                         ),
-                      () =>
-                        new tween.Tween({
-                          from: n.scale,
-                          to: items[index].scale,
-                          easing: easing.easeOutBounce,
-                          duration: 1000,
-                          onUpdate: (value) => n.container.scale.set(value),
-                        }),
-                    ]),
-                new entity.FunctionCallEntity(() => finish()),
-              ])
-            );
+                        1000,
+                        easing.easeOutBounce
+                      ),
+                    () =>
+                      new tween.Tween({
+                        from: n.scale,
+                        to: items[index].scale,
+                        easing: easing.easeOutBounce,
+                        duration: 1000,
+                        onUpdate: (value) => n.container.scale.set(value),
+                      }),
+                  ]),
+            ]);
+          } else {
+            return new entity.FunctionCallEntity(() => null);
           }
         },
       }),
@@ -321,7 +320,7 @@ export class Path extends entity.CompositeEntity {
         timeBetween: 50,
         waitForAllSteps: true,
         onStep: (n, i) => {
-          if (n.type !== "normal" && n.type !== "clip") {
+          if (n.type !== "normal") {
             return n.switchTypeAnimation("hole");
           } else {
             const index = this.normals.indexOf(n);
@@ -338,7 +337,7 @@ export class Path extends entity.CompositeEntity {
               //   duration: 250
               // }),
               new entity.ParallelEntity([
-                () => anim.down(n.sprite, 500, 1),
+                () => anim.down(n.container, 500, items[index].scale),
                 new entity.EntitySequence([
                   new entity.WaitingEntity(250),
                   new entity.FunctionCallEntity(() => {
@@ -348,9 +347,10 @@ export class Path extends entity.CompositeEntity {
               ]),
               new entity.FunctionCallEntity(() => {
                 n.position.copyFrom(originalPositions[i]);
-                n.container.scale.set(n.scale);
+                n.container.scale.set(0);
+                n.turn(false);
               }),
-              n.switchTypeAnimation("hole"),
+              () => n.switchTypeAnimation("hole"),
             ]);
           }
 

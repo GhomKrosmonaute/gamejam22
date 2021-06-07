@@ -296,6 +296,14 @@ export class Grid extends entity.CompositeEntity {
     });
   }
 
+  static fromShape<T = nucleotide.NucleotideSignatures>(
+    shape: GridArrayShape<T>,
+    x: number,
+    y: number
+  ): T {
+    return shape[y][x];
+  }
+
   generateShape() {
     this.allNucleotides.length = colCount * rowCount;
 
@@ -304,7 +312,7 @@ export class Grid extends entity.CompositeEntity {
 
     // generate
     return anim.sequenced({
-      items: this.regenerateFromShape(this.allNucleotides),
+      items: this.regenerateFromShape(this.allNucleotides.filter((n) => !!n)),
       timeBetween: 50,
       waitForAllSteps: true,
       onStep: (item) => {
@@ -399,26 +407,22 @@ export class Grid extends entity.CompositeEntity {
   }
 
   regenerateFromShape(among: nucleotide.Nucleotide[]) {
-    const edited: nucleotide.Nucleotide[] = [];
-
-    Grid.forShape(this.level.options.gridShape, (x, y, signature) => {
-      const n = this.getNucleotideFromGridPosition(new PIXI.Point(x, y));
-      if (n && among.includes(n)) {
-        if (n.toString() !== nucleotide.NucleotideSignatures[signature]) {
-          const info = nucleotide.Nucleotide.fromSignature(
-            nucleotide.NucleotideSignatures[signature]
-          );
-          n.type = info.type;
-          n.color = info.color;
-          edited.push(n);
-        }
-      }
+    return among.map((n) => {
+      const gridPosition = this.getGridPositionOf(n);
+      const signatureName = Grid.fromShape(
+        this.level.options.gridShape,
+        gridPosition.x,
+        gridPosition.y
+      );
+      const signature = nucleotide.NucleotideSignatures[signatureName];
+      const info = nucleotide.Nucleotide.fromSignature(signature);
+      n.type = info.type;
+      n.color = info.color;
+      return n;
     });
-
-    return edited;
   }
 
-  isOnEvenCol(n: nucleotide.Nucleotide): boolean {
+  isOnEvenCol(n: nucleotide.Nucleotide): boolean | null {
     const position = this.getGridPositionOf(n);
     if (!position) return null;
     return position.x % 2 === 0;
@@ -590,7 +594,7 @@ export class Grid extends entity.CompositeEntity {
   }
 
   getNucleotideFromGridPosition(
-    gridPos: PIXI.Point
+    gridPos: PIXI.IPointData
   ): nucleotide.Nucleotide | undefined {
     return this.allNucleotides[gridPos.y * colCount + gridPos.x];
   }
@@ -687,11 +691,11 @@ export class Grid extends entity.CompositeEntity {
       new entity.FunctionCallEntity(() => {
         if (this.holes.length > 0) this._entityConfig.fxMachine.play("spawn");
       }),
-      () => this.switchSpritesOf(this.regenerateFromShape(this.holes)),
+      () => this.refreshTypeOf(this.regenerateFromShape(this.holes)),
     ]);
   }
 
-  switchSpritesOf(targets: nucleotide.Nucleotide[]) {
+  refreshTypeOf(targets: nucleotide.Nucleotide[]) {
     return new entity.ParallelEntity(
       targets.map((n) => n.switchTypeAnimation(n.type))
     );

@@ -157,6 +157,12 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._colorsAnimatedSpriteEntities[this.color].sprite;
   }
 
+  get colorSprites(): PIXI.AnimatedSprite[] {
+    return Object.values(this._colorsAnimatedSpriteEntities).map(
+      (e) => e.sprite
+    );
+  }
+
   get portalSprite(): PIXI.AnimatedSprite {
     return this._portalAnimatedSpriteEntity.sprite;
   }
@@ -179,7 +185,7 @@ export class Nucleotide extends entity.CompositeEntity {
 
   get middleSprites() {
     return [
-      this.colorSprite,
+      ...this.colorSprites,
       this.jokerSprite,
       this.portalSprite,
       this.holeSprite,
@@ -191,7 +197,7 @@ export class Nucleotide extends entity.CompositeEntity {
     return this.foreContainer.children as (PIXI.AnimatedSprite | PIXI.Sprite)[];
   }
 
-  get sprites(): (PIXI.AnimatedSprite | PIXI.Sprite)[] {
+  get sprites(): PIXI.Container[] {
     return [
       this.pathArrowSprite,
       this.glowSprite,
@@ -209,21 +215,21 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   switchType(type?: keyof typeof NucleotideTypeSprite) {
+    this.type = type;
     this.middleSprites.forEach((sprite) => {
       sprite.visible = false;
     });
-    this[NucleotideTypeSprite[type]].visible = true;
-    this.type = type;
+    this.getSpriteByType(type).visible = true;
   }
 
   switchTypeAnimation(
-    target?: keyof typeof NucleotideTypeSprite,
+    type?: keyof typeof NucleotideTypeSprite,
     callback?: () => unknown
   ) {
     return new entity.EntitySequence([
       this.turnAnimation(false),
       new entity.FunctionCallEntity(() => {
-        this.switchType(target);
+        this.switchType(type);
         callback?.();
       }),
       this.turnAnimation(true),
@@ -380,6 +386,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   _update() {
+    //this.sprite?.scale.set(1);
     this.container.position.copyFrom(this.position);
     this.pathArrowSprite.position.copyFrom(this.position);
   }
@@ -421,7 +428,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   turnAnimation(value: boolean, duration = 500) {
-    if (value === this._active)
+    if (value === this._active && !value)
       return new entity.FunctionCallEntity(() => null);
 
     this.turn(value);
@@ -480,11 +487,8 @@ export class Nucleotide extends entity.CompositeEntity {
 
   toString(): NucleotideSignatures {
     if (!this._active) return NucleotideSignatures.inactive;
-    if (this.type === "clip") return NucleotideSignatures.clip;
-    if (this.type === "portal") return NucleotideSignatures.portal;
-    if (this.type === "joker") return NucleotideSignatures.joker;
-    if (this.type === "hole") return NucleotideSignatures.hole;
-    return NucleotideSignatures[this.color];
+    if (this.type === "normal") return NucleotideSignatures[this.color];
+    else return NucleotideSignatures[this.type];
   }
 
   toJSON(withoutPosition = false): NucleotideJSON {
