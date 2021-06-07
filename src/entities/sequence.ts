@@ -431,6 +431,8 @@ export class Sequence extends entity.CompositeEntity {
         ...nucleotide.Nucleotide.fromSignature(forcedSequence[i]),
       });
 
+      n.container.scale.set(0);
+
       if (i === -1) n.type = "clip";
 
       if (this.virus) {
@@ -450,6 +452,9 @@ export class Sequence extends entity.CompositeEntity {
         })
       );
 
+      n.switchType(n.type);
+      n.turn(true);
+
       this.nucleotides.push(n);
     }
 
@@ -457,37 +462,42 @@ export class Sequence extends entity.CompositeEntity {
       anim.sequenced({
         items: this.nucleotides,
         waitForAllSteps: true,
-        timeBetween: 50,
-        onStep: (item) => {
-          console.log(item);
-          return item.spriteSwitchAnimation(item.sprite);
-        },
-      })
-    );
-
-    if (this.virus) {
-      this._activateChildEntity(
-        anim.sequenced({
-          items: this.nucleotides,
-          waitForAllSteps: true,
-          timeBetween: 250,
-          delay: 500,
-          onStep: (n, index) => {
+        timeBetween: 250,
+        delay: 500,
+        onStep: (n, index) => {
+          if (this.virus) {
             const position = new PIXI.Point(
               index * width * 0.8,
               crispr.approximate(0, height * 0.05)
             );
-            return anim.move(
-              n.position,
-              n.position.clone(),
-              position,
-              1000,
-              easing.easeOutCubic
-            );
-          },
-        })
-      );
-    }
+            return new entity.ParallelEntity([
+              anim.move(
+                n.position,
+                n.position.clone(),
+                position,
+                1000,
+                easing.easeOutCubic
+              ),
+              new tween.Tween({
+                from: 0,
+                to: n.scale,
+                duration: 1000,
+                easing: easing.easeInOutQuint,
+                onUpdate: (value) => n.container.scale.set(value),
+              }),
+            ]);
+          } else {
+            return new tween.Tween({
+              from: 0,
+              to: n.scale,
+              duration: 1000,
+              easing: easing.easeInOutQuint,
+              onUpdate: (value) => n.container.scale.set(value),
+            });
+          }
+        },
+      })
+    );
   }
 
   _setup() {
@@ -878,7 +888,7 @@ export class Sequence extends entity.CompositeEntity {
     if (!segment) return false;
 
     segment.forEach((n) => {
-      this._activateChildEntity(n.turn(false));
+      this._activateChildEntity(n.turnAnimation(false));
     });
 
     return true;

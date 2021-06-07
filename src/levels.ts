@@ -640,15 +640,15 @@ export const levels = {
                           null,
                           [null, null, "yellow", "yellow", "blue"],
                           [null, "blue", "yellow", "blue", "yellow", "blue"],
-                          [null, "blue", "yellow", "yellow", "blue", "blue"],
+                          [null, "blue", "yellow", "clip", "blue", "blue"],
                           [null, "yellow", "blue", "blue", "yellow", "blue"],
                           [null, null, null, "yellow"],
                         ],
                         sequences: [["green", "red", "green", "red", "red"]],
-                        clips: 1,
                         sequenceLength: 6,
                         forceMatching: true,
                         disableButton: false,
+                        disableClips: false,
                         maxLife: 2,
                         hooks: [
                           new l.Hook({
@@ -739,16 +739,17 @@ export const levels = {
                             id: "step 4 => step 5",
                             event: "canReset",
                             reset: {
-                              gridShape: grid.makeGrid(
-                                grid.gridMakerPresets.medium
-                              ),
+                              gridShape: grid.makeGrid({
+                                ...grid.gridMakerPresets.medium,
+                                clips: [{ x: 3, y: 3 }],
+                              }),
                               resetGrid: true,
                               resetScore: true,
                               resetSequences: true,
                               sequenceLength: 5,
                               maxLife: 5,
-                              //clips: 3,
                               sequences: null,
+                              disableClips: false,
                               disableScore: false,
                               disableGauge: false,
                               forceMatching: true,

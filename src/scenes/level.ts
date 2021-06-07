@@ -1248,6 +1248,7 @@ export class Level extends entity.CompositeEntity {
         ? this.remainingMoves.removeOne()
         : new entity.FunctionCallEntity(() => null),
       new entity.ParallelEntity(parallel),
+      () => this.fillHolesEntity(),
       new entity.FunctionCallEntity(() => {
         this.sequenceManager.adjustment.adjust();
       }),
@@ -1281,8 +1282,8 @@ export class Level extends entity.CompositeEntity {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.disablingAnimation("level.fillHoles", true);
-        this.grid.fillHoles();
       }),
+      this.grid.fillHoles(),
       // todo: replace waiting entity by this.grid.fillHoles():SeqenceEntity
       new entity.WaitingEntity(1000),
       new entity.FunctionCallEntity(() => {

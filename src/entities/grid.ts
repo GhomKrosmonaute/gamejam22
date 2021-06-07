@@ -223,7 +223,8 @@ export class Grid extends entity.CompositeEntity {
   }
 
   _update() {
-    if (!this.level.isDisablingAnimationInProgress) this.fillHoles();
+    // if (!this.level.isDisablingAnimationInProgress)
+    //   this._activateChildEntity(this.fillHoles());
 
     if (!this.isPointerDown) return;
 
@@ -301,16 +302,13 @@ export class Grid extends entity.CompositeEntity {
     // colors and shape
     Grid.forShape(this.level.options.gridShape, this.addNucleotide.bind(this));
 
-    // add items
-    this.regenerateFromShape(this.allNucleotides);
-
     // generate
     return anim.sequenced({
-      items: this.allNucleotides.filter((n) => !!n),
+      items: this.regenerateFromShape(this.allNucleotides),
       timeBetween: 50,
       waitForAllSteps: true,
       onStep: (item) => {
-        return item.spriteSwitchAnimation(item.sprite);
+        return item.switchTypeAnimation(item.type);
       },
     });
   }
@@ -374,30 +372,30 @@ export class Grid extends entity.CompositeEntity {
     return this.allNucleotides.filter((n) => n !== undefined);
   }
 
-  getNucleotideByType(
+  getNucleotidesByType(
     type: nucleotide.NucleotideType
   ): nucleotide.Nucleotide[] {
     return this.allNucleotides.filter((n) => n?.type === type);
   }
 
   get clips(): nucleotide.Nucleotide[] {
-    return this.getNucleotideByType("clip");
+    return this.getNucleotidesByType("clip");
   }
 
   get portals(): nucleotide.Nucleotide[] {
-    return this.getNucleotideByType("portal");
+    return this.getNucleotidesByType("portal");
   }
 
   get jokers(): nucleotide.Nucleotide[] {
-    return this.getNucleotideByType("joker");
+    return this.getNucleotidesByType("joker");
   }
 
   get holes(): nucleotide.Nucleotide[] {
-    return this.getNucleotideByType("hole");
+    return this.getNucleotidesByType("hole");
   }
 
   get normals(): nucleotide.Nucleotide[] {
-    return this.getNucleotideByType("normal");
+    return this.getNucleotidesByType("normal");
   }
 
   regenerateFromShape(among: nucleotide.Nucleotide[]) {
@@ -432,7 +430,7 @@ export class Grid extends entity.CompositeEntity {
     colors: nucleotide.NucleotideSignatures[];
     nucleotides: nucleotide.Nucleotide[];
   } {
-    if (this.nucleotides.length === 0) throw new Error("The grid is empty");
+    if (this.nucleotides.length === 0) throw new Error("The grid is empty!");
 
     if (!this.level.options.disableClips && this.clips.length === 0)
       throw new Error("clips are enabled and grid not includes any clip!");
@@ -685,23 +683,17 @@ export class Grid extends entity.CompositeEntity {
   }
 
   fillHoles() {
-    const holes = this.holes;
-
-    if (holes.length === 0) return new entity.FunctionCallEntity(() => null);
-
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        this.regenerateFromShape(holes);
-
-        this._entityConfig.fxMachine.play("spawn");
+        if (this.holes.length > 0) this._entityConfig.fxMachine.play("spawn");
       }),
-      this.switchSpritesOf(holes),
+      () => this.switchSpritesOf(this.regenerateFromShape(this.holes)),
     ]);
   }
 
   switchSpritesOf(targets: nucleotide.Nucleotide[]) {
     return new entity.ParallelEntity(
-      targets.map((n) => n.spriteSwitchAnimation(n.sprite))
+      targets.map((n) => n.switchTypeAnimation(n.type))
     );
   }
 

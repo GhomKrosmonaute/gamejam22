@@ -253,7 +253,7 @@ export class Path extends entity.CompositeEntity {
           n.sprite.scale.set(1);
           n.pathArrowSprite.visible = false;
 
-          if (n.type === "normal") {
+          if (n.type === "normal" || n.type === "clip") {
             const index = this.normals.indexOf(n);
 
             items[index].highlighted = false;
@@ -321,8 +321,8 @@ export class Path extends entity.CompositeEntity {
         timeBetween: 50,
         waitForAllSteps: true,
         onStep: (n, i) => {
-          if (n.type !== "normal") {
-            return n.spriteSwitchAnimation(n.holeSprite);
+          if (n.type !== "normal" && n.type !== "clip") {
+            return n.switchTypeAnimation("hole");
           } else {
             const index = this.normals.indexOf(n);
 
@@ -350,7 +350,7 @@ export class Path extends entity.CompositeEntity {
                 n.position.copyFrom(originalPositions[i]);
                 n.container.scale.set(n.scale);
               }),
-              n.spriteSwitchAnimation(n.holeSprite),
+              n.switchTypeAnimation("hole"),
             ]);
           }
 

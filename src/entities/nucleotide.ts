@@ -26,6 +26,14 @@ export enum NucleotideSignatures {
 export type NucleotideParent = "grid" | "sequence";
 export type NucleotideType = "clip" | "normal" | "portal" | "joker" | "hole";
 
+export enum NucleotideTypeSprite {
+  clip = "clipSprite",
+  normal = "colorSprite",
+  portal = "portalSprite",
+  joker = "jokerSprite",
+  hole = "holeSprite",
+}
+
 export interface NucleotideInformation {
   type: NucleotideType;
   color: NucleotideColor;
@@ -193,31 +201,32 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   get sprite(): PIXI.Sprite | PIXI.AnimatedSprite {
-    switch (this.type) {
-      case "hole":
-        return this.holeSprite;
-      case "clip":
-        return this.clipSprite;
-      case "joker":
-        return this.jokerSprite;
-      case "normal":
-        return this.colorSprite;
-      case "portal":
-        return this.portalSprite;
-    }
+    return this.getSpriteByType(this.type);
   }
 
-  switchSprite(target?: PIXI.Sprite | PIXI.AnimatedSprite) {
+  getSpriteByType(type?: keyof typeof NucleotideTypeSprite) {
+    return this[NucleotideTypeSprite[type]];
+  }
+
+  switchType(type?: keyof typeof NucleotideTypeSprite) {
     this.middleSprites.forEach((sprite) => {
-      sprite.visible = sprite === target;
+      sprite.visible = false;
     });
+    this[NucleotideTypeSprite[type]].visible = true;
+    this.type = type;
   }
 
-  spriteSwitchAnimation(target?: PIXI.Sprite | PIXI.AnimatedSprite) {
+  switchTypeAnimation(
+    target?: keyof typeof NucleotideTypeSprite,
+    callback?: () => unknown
+  ) {
     return new entity.EntitySequence([
-      this.turn(false),
-      new entity.FunctionCallEntity(() => this.switchSprite(target)),
-      this.turn(true),
+      this.turnAnimation(false),
+      new entity.FunctionCallEntity(() => {
+        this.switchType(target);
+        callback?.();
+      }),
+      this.turnAnimation(true),
     ]);
   }
 
@@ -411,11 +420,11 @@ export class Nucleotide extends entity.CompositeEntity {
     return (0.85 * this.width) / 136;
   }
 
-  turn(value: boolean, duration = 500) {
+  turnAnimation(value: boolean, duration = 500) {
     if (value === this._active)
       return new entity.FunctionCallEntity(() => null);
 
-    this._active = value;
+    this.turn(value);
 
     return new tween.Tween({
       from: value ? 0 : this.scale,
@@ -424,6 +433,10 @@ export class Nucleotide extends entity.CompositeEntity {
       easing: value ? easing.easeOutBack : easing.easeInBack,
       onUpdate: (value) => this.container.scale.set(value),
     });
+  }
+
+  turn(value: boolean) {
+    this._active = value;
   }
 
   public set crispyMultiplier(n: number) {
@@ -462,7 +475,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this.setRandomCrispyMultiplier();
     else this.crispyMultiplier = 1;
 
-    if (animated) return this.spriteSwitchAnimation(this.sprite);
+    if (animated) return this.switchTypeAnimation(this.type);
   }
 
   toString(): NucleotideSignatures {
