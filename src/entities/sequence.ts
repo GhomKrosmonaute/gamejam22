@@ -172,7 +172,7 @@ export class SequenceManager extends entity.CompositeEntity {
     return [...this.sequences].map((s) => s.virus).filter((v) => v.isSetup);
   }
 
-  set(colors: nucleotide.NucleotideSignature[]) {
+  set(colors: (keyof typeof nucleotide.NucleotideSignatures)[]) {
     if (this.sequenceCount > 0) return;
     const {
       width: nucleotideWidth,
@@ -306,7 +306,9 @@ export class Sequence extends entity.CompositeEntity {
   };
 
   constructor(
-    public readonly base: number | nucleotide.NucleotideSignature[],
+    public readonly base:
+      | number
+      | (keyof typeof nucleotide.NucleotideSignatures)[],
     private readonly basePosition: PIXI.Point
   ) {
     super();
@@ -374,12 +376,14 @@ export class Sequence extends entity.CompositeEntity {
       nucleotide.nucleotideRadius.sequence
     );
 
-    let forcedSequence: nucleotide.NucleotideSignature[] = [];
+    let forcedSequence: nucleotide.NucleotideSignatures[] = [];
 
     this.level.grid.solution = [];
 
     if (Array.isArray(this.base)) {
-      forcedSequence = this.base.slice(0);
+      forcedSequence = this.base.map(
+        (sign) => nucleotide.NucleotideSignatures[sign]
+      );
     } else if (this.level.options.forceMatching) {
       const forcedMatching = this.level.grid.getForcedMatchingPath(
         this.baseLength

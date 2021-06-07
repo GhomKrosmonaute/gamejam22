@@ -130,8 +130,8 @@ export interface LevelOptions {
   gaugeRings: ((level: Level, ring: hud.Ring) => unknown)[];
   sequenceLength: number | ((level: Level) => number);
   sequenceRounded: boolean;
-  gridShape: grid.GridArrayShape<nucleotide.NucleotideSignature>;
-  sequences: nucleotide.NucleotideSignature[][] | null;
+  gridShape: grid.GridArrayShape<keyof typeof nucleotide.NucleotideSignatures>;
+  sequences: (keyof typeof nucleotide.NucleotideSignatures)[][] | null;
   forceMatching: boolean;
   hooks: Hook[];
   initialBonuses: bonuses.InitialBonuses;
@@ -248,7 +248,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   actionButtonSprite: "images/hud_action_button.png",
 
   sequenceRounded: false,
-  gridShape: [],
+  gridShape: crispr.makeGrid(crispr.gridMakerPresets.medium),
   forceMatching: false,
   hooks: [],
   initialBonuses: [],

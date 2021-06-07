@@ -25,6 +25,8 @@ export const rowCount = 7;
 
 export type GridArrayShape<T = true> = ((T | null)[] | null)[];
 
+export type GridFilter = (x: number, y: number) => boolean;
+
 /** Represent the game nucleotides grid
  *
  * Emits
@@ -109,30 +111,6 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides = [];
   }
 
-  get shape(): nucleotide.NucleotideSignature[][] {
-    const shape: nucleotide.NucleotideSignature[][] = [];
-    for (let y = 0; y < colCount; y++) {
-      shape.push([]);
-      for (let x = 0; x < rowCount; x++) {
-        const n = this.getNucleotideFromGridPosition(new PIXI.Point(x, y));
-        if (n) {
-          if (n.type === "normal") {
-            shape[y][x] = n.colorLetter;
-          } else if (n.type === "joker") {
-            shape[y][x] = "*";
-          } else if (n.type === "portal") {
-            shape[y][x] = "";
-          } else if (n.type === "hole") {
-            shape[y][x] = " ";
-          } else {
-            shape[y][x] = "c";
-          }
-        }
-      }
-    }
-    return shape;
-  }
-
   applySolution(): entity.EntityBase {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
@@ -156,7 +134,7 @@ export class Grid extends entity.CompositeEntity {
   addNucleotide(
     x: number,
     y: number,
-    signature?: nucleotide.NucleotideSignature
+    signature?: nucleotide.NucleotideSignatures
   ) {
     const n = new nucleotide.Nucleotide({
       parent: "grid",
@@ -173,7 +151,7 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides[y * colCount + x] = n;
   }
 
-  static forShape<T = nucleotide.NucleotideSignature>(
+  static forShape<T = nucleotide.NucleotideSignatures>(
     shape: GridArrayShape<T>,
     fn: (x: number, y: number, val: T) => unknown
   ) {
@@ -298,8 +276,10 @@ export class Grid extends entity.CompositeEntity {
     Grid.forShape(this.level.options.gridShape, (x, y, signature) => {
       const n = this.getNucleotideFromGridPosition(new PIXI.Point(x, y));
       if (n && among.includes(n)) {
-        if (n.toString() !== signature) {
-          const info = nucleotide.Nucleotide.fromSignature(signature);
+        if (n.toString() !== nucleotide.NucleotideSignatures[signature]) {
+          const info = nucleotide.Nucleotide.fromSignature(
+            nucleotide.NucleotideSignatures[signature]
+          );
           n.type = info.type;
           n.color = info.color;
           edited.push(n);
@@ -319,13 +299,13 @@ export class Grid extends entity.CompositeEntity {
   getForcedMatchingPath(
     givenLength: number
   ): {
-    colors: nucleotide.NucleotideColorLetter[];
+    colors: nucleotide.NucleotideSignatures[];
     nucleotides: nucleotide.Nucleotide[];
   } {
     let security = 5000;
 
     let output: {
-      colors: nucleotide.NucleotideColorLetter[];
+      colors: nucleotide.NucleotideSignatures[];
       nucleotides: nucleotide.Nucleotide[];
     } = null;
 
@@ -353,7 +333,7 @@ export class Grid extends entity.CompositeEntity {
         : Math.min(givenLength, island.length);
 
       const passed: {
-        colors: nucleotide.NucleotideColorLetter[];
+        colors: nucleotide.NucleotideSignatures[];
         nucleotides: nucleotide.Nucleotide[];
       } = {
         colors: [],
@@ -365,7 +345,8 @@ export class Grid extends entity.CompositeEntity {
       const addAndFocus = (n: nucleotide.Nucleotide) => {
         current = n;
         passed.nucleotides.push(n);
-        if (is(current)) passed.colors.push(n.colorLetter);
+        if (is(current))
+          passed.colors.push(nucleotide.NucleotideSignatures[n.color]);
       };
 
       // get all color-based nucleotides

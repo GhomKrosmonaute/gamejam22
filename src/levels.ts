@@ -7,7 +7,6 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as popup from "./entities/popup";
-import * as grid from "./entities/grid";
 
 import * as l from "./scenes/level";
 
@@ -504,7 +503,7 @@ export const levels = {
       noCrispyBonus: true,
       disableClips: true,
       gridShape: [],
-      sequences: [["r", "g", "b"]],
+      sequences: [["red", "green", "blue"]],
       disableButton: true,
       disableBonuses: true,
       disableGauge: true,
@@ -557,9 +556,9 @@ export const levels = {
             gridShape: [
               [],
               [],
-              [null, null, "y", "g", "r"],
-              [null, null, "b", "g", "g"],
-              [null, null, null, "b"],
+              [null, null, "yellow", "green", "red"],
+              [null, null, "blue", "green", "green"],
+              [null, null, null, "blue"],
               [],
               [],
             ],
@@ -587,12 +586,11 @@ export const levels = {
                 id: "step 2 => step 3",
                 event: "sequenceDown",
                 reset: {
-                  gridShape: [],
+                  gridShape: crispr.makeGrid(crispr.gridMakerPresets.mini),
                   resetGrid: true,
                   resetSequences: true,
                   forceMatching: true,
                   disableButton: true,
-                  //clips: 1,
                   sequenceLength: 4,
                   hooks: [
                     new l.Hook({
@@ -636,13 +634,13 @@ export const levels = {
                         resetSequences: true,
                         gridShape: [
                           null,
-                          [null, null, "y", "y", "b"],
-                          [null, "b", "y", "b", "y", "b"],
-                          [null, "b", "y", "y", "b", "b"],
-                          [null, "y", "b", "b", "y", "b"],
-                          [null, null, null, "y"],
+                          [null, null, "yellow", "yellow", "blue"],
+                          [null, "blue", "yellow", "blue", "yellow", "blue"],
+                          [null, "blue", "yellow", "yellow", "blue", "blue"],
+                          [null, "yellow", "blue", "blue", "yellow", "blue"],
+                          [null, null, null, "yellow"],
                         ],
-                        sequences: [["g", "r", "g", "r", "r"]],
+                        sequences: [["green", "red", "green", "red", "red"]],
                         clips: 1,
                         sequenceLength: 6,
                         forceMatching: true,
