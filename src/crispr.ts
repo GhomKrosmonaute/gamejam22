@@ -5,7 +5,11 @@ import * as entity from "booyah/src/entity";
 
 import * as level from "./scenes/level";
 
+import * as grid from "./entities/grid";
+import * as nucleotide from "./entities/nucleotide";
+
 import * as game from "./game";
+import { colCount, rowCount } from "./entities/grid";
 
 export const width = 1080;
 export const height = 1920;
@@ -153,6 +157,42 @@ export function makeText(
   );
   pixiText.anchor.set(0.5);
   return pixiText;
+}
+
+export function makeGrid(options: {
+  filter?: (x: number, y: number) => boolean;
+  portals?: PIXI.IPointData[];
+  jokers?: PIXI.IPointData[];
+  clips?: PIXI.IPointData[];
+}): grid.GridArrayShape<nucleotide.NucleotideSignatures> {
+  const shape: grid.GridArrayShape<nucleotide.NucleotideSignatures> = [];
+  const filter = options.filter ?? (() => true);
+  const portals = options.portals ?? [];
+  const jokers = options.jokers ?? [];
+  const clips = options.clips ?? [];
+
+  for (let y = 0; y < colCount; y++) {
+    shape.push([]);
+    for (let x = 0; x < rowCount; x++) {
+      shape[y][x] = filter(x, y)
+        ? nucleotide.NucleotideSignatures.random
+        : null;
+    }
+  }
+
+  portals.forEach(
+    ({ x, y }) => (shape[y][x] = nucleotide.NucleotideSignatures.portal)
+  );
+
+  jokers.forEach(
+    ({ x, y }) => (shape[y][x] = nucleotide.NucleotideSignatures.joker)
+  );
+
+  clips.forEach(
+    ({ x, y }) => (shape[y][x] = nucleotide.NucleotideSignatures.clip)
+  );
+
+  return shape;
 }
 
 export type Axe = "x" | "y";

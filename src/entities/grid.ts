@@ -346,7 +346,7 @@ export class Grid extends entity.CompositeEntity {
           : islands.filter((island) => island.some((n) => n.type === "clip"))
       );
 
-      if (!island) continue;
+      if (!island) throw new Error("The grid is not defined with a array!");
 
       let length = island.some((n) => n.type === "portal")
         ? givenLength

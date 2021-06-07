@@ -10,16 +10,21 @@ import * as level from "../scenes/level";
 import * as anim from "../animations";
 import * as crispr from "../crispr";
 
+export enum NucleotideSignatures {
+  portal = "",
+  clip = "c",
+  random = "?",
+  joker = "*",
+  hole = " ",
+  inactive = "x",
+  blue = "b",
+  red = "r",
+  green = "g",
+  yellow = "y",
+}
+
 export type NucleotideParent = "grid" | "sequence";
 export type NucleotideType = "clip" | "normal" | "portal" | "joker" | "hole";
-export type NucleotideSignature =
-  | "x"
-  | "c"
-  | "*"
-  | " "
-  | "?"
-  | ""
-  | NucleotideColorLetter;
 
 export interface NucleotideInformation {
   type: NucleotideType;
@@ -35,8 +40,14 @@ export interface NucleotideJSON {
   position?: PIXI.IPointData;
 }
 
-export type NucleotideColorLetter = "b" | "r" | "g" | "y";
-export type NucleotideColor = "blue" | "red" | "green" | "yellow";
+export enum NucleotideColorLetters {
+  blue = "b",
+  red = "r",
+  green = "g",
+  yellow = "y",
+}
+
+export type NucleotideColor = keyof typeof NucleotideColorLetters;
 export const nucleotideColors: NucleotideColor[] = [
   "blue",
   "red",
@@ -126,8 +137,8 @@ export class Nucleotide extends entity.CompositeEntity {
     return this._active;
   }
 
-  get colorLetter(): NucleotideColorLetter {
-    return this.color[0] as NucleotideColorLetter;
+  get colorLetter(): NucleotideColorLetters {
+    return NucleotideColorLetters[this.color];
   }
 
   get pathArrowSprite(): PIXI.AnimatedSprite {
@@ -454,13 +465,13 @@ export class Nucleotide extends entity.CompositeEntity {
     if (animated) return this.spriteSwitchAnimation(this.sprite);
   }
 
-  toString(): NucleotideSignature {
-    if (!this._active) return "x";
-    if (this.type === "clip") return "c";
-    if (this.type === "portal") return "";
-    if (this.type === "joker") return "*";
-    if (this.type === "hole") return " ";
-    return this.colorLetter;
+  toString(): NucleotideSignatures {
+    if (!this._active) return NucleotideSignatures.inactive;
+    if (this.type === "clip") return NucleotideSignatures.clip;
+    if (this.type === "portal") return NucleotideSignatures.portal;
+    if (this.type === "joker") return NucleotideSignatures.joker;
+    if (this.type === "hole") return NucleotideSignatures.hole;
+    return NucleotideSignatures[this.color];
   }
 
   toJSON(withoutPosition = false): NucleotideJSON {
@@ -491,7 +502,7 @@ export class Nucleotide extends entity.CompositeEntity {
     ];
   }
 
-  static fromSignature(signature: NucleotideSignature): NucleotideInformation {
+  static fromSignature(signature: NucleotideSignatures): NucleotideInformation {
     const result: NucleotideInformation = {
       active: signature !== "x",
       type: "normal",

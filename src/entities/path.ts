@@ -224,10 +224,14 @@ export class Path extends entity.CompositeEntity {
   }
 
   crunch() {
-    let originalPositions: PIXI.Point[] = [];
+    let originalPositions: PIXI.Point[] = [],
+      items: nucleotide.Nucleotide[],
+      seq = this.level.sequenceManager.first;
     if (this.length === 0) return new entity.FunctionCallEntity(() => null);
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
+        items = seq.nucleotides.slice();
+
         this.level.screenShake(10, 1.02, 100);
         this.level.disablingAnimation("path.crunch", true);
 
@@ -246,15 +250,14 @@ export class Path extends entity.CompositeEntity {
         onStep: (n, i, src, finish) => {
           originalPositions.push(n.position.clone());
 
-          const seq = [...this.level.sequenceManager.sequences][0];
-          const items = seq.nucleotides.slice();
-
-          //n.isHighlighted = false;
+          n.highlighted = false;
           n.sprite.scale.set(1);
           n.pathArrowSprite.visible = false;
 
           if (n.type === "normal") {
             const index = this.normals.indexOf(n);
+
+            items[index].highlighted = false;
 
             this._activateChildEntity(
               new entity.EntitySequence([
@@ -279,12 +282,11 @@ export class Path extends entity.CompositeEntity {
                         ),
                       () =>
                         new tween.Tween({
-                          from: n.shakeContainer.scale.x,
-                          to: items[index].shakeContainer.scale.x,
+                          from: n.scale,
+                          to: items[index].scale,
                           easing: easing.easeOutBounce,
                           duration: 1000,
-                          onUpdate: (value) =>
-                            n.shakeContainer.scale.set(value),
+                          onUpdate: (value) => n.container.scale.set(value),
                         }),
                     ]),
                 new entity.FunctionCallEntity(() => finish()),
