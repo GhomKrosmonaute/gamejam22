@@ -347,10 +347,12 @@ export const levels = {
   Chrono: () =>
     new l.Level("Chrono", (context) => ({
       variant: "fall",
-      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.medium,
+        clips: [{ x: 3, y: 3 }],
+      }),
       forceMatching: true,
       crispyBonusRate: 0.3,
-      //clips: 3,
       gaugeRings: [
         (context) =>
           context.bonusesManager.add(
@@ -437,9 +439,12 @@ export const levels = {
       variant: "turn",
       minStarNeeded: 1,
       forceMatching: true,
-      noCrispyBonus: true,
-      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
-      //clips: 3,
+      noCrispyBonus: false,
+      crispyBonusRate: 0.2,
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.medium,
+        clips: [{ x: 3, y: 3 }],
+      }),
       gaugeRings: [
         (context, ring) =>
           context.activate(
@@ -671,7 +676,7 @@ export const levels = {
                             once: true,
                             event: "minimizedPopup",
                             filter: (p) => p.id === "popup skip button",
-                            delay: 5000,
+                            delay: 2000,
                             entity: new entity.FunctionCallEntity(() => {
                               level.disablingAnimation("tutorial", false);
 
@@ -680,7 +685,7 @@ export const levels = {
 
                               level.activate(
                                 new entity.EntitySequence([
-                                  new entity.WaitingEntity(2000),
+                                  new entity.WaitingEntity(1000),
                                   anim.finger(level, {
                                     container: level.entityConfig.container,
                                     to: { x: buttonPos.x, y: buttonPos.y },
@@ -744,6 +749,8 @@ export const levels = {
                                 ...grid.gridMakerPresets.medium,
                                 clips: [{ x: 3, y: 3 }],
                               }),
+                              crispyBonusRate: 0.2,
+                              noCrispyBonus: false,
                               resetGrid: true,
                               resetScore: true,
                               resetSequences: true,

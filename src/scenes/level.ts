@@ -932,7 +932,6 @@ export class Level extends entity.CompositeEntity {
 
     if (this.options.winCondition(this)) {
       this.finished = true;
-      this.minimap.saveResults(this);
       this._activateChildEntity(
         new entity.EntitySequence([
           new entity.WaitingEntity(2000),
@@ -1206,8 +1205,7 @@ export class Level extends entity.CompositeEntity {
     return { pathSignature, sequenceSignature };
   }
 
-  exit(save: boolean = false) {
-    if (save) this.minimap.saveResults(this);
+  exit() {
     this._transition = entity.makeTransition();
   }
 

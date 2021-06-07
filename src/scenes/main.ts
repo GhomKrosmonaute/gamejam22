@@ -292,6 +292,7 @@ export class Main extends entity.CompositeEntity {
   }
 
   public saveResults(l: level.Level) {
+    debugger;
     const results = l.checkAndReturnsResults();
     let oldResults: level.LevelResults;
     const data = localStorage.getItem(l.name);
@@ -299,5 +300,6 @@ export class Main extends entity.CompositeEntity {
     if (!oldResults || oldResults.checkedCount < results.checkedCount) {
       localStorage.setItem(l.name, JSON.stringify(results));
     }
+    this._transition = entity.makeTransition();
   }
 }

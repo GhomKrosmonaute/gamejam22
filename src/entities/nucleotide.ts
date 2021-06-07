@@ -219,6 +219,8 @@ export class Nucleotide extends entity.CompositeEntity {
     this.middleSprites.forEach((sprite) => {
       sprite.visible = false;
     });
+    if (type === "normal" || type === "joker") this.setRandomCrispyMultiplier();
+    else this.crispyMultiplier = 1;
     this.getSpriteByType(type).visible = true;
   }
 
@@ -475,14 +477,6 @@ export class Nucleotide extends entity.CompositeEntity {
       else if (rand < 0.25) this.crispyMultiplier = 3;
       else this.crispyMultiplier = 2;
     } else this.crispyMultiplier = 1;
-  }
-
-  public refreshSprites(animated = false) {
-    if (this.type === "normal" || this.type === "joker")
-      this.setRandomCrispyMultiplier();
-    else this.crispyMultiplier = 1;
-
-    if (animated) return this.switchTypeAnimation(this.type);
   }
 
   toString(): NucleotideSignatures {
