@@ -7,6 +7,7 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as popup from "./entities/popup";
+import * as grid from "./entities/grid";
 
 import * as l from "./scenes/level";
 
@@ -19,7 +20,7 @@ export const levels = {
   // Hard
   "Big\nBoss": () =>
     new l.Level("Big\nBoss", (ctx) => ({
-      gridShape: [],
+      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       forceMatching: false,
       sequenceLength: 6,
       // jokers: 1,
@@ -29,7 +30,7 @@ export const levels = {
     })),
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
-      gridShape: [],
+      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       forceMatching: false,
       sequenceLength: 4,
 
@@ -115,7 +116,7 @@ export const levels = {
       virus: "big",
       variant: "turn",
       fallingSpeed: 1,
-      gridShape: [],
+      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       sequenceLength: 7,
       forceMatching: true,
       //portals: 4,
@@ -172,7 +173,7 @@ export const levels = {
   "Chrono\nPortal": () =>
     new l.Level("Chrono\nPortal", (context) => ({
       variant: "fall",
-      gridShape: [],
+      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       forceMatching: true,
       // portals: 2,
       // clips: 1,
@@ -209,7 +210,7 @@ export const levels = {
     })),
   "Four\nIslands": () =>
     new l.Level("Four\nIslands", (context) => ({
-      gridShape: [],
+      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       forceMatching: true,
       // clips: 3,
       // portals: 4,
@@ -217,7 +218,7 @@ export const levels = {
     })),
   "Two Islands": () =>
     new l.Level("Two Islands", (context) => ({
-      gridShape: [],
+      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       forceMatching: true,
       //portals: 6,
       hooks: [
@@ -248,7 +249,7 @@ export const levels = {
       virus: "big",
       variant: "fall",
       fallingSpeed: 1,
-      gridShape: [],
+      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       sequenceLength: 7,
       forceMatching: true,
       //clips: 3,
@@ -324,7 +325,7 @@ export const levels = {
   Zen: () =>
     new l.Level("Zen", {
       variant: "zen",
-      gridShape: [],
+      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       forceMatching: true,
       hooks: [
         new l.Hook({
@@ -346,7 +347,7 @@ export const levels = {
   Chrono: () =>
     new l.Level("Chrono", (context) => ({
       variant: "fall",
-      gridShape: [],
+      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       forceMatching: true,
       crispyBonusRate: 0.3,
       //clips: 3,
@@ -437,7 +438,7 @@ export const levels = {
       minStarNeeded: 1,
       forceMatching: true,
       noCrispyBonus: true,
-      gridShape: [],
+      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       //clips: 3,
       gaugeRings: [
         (context, ring) =>
@@ -586,7 +587,10 @@ export const levels = {
                 id: "step 2 => step 3",
                 event: "sequenceDown",
                 reset: {
-                  gridShape: crispr.makeGrid(crispr.gridMakerPresets.mini),
+                  gridShape: grid.makeGrid({
+                    ...grid.gridMakerPresets.mini,
+                    clips: [{ x: 3, y: 3 }],
+                  }),
                   resetGrid: true,
                   resetSequences: true,
                   forceMatching: true,
@@ -735,7 +739,9 @@ export const levels = {
                             id: "step 4 => step 5",
                             event: "canReset",
                             reset: {
-                              gridShape: [],
+                              gridShape: grid.makeGrid(
+                                grid.gridMakerPresets.medium
+                              ),
                               resetGrid: true,
                               resetScore: true,
                               resetSequences: true,

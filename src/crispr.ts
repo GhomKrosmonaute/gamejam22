@@ -1,3 +1,6 @@
+export const width = 1080;
+export const height = 1920;
+
 import * as PIXI from "pixi.js";
 
 import * as geom from "booyah/src/geom";
@@ -6,13 +9,9 @@ import * as entity from "booyah/src/entity";
 import * as level from "./scenes/level";
 
 import * as grid from "./entities/grid";
-import * as nucleotide from "./entities/nucleotide";
 
 import * as game from "./game";
 import { colCount, rowCount } from "./entities/grid";
-
-export const width = 1080;
-export const height = 1920;
 
 const searchParams = new URL(window.location.href).searchParams;
 const _hasDebug = searchParams.has("debug");
@@ -157,139 +156,6 @@ export function makeText(
   );
   pixiText.anchor.set(0.5);
   return pixiText;
-}
-
-export const gridMakerPresets: { [k: string]: GridMakerOptions } = {
-  full: {},
-  mini: {
-    filter: (x, y) =>
-      !(x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0)),
-  },
-  medium: {
-    filter: (x, y) =>
-      !(
-        x < 1 ||
-        x > 5 ||
-        y < 1 ||
-        y > 5 ||
-        (x === 1 && y === 1) ||
-        (x === 5 && y === 1) ||
-        (x !== 3 && x > 0 && x < 6 && y === 5)
-      ),
-  },
-  fourIslands: {
-    portals: [
-      { x: 1, y: 1 },
-      { x: 5, y: 1 },
-      { x: 1, y: 5 },
-      { x: 5, y: 5 },
-    ],
-    filter: (x, y) =>
-      !(
-        (x > 2 || y < 4 || y > 6) &&
-        (x < 4 || y < 4 || y > 6) &&
-        (x > 2 || y > 2 || (y === 2 && (x === 0 || x === 2))) &&
-        (x < 4 || y > 2 || (y === 2 && (x === 4 || x === 6)))
-      ),
-  },
-  littleBridge: {
-    filter: (x, y) =>
-      !(
-        (x > 2 || y < 1 || y > 5 || (y === 5 && (x === 0 || x === 2))) &&
-        (x !== 3 || y !== 3) &&
-        (x < 4 || y < 1 || y > 5 || (y === 5 && (x === 4 || x === 6)))
-      ),
-  },
-  bowTie: {
-    filter: (x, y) =>
-      !(
-        y < 1 ||
-        y > 4 ||
-        (y === 4 && x > 1 && x < 5) ||
-        (y === 1 && x > 0 && x < 6) ||
-        (x === 3 && y === 2)
-      ),
-  },
-  hole: {
-    filter: (x, y) =>
-      !(
-        (x > 1 &&
-          x < 5 &&
-          y > 1 &&
-          y < 5 &&
-          !(y === 4 && (x === 2 || x === 4))) ||
-        (y === 0 && (x < 2 || x > 4)) ||
-        (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5))
-      ),
-  },
-  hive: {
-    filter: (x, y) => !(x % 2 !== 0 && y % 2 === 0),
-  },
-};
-
-export const madeGrids: {
-  [k: string]: grid.GridArrayShape<
-    keyof typeof nucleotide.NucleotideSignatures
-  >;
-} = {
-  around: [
-    ["random", "random", "random", "portal", "random", "random", "random"],
-    ["random", "portal", null, "clip", null, "portal", "random"],
-    ["portal", null, null, null, null, null, "portal"],
-    ["random", null, null, null, null, null, "random"],
-    ["random", "random", "random", "clip", "random", "portal", "random"],
-    [null, "random", null, "portal", null, "random", null],
-  ],
-  bone: [
-    ["random", "random", "random", null, "random", "random", "random"],
-    ["random", "random", "random", null, null, "random", "random"],
-    [null, "random", "random", "random", "random", null, null],
-    ["random", null, null, "random", "random", "random", "random"],
-    ["random", "portal", "random", null, "random", "random", "random"],
-    [null, "random", null, null, null, "random", null],
-  ],
-  mediumPortal: [
-    [null, null, "random", null, "random", null, null],
-    ["random", "random", "random", null, "random", "random", "random"],
-    ["random", "clip", "portal", null, "portal", "clip", "random"],
-    ["random", "random", "random", null, "random", "random", "random"],
-    [null, "random", "random", null, "random", "random", null],
-    [null, null, null, null, null, null, null],
-  ],
-};
-
-export interface GridMakerOptions {
-  filter?: grid.GridFilter;
-  portals?: PIXI.IPointData[];
-  jokers?: PIXI.IPointData[];
-  clips?: PIXI.IPointData[];
-}
-
-export function makeGrid(
-  options: GridMakerOptions
-): grid.GridArrayShape<keyof typeof nucleotide.NucleotideSignatures> {
-  const shape: grid.GridArrayShape<
-    keyof typeof nucleotide.NucleotideSignatures
-  > = [];
-  const filter = options.filter ?? (() => true);
-  const portals = options.portals ?? [];
-  const jokers = options.jokers ?? [];
-  const clips = options.clips ?? [];
-
-  for (let y = 0; y < colCount; y++) {
-    shape.push([]);
-    for (let x = 0; x < rowCount; x++) {
-      shape[y][x] = filter(x, y) ? "random" : null;
-    }
-  }
-
-  portals.forEach(({ x, y }) => (shape[y][x] = "portal"));
-
-  jokers.forEach(({ x, y }) => (shape[y][x] = "joker"));
-
-  clips.forEach(({ x, y }) => (shape[y][x] = "clip"));
-
-  return shape;
 }
 
 export type Axe = "x" | "y";

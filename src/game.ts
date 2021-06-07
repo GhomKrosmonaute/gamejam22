@@ -5,11 +5,11 @@ import * as audio from "booyah/src/audio";
 import * as entity from "booyah/src/entity";
 import * as narration from "booyah/src/narration";
 
-import * as _main from "./scenes/main";
-
 import * as crispr from "./crispr";
 import * as levels from "./levels";
 import * as metrics from "./metrics";
+
+import * as _main from "./scenes/main";
 
 const main = new _main.Main();
 

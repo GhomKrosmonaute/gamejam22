@@ -9,7 +9,6 @@ import * as nucleotide from "./nucleotide";
 import * as level from "../scenes/level";
 
 import * as anim from "../animations";
-import * as crispr from "../crispr";
 
 export type PathState =
   | "no match"

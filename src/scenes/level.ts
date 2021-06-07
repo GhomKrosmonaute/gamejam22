@@ -248,7 +248,7 @@ export const defaultLevelOptions: Readonly<LevelOptions> = {
   actionButtonSprite: "images/hud_action_button.png",
 
   sequenceRounded: false,
-  gridShape: crispr.makeGrid(crispr.gridMakerPresets.medium),
+  gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
   forceMatching: false,
   hooks: [],
   initialBonuses: [],
