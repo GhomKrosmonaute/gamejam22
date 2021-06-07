@@ -432,6 +432,11 @@ export class Grid extends entity.CompositeEntity {
     colors: nucleotide.NucleotideSignatures[];
     nucleotides: nucleotide.Nucleotide[];
   } {
+    if (this.nucleotides.length === 0) throw new Error("The grid is empty");
+
+    if (!this.level.options.disableClips && this.clips.length === 0)
+      throw new Error("clips are enabled and grid not includes any clip!");
+
     let security = 5000;
 
     let output: {
@@ -456,10 +461,7 @@ export class Grid extends entity.CompositeEntity {
           : islands.filter((island) => island.some((n) => n.type === "clip"))
       );
 
-      if (!island)
-        throw new Error(
-          "The grid is empty or clips are enabled and grid not includes any clip!"
-        );
+      if (!island) continue;
 
       let length = island.some((n) => n.type === "portal")
         ? givenLength
