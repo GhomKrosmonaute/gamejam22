@@ -511,7 +511,7 @@ export const levels = {
       disableScore: true,
       disablingAnimations: ["tutorial"],
       checks: {
-        "Not infected": (context) => context.wasInfected,
+        "Not infected": (context) => !context.wasInfected,
       },
       hooks: [
         new l.Hook({
@@ -706,6 +706,7 @@ export const levels = {
                             entity: new entity.EntitySequence([
                               new entity.WaitingEntity(1500),
                               new entity.FunctionCallEntity(() => {
+                                context.wasInfected = false;
                                 context.activate(
                                   new popup.TutorialPopup({
                                     title: "Infection",
@@ -765,6 +766,7 @@ export const levels = {
                                   entity: new entity.EntitySequence([
                                     new entity.WaitingEntity(1500),
                                     new entity.FunctionCallEntity(() => {
+                                      context.wasInfected = false;
                                       context.life = 5;
                                       context.disablingAnimation(
                                         "preventVirus",
