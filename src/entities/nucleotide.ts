@@ -211,7 +211,10 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   _setup() {
-    this.shakes.setFloat("floating", this.floating);
+    {
+      this.shakes.setFloat("floating", this.floating);
+      this._activateChildEntity(this.shakes);
+    }
 
     // path arrow
     {
@@ -222,6 +225,7 @@ export class Nucleotide extends entity.CompositeEntity {
       this.pathArrowSprite.loop = true;
       this.pathArrowSprite.visible = false;
       this.pathArrowSprite.anchor.set(0.5, 1);
+      this.pathArrowSprite.scale.set(1.2);
       this.pathArrowSprite.animationSpeed = 0.4;
 
       this._activateChildEntity(
@@ -319,40 +323,45 @@ export class Nucleotide extends entity.CompositeEntity {
         this,
         `images/nucleotide_glow_${this.parent}.png`
       );
-      this._glowSprite.anchor.set(0.5);
-      this._glowSprite.alpha = 0.5;
-      this._glowSprite.visible = false;
+      this.glowSprite.anchor.set(0.5);
+      //this.glowSprite.alpha = 0.5;
+      this.glowSprite.scale.set(1.1);
+      this.glowSprite.visible = false;
     }
 
     // hole
     {
       this._holeSprite = crispr.sprite(this, "images/hole.png");
-      this._holeSprite.anchor.set(0.5);
-      this._holeSprite.visible = false;
+      this.holeSprite.anchor.set(0.5);
+      this.holeSprite.visible = false;
     }
 
     // clip
     {
       this._clipSprite = crispr.sprite(this, `images/clip_${this.parent}.png`);
-      this._clipSprite.anchor.set(0.5);
-      this._clipSprite.visible = false;
+      this.clipSprite.anchor.set(0.5);
+      this.clipSprite.visible = false;
     }
 
-    this.backContainer.addChild(this._glowSprite);
-    this.middleContainer.addChild(this._holeSprite, this._clipSprite);
-    this.shakeContainer.addChild(
-      this.backContainer,
-      this.middleContainer,
-      this.foreContainer
-    );
+    // containers
+    {
+      this.backContainer.addChild(this._glowSprite);
+      this.middleContainer.addChild(this._holeSprite, this._clipSprite);
+      this.shakeContainer.addChild(
+        this.backContainer,
+        this.middleContainer,
+        this.foreContainer
+      );
 
-    this.container.addChild(this.shakeContainer);
+      this.container.addChild(this.shakeContainer);
+    }
 
     this._entityConfig.container.addChild(this.container);
   }
 
   _update() {
     this.container.position.copyFrom(this.position);
+    this.pathArrowSprite.position.copyFrom(this.position);
   }
 
   _teardown() {
@@ -365,11 +374,11 @@ export class Nucleotide extends entity.CompositeEntity {
   set highlighted(isHighlighted: boolean) {
     if (isHighlighted && !this._highlighted) {
       this.shakes.setShake("highlight", 2);
-      this.shakeContainer.scale.set(this.scale + 0.2);
+      this.container.scale.set(this.scale * 1.05);
       this.glowSprite.visible = true;
     } else if (!isHighlighted && this._highlighted) {
       this.shakes.removeShake("highlight");
-      this.shakeContainer.scale.set(this.scale);
+      this.container.scale.set(this.scale);
       this.glowSprite.visible = false;
     }
     this._highlighted = isHighlighted;

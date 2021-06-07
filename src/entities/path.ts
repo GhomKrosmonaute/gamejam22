@@ -345,22 +345,10 @@ export class Path extends entity.CompositeEntity {
                   }),
                 ]),
               ]),
-              () =>
-                new tween.Tween({
-                  from: n.shakeContainer.scale.x,
-                  to: 1,
-                  easing: easing.linear,
-                  duration: 1,
-                  onUpdate: (value) => n.shakeContainer.scale.set(value),
-                }),
-              () =>
-                anim.move(
-                  n.position,
-                  n.position.clone(),
-                  originalPositions[i],
-                  1,
-                  easing.linear
-                ),
+              new entity.FunctionCallEntity(() => {
+                n.position.copyFrom(originalPositions[i]);
+                n.container.scale.set(n.scale);
+              }),
               n.spriteSwitchAnimation(n.holeSprite),
             ]);
           }
