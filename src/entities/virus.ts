@@ -256,12 +256,15 @@ export class Virus extends entity.CompositeEntity {
       }),
       new entity.FunctionCallEntity(() => {
         this.level.screenShake(20, 1.03, 200);
+        this._animation.sprite.gotoAndPlay(
+          Math.ceil(this._animation.sprite.totalFrames * 0.5)
+        );
       }),
-      new entity.FunctionalEntity({
-        requestTransition: () =>
-          this._animation.sprite.currentFrame >=
-          this._animation.sprite.totalFrames * 0.5,
-      }),
+      // new entity.FunctionalEntity({
+      //   requestTransition: () =>
+      //     this._animation.sprite.currentFrame >=
+      //     this._animation.sprite.totalFrames * 0.5,
+      // }),
       new entity.FunctionCallEntity(() => {
         this.stop();
         this.emit("stungIn");

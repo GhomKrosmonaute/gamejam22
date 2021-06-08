@@ -459,7 +459,6 @@ export class Sequence extends entity.CompositeEntity {
       items: this.nucleotides,
       waitForAllSteps: true,
       timeBetween: 100,
-      delay: 500,
       onStep: (n, index) => {
         if (this.virus) {
           const position = new PIXI.Point(
