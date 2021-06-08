@@ -357,9 +357,8 @@ export class Sequence extends entity.CompositeEntity {
       }),
       this.virus.come(),
       new entity.FunctionalEntity({ requestTransition }),
-      new entity.FunctionCallEntity(() => this._initNucleotides()),
       this.virus.stingIn(),
-      new entity.WaitingEntity(1000),
+      () => this._initNucleotides(),
       this.virus.stingOut(),
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("sequence._initVirus", false);
@@ -453,52 +452,49 @@ export class Sequence extends entity.CompositeEntity {
         })
       );
 
-      n.switchType(n.type);
-      n.turn(true);
-
       this.nucleotides.push(n);
     }
 
-    this._activateChildEntity(
-      anim.sequenced({
-        items: this.nucleotides,
-        waitForAllSteps: true,
-        timeBetween: 100,
-        delay: 500,
-        onStep: (n, index) => {
-          if (this.virus) {
-            const position = new PIXI.Point(
-              index * width * 0.8,
-              crispr.approximate(0, height * 0.05)
-            );
-            return new entity.ParallelEntity([
-              anim.move(
-                n.position,
-                n.position.clone(),
-                position,
-                1000,
-                easing.easeOutCubic
-              ),
-              new tween.Tween({
-                from: 0,
-                to: n.scale,
-                duration: 1000,
-                easing: easing.easeInOutQuint,
-                onUpdate: (value) => n.container.scale.set(value),
-              }),
-            ]);
-          } else {
-            return new tween.Tween({
-              from: 0,
-              to: n.scale,
-              duration: 1000,
-              easing: easing.easeInOutQuint,
-              onUpdate: (value) => n.container.scale.set(value),
-            });
-          }
-        },
-      })
-    );
+    return anim.sequenced({
+      items: this.nucleotides,
+      waitForAllSteps: true,
+      timeBetween: 100,
+      delay: 500,
+      onStep: (n, index) => {
+        if (this.virus) {
+          const position = new PIXI.Point(
+            index * width * 0.8,
+            crispr.approximate(0, height * 0.05)
+          );
+          return new entity.ParallelEntity([
+            anim.move(
+              n.position,
+              n.position.clone(),
+              position,
+              1000,
+              easing.easeOutCubic
+            ),
+            n.switchTypeAnimation(n.type),
+            // new tween.Tween({
+            //   from: 0,
+            //   to: n.scale,
+            //   duration: 1000,
+            //   easing: easing.easeInOutQuint,
+            //   onUpdate: (value) => n.container.scale.set(value),
+            // }),
+          ]);
+        } else {
+          return n.switchTypeAnimation(n.type);
+          // return new tween.Tween({
+          //   from: 0,
+          //   to: n.scale,
+          //   duration: 1000,
+          //   easing: easing.easeInOutQuint,
+          //   onUpdate: (value) => n.container.scale.set(value),
+          // });
+        }
+      },
+    });
   }
 
   _setup() {
@@ -521,9 +517,7 @@ export class Sequence extends entity.CompositeEntity {
                 name.startsWith("popup")
               ),
           }),
-          new entity.FunctionCallEntity(() => {
-            this._initNucleotides();
-          }),
+          () => this._initNucleotides(),
         ])
       );
     } else {
@@ -895,20 +889,39 @@ export class Sequence extends entity.CompositeEntity {
    * Make the nucleotides that match the signature inactive
    * @param options
    */
-  deactivateSegment(
+  deactivateSegmentAnimation(
     options: SequenceMatchingOptions = sequenceMatchingOptions[
       this.level.variant
     ]
-  ): boolean {
+  ) {
     const segment = this.getMatchingSegment(options);
 
-    if (!segment) return false;
+    if (!segment) return new entity.FunctionCallEntity(() => null);
 
-    segment.forEach((n) => {
-      this._activateChildEntity(n.turnAnimation(false));
+    return anim.sequenced({
+      items: segment,
+      timeBetween: 200,
+      waitForAllSteps: true,
+      onStep: (n) => n.turnAnimation(false),
     });
+  }
 
-    return true;
+  /**
+   * Make the nucleotides that match the signature inactive
+   * @param options
+   */
+  getSequenceWithDeactivatedSegment(
+    options: SequenceMatchingOptions = sequenceMatchingOptions[
+      this.level.variant
+    ]
+  ) {
+    const segment = this.getMatchingSegment(options);
+
+    if (!segment) return this;
+
+    segment.forEach((n) => n.turn(false));
+
+    return this;
   }
 
   highlightSegment(

@@ -155,8 +155,6 @@ export function makeGrid(
   jokers.forEach(({ x, y }) => (shape[y][x] = "joker"));
   clips.forEach(({ x, y }) => (shape[y][x] = "clip"));
 
-  debugger;
-
   return shape;
 }
 

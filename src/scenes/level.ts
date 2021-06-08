@@ -1229,9 +1229,16 @@ export class Level extends entity.CompositeEntity {
     parallel.push(this.path.crunch());
 
     if (this.options.variant === "zen") {
-      sequence.deactivateSegment();
+      const segment = sequence.getMatchingSegment();
 
-      if (sequence.maxActiveLength < 3) {
+      context.push(
+        new entity.FunctionCallEntity(() => {
+          segment.forEach((n) => n.turn(true));
+        }),
+        () => sequence.deactivateSegmentAnimation()
+      );
+
+      if (sequence.getSequenceWithDeactivatedSegment().maxActiveLength < 3) {
         parallel.push(sequence.down(!this.options.disableScore));
       }
     } else {
