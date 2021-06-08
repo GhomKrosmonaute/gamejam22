@@ -350,7 +350,7 @@ export class Grid extends entity.CompositeEntity {
 
     this.allNucleotides = [];
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("--> DONE", "grid.reset()");
     }
 

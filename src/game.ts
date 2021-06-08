@@ -11,6 +11,7 @@ import * as metrics from "./metrics";
 import * as writeUs from "./scenes/writeUs";
 
 import * as _main from "./scenes/main";
+import * as menu from "./scenes/menu";
 
 const main = new _main.Main();
 

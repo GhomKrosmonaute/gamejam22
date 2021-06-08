@@ -8,7 +8,8 @@ import * as crispr from "../crispr";
 import * as levels from "../levels";
 import * as anim from "../animations";
 
-import * as minimap from "./main";
+import * as main from "./main";
+import * as menu from "./menu";
 
 import * as nucleotide from "../entities/nucleotide";
 import * as sequence from "../entities/sequence";
@@ -452,7 +453,6 @@ export class Level extends entity.CompositeEntity {
   public remainingMoves: hud.RemainingMoves;
   public menu: menu.Menu;
 
-
   // screen shake
   public screenShakeAmplitude: number;
   public screenShakeDuration: number;
@@ -538,7 +538,7 @@ export class Level extends entity.CompositeEntity {
     this._once(this, event, callback);
   }
 
-  get minimap(): minimap.Main {
+  get minimap(): main.Main {
     return this._entityConfig.minimap;
   }
 

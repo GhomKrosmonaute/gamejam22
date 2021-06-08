@@ -12,7 +12,6 @@ import * as level from "./scenes/level";
 import * as grid from "./entities/grid";
 
 import * as game from "./game";
-import { colCount, rowCount } from "./entities/grid";
 
 const searchParams = new URL(window.location.href).searchParams;
 let _inDebugMode =

@@ -204,7 +204,7 @@ export class SequenceManager extends entity.CompositeEntity {
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
       nucleotide.nucleotideRadius.sequence
     );
-    
+
     const sequence = new Sequence(
       length,
       new PIXI.Point(
