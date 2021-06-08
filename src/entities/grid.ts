@@ -27,7 +27,9 @@ export type GridArrayShape<T = true> = ((T | null)[] | null)[];
 export type GridFilter = (x: number, y: number) => boolean;
 
 export const gridMakerPresets: { [k: string]: GridMakerOptions } = {
-  full: {},
+  full: {
+    filter: (x, y) => y < 6 || x % 2 !== 0,
+  },
   mini: {
     filter: (x, y) =>
       !(x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0)),
