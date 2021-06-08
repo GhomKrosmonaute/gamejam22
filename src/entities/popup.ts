@@ -673,7 +673,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
       withBackground: true,
       withClosureCross: false,
       closeOnBackgroundClick: true,
-      onClose: (popup) => popup.level.exit(true),
+      onClose: (popup) => popup.level.exit(),
     });
 
     this._once(this, "opened", () => {
@@ -702,11 +702,6 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
 }
 
 export class FailedLevelPopup extends EndOfLevelPopup {
-  constructor() {
-    super();
-    this.options.onClose = (popup) => popup.level.exit();
-  }
-
   onSetup() {
     Popup.cleanUpMinimized();
     // add title
@@ -811,6 +806,8 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
       success: true,
       results,
     });
+
+    this.level.minimap.saveResults(this.level);
   }
 
   protected _playSound() {
@@ -935,6 +932,8 @@ export class StatePopup extends ChecksPopup {
     score.position.x = this.center.x;
     score.position.y = 75;
 
-    this.addRow(text, 200).addRow(score, 150).addCheckRows();
+    this.addRow(text, 300)
+      .addRow(score, 100 * score.text.split("\n").length)
+      .addCheckRows();
   }
 }

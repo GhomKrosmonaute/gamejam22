@@ -196,7 +196,7 @@ export class Gauge extends entity.CompositeEntity {
 
   _update(frameInfo: entity.FrameInfo) {
     if (
-      this.level.options.gaugeOptions.get(this.level) <
+      this.level.options.gaugeOptions.value(this.level) <
       this.level.options.gaugeOptions.final
     ) {
       const reachedScorePosition = this.reachedScoreXPosition;
@@ -251,7 +251,7 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   refreshValue() {
-    const score = this.level.options.gaugeOptions.get(this.level);
+    const score = this.level.options.gaugeOptions.value(this.level);
     this._bar.width = this.barWidth;
     this._text.text = this.level.options.gaugeOptions.show(score, this.level);
 
@@ -305,7 +305,7 @@ export class Gauge extends entity.CompositeEntity {
     const reverse = !!this.level.options.gaugeOptions.reverse;
     const [a, b] = initial < final ? [initial, final] : [final, initial];
     return crispr.proportion(
-      this.level.options.gaugeOptions.get(this.level),
+      this.level.options.gaugeOptions.value(this.level),
       reverse ? b : a,
       reverse ? a : b,
       0,
@@ -467,6 +467,8 @@ export class ActionButton extends entity.CompositeEntity {
   }
 
   private press(): entity.Entity {
+    this.level.emitLevelEvent("actionButtonPressed", this.level);
+
     if (this.level.isDisablingAnimationInProgress) {
       return this.errorAnimation();
     }
@@ -550,7 +552,7 @@ export class RemainingMoves extends entity.CompositeEntity {
   removeOne(duration = 1000) {
     if (this._count === 0) {
       this.level.emitLevelEvent("outOfZenMoves");
-      return new entity.TransitoryEntity();
+      return new entity.FunctionCallEntity(() => null);
     } else {
       const result = this._count - 1;
       return new entity.ParallelEntity([

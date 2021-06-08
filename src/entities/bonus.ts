@@ -142,14 +142,11 @@ export class SwapBonus extends Bonus {
 
   swap(a: nucleotide.Nucleotide, b: nucleotide.Nucleotide) {
     if (
-      a.colorName === b.colorName &&
-      a.type === b.type &&
-      a.state === b.state &&
-      a.crispyMultiplier === b.crispyMultiplier
+      JSON.stringify(a.toJSON()) === JSON.stringify(b.toJSON()) ||
+      a.type === "portal" ||
+      b.type === "portal"
     )
       return this.abort();
-
-    if (a.type === "portal" || b.type === "portal") return this.abort();
 
     this.isUpdateDisabled = true;
     this.level.grid.swap(a, b, false);
@@ -168,10 +165,17 @@ export class SwapBonus extends Bonus {
         ),
         easing.easeInBack,
         () => {
-          b.bubble(150).catch();
-          a.bubble(150)
-            .then(() => this.level.disablingAnimation(this.name, false))
-            .catch();
+          this.level.activate(
+            new entity.EntitySequence([
+              new entity.ParallelEntity([
+                anim.bubble(a.shakeContainer, 1.2, 150),
+                anim.bubble(b.shakeContainer, 1.2, 150),
+              ]),
+              new entity.FunctionCallEntity(() => {
+                this.level.disablingAnimation(this.name, false);
+              }),
+            ])
+          );
           this.end();
         }
       )
@@ -244,60 +248,12 @@ export class SwapBonus extends Bonus {
   }
 }
 
-export class HealBonus extends Bonus {
-  name = "heal";
-
-  protected _setup() {
-    this._once(this.level.grid, "drag", (target: nucleotide.Nucleotide) => {
-      const stages = [[target], ...this.level.grid.getStarStages(target)];
-
-      this.level.disablingAnimation(this.name, true);
-
-      this._activateChildEntity(
-        new entity.EntitySequence([
-          anim.sequenced({
-            timeBetween: 200,
-            items: stages,
-            onStep: (stage, index) => {
-              for (const n of stage) {
-                n.shakes.setShake(this.name, 7 - index / 2);
-              }
-            },
-          }),
-          anim.sequenced({
-            delay: 400,
-            timeBetween: 200,
-            waitForAllSteps: true,
-            items: stages,
-            onStep: (stage, index, src, finish) => {
-              const promises: Promise<any>[] = [];
-              for (const n of stage) {
-                promises.push(
-                  n.bubble(300, (_n) => {
-                    _n.state = "present";
-                    _n.shakes.removeShake(this.name);
-                  })
-                );
-              }
-              Promise.all(promises).then(finish);
-            },
-            callback: () => {
-              this.level.disablingAnimation(this.name, false);
-              this.end();
-            },
-          }),
-        ])
-      );
-    });
-  }
-}
-
-export interface InitialBonus {
+export interface InitialBonusOption {
   bonus: ((context: level.Level) => Bonus) | Bonus;
   quantity?: number;
 }
 
-export type InitialBonuses = InitialBonus[];
+export type InitialBonuses = InitialBonusOption[];
 
 export class BonusesManager extends entity.CompositeEntity {
   public container: PIXI.Container;

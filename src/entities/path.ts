@@ -9,7 +9,6 @@ import * as nucleotide from "./nucleotide";
 import * as level from "../scenes/level";
 
 import * as anim from "../animations";
-import * as crispr from "../crispr";
 
 export type PathState =
   | "no match"
@@ -55,14 +54,13 @@ export class Path extends entity.CompositeEntity {
     return this._entityConfig.level;
   }
 
-  /** The real length without cuts */
+  /** The path signature length without portals */
   get length(): number {
-    return this.nucleotides.length;
+    return this.toString().length;
   }
 
-  /** only nucleotides */
-  get nucleotides(): nucleotide.Nucleotide[] {
-    return this.items.filter((n) => !/^(?:clips|portal)$/.test(n.type));
+  get normals(): nucleotide.Nucleotide[] {
+    return this.items.filter((n) => n.type === "normal");
   }
 
   get clips(): nucleotide.Nucleotide[] {
@@ -73,10 +71,8 @@ export class Path extends entity.CompositeEntity {
     return this.items.filter((n) => n.type === "portal");
   }
 
-  get maxLength(): number {
-    return Math.max(
-      ...[...this.level.sequenceManager.sequences].map((s) => s.baseLength)
-    );
+  get jokers(): nucleotide.Nucleotide[] {
+    return this.items.filter((n) => n.type === "joker");
   }
 
   get first(): nucleotide.Nucleotide | null {
@@ -95,7 +91,7 @@ export class Path extends entity.CompositeEntity {
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
-    if (n.state === "missing" || this.level.isDisablingAnimationInProgress)
+    if (n.type === "hole" || this.level.isDisablingAnimationInProgress)
       return false;
 
     // check the cancellation & cancel to previous nucleotide
@@ -140,7 +136,7 @@ export class Path extends entity.CompositeEntity {
     if (n.type === "clip" && this.first !== n) return false;
 
     // Ignore holes
-    if (n.state === "missing") return false;
+    if (n.type === "hole") return false;
 
     // Don't start new paths
     if (this.items.length === 0) return false;
@@ -191,7 +187,7 @@ export class Path extends entity.CompositeEntity {
       return this.items.indexOf(a) - this.items.indexOf(b);
     })) {
       if (this.items.includes(n)) {
-        n.isHighlighted = true;
+        n.highlighted = true;
 
         if (last) {
           this.level.grid.pointTo(
@@ -206,9 +202,9 @@ export class Path extends entity.CompositeEntity {
 
         last = n;
       } else {
-        n.isHighlighted = false;
+        n.highlighted = false;
 
-        n.pathArrow.visible = false;
+        n.pathArrowSprite.visible = false;
       }
     }
 
@@ -220,77 +216,80 @@ export class Path extends entity.CompositeEntity {
     ) {
       this.level.grid.nucleotides.forEach((n) => {
         if (n.type === "portal" && n !== this.last) {
-          n.isHighlighted = true;
+          n.highlighted = true;
         }
       });
     }
   }
 
   crunch() {
-    let originalPositions: PIXI.Point[] = [];
+    let originalPositions: PIXI.Point[] = [],
+      items: nucleotide.Nucleotide[],
+      seq = this.level.sequenceManager.first;
+    if (this.length === 0) return new entity.FunctionCallEntity(() => null);
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
+        items = seq.nucleotides.slice();
+
+        this.level.screenShake(10, 1.02, 100);
         this.level.disablingAnimation("path.crunch", true);
 
         if (this.correctlyContainsClips()) {
           this.level.clipsWasIncludes = true;
-          this.items[0].type = "normal";
+          if (!this.level.options.disableClips) this.first.type = "normal";
+          this.items.forEach((n) => {
+            if (n.type === "joker") n.type = "normal";
+          });
         }
       }),
       anim.sequenced({
         items: this.items,
         timeBetween: 50,
         waitForAllSteps: true,
-        onStep: (n, i, src, finish) => {
-          this._playExplosion();
-          this.level.screenShake(10, 1.02, 50);
-
+        onStep: (n) => {
           originalPositions.push(n.position.clone());
 
-          const seq = [...this.level.sequenceManager.sequences][0];
-          const items = seq.nucleotides.slice();
-
-          //n.isHighlighted = false;
-          n.sprite.scale.set(1);
-          n.pathArrow.visible = false;
+          n.highlighted = false;
+          n.container.scale.set(n.scale);
+          n.pathArrowSprite.visible = false;
 
           if (n.type === "normal") {
-            const index = this.nucleotides.indexOf(n);
+            const index = this.normals.indexOf(n);
 
-            this._activateChildEntity(
-              new entity.EntitySequence([
-                !this.level.options.showMatchOnCrunch
-                  ? new entity.TransitoryEntity()
-                  : new entity.ParallelEntity([
-                      () =>
-                        anim.move(
-                          n.position,
-                          n.position.clone(),
-                          new PIXI.Point(
-                            items[index].position.x -
-                              this.level.grid.nucleotideContainer.x +
-                              seq.container.x,
-                            items[index].position.y -
-                              this.level.grid.nucleotideContainer.y +
-                              seq.container.y +
-                              60
-                          ),
-                          1000,
-                          easing.easeOutBounce
+            items[index].highlighted = false;
+
+            return new entity.EntitySequence([
+              !this.level.options.showMatchOnCrunch
+                ? new entity.FunctionCallEntity(() => null)
+                : new entity.ParallelEntity([
+                    () =>
+                      anim.move(
+                        n.position,
+                        n.position.clone(),
+                        new PIXI.Point(
+                          items[index].position.x -
+                            this.level.grid.nucleotideContainer.x +
+                            seq.container.x,
+                          items[index].position.y -
+                            this.level.grid.nucleotideContainer.y +
+                            seq.container.y +
+                            60
                         ),
-                      () =>
-                        new tween.Tween({
-                          from: n.shakingContainer.scale.x,
-                          to: items[index].shakingContainer.scale.x,
-                          easing: easing.easeOutBounce,
-                          duration: 1000,
-                          onUpdate: (value) =>
-                            n.shakingContainer.scale.set(value),
-                        }),
-                    ]),
-                new entity.FunctionCallEntity(() => finish()),
-              ])
-            );
+                        1000,
+                        easing.easeOutBounce
+                      ),
+                    () =>
+                      new tween.Tween({
+                        from: n.scale,
+                        to: items[index].scale,
+                        easing: easing.easeOutBounce,
+                        duration: 1000,
+                        onUpdate: (value) => n.container.scale.set(value),
+                      }),
+                  ]),
+            ]);
+          } else {
+            return new entity.FunctionCallEntity(() => null);
           }
         },
       }),
@@ -320,59 +319,39 @@ export class Path extends entity.CompositeEntity {
         items: this.items,
         timeBetween: 50,
         waitForAllSteps: true,
-        onStep: (n, i, all, finish) => {
+        onStep: (n, i) => {
           if (n.type !== "normal") {
-            this._activateChildEntity(
-              new entity.EntitySequence([
-                () => anim.down(n.shakingContainer, 500, 1),
-                new entity.FunctionCallEntity(() => {
-                  n.once("stateChanged", finish);
-                  n.state = this.level.options.gridCleaning
-                    ? "inactive"
-                    : "missing";
-                }),
-              ])
-            );
+            return n.switchTypeAnimation("hole");
           } else {
-            const index = this.nucleotides.indexOf(n);
+            const index = this.normals.indexOf(n);
 
-            this._activateChildEntity(
-              new entity.EntitySequence([
-                new entity.FunctionCallEntity(() => {
-                  if (index === 0)
-                    this.level.disablingAnimation("path.crunch.down", true);
-                }),
-                // () => new tween.Tween({
-                //   from: n.position.y,
-                //   to: n.position.y - 30,
-                //   onUpdate: (v) => n.position.y = v,
-                //   duration: 250
-                // }),
-                () => anim.down(n.sprite, 500, 1),
-                () =>
-                  new tween.Tween({
-                    from: n.shakingContainer.scale.x,
-                    to: 1,
-                    easing: easing.linear,
-                    duration: 1,
-                    onUpdate: (value) => n.shakingContainer.scale.set(value),
+            return new entity.EntitySequence([
+              new entity.FunctionCallEntity(() => {
+                if (index === 0)
+                  this.level.disablingAnimation("path.crunch.down", true);
+              }),
+              // () => new tween.Tween({
+              //   from: n.position.y,
+              //   to: n.position.y - 30,
+              //   onUpdate: (v) => n.position.y = v,
+              //   duration: 250
+              // }),
+              new entity.ParallelEntity([
+                () => anim.down(n.container, 500, n.container.scale.x),
+                new entity.EntitySequence([
+                  new entity.WaitingEntity(250),
+                  new entity.FunctionCallEntity(() => {
+                    this._playExplosion();
                   }),
-                () =>
-                  anim.move(
-                    n.position,
-                    n.position.clone(),
-                    originalPositions[i],
-                    1,
-                    easing.linear
-                  ),
-                new entity.FunctionCallEntity(() => {
-                  n.once("stateChanged", finish);
-                  n.state = this.level.options.gridCleaning
-                    ? "inactive"
-                    : "missing";
-                }),
-              ])
-            );
+                ]),
+              ]),
+              new entity.FunctionCallEntity(() => {
+                n.position.copyFrom(originalPositions[i]);
+                n.container.scale.set(0);
+                n.turn(false);
+              }),
+              () => n.switchTypeAnimation("hole"),
+            ]);
           }
 
           // if (!this.level.options.disableScore) {
@@ -416,8 +395,11 @@ export class Path extends entity.CompositeEntity {
     ]);
   }
 
-  toString(reverse = false) {
-    return (reverse ? this.nucleotides.reverse() : this.nucleotides).join("");
+  /**
+   * Returns signature of path
+   */
+  toString() {
+    return this.items.join("");
   }
 
   private _playNote(): void {
@@ -433,14 +415,8 @@ export class Path extends entity.CompositeEntity {
     let sound: string;
     if (lastNucleotide.type === "clip") {
       sound = "tile_clips";
-    } else if (lastNucleotide.colorName === "r") {
-      sound = "tile_red";
-    } else if (lastNucleotide.colorName === "g") {
-      sound = "tile_green";
-    } else if (lastNucleotide.colorName === "b") {
-      sound = "tile_blue";
-    } else if (lastNucleotide.colorName === "y") {
-      sound = "tile_yellow";
+    } else if (lastNucleotide.type === "normal") {
+      sound = "tile_" + lastNucleotide.color;
     } else {
       sound = "score_ring";
     }

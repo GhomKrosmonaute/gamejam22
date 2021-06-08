@@ -296,8 +296,7 @@ export class Main extends entity.CompositeEntity {
     let oldResults: level.LevelResults;
     const data = localStorage.getItem(l.name);
     if (data) oldResults = JSON.parse(data);
-    if (!oldResults || oldResults.checkedCount < results.checkedCount) {
+    if (!oldResults || oldResults.starCount < results.starCount)
       localStorage.setItem(l.name, JSON.stringify(results));
-    }
   }
 }

@@ -68,6 +68,8 @@ export class Virus extends entity.CompositeEntity {
   public scale = 1;
   public filters: PIXI.Filter[] = [];
 
+  animationRunning = false;
+
   constructor(public type: VirusType) {
     super();
   }
@@ -120,10 +122,11 @@ export class Virus extends entity.CompositeEntity {
       this.angle = this.randomStartAngle;
     }
 
-    this._entityConfig.container.addChildAt(
-      this._container,
-      Math.min(15, this._entityConfig.container.children.length - 1)
-    );
+    this._entityConfig.container.addChild(this._container);
+  }
+
+  protected _update() {
+    this._entityConfig.container.addChild(this._container);
   }
 
   protected _teardown() {
@@ -207,7 +210,7 @@ export class Virus extends entity.CompositeEntity {
   kill(): entity.EntitySequence {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
-        this.setAnimatedSprite("dead", false);
+        this.setAnimatedSprite("dead", false, true);
 
         this._entityConfig.fxMachine.play("virus_death");
       }),
@@ -218,7 +221,9 @@ export class Virus extends entity.CompositeEntity {
         easing: easing.easeOutQuint,
         onUpdate: (value) => (this.level.killedViruses = value),
       }),
-      new entity.WaitForEvent(this, "terminatedAnimation"),
+      new entity.FunctionalEntity({
+        requestTransition: () => !this.animationRunning,
+      }),
       new entity.FunctionCallEntity(() => {
         this.level.emitLevelEvent("virusLeaves", this);
         this._transition = entity.makeTransition();
@@ -251,12 +256,15 @@ export class Virus extends entity.CompositeEntity {
       }),
       new entity.FunctionCallEntity(() => {
         this.level.screenShake(20, 1.03, 200);
+        this._animation.sprite.gotoAndPlay(
+          Math.ceil(this._animation.sprite.totalFrames * 0.5)
+        );
       }),
-      new entity.FunctionalEntity({
-        requestTransition: () =>
-          this._animation.sprite.currentFrame >=
-          this._animation.sprite.totalFrames * 0.5,
-      }),
+      // new entity.FunctionalEntity({
+      //   requestTransition: () =>
+      //     this._animation.sprite.currentFrame >=
+      //     this._animation.sprite.totalFrames * 0.5,
+      // }),
       new entity.FunctionCallEntity(() => {
         this.stop();
         this.emit("stungIn");
@@ -303,9 +311,15 @@ export class Virus extends entity.CompositeEntity {
     this._container.position.y += this.position.y;
   }
 
-  private setAnimatedSprite(animationName: VirusAnimation, loop = true) {
+  private setAnimatedSprite(
+    animationName: VirusAnimation,
+    loop = true,
+    runningFLag = false
+  ) {
     if (this._previousAnimationName === animationName) return;
     else this._previousAnimationName = animationName;
+
+    if (runningFLag) this.animationRunning = true;
 
     if (this._animation && this._animation.isSetup)
       this._deactivateChildEntity(this._animation);
@@ -360,6 +374,7 @@ export class Virus extends entity.CompositeEntity {
     this._animation.sprite.filters = this.filters;
     this._animation.sprite.loop = loop;
     this._animation.options.transitionOnComplete = () => {
+      this.animationRunning = false;
       this.emit("terminatedAnimation");
       if (animationName !== "dead") {
         this.setAnimatedSprite("idle");
