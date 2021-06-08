@@ -390,6 +390,10 @@ export class Sequence extends entity.CompositeEntity {
       );
       forcedSequence = forcedMatching.colors;
       this.level.grid.solution = forcedMatching.nucleotides;
+    } else {
+      forcedSequence = new Array(this.baseLength).fill(
+        nucleotide.NucleotideSignatures.random
+      );
     }
 
     for (

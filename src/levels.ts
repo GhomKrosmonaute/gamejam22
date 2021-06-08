@@ -19,25 +19,90 @@ declare var level: l.Level;
 export const levels = {
   // Hard
   "Big\nBoss": () =>
-    new l.Level("Big\nBoss", (ctx) => ({
-      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
+    new l.Level("Big\nBoss", (context) => ({
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.full,
+        portals: [
+          { x: 1, y: 1 },
+          { x: 5, y: 5 },
+        ],
+        jokers: [
+          { x: 1, y: 5 },
+          { x: 5, y: 1 },
+        ],
+      }),
+      virus: "big",
       forceMatching: false,
-      sequenceLength: 6,
-      // jokers: 1,
-      // portals: 2,
-      // clips: 1,
+      sequenceLength: 10,
+      disableClips: true,
       maxLife: 5,
+      crispyBonusRate: 0.5,
+      initialBonuses: [
+        {
+          bonus: (ctx) => ctx.swapBonus,
+          quantity: 5,
+        },
+      ],
+      hooks: [
+        new l.Hook({
+          id: "intro animation",
+          event: "init",
+          once: true,
+          entity: new entity.EntitySequence([
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", true);
+            }),
+            new anim.VirusSequence([
+              (v) =>
+                new entity.FunctionCallEntity(() => {
+                  v.type = "big";
+                  v.scale = 4.5;
+                  v.rounded = false;
+                  v.angle = 0;
+                  v.position = { x: crispr.width / 2, y: crispr.height * 2 };
+                  v.filters = [new OutlineFilter(20, 0x000000) as any];
+                }),
+              (v) => v.stingIn(),
+              (v) =>
+                new tween.Tween({
+                  duration: 500,
+                  from: crispr.height * 2,
+                  to: crispr.height,
+                  easing: easing.easeOutCubic,
+                  onUpdate: (value) => {
+                    v.position = { x: crispr.width / 2, y: value };
+                  },
+                }),
+              (v) => v.stingOut(),
+              () => new entity.WaitingEntity(500),
+              (v) => v.leave(),
+            ]),
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", false);
+            }),
+          ]),
+        }),
+        new l.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            if (context.isEnded && !context.finished)
+              context.activate(anim.title(context.container, "Go!"));
+          }),
+        }),
+      ],
     })),
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
-      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.fourIslands,
+        jokers: [
+          { x: 4, y: 4 },
+          { x: 2, y: 1 },
+        ],
+      }),
       forceMatching: false,
-      sequenceLength: 4,
-
-      // portals: 4,
-      // jokers: 3,
-      // clips: 4,
-
+      sequenceLength: 6,
       maxLife: 10,
       crispyBonusRate: 0.6,
       initialBonuses: [
@@ -116,11 +181,18 @@ export const levels = {
       virus: "big",
       variant: "turn",
       fallingSpeed: 1,
-      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.hive,
+        clips: [{ x: 3, y: 3 }],
+        portals: [
+          { x: 1, y: 3 },
+          { x: 5, y: 3 },
+          { x: 3, y: 1 },
+          { x: 3, y: 5 },
+        ],
+      }),
       sequenceLength: 7,
       forceMatching: true,
-      //portals: 4,
-      //clips: 3,
       hooks: [
         new l.Hook({
           id: "intro animation",
@@ -173,7 +245,16 @@ export const levels = {
   "Chrono\nPortal": () =>
     new l.Level("Chrono\nPortal", (context) => ({
       variant: "fall",
-      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.medium,
+        clips: [{ x: 3, y: 3 }],
+        portals: [
+          { x: 1, y: 3 },
+          { x: 5, y: 3 },
+          { x: 3, y: 1 },
+          { x: 3, y: 5 },
+        ],
+      }),
       forceMatching: true,
       // portals: 2,
       // clips: 1,
@@ -210,17 +291,14 @@ export const levels = {
     })),
   "Four\nIslands": () =>
     new l.Level("Four\nIslands", (context) => ({
-      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
       forceMatching: true,
-      // clips: 3,
-      // portals: 4,
+      gridShape: grid.makeGrid(grid.gridMakerPresets.fourIslands),
       sequenceLength: 5,
     })),
   "Two Islands": () =>
     new l.Level("Two Islands", (context) => ({
-      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
+      gridShape: grid.makeGrid(grid.gridMakerPresets.twoIslands),
       forceMatching: true,
-      //portals: 6,
       hooks: [
         new l.Hook({
           id: "tuto portal",
@@ -249,7 +327,10 @@ export const levels = {
       virus: "big",
       variant: "fall",
       fallingSpeed: 1,
-      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.medium,
+        clips: [{ x: 3, y: 3 }],
+      }),
       sequenceLength: 7,
       forceMatching: true,
       //clips: 3,

@@ -53,13 +53,20 @@ export const gridMakerPresets: { [k: string]: GridMakerOptions } = {
       { x: 1, y: 5 },
       { x: 5, y: 5 },
     ],
+    clips: [
+      { x: 1, y: 3 },
+      { x: 5, y: 3 },
+      { x: 3, y: 1 },
+      { x: 3, y: 5 },
+    ],
     filter: (x, y) =>
       !(
         (x > 2 || y < 4 || y > 6) &&
         (x < 4 || y < 4 || y > 6) &&
         (x > 2 || y > 2 || (y === 2 && (x === 0 || x === 2))) &&
         (x < 4 || y > 2 || (y === 2 && (x === 4 || x === 6)))
-      ),
+      ) &&
+      (y < 6 || x % 2 !== 0),
   },
   littleBridge: {
     filter: (x, y) =>
@@ -68,6 +75,19 @@ export const gridMakerPresets: { [k: string]: GridMakerOptions } = {
         (x !== 3 || y !== 3) &&
         (x < 4 || y < 1 || y > 5 || (y === 5 && (x === 4 || x === 6)))
       ),
+  },
+  twoIslands: {
+    filter: (x, y) =>
+      !(
+        (x > 2 || y < 1 || y > 5 || (y === 5 && (x === 0 || x === 2))) &&
+        (x !== 3 || y !== 3) &&
+        (x < 4 || y < 1 || y > 5 || (y === 5 && (x === 4 || x === 6)))
+      ),
+    clips: [{ x: 3, y: 3 }],
+    portals: [
+      { x: 1, y: 3 },
+      { x: 5, y: 3 },
+    ],
   },
   bowTie: {
     filter: (x, y) =>
@@ -92,7 +112,7 @@ export const gridMakerPresets: { [k: string]: GridMakerOptions } = {
       ),
   },
   hive: {
-    filter: (x, y) => !(x % 2 !== 0 && y % 2 === 0),
+    filter: (x, y) => !(x % 2 !== 0 && y % 2 === 0) && (y < 6 || x % 2 !== 0),
   },
 };
 
