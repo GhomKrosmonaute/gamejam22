@@ -1,3 +1,6 @@
+export const width = 1080;
+export const height = 1920;
+
 import * as PIXI from "pixi.js";
 
 import * as geom from "booyah/src/geom";
@@ -6,10 +9,10 @@ import * as util from "booyah/src/util";
 
 import * as level from "./scenes/level";
 
-import * as game from "./game";
+import * as grid from "./entities/grid";
 
-export const width = 1080;
-export const height = 1920;
+import * as game from "./game";
+import { colCount, rowCount } from "./entities/grid";
 
 const searchParams = new URL(window.location.href).searchParams;
 let _inDebugMode =
@@ -222,16 +225,3 @@ export function resolveRange(range: RangeValue): number {
 
 export const yellow = "#ffda6b";
 export const yellowNumber = 0xffda6b;
-
-export function resolvePossiblePartLength(
-  length: number | string,
-  sequenceLength: number
-): number {
-  if (typeof length === "string") {
-    return Math.ceil(
-      proportion(Number(length.replace("%", "")), 0, 100, 0, sequenceLength)
-    );
-  } else {
-    return length;
-  }
-}

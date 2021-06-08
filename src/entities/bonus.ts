@@ -6,7 +6,6 @@ import * as tween from "booyah/src/tween";
 
 import * as level from "../scenes/level";
 import * as nucleotide from "./nucleotide";
-import * as sequence from "./sequence";
 import * as anim from "../animations";
 import * as crispUtil from "../crispr";
 import * as crispr from "../crispr";
@@ -143,14 +142,11 @@ export class SwapBonus extends Bonus {
 
   swap(a: nucleotide.Nucleotide, b: nucleotide.Nucleotide) {
     if (
-      a.colorName === b.colorName &&
-      a.type === b.type &&
-      a.state === b.state &&
-      a.crispyMultiplier === b.crispyMultiplier
+      JSON.stringify(a.toJSON()) === JSON.stringify(b.toJSON()) ||
+      a.type === "portal" ||
+      b.type === "portal"
     )
       return this.abort();
-
-    if (a.type === "portal" || b.type === "portal") return this.abort();
 
     this.isUpdateDisabled = true;
     this.level.grid.swap(a, b, false);
@@ -169,10 +165,17 @@ export class SwapBonus extends Bonus {
         ),
         easing.easeInBack,
         () => {
-          b.bubble(150).catch();
-          a.bubble(150)
-            .then(() => this.level.disablingAnimation(this.name, false))
-            .catch();
+          this.level.activate(
+            new entity.EntitySequence([
+              new entity.ParallelEntity([
+                anim.bubble(a.shakeContainer, 1.2, 150),
+                anim.bubble(b.shakeContainer, 1.2, 150),
+              ]),
+              new entity.FunctionCallEntity(() => {
+                this.level.disablingAnimation(this.name, false);
+              }),
+            ])
+          );
           this.end();
         }
       )
@@ -245,90 +248,12 @@ export class SwapBonus extends Bonus {
   }
 }
 
-export class HealBonus extends Bonus {
-  name = "heal";
-
-  protected _setup() {
-    this._once(this.level.grid, "drag", (target: nucleotide.Nucleotide) => {
-      const stages = [[target], ...this.level.grid.getStarStages(target)];
-
-      this.level.disablingAnimation(this.name, true);
-
-      this._activateChildEntity(
-        new entity.EntitySequence([
-          anim.sequenced({
-            timeBetween: 200,
-            items: stages,
-            onStep: (stage, index) => {
-              for (const n of stage) {
-                n.shakes.setShake(this.name, 7 - index / 2);
-              }
-            },
-          }),
-          anim.sequenced({
-            delay: 400,
-            timeBetween: 200,
-            waitForAllSteps: true,
-            items: stages,
-            onStep: (stage, index, src, finish) => {
-              const promises: Promise<any>[] = [];
-              for (const n of stage) {
-                promises.push(
-                  n.bubble(300, (_n) => {
-                    _n.state = "present";
-                    _n.shakes.removeShake(this.name);
-                  })
-                );
-              }
-              Promise.all(promises).then(finish);
-            },
-            callback: () => {
-              this.level.disablingAnimation(this.name, false);
-              this.end();
-            },
-          }),
-        ])
-      );
-    });
-  }
-}
-
-export class SyringeBonus extends Bonus {
-  name = "syringe";
-
-  protected _setup() {
-    this.level.sequenceManager.container.buttonMode = true;
-
-    this._once(this.level.sequenceManager, "click", (s: sequence.Sequence) => {
-      this.level.disablingAnimation(this.name, true);
-      this._activateChildEntity(
-        new entity.EntitySequence([
-          this.level.sequenceManager.removeSequence(
-            !this.level.options.disableScore,
-            true,
-            s
-          ),
-          new entity.FunctionCallEntity(() => {
-            this.level.sequenceManager.add();
-            this.level.disablingAnimation(this.name, false);
-            this.end();
-          }),
-        ])
-      );
-    });
-  }
-
-  protected _teardown() {
-    this.level.sequenceManager.container.buttonMode = false;
-  }
-}
-
-export interface InitialBonus {
+export interface InitialBonusOption {
   bonus: ((context: level.Level) => Bonus) | Bonus;
   quantity?: number;
 }
 
-export type InitialBonuses = InitialBonus[];
+export type InitialBonuses = InitialBonusOption[];
 
 export class BonusesManager extends entity.CompositeEntity {
   public container: PIXI.Container;
@@ -356,6 +281,7 @@ export class BonusesManager extends entity.CompositeEntity {
       this,
       "images/hud_bonus_background.png"
     );
+    this.bonusBackground.alpha = 0;
     this.container.addChild(this.bonusBackground);
 
     this._on(this, "deactivatedChildEntity", (bonus: entity.EntityBase) => {
@@ -408,6 +334,21 @@ export class BonusesManager extends entity.CompositeEntity {
         ((disable || !bonus.count) && !bonus.highlight);
       bonus.sprite.buttonMode = !bonusDisable;
       bonus.sprite.tint = bonusDisable ? 0x9f9f9f : 0xffffff;
+    }
+    if (this.bonuses.size > 0) {
+      if (this.bonusBackground.alpha < 1) {
+        this.bonusBackground.alpha = Math.min(
+          1,
+          this.bonusBackground.alpha + 0.01
+        );
+      }
+    } else {
+      if (this.bonusBackground.alpha > 0) {
+        this.bonusBackground.alpha = Math.max(
+          0,
+          this.bonusBackground.alpha - 0.01
+        );
+      }
     }
   }
 

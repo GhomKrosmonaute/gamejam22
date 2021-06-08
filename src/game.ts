@@ -5,13 +5,12 @@ import * as audio from "booyah/src/audio";
 import * as entity from "booyah/src/entity";
 import * as narration from "booyah/src/narration";
 
-import * as _main from "./scenes/main";
-import * as menu from "./scenes/menu";
-
 import * as crispr from "./crispr";
 import * as levels from "./levels";
 import * as metrics from "./metrics";
 import * as writeUs from "./scenes/writeUs";
+
+import * as _main from "./scenes/main";
 
 const main = new _main.Main();
 
@@ -105,11 +104,11 @@ const graphicalAssets = [
   "images/hole.png",
   "images/bubble.png",
   "images/clip.png",
-  "images/clip_top.png",
-  "images/clip_bottom.png",
+  "images/clip_sequence.png",
+  "images/clip_grid.png",
 
-  "images/nucleotide_glow.png",
-  "images/nucleotide_bright.png",
+  "images/nucleotide_glow_sequence.png",
+  "images/nucleotide_glow_grid.png",
   "images/nucleotide_gold_border.png",
 
   "images/particle.png",

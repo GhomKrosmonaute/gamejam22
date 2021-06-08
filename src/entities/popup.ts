@@ -673,7 +673,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
       withBackground: true,
       withClosureCross: false,
       closeOnBackgroundClick: true,
-      onClose: (popup) => popup.level.exit(true),
+      onClose: (popup) => popup.level.exit(),
     });
 
     this._once(this, "opened", () => {
@@ -702,11 +702,6 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
 }
 
 export class FailedLevelPopup extends EndOfLevelPopup {
-  constructor() {
-    super();
-    this.options.onClose = (popup) => popup.level.exit();
-  }
-
   onSetup() {
     Popup.cleanUpMinimized();
     // add title
@@ -762,10 +757,10 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
     // add score
     if (!this.level.options.disableScore) {
       const score = crispr.makeText(
-        `Score: ${this.level.score} pts (${crispr.proportion(
-          this.level.score,
+        `Score: ${this.level.crispies} pts (${crispr.proportion(
+          this.level.crispies,
           0,
-          crispr.scrap(this.level.options.score.max, this.level),
+          crispr.scrap(this.level.options.gaugeOptions.final, this.level),
           0,
           100,
           true
@@ -786,7 +781,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
       this._activateChildEntity(
         new tween.Tween({
           from: 0,
-          to: this.level.score,
+          to: this.level.crispies,
           easing: easing.easeInQuad,
           duration: 1000,
           onUpdate: (value) =>
@@ -794,7 +789,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
               crispr.proportion(
                 value,
                 0,
-                crispr.scrap(this.level.options.score.max, this.level),
+                crispr.scrap(this.level.options.gaugeOptions.final, this.level),
                 0,
                 100,
                 true
@@ -811,6 +806,8 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
       success: true,
       results,
     });
+
+    this.level.minimap.saveResults(this.level);
   }
 
   protected _playSound() {
@@ -925,9 +922,7 @@ export class StatePopup extends ChecksPopup {
     text.position.y = 100;
 
     const score = crispr.makeText(
-      `Progress: ${Math.floor(
-        this.level.options.score.get(this.level)
-      )} / ${crispr.scrap(this.level.options.score.max, this.level)}`,
+      crispr.scrap(this.level.options.endConditionText, this.level),
       {
         fontSize: 100,
         fill: 0xffffff,
@@ -937,6 +932,8 @@ export class StatePopup extends ChecksPopup {
     score.position.x = this.center.x;
     score.position.y = 75;
 
-    this.addRow(text, 200).addRow(score, 150).addCheckRows();
+    this.addRow(text, 300)
+      .addRow(score, 100 * score.text.split("\n").length)
+      .addCheckRows();
   }
 }

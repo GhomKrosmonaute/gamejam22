@@ -7,6 +7,7 @@ import * as tween from "booyah/src/tween";
 import * as easing from "booyah/src/easing";
 
 import * as popup from "./entities/popup";
+import * as grid from "./entities/grid";
 
 import * as l from "./scenes/level";
 
@@ -40,55 +41,122 @@ export function makeInstallCurrentLevelHolder() {
 }
 
 export const levels = {
-  // TODO: Joker doesn't work yet
-
-  // // Hard
-  // "Big\nBoss": () =>
-  //   new l.Level("Big\nBoss", (ctx) => ({
-  //     gridShape: "mini",
-  //     forceMatching: false,
-  //     jokerCount: 1,
-  //     maxLife: 5,
-  //     portalsCount: 2,
-  //   })),
-  // Caribbean: () =>
-  //   new l.Level("Caribbean", (ctx) => ({
-  //     gridShape: "fourIslands",
-  //     forceMatching: false,
-  //     clipCount: 4,
-  //     sequenceLength: 4,
-  //     portalsCount: 4,
-  //     jokerCount: 3,
-  //     maxLife: 10,
-  //     crispyBonusRate: 0.6,
-  //     initialBonuses: [
-  //       {
-  //         bonus: (ctx) => ctx.swapBonus,
-  //         quantity: 2,
-  //       },
-  //     ],
-  //     hooks: [
-  //       new l.Hook({
-  //         id: "intro",
-  //         event: "init",
-  //         once: true,
-  //         entity: new entity.FunctionCallEntity(() => {
-  //           ctx.activate(
-  //             new popup.TutorialPopup({
-  //               title: "Land in sight!",
-  //               content: `Loot the Caribbean treasures, collect at least ${ctx.options.score.max}!`,
-  //               image: "images/crispy.png",
-  //               imageHeight: 200,
-  //               popupOptions: {
-  //                 minimizeOnClose: false,
-  //                 coolDown: 2000,
-  //               },
-  //             })
-  //           );
-  //         }),
-  //       }),
-  //     ],
-  //   })),
+  // Hard
+  "Big\nBoss": () =>
+    new l.Level("Big\nBoss", (context) => ({
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.full,
+        portals: [
+          { x: 1, y: 1 },
+          { x: 5, y: 5 },
+        ],
+        jokers: [
+          { x: 1, y: 5 },
+          { x: 5, y: 1 },
+        ],
+      }),
+      virus: "big",
+      forceMatching: false,
+      sequenceLength: 10,
+      disableClips: true,
+      maxLife: 5,
+      crispyBonusRate: 0.5,
+      initialBonuses: [
+        {
+          bonus: (ctx) => ctx.swapBonus,
+          quantity: 5,
+        },
+      ],
+      hooks: [
+        new l.Hook({
+          id: "intro animation",
+          event: "init",
+          once: true,
+          entity: new entity.EntitySequence([
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", true);
+            }),
+            new anim.VirusSequence([
+              (v) =>
+                new entity.FunctionCallEntity(() => {
+                  v.type = "big";
+                  v.scale = 4.5;
+                  v.rounded = false;
+                  v.angle = 0;
+                  v.position = { x: crispr.width / 2, y: crispr.height * 2 };
+                  v.filters = [new OutlineFilter(20, 0x000000) as any];
+                }),
+              (v) => v.stingIn(),
+              (v) =>
+                new tween.Tween({
+                  duration: 500,
+                  from: crispr.height * 2,
+                  to: crispr.height,
+                  easing: easing.easeOutCubic,
+                  onUpdate: (value) => {
+                    v.position = { x: crispr.width / 2, y: value };
+                  },
+                }),
+              (v) => v.stingOut(),
+              () => new entity.WaitingEntity(500),
+              (v) => v.leave(),
+            ]),
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", false);
+            }),
+          ]),
+        }),
+        new l.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            if (context.isEnded && !context.finished)
+              context.activate(anim.title(context.container, "Go!"));
+          }),
+        }),
+      ],
+    })),
+  Caribbean: () =>
+    new l.Level("Caribbean", (ctx) => ({
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.fourIslands,
+        jokers: [
+          { x: 4, y: 4 },
+          { x: 2, y: 1 },
+        ],
+      }),
+      forceMatching: false,
+      sequenceLength: 6,
+      maxLife: 10,
+      crispyBonusRate: 0.6,
+      initialBonuses: [
+        {
+          bonus: (ctx) => ctx.swapBonus,
+          quantity: 2,
+        },
+      ],
+      hooks: [
+        new l.Hook({
+          id: "intro",
+          event: "init",
+          once: true,
+          entity: new entity.FunctionCallEntity(() => {
+            ctx.activate(
+              new popup.TutorialPopup({
+                title: "Land in sight!",
+                content: `Loot the Caribbean treasures, collect the maximum!`,
+                image: "images/crispy.png",
+                imageHeight: 200,
+                popupOptions: {
+                  minimizeOnClose: false,
+                  coolDown: 2000,
+                },
+              })
+            );
+          }),
+        }),
+      ],
+    })),
   // Timed: () =>
   //   new l.Level("Timed", (ctx) => {
   //     ctx.playTime = 0;
@@ -132,55 +200,150 @@ export const levels = {
   //   }),
 
   // Medium
-  // TODO: Doesn't look like a boss
-  // "Medium\nBoss": () => new l.Level("Medium\nBoss", {}),
-
-  // "Chrono\nPortal": () =>
-  //   new l.Level("Chrono\nPortal", (context) => ({
-  //     variant: "fall",
-  //     gridShape: "medium",
-  //     forceMatching: true,
-  //     portalsCount: 2,
-  //     clipCount: 3,
-  //     gaugeRings: [
-  //       (context) =>
-  //         context.bonusesManager.add(
-  //           context.swapBonus,
-  //           1,
-  //           new PIXI.Point(200, -2000)
-  //         ),
-  //       (context, ring) =>
-  //         context.activate(
-  //           new entity.EntitySequence([
-  //             new entity.FunctionCallEntity(() => {
-  //               context.bonusesManager.add(
-  //                 context.timeBonus,
-  //                 1,
-  //                 new PIXI.Point(500, -2000)
-  //               );
-  //             }),
-  //           ])
-  //         ),
-  //     ],
-  //     hooks: [
-  //       new l.Hook({
-  //         id: "go title",
-  //         event: "injectedSequence",
-  //         entity: new entity.FunctionCallEntity(() => {
-  //           if (context.isEnded && !context.finished)
-  //             context.activate(anim.title(context.container, "Go!"));
-  //         }),
-  //       }),
-  //     ],
-  //   })),
-  // "Four\nIslands": () =>
-  //   new l.Level("Four\nIslands", (context) => ({
-  //     gridShape: "fourIslands",
-  //     forceMatching: true,
-  //     clipCount: 3,
-  //     sequenceLength: 5,
-  //     portalsCount: 4,
-  //   })),
+  "Medium\nBoss": () =>
+    new l.Level("Medium\nBoss", (context) => ({
+      virus: "big",
+      variant: "turn",
+      fallingSpeed: 1,
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.hive,
+        clips: [{ x: 3, y: 3 }],
+        portals: [
+          { x: 1, y: 3 },
+          { x: 5, y: 3 },
+          { x: 3, y: 1 },
+          { x: 3, y: 5 },
+        ],
+      }),
+      sequenceLength: 7,
+      forceMatching: true,
+      hooks: [
+        new l.Hook({
+          id: "intro animation",
+          event: "init",
+          once: true,
+          entity: new entity.EntitySequence([
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", true);
+            }),
+            new anim.VirusSequence([
+              (v) =>
+                new entity.FunctionCallEntity(() => {
+                  v.type = "big";
+                  v.scale = 4.5;
+                  v.rounded = false;
+                  v.angle = 0;
+                  v.position = { x: crispr.width / 2, y: crispr.height * 2 };
+                  v.filters = [new OutlineFilter(20, 0x000000) as any];
+                }),
+              (v) => v.stingIn(),
+              (v) =>
+                new tween.Tween({
+                  duration: 500,
+                  from: crispr.height * 2,
+                  to: crispr.height,
+                  easing: easing.easeOutCubic,
+                  onUpdate: (value) => {
+                    v.position = { x: crispr.width / 2, y: value };
+                  },
+                }),
+              (v) => v.stingOut(),
+              () => new entity.WaitingEntity(500),
+              (v) => v.leave(),
+            ]),
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", false);
+            }),
+          ]),
+        }),
+        new l.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            if (context.isEnded && !context.finished)
+              context.activate(anim.title(context.container, "Go!"));
+          }),
+        }),
+      ],
+    })),
+  "Chrono\nPortal": () =>
+    new l.Level("Chrono\nPortal", (context) => ({
+      variant: "fall",
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.medium,
+        clips: [{ x: 3, y: 3 }],
+        portals: [
+          { x: 1, y: 3 },
+          { x: 5, y: 3 },
+          { x: 3, y: 1 },
+          { x: 3, y: 5 },
+        ],
+      }),
+      forceMatching: true,
+      // portals: 2,
+      // clips: 1,
+      gaugeRings: [
+        (context) =>
+          context.bonusesManager.add(
+            context.swapBonus,
+            1,
+            new PIXI.Point(200, -2000)
+          ),
+        (context, ring) =>
+          context.activate(
+            new entity.EntitySequence([
+              new entity.FunctionCallEntity(() => {
+                context.bonusesManager.add(
+                  context.timeBonus,
+                  1,
+                  new PIXI.Point(500, -2000)
+                );
+              }),
+            ])
+          ),
+      ],
+      hooks: [
+        new l.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            if (context.isEnded && !context.finished)
+              context.activate(anim.title(context.container, "Go!"));
+          }),
+        }),
+      ],
+    })),
+  "Four\nIslands": () =>
+    new l.Level("Four\nIslands", (context) => ({
+      forceMatching: true,
+      gridShape: grid.makeGrid(grid.gridMakerPresets.fourIslands),
+      sequenceLength: 5,
+    })),
+  "Two Islands": () =>
+    new l.Level("Two Islands", (context) => ({
+      gridShape: grid.makeGrid(grid.gridMakerPresets.twoIslands),
+      forceMatching: true,
+      hooks: [
+        new l.Hook({
+          id: "tuto portal",
+          event: "init",
+          once: true,
+          entity: new popup.TutorialPopup({
+            title: "Portals",
+            content:
+              "The portals are all linked together by quantum entanglement, you can use them to reach the unbeatable! ",
+            image: "images/portal.json",
+            imageHeight: 300,
+            imageAnimationSpeed: 15 / 60,
+            popupOptions: {
+              id: "popup tuto portal",
+              logo: "images/icon.png",
+              minimizeOnClose: true,
+            },
+          }),
+        }),
+      ],
+    })),
 
   // Medium
 
@@ -189,10 +352,13 @@ export const levels = {
       virus: "big",
       variant: "fall",
       fallingSpeed: 1,
-      gridShape: "bone",
-      sequenceLength: 5,
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.medium,
+        clips: [{ x: 3, y: 3 }],
+      }),
+      sequenceLength: 7,
       forceMatching: true,
-      clipCount: 3,
+      //clips: 3,
       gaugeRings: [
         (context) => {
           context.options.fallingSpeed = 1.2;
@@ -262,97 +428,9 @@ export const levels = {
         }),
       ],
     })),
-
-  "Chrono\nPortal": () =>
-    new l.Level("Chrono\nPortal", (context) => ({
-      variant: "fall",
-      gridShape: "mediumPortal",
-      forceMatching: true,
-      portalsCount: 2,
-      clipCount: 3,
-      gaugeRings: [
-        (context) =>
-          context.bonusesManager.add(
-            context.swapBonus,
-            1,
-            new PIXI.Point(200, -2000)
-          ),
-        (context, ring) =>
-          context.activate(
-            new entity.EntitySequence([
-              new entity.FunctionCallEntity(() => {
-                context.bonusesManager.add(
-                  context.timeBonus,
-                  1,
-                  new PIXI.Point(500, -2000)
-                );
-              }),
-            ])
-          ),
-      ],
-      hooks: [
-        new l.Hook({
-          id: "go title",
-          event: "injectedSequence",
-          entity: new entity.FunctionCallEntity(() => {
-            if (context.isEnded && !context.finished)
-              context.activate(anim.title(context.container, "Go!"));
-          }),
-        }),
-      ],
-    })),
-
-  // Around: () =>
-  //   new l.Level("Around", {
-  //     gridShape: "around",
-  //     forceMatching: true,
-  //     sequenceLength: 7,
-  //   }),
-
-  Claw: () =>
-    new l.Level("Claw", {
-      gridShape: "bone",
-      forceMatching: true,
-      sequenceLength: 7,
-    }),
-
-  Portal: () =>
-    new l.Level("Portal", {
-      gridShape: "mediumPortal",
-      forceMatching: true,
-      sequenceLength: 5,
-    }),
-
-  // Easy
-  Boss: () =>
-    new l.Level("Boss", (context) => ({
-      virus: "big",
-      variant: "fall",
-      fallingSpeed: 1,
-      gridShape: "medium",
-      sequenceLength: 7,
-      forceMatching: true,
-      clipCount: 3,
-      gaugeRings: [
-        (context) => {
-          context.options.fallingSpeed = 1.2;
-          context.activate(
-            anim.title(context.container, "Speed 120%", 2000, (t) => t, 2)
-          );
-        },
-        (context) =>
-          context.bonusesManager.add(
-            context.timeBonus,
-            1,
-            new PIXI.Point(500, -2000)
-          ),
-        (context) => {
-          context.options.fallingSpeed = 1.3;
-          context.activate(
-            anim.title(context.container, "Speed 130%", 2000, (t) => t, 2)
-          );
-        },
-      ],
+  Zen: () =>
+    new l.Level("Zen", {
+      variant: "zen",
       hooks: [
         new l.Hook({
           id: "intro animation",
@@ -459,10 +537,12 @@ export const levels = {
   Chrono: () =>
     new l.Level("Chrono", (context) => ({
       variant: "fall",
-      gridShape: "medium",
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.medium,
+        clips: [{ x: 3, y: 3 }],
+      }),
       forceMatching: true,
       crispyBonusRate: 0.3,
-      clipCount: 3,
       gaugeRings: [
         (context) =>
           context.bonusesManager.add(
@@ -506,7 +586,7 @@ export const levels = {
             context.activate(
               new popup.TutorialPopup({
                 title: "Time attack!",
-                content: `Crunch the sequences before they hit the grid!\n\nReach ${context.options.score.max} points to continue`,
+                content: `Crunch the sequences before they hit the grid!\n\nReach ${context.options.gaugeOptions.final} points to continue`,
                 popupOptions: {
                   id: "intro popup",
                   logo: "images/icon_timed.png",
@@ -549,9 +629,12 @@ export const levels = {
       variant: "turn",
       minStarNeeded: 1,
       forceMatching: true,
-      noCrispyBonus: true,
-      gridShape: "medium",
-      clipCount: 3,
+      noCrispyBonus: false,
+      crispyBonusRate: 0.2,
+      gridShape: grid.makeGrid({
+        ...grid.gridMakerPresets.medium,
+        clips: [{ x: 3, y: 3 }],
+      }),
       gaugeRings: [
         (context, ring) =>
           context.activate(
@@ -596,7 +679,7 @@ export const levels = {
             context.activate(
               new popup.TutorialPopup({
                 title: "Turn by turn",
-                content: `Now you know the basics, try with some longer sequences.\n\nKill ${context.options.score.max} viruses to continue!`,
+                content: `Now you know the basics, try with some longer sequences.\n\nKill ${context.options.gaugeOptions.final} viruses to continue!`,
                 popupOptions: {
                   minimizeOnClose: false,
                   coolDown: 2000,
@@ -611,19 +694,19 @@ export const levels = {
   // Intro
   Tutorial: () =>
     new l.Level("Tutorial", {
+      endConditionText: "Defeat 2 viruses\nwithout infection",
       variant: "turn",
       noCrispyBonus: true,
       disableClips: true,
       gridShape: [],
-      sequences: [["r", "g", "b"]],
+      sequences: [["red", "green", "blue"]],
       disableButton: true,
       disableBonuses: true,
       disableGauge: true,
       disableScore: true,
       disablingAnimations: ["tutorial"],
       checks: {
-        "Crunch a sequence": (context) => context.sequenceWasCrunched,
-        "Defeat 2 viruses": (context) => context.killedViruses >= 2,
+        "Not infected": (context) => !context.wasInfected,
       },
       hooks: [
         new l.Hook({
@@ -669,9 +752,9 @@ export const levels = {
             gridShape: [
               [],
               [],
-              [null, null, "y", "g", "r"],
-              [null, null, "b", "g", "g"],
-              [null, null, null, "b"],
+              [null, null, "yellow", "green", "red"],
+              [null, null, "blue", "green", "green"],
+              [null, null, null, "blue"],
               [],
               [],
             ],
@@ -681,7 +764,7 @@ export const levels = {
                 event: "init",
                 delay: 2000,
                 entity: new entity.FunctionCallEntity(() => {
-                  level.disablingAnimation("tutorial", false);
+                  level.disablingAnimations.clear();
 
                   const gridPos = level.grid.nucleotideContainer.position;
 
@@ -699,12 +782,14 @@ export const levels = {
                 id: "step 2 => step 3",
                 event: "sequenceDown",
                 reset: {
-                  gridShape: "mini",
+                  gridShape: grid.makeGrid({
+                    ...grid.gridMakerPresets.mini,
+                    clips: [{ x: 3, y: 3 }],
+                  }),
                   resetGrid: true,
                   resetSequences: true,
                   forceMatching: true,
                   disableButton: true,
-                  clipCount: 1,
                   sequenceLength: 4,
                   hooks: [
                     new l.Hook({
@@ -748,17 +833,17 @@ export const levels = {
                         resetSequences: true,
                         gridShape: [
                           null,
-                          [null, null, "y", "y", "b"],
-                          [null, "b", "y", "b", "y", "b"],
-                          [null, "b", "y", "y", "b", "b"],
-                          [null, "y", "b", "b", "y", "b"],
-                          [null, null, null, "y"],
+                          [null, null, "yellow", "yellow", "blue"],
+                          [null, "blue", "yellow", "blue", "yellow", "blue"],
+                          [null, "blue", "yellow", "clip", "blue", "blue"],
+                          [null, "yellow", "blue", "blue", "yellow", "blue"],
+                          [null, null, null, "yellow"],
                         ],
-                        sequences: [["g", "r", "g", "r", "r"]],
-                        clipCount: 1,
+                        sequences: [["green", "red", "green", "red", "red"]],
                         sequenceLength: 6,
                         forceMatching: true,
                         disableButton: false,
+                        disableClips: false,
                         maxLife: 2,
                         hooks: [
                           new l.Hook({
@@ -781,7 +866,7 @@ export const levels = {
                             once: true,
                             event: "minimizedPopup",
                             filter: (p) => p.id === "popup skip button",
-                            delay: 5000,
+                            delay: 2000,
                             entity: new entity.FunctionCallEntity(() => {
                               level.disablingAnimation("tutorial", false);
 
@@ -790,7 +875,7 @@ export const levels = {
 
                               level.activate(
                                 new entity.EntitySequence([
-                                  new entity.WaitingEntity(2000),
+                                  new entity.WaitingEntity(1000),
                                   anim.finger(level, {
                                     container: level.entityConfig.container,
                                     to: { x: buttonPos.x, y: buttonPos.y },
@@ -801,19 +886,22 @@ export const levels = {
                             }),
                           }),
                           new l.Hook({
+                            id: "press button and infect",
+                            event: "actionButtonPressed",
+                            once: true,
+                            entity: new entity.FunctionCallEntity(() => {
+                              context.disablingAnimation("tutorial", true);
+                              context.disablingAnimation("preventVirus", true);
+                            }),
+                          }),
+                          new l.Hook({
                             id: "step 4.1",
                             event: "infected",
                             once: true,
                             entity: new entity.EntitySequence([
-                              new entity.FunctionCallEntity(() => {
-                                context.disablingAnimation("tutorial", true);
-                                context.disablingAnimation(
-                                  "preventVirus",
-                                  true
-                                );
-                              }),
                               new entity.WaitingEntity(1500),
                               new entity.FunctionCallEntity(() => {
+                                context.wasInfected = false;
                                 context.activate(
                                   new popup.TutorialPopup({
                                     title: "Infection",
@@ -840,26 +928,32 @@ export const levels = {
                               context.disablingAnimation("preventVirus", false);
                               context.emitLevelEvent("canReset");
                               context.wasInfected = false;
+                              context.killedViruses = 0;
                             }),
                           }),
                           new l.Hook({
                             id: "step 4 => step 5",
                             event: "canReset",
                             reset: {
-                              gridShape: "medium",
+                              gridShape: grid.makeGrid({
+                                ...grid.gridMakerPresets.medium,
+                                clips: [{ x: 3, y: 3 }],
+                              }),
+                              crispyBonusRate: 0.2,
+                              noCrispyBonus: false,
                               resetGrid: true,
                               resetScore: true,
                               resetSequences: true,
                               sequenceLength: 5,
                               maxLife: 5,
-                              clipCount: 3,
                               sequences: null,
+                              disableClips: false,
                               disableScore: false,
                               disableGauge: false,
                               forceMatching: true,
-                              score: {
+                              gaugeOptions: {
                                 initial: 0,
-                                max: 2,
+                                final: 2,
                               },
                               hooks: [
                                 new l.Hook({
@@ -869,6 +963,7 @@ export const levels = {
                                   entity: new entity.EntitySequence([
                                     new entity.WaitingEntity(1500),
                                     new entity.FunctionCallEntity(() => {
+                                      context.wasInfected = false;
                                       context.life = 5;
                                       context.disablingAnimation(
                                         "preventVirus",
@@ -923,19 +1018,14 @@ export type Levels = typeof levels;
 
 export const sections = {
   Intro: [levels.Tutorial],
-  Easy: [levels.Classic, levels.Chrono, levels.Hole, levels.Boss],
+  Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
   Medium: [
-    levels.Portal,
-    levels.Claw,
+    levels["Two Islands"],
+    levels["Four\nIslands"],
     levels["Chrono\nPortal"],
-    levels["Big Boss"],
+    levels["Medium\nBoss"],
   ],
-  // Medium: [
-  //   levels["Four\nIslands"],
-  //   levels["Chrono\nPortal"],
-  // levels["Medium\nBoss"],
-  // ],
-  // Hard: [levels.Caribbean, levels["Big\nBoss"]],
+  Hard: [levels.Caribbean, levels["Big\nBoss"]],
 };
 
 export type SectionName = keyof typeof sections;
