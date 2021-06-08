@@ -136,6 +136,7 @@ export function makeGrid(
   const shape: GridArrayShape<
     keyof typeof nucleotide.NucleotideSignatures
   > = [];
+
   const filter = options.filter ?? (() => true);
   const portals = options.portals ?? [];
   const jokers = options.jokers ?? [];
@@ -149,10 +150,10 @@ export function makeGrid(
   }
 
   portals.forEach(({ x, y }) => (shape[y][x] = "portal"));
-
   jokers.forEach(({ x, y }) => (shape[y][x] = "joker"));
-
   clips.forEach(({ x, y }) => (shape[y][x] = "clip"));
+
+  debugger;
 
   return shape;
 }

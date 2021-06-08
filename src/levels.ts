@@ -325,8 +325,6 @@ export const levels = {
   Zen: () =>
     new l.Level("Zen", {
       variant: "zen",
-      gridShape: grid.makeGrid(grid.gridMakerPresets.medium),
-      forceMatching: true,
       hooks: [
         new l.Hook({
           id: "intro",

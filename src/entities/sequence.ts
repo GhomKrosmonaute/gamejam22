@@ -345,6 +345,7 @@ export class Sequence extends entity.CompositeEntity {
       this.level.isInit &&
       !this.level.isEnded &&
       !this.level.disablingAnimations.has("preventVirus") &&
+      !this.level.disablingAnimations.has("grid._setup") &&
       ![...this.level.disablingAnimations].some((name) =>
         name.startsWith("popup")
       );
@@ -508,7 +509,23 @@ export class Sequence extends entity.CompositeEntity {
     });
 
     if (this.level.options.disableViruses) {
-      this._initNucleotides();
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          new entity.FunctionalEntity({
+            requestTransition: () =>
+              !this.level.finished &&
+              this.level.isInit &&
+              !this.level.isEnded &&
+              !this.level.disablingAnimations.has("grid._setup") &&
+              ![...this.level.disablingAnimations].some((name) =>
+                name.startsWith("popup")
+              ),
+          }),
+          new entity.FunctionCallEntity(() => {
+            this._initNucleotides();
+          }),
+        ])
+      );
     } else {
       this._activateChildEntity(this._initVirus());
     }

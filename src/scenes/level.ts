@@ -35,6 +35,8 @@ export const levelVariants: { [k in LevelVariant]: Partial<LevelOptions> } = {
       ctx.remainingMoves.count <= 0 && ctx.crispies >= 1000,
     showMatchOnCrunch: false,
     sequenceRounded: true,
+    gridShape: grid.makeGrid(grid.gridMakerPresets.full),
+    forceMatching: true,
     sequenceLength: 13,
     disableClips: true,
     disableBonuses: true,
@@ -483,15 +485,10 @@ export class Level extends entity.CompositeEntity {
 
   constructor(
     public name: levels.LevelName,
-    optionsResolvable:
-      | ((context: Level) => Partial<LevelOptions>)
-      | Partial<LevelOptions>
+    optionsResolvable: crispr.Scrapper<Partial<LevelOptions>, [Level]>
   ) {
     super();
-    const options =
-      typeof optionsResolvable === "function"
-        ? optionsResolvable(this)
-        : optionsResolvable;
+    const options = crispr.scrap(optionsResolvable, this);
 
     this.options = {
       ...defaultLevelOptions,
