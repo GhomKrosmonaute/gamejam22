@@ -16,6 +16,30 @@ import * as crispr from "./crispr";
 
 declare var level: l.Level;
 
+export class CurrentLevelHolder {
+  private _level: l.Level = null;
+
+  get level(): l.Level {
+    return this._level;
+  }
+
+  set level(level: l.Level) {
+    this._level = level;
+
+    // Store the level in window for convenience
+    (window as any).level = level;
+  }
+}
+
+export function makeInstallCurrentLevelHolder() {
+  return (
+    rootConfig: entity.EntityConfig,
+    rootEntity: entity.ParallelEntity
+  ) => {
+    rootConfig.currentLevelHolder = new CurrentLevelHolder();
+  };
+}
+
 export const levels = {
   // Hard
   "Big\nBoss": () =>
@@ -321,9 +345,10 @@ export const levels = {
       ],
     })),
 
-  // Easy
-  Boss: () =>
-    new l.Level("Boss", (context) => ({
+  // Medium
+
+  "Big Boss": () =>
+    new l.Level("Big Boss", (context) => ({
       virus: "big",
       variant: "fall",
       fallingSpeed: 1,
@@ -408,21 +433,107 @@ export const levels = {
       variant: "zen",
       hooks: [
         new l.Hook({
-          id: "intro",
-          event: "setup",
+          id: "intro animation",
+          event: "init",
           once: true,
-          entity: new popup.TutorialPopup({
-            title: "Zen",
-            content:
-              "Chill out and enjoy making long DNA sequences.\n\nYou have 10 moves to rack up 1000 points and continue",
-            popupOptions: {
-              minimizeOnClose: false,
-              coolDown: 2000,
-            },
+          entity: new entity.EntitySequence([
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", true);
+            }),
+            new anim.VirusSequence([
+              (v) =>
+                new entity.FunctionCallEntity(() => {
+                  v.type = "big";
+                  v.scale = 4.5;
+                  v.rounded = false;
+                  v.angle = 0;
+                  v.position = { x: crispr.width / 2, y: crispr.height * 2 };
+                  v.filters = [new OutlineFilter(20, 0x000000) as any];
+                }),
+              (v) => v.stingIn(),
+              (v) =>
+                new tween.Tween({
+                  duration: 500,
+                  from: crispr.height * 2,
+                  to: crispr.height,
+                  easing: easing.easeOutCubic,
+                  onUpdate: (value) => {
+                    v.position = { x: crispr.width / 2, y: value };
+                  },
+                }),
+              (v) => v.stingOut(),
+              () => new entity.WaitingEntity(500),
+              (v) => v.leave(),
+            ]),
+            new entity.FunctionCallEntity(() => {
+              context.disablingAnimation("preventVirus", false);
+            }),
+          ]),
+        }),
+        new l.Hook({
+          id: "go title",
+          event: "injectedSequence",
+          entity: new entity.FunctionCallEntity(() => {
+            if (context.isEnded && !context.finished)
+              context.activate(anim.title(context.container, "Go!"));
           }),
         }),
       ],
-    }),
+    })),
+  // Zen: () =>
+  //   new l.Level("Zen", {
+  //     variant: "zen",
+  //     gridShape: "full",
+  //     disableClips: true,
+  //     forceMatching: true,
+  //     disableBonuses: true,
+  //     crispyBonusRate: 0.2,
+  //     zenMoves: 10,
+  //     score: {
+  //       max: 1000,
+  //       initial: 0,
+  //       color: crispr.yellowNumber,
+  //       get: (ctx) => ctx.score,
+  //       set: (val, ctx) => (ctx.score = val),
+  //       show: (val) => String(Math.floor(val)),
+  //       devise: (val, ctx) =>
+  //         crispr.sprite(ctx, "images/crispy.png", (it) => {
+  //           it.anchor.set(0.5);
+  //           it.scale.set(0.6);
+  //           it.x = 65;
+  //         }),
+  //     },
+  //     checks: {
+  //       "One shot sequence": (level) => level.oneShotLongSequence,
+  //       "Win in 5 moves or less": (level) =>
+  //         level.options.zenMoves - level.remainingMovesIndicator.count <= 5,
+  //       "Max score reached": (level) =>
+  //         level.options.score.get(level) >=
+  //         crispr.scrap(level.options.score.max, level),
+  //     },
+  //     hooks: [
+  //       new l.Hook({
+  //         id: "intro",
+  //         event: "setup",
+  //         once: true,
+  //         entity: new popup.TutorialPopup({
+  //           title: "Zen",
+  //           content:
+  //             "Chill out and enjoy making long DNA sequences.\n\nYou have 10 moves to rack up 1000 points and continue",
+  //           popupOptions: {
+  //             minimizeOnClose: false,
+  //             coolDown: 2000,
+  //           },
+  //         }),
+  //       }),
+  //     ],
+  //   }),
+
+  Hole: () =>
+    new l.Level("Hole", (context) => ({
+      gridShape: "hole",
+      forceMatching: true,
+    })),
   Chrono: () =>
     new l.Level("Chrono", (context) => ({
       variant: "fall",

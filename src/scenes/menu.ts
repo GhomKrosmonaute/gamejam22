@@ -20,12 +20,32 @@ const defaultSettings: Settings = {
   fullscreen: util.inFullscreen(),
 };
 
+const creditsOptions: Partial<booyah.CreditsEntityOptions> = {
+  credits: {
+    Programming: "Camille Abella",
+    "Game Design": "Jesse Himmelstein",
+    "Graphic Design": [
+      "Naëlane Lefebvre Thillier",
+      "Nawel Nenrhannou",
+      "Mathieu Lim",
+    ],
+    Animation: ["Dilane Kerfanto", "Anthony Bastide"],
+    Science: "Jake Wintermute",
+    "Sound Design": "Jean-Baptiste Mar",
+    "Creative Direction": "JC Letraublon",
+    QA: ["Ilyes Khamassi", "Eliot Marechal"],
+  },
+  fontFamily: "Optimus",
+  textSize: 40,
+};
+
 export class Menu extends entity.CompositeEntity {
   private settings: Settings;
 
   private opened: boolean;
   private container: PIXI.Container;
 
+  private blackBackground: PIXI.Graphics;
   private background: PIXI.Sprite;
   private popupBackground: PIXI.Sprite;
   private homeButton: PIXI.Sprite;
@@ -33,16 +53,19 @@ export class Menu extends entity.CompositeEntity {
   private backButton: PIXI.Sprite;
   private playCuriousLogo: PIXI.Sprite;
   private creditButton: PIXI.Text;
+  private creditsEntity: booyah.CreditsEntity;
   private title: PIXI.Text;
 
   private fullscreenSwitcher: SpriteSwitcher;
-  private subTitleSwitcher: SpriteSwitcher;
+  // private subTitleSwitcher: SpriteSwitcher;
   private musicVolumeSwitcher: SpriteSwitcher<
     Record<"0" | "0.5" | "1", string>
   >;
   private soundVolumeSwitcher: SpriteSwitcher<
     Record<"0" | "0.5" | "1", string>
   >;
+
+  private debugPressCount: number;
 
   private saveSettings() {
     localStorage.setItem("settings", JSON.stringify(this.settings));
@@ -59,18 +82,11 @@ export class Menu extends entity.CompositeEntity {
     this.container.visible = false;
 
     {
-      // @ts-ignore
-      if (window.level) {
-        // @ts-ignore
-        if (window.level.options.mustBeHiddenOnPause) {
-          const blackBackground = new PIXI.Graphics()
-            .beginFill()
-            .drawRect(0, 0, crispr.width, crispr.height)
-            .endFill();
-
-          this.container.addChild(blackBackground);
-        }
-      }
+      this.blackBackground = new PIXI.Graphics()
+        .beginFill()
+        .drawRect(0, 0, crispr.width, crispr.height)
+        .endFill();
+      this.container.addChild(this.blackBackground);
     }
 
     {
@@ -79,7 +95,7 @@ export class Menu extends entity.CompositeEntity {
       this.menuButton.position.set(crispr.width, 0);
       this.menuButton.buttonMode = true;
       this.menuButton.interactive = true;
-      this._on(this.menuButton, "pointerup", this.open.bind(this));
+      this._on(this.menuButton, "pointerup", this.open);
     }
 
     {
@@ -102,6 +118,10 @@ export class Menu extends entity.CompositeEntity {
       );
       this.playCuriousLogo.anchor.set(0.5);
       this.playCuriousLogo.position.set(crispr.width / 2, crispr.height * 0.85);
+
+      this.playCuriousLogo.interactive = true;
+      this.playCuriousLogo.buttonMode = true;
+      this._on(this.playCuriousLogo, "pointertap", this._onTapPCLogo);
       this.container.addChild(this.playCuriousLogo);
     }
 
@@ -111,16 +131,22 @@ export class Menu extends entity.CompositeEntity {
         fill: crispr.yellow,
       });
       this.creditButton.position.set(crispr.width / 2, crispr.height * 0.74);
+      this.creditButton.interactive = true;
+      this.creditButton.buttonMode = true;
+      this._on(this.creditButton, "pointertap", this._showCredits);
       this.container.addChild(this.creditButton);
+
+      // Credits entity starts null, and is created only when the button is pressed
+      this.creditsEntity = null;
     }
 
-    if (this._entityConfig.level) {
+    {
       this.homeButton = crispr.sprite(this, "images/menu_home_button.png");
       this.homeButton.buttonMode = true;
       this.homeButton.interactive = true;
       this._on(this.homeButton, "pointerup", () => {
         this.close();
-        this._entityConfig.level.exit();
+        this._entityConfig.currentLevelHolder.level.exit();
       });
       this.container.addChild(this.homeButton);
     }
@@ -131,7 +157,7 @@ export class Menu extends entity.CompositeEntity {
       this.backButton.interactive = true;
       this.backButton.anchor.set(1, 0);
       this.backButton.position.set(crispr.width, 0);
-      this._on(this.backButton, "pointerup", this.close.bind(this));
+      this._on(this.backButton, "pointerup", this.close);
       this.container.addChild(this.backButton);
     }
 
@@ -145,6 +171,10 @@ export class Menu extends entity.CompositeEntity {
       this.title.anchor.set(0.5);
       this.title.position.set(crispr.width / 2, crispr.height / 6);
       this.container.addChild(this.title);
+
+      // Put in "debug mode" easter egg
+      this.title.interactive = true;
+      this._on(this.title, "pointertap", this._onDebugPress);
     }
 
     if (util.supportsFullscreen()) {
@@ -166,24 +196,25 @@ export class Menu extends entity.CompositeEntity {
       });
     }
 
-    {
-      this.subTitleSwitcher = new SpriteSwitcher(
-        {
-          on: "images/menu_subtitles_button.png",
-          off: "images/menu_subtitles_button_disabled.png",
-        },
-        this.settings.subTitles ? "on" : "off"
-      );
-      this.subTitleSwitcher.container.position.set(200, -200);
-      this.subTitleSwitcher.onStateChange((state) => {
-        this._entityConfig.playOptions.setOption(
-          "showSubtitles",
-          state === "on"
-        );
-        this.settings.subTitles = state === "on";
-        this.saveSettings();
-      });
-    }
+    // Currently subtitles can't be controlled
+    // {
+    //   this.subTitleSwitcher = new SpriteSwitcher(
+    //     {
+    //       on: "images/menu_subtitles_button.png",
+    //       off: "images/menu_subtitles_button_disabled.png",
+    //     },
+    //     this.settings.subTitles ? "on" : "off"
+    //   );
+    //   this.subTitleSwitcher.container.position.set(200, -200);
+    //   this.subTitleSwitcher.onStateChange((state) => {
+    //     this._entityConfig.playOptions.setOption(
+    //       "showSubtitles",
+    //       state === "on"
+    //     );
+    //     this.settings.subTitles = state === "on";
+    //     this.saveSettings();
+    //   });
+    // }
 
     {
       this.musicVolumeSwitcher = new SpriteSwitcher(
@@ -265,12 +296,12 @@ export class Menu extends entity.CompositeEntity {
       );
     }
 
-    this._activateChildEntity(
-      this.subTitleSwitcher,
-      entity.extendConfig({
-        container: this.popupBackground,
-      })
-    );
+    // this._activateChildEntity(
+    //   this.subTitleSwitcher,
+    //   entity.extendConfig({
+    //     container: this.popupBackground,
+    //   })
+    // );
     this._activateChildEntity(
       this.musicVolumeSwitcher,
       entity.extendConfig({
@@ -295,20 +326,76 @@ export class Menu extends entity.CompositeEntity {
   }
 
   open() {
-    if (this.opened) throw new Error("nope");
+    if (this.opened) return;
+
     booyah.changeGameState("paused");
-    this.opened = true;
-    this.menuButton.visible = false;
-    this.container.visible = true;
+    this.debugPressCount = 0;
+
+    // Displaying the menu will be done in _onSignal()
   }
 
   close() {
-    if (!this.opened) throw new Error("nope");
+    if (!this.opened) return;
+
     booyah.changeGameState("playing");
-    this.opened = false;
-    this.menuButton.visible = true;
-    this.container.visible = false;
+    // Hiding the menu will be done in _onSignal()
   }
+
+  _onSignal(frameInfo: entity.FrameInfo, signal: string, data?: any): void {
+    if (signal === "pause" && !this.opened) {
+      this.opened = true;
+      this.menuButton.visible = false;
+      this.container.visible = true;
+
+      this._onOpen();
+    } else if (signal === "play" && this.opened) {
+      this.opened = false;
+      this.menuButton.visible = true;
+      this.container.visible = false;
+    }
+  }
+
+  _update(frameInfo: entity.FrameInfo) {
+    if (this.creditsEntity) {
+      if (this.creditsEntity.transition) {
+        this._deactivateChildEntity(this.creditsEntity);
+        this.creditsEntity = null;
+      }
+    }
+  }
+
+  private _onOpen() {
+    this.blackBackground.visible =
+      !!this._entityConfig.currentLevelHolder.level?.options
+        .mustBeHiddenOnPause;
+    this.homeButton.visible = !!this._entityConfig.currentLevelHolder.level;
+  }
+
+  private _showCredits() {
+    this.creditsEntity = new booyah.CreditsEntity(creditsOptions);
+    this._activateChildEntity(this.creditsEntity);
+  }
+
+  private _onTapPCLogo() {
+    window.open("https://playcurious.games", "_blank");
+  }
+
+  private _onDebugPress() {
+    if (++this.debugPressCount === 9) {
+      crispr.setInDebugMode(true);
+      this._entityConfig.fxMachine.play("score_ring");
+    }
+  }
+}
+
+export function makeInstallMenu() {
+  return (
+    rootConfig: entity.EntityConfig,
+    rootEntity: entity.ParallelEntity
+  ) => {
+    rootConfig.menu = new Menu();
+    rootEntity.addChildEntity(rootConfig.menu);
+  };
 }
 
 /**

@@ -43,7 +43,7 @@ export class Gauge extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   _setup() {
@@ -356,7 +356,7 @@ export class ActionButton extends entity.CompositeEntity {
   public text: PIXI.Text;
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   protected _setup() {
@@ -520,7 +520,7 @@ export class RemainingMoves extends entity.CompositeEntity {
   private _count: number;
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get count(): number {

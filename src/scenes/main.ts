@@ -9,7 +9,6 @@ import * as levels from "../levels";
 import * as level from "./level";
 
 import * as popup from "../entities/popup";
-import * as menu from "./menu";
 
 import * as anim from "../animations";
 import * as crispr from "../crispr";
@@ -18,7 +17,6 @@ export class Main extends entity.CompositeEntity {
   static savedScroll = -9999999;
   static lastLevel: levels.LevelName = null;
 
-  private menu: menu.Menu;
   private container: PIXI.Container;
   private background: PIXI.Sprite;
   private buttons: PIXI.Container;
@@ -34,8 +32,6 @@ export class Main extends entity.CompositeEntity {
     this.container = new PIXI.Container();
     this.buttons = new PIXI.Container();
 
-    this.menu = new menu.Menu();
-
     this.background = crispr.sprite(this, "images/minimap_background.png");
 
     this.container.addChild(this.background);
@@ -49,8 +45,38 @@ export class Main extends entity.CompositeEntity {
 
     const starCount = levels.countStars();
 
+    // Add "Want more levels?" to the map
+    {
+      const index = this.buttons.children.length;
+      const even = index % 2 === 0;
+      const position = new PIXI.Point(
+        crispr.approximate(crispr.width * 0.5 + (even ? -150 : 150), 50),
+        crispr.proportion(index, -0.5, 4 - 0.5, 200, crispr.height - 200)
+      );
+
+      const levelSprite = crispr.sprite(
+        this,
+        "images/minimap_want_more_levels.png"
+      );
+
+      levelSprite.anchor.set(0.5);
+      levelSprite.scale.set(0.9 + Math.random() * 0.2);
+      levelSprite.position.copyFrom(position);
+      levelSprite.interactive = true;
+      levelSprite.buttonMode = true;
+
+      this._on(
+        levelSprite,
+        "pointertap",
+        () => (this._transition = entity.makeTransition("writeUs"))
+      );
+
+      this.buttons.addChild(levelSprite);
+    }
+
+    // Add each of the levels to the map
     for (const levelName of Object.keys(levels.levels) as levels.LevelName[]) {
-      const index = Object.keys(levels.levels).indexOf(levelName);
+      const index = this.buttons.children.length;
       const data = localStorage.getItem(levelName);
       const even = index % 2 === 0;
       const neededStars = levels.getNeededStars(levelName);
@@ -61,13 +87,7 @@ export class Main extends entity.CompositeEntity {
       // make a button
       const position = new PIXI.Point(
         crispr.approximate(crispr.width * 0.5 + (even ? -150 : 150), 50),
-        crispr.proportion(
-          levels.levelNames.indexOf(levelName),
-          -0.5,
-          4 - 0.5,
-          200,
-          crispr.height - 200
-        )
+        crispr.proportion(index, -0.5, 4 - 0.5, 200, crispr.height - 200)
       );
 
       const levelSprite = crispr.sprite(this, "images/minimap_level.png");
@@ -184,7 +204,7 @@ export class Main extends entity.CompositeEntity {
         levelSprite.addChild(viruses);
       }
 
-      if (!isAccessible && !crispr.debug) {
+      if (!isAccessible && !crispr.inDebugMode()) {
         text.visible = false;
 
         levelSprite.tint = 0xb0b0b0;
@@ -202,6 +222,35 @@ export class Main extends entity.CompositeEntity {
         })
       );
       this._activateChildEntity(shaking);
+
+      this.buttons.addChild(levelSprite);
+    }
+
+    // Add the trailer button to the map
+    {
+      const index = this.buttons.children.length;
+      const even = index % 2 === 0;
+      const position = new PIXI.Point(
+        crispr.approximate(crispr.width * 0.5 + (even ? -150 : 150), 50),
+        crispr.proportion(index, -0.5, 4 - 0.5, 200, crispr.height - 200)
+      );
+
+      const levelSprite = crispr.sprite(
+        this,
+        "images/minimap_watch_trailer.png"
+      );
+
+      levelSprite.anchor.set(0.5);
+      levelSprite.scale.set(0.9 + Math.random() * 0.2);
+      levelSprite.position.copyFrom(position);
+      levelSprite.interactive = true;
+      levelSprite.buttonMode = true;
+
+      this._on(
+        levelSprite,
+        "pointertap",
+        () => (this._transition = entity.makeTransition("start"))
+      );
 
       this.buttons.addChild(levelSprite);
     }
@@ -224,13 +273,6 @@ export class Main extends entity.CompositeEntity {
 
     this._entityConfig.container.addChild(this.container);
     this._entityConfig.minimap = this;
-
-    this._activateChildEntity(
-      this.menu,
-      entity.extendConfig({
-        container: this.container,
-      })
-    );
   }
 
   protected _update() {

@@ -28,7 +28,7 @@ export const sequenceMatchingOptions: {
   },
   fall: {
     minLength: (ctx) => ctx.sequenceManager.first.baseLength,
-    sticky: "left",
+    sticky: "right",
     sens: "toRight",
   },
   turn: {
@@ -42,7 +42,7 @@ export class SequenceAdjustment extends entity.CompositeEntity {
   private readonly disablingAnimation = "adjustSequences";
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   adjust() {
@@ -149,7 +149,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
     this.generateFirstSequences();
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("--> DONE", "sequenceManager.reset()");
     }
   }
@@ -165,7 +165,7 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get viruses(): virus.Virus[] {
@@ -179,6 +179,7 @@ export class SequenceManager extends entity.CompositeEntity {
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
       nucleotide.nucleotideRadius.sequence
     );
+
     const sequence = new Sequence(
       colors,
       new PIXI.Point(
@@ -203,6 +204,7 @@ export class SequenceManager extends entity.CompositeEntity {
     } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
       nucleotide.nucleotideRadius.sequence
     );
+    
     const sequence = new Sequence(
       length,
       new PIXI.Point(
@@ -317,7 +319,7 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get maxActiveLength(): number {
@@ -504,7 +506,10 @@ export class Sequence extends entity.CompositeEntity {
     this.container.interactive = true;
 
     this._on(this.container, "pointerup", () => {
-      this._entityConfig.level.sequenceManager.emit("click", this);
+      this._entityConfig.currentLevelHolder.level.sequenceManager.emit(
+        "click",
+        this
+      );
     });
 
     if (this.level.options.disableViruses) {

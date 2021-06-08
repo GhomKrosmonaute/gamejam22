@@ -138,7 +138,7 @@ export class Nucleotide extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get active(): boolean {

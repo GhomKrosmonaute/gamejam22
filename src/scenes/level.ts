@@ -20,7 +20,6 @@ import * as path from "../entities/path";
 import * as hair from "../entities/hair";
 import * as hud from "../entities/hud";
 
-import * as menu from "../scenes/menu";
 import * as metrics from "../metrics";
 
 export type LevelVariant = "turn" | "fall" | "zen";
@@ -329,7 +328,7 @@ export class Hook<
   }
 
   get level(): Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   protected _setup() {
@@ -338,13 +337,13 @@ export class Hook<
       this.options.event,
       this.listener.bind(this)
     );
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("hook setup:", this.options.id);
     }
   }
 
   protected _teardown() {
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("hook teardown:", this.options.id);
     }
   }
@@ -364,7 +363,7 @@ export class Hook<
       const delay = this.options.delay ?? 0;
 
       if (this.options.reset) {
-        if (crispr.debug) {
+        if (crispr.inDebugMode()) {
           console.log("hook reset:", this.options.id);
         }
 
@@ -401,7 +400,7 @@ export class Hook<
           ])
         );
       } else if (this.options.entity) {
-        if (crispr.debug) {
+        if (crispr.inDebugMode()) {
           console.log("hook activate:", this.options.id, this.options.entity);
         }
 
@@ -418,7 +417,7 @@ export class Hook<
           ])
         );
       } else {
-        if (crispr.debug) {
+        if (crispr.inDebugMode()) {
           console.error("hook called but not triggered:", this.options.id);
         }
       }
@@ -452,6 +451,7 @@ export class Level extends entity.CompositeEntity {
   public actionButton: hud.ActionButton;
   public remainingMoves: hud.RemainingMoves;
   public menu: menu.Menu;
+
 
   // screen shake
   public screenShakeAmplitude: number;
@@ -558,28 +558,10 @@ export class Level extends entity.CompositeEntity {
 
   private _initScreenShake() {
     this.screenShake(0, 0, 0);
-    // this.screenShakeComponents = [
-    //   ...this.backgroundLayers,
-    //   this.grid.container
-    // ]
-  }
-
-  private _initMenu() {
-    this.menu = new menu.Menu();
-    this._activateChildEntity(
-      this.menu,
-      entity.extendConfig({
-        container: this._entityConfig.app.stage,
-      })
-    );
-  }
-
-  private _disableMenu() {
-    this._deactivateChildEntity(this.menu);
   }
 
   private _initHooks() {
-    if (crispr.debug)
+    if (crispr.inDebugMode())
       console.log(
         "hooks to init",
         this.options.hooks.map((h) => h.options.id)
@@ -745,7 +727,7 @@ export class Level extends entity.CompositeEntity {
   _setup() {
     this.isInit = false;
     this.container.sortableChildren = true;
-    this._entityConfig.level = this;
+    this._entityConfig.currentLevelHolder.level = this;
     this._entityConfig.container.addChild(this.container);
 
     metrics.logEvent("level_start", { level_name: this.name });
@@ -803,7 +785,6 @@ export class Level extends entity.CompositeEntity {
     this._initBonuses();
     this._initButton();
     this._initGauge();
-    this._initMenu();
 
     this._activateChildEntity(
       new entity.EntitySequence([
@@ -969,11 +950,13 @@ export class Level extends entity.CompositeEntity {
     this._entityConfig.container.removeChildren();
     this.disablingAnimations.clear();
     this.removeAllListeners();
+
+    this._entityConfig.currentLevelHolder.level = null;
   }
 
   reset(options: LevelOptions) {
     this.isInit = false;
-    this._entityConfig.level = this;
+    this._entityConfig.currentLevelHolder.level = this;
 
     // assign flags
     for (const key in options) {
@@ -1042,7 +1025,7 @@ export class Level extends entity.CompositeEntity {
 
     // Hooks
     {
-      if (crispr.debug) {
+      if (crispr.inDebugMode()) {
         console.log(
           "hooks to deactivate",
           this.options.hooks.map((h) => h.options.id)
@@ -1057,18 +1040,12 @@ export class Level extends entity.CompositeEntity {
       this._initHooks();
     }
 
-    // Menu
-    {
-      this._disableMenu();
-      this._initMenu();
-    }
-
     this.refresh();
 
     this.emitLevelEvent("init");
     this.isInit = true;
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("--> DONE", "level.reset()");
     }
   }
@@ -1097,7 +1074,7 @@ export class Level extends entity.CompositeEntity {
   disablingAnimation(name: string, state: boolean) {
     const oldLength = this.disablingAnimations.size;
     this.disablingAnimations[state ? "add" : "delete"](name);
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       const newLength = this.disablingAnimations.size;
       if (oldLength !== newLength) {
         console.log("updated disabling animations:", newLength, [

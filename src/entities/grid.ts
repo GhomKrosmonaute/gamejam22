@@ -196,7 +196,7 @@ export class Grid extends entity.CompositeEntity {
   public lastHovered: nucleotide.Nucleotide | null;
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   _setup() {
@@ -214,7 +214,7 @@ export class Grid extends entity.CompositeEntity {
     this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointermove", this._onPointerMove);
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       this._on(this, "drag", (n: nucleotide.Nucleotide) => {
         console.log(this.getGridPositionOf(n));
       });
