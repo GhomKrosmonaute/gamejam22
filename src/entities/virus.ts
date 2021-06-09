@@ -125,10 +125,6 @@ export class Virus extends entity.CompositeEntity {
     this.level.foreContainer.addChild(this._container);
   }
 
-  // protected _update() {
-  //   this.level.foreContainer.addChild(this._container);
-  // }
-
   protected _teardown() {
     this.level.foreContainer.removeChild(this._container);
   }

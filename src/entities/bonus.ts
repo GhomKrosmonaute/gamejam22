@@ -143,9 +143,14 @@ export class SwapBonus extends Bonus {
 
   swap(a: nucleotide.Nucleotide, b: nucleotide.Nucleotide) {
     if (
-      JSON.stringify(a.toJSON()) === JSON.stringify(b.toJSON()) ||
-      a.type === "portal" ||
-      b.type === "portal"
+      JSON.stringify(a.toJSON(), (key, val) =>
+        key === "position" ? null : val
+      ) ===
+        JSON.stringify(b.toJSON(), (key, val) =>
+          key === "position" ? null : val
+        ) ||
+      a.type !== "normal" ||
+      b.type !== "normal"
     )
       return this.abort();
 
