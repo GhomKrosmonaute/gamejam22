@@ -199,6 +199,20 @@ export class Grid extends entity.CompositeEntity {
     return this._entityConfig.currentLevelHolder.level;
   }
 
+  get presentColors(): nucleotide.NucleotideSignatures[] {
+    const colors: nucleotide.NucleotideSignatures[] = [];
+    Object.entries(nucleotide.NucleotideColorLetters).forEach(([key]) => {
+      if (this.normals.some((n) => n.color === key)) {
+        colors.push(
+          nucleotide.NucleotideSignatures[
+            key as keyof typeof nucleotide.NucleotideSignatures
+          ]
+        );
+      }
+    });
+    return colors;
+  }
+
   _setup() {
     this.level.disablingAnimation("grid._setup", true);
 
