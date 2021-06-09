@@ -948,53 +948,60 @@ export const levels = {
 
       const editorDOM: editor.EditorDOM = new editor.EditorDOM(ctx);
 
-      const gridEditor = new l.Hook({
+      const updatedNucleotideHook = new l.Hook({
         id: "update cell",
         event: "clickedNucleotide",
         filter: (n) => {
-          if (typeof editorGridShape === "function") return false;
-
           const pos = ctx.grid.getGridPositionOf(n);
+          const sign = editorDOM.getCurrentSignature();
 
-          editorGridShape[pos.y][pos.x] = editorDOM.getCurrentType();
+          editorGridShape[pos.y][pos.x] = sign;
 
-          ctx.emitLevelEvent("triggerHook", "reload grid");
+          const info = nucleotide.Nucleotide.fromSignature(
+            nucleotide.NucleotideSignatures[sign]
+          );
+
+          // ctx.emitLevelEvent("triggerHook", "reload grid");
+
+          n.color = info.color;
+
+          ctx.activate(n.switchTypeAnimation(info.type));
 
           return true;
         },
       });
 
-      const reloadHook = new l.Hook({
+      const reloadedGridHook = new l.Hook({
         id: "reload grid",
         event: "triggerHook",
       });
 
-      reloadHook.options.filter = (type) => {
-        console.log(type, reloadHook.options.id);
-        if (type !== reloadHook.options.id) return false;
+      reloadedGridHook.options.filter = (type) => {
+        console.log(type, reloadedGridHook.options.id);
+        if (type !== reloadedGridHook.options.id) return false;
 
         editorDOM.ShowArrays(editorGridShape);
 
         return true;
       };
 
-      reloadHook.options.reset = {
+      reloadedGridHook.options.reset = {
         gridShape: editorGridShape,
         resetGrid: true,
-        hooks: [gridEditor, reloadHook],
+        hooks: [updatedNucleotideHook, reloadedGridHook],
       };
 
       return {
         variant: "turn",
         minStarNeeded: 3,
         forceMatching: false,
-        gridShape: reloadHook.options.reset.gridShape,
+        gridShape: reloadedGridHook.options.reset.gridShape,
         clipCount: 0,
         sequenceLength: -1,
         disableButton: true,
         disableBonuses: true,
         disableGauge: true,
-        hooks: [gridEditor, reloadHook],
+        hooks: [updatedNucleotideHook, reloadedGridHook],
       };
     }),
 };

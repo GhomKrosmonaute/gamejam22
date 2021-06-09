@@ -216,6 +216,7 @@ export class Grid extends entity.CompositeEntity {
 
     if (crispr.inDebugMode()) {
       this._on(this, "drag", (n: nucleotide.Nucleotide) => {
+        this.level.emit("clickedNucleotide", n);
         console.log(this.getGridPositionOf(n));
       });
     }

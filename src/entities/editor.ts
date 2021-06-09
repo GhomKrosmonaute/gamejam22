@@ -15,11 +15,14 @@ export class EditorDOM {
 
     {
       const reloadButton = document.createElement("input");
+
       reloadButton.setAttribute("type", "submit");
       reloadButton.setAttribute("value", "Reload");
-      reloadButton.onclick = (e) => {
+
+      reloadButton.onclick = () => {
         level.emitLevelEvent("triggerHook", "reload grid");
       };
+
       this._divEditor.append(reloadButton);
     }
 
@@ -29,10 +32,14 @@ export class EditorDOM {
       const div = document.createElement("div");
 
       div.innerHTML = `
-        <input name="type" type="radio" value="random"> Random color <br>
-        <input name="type" type="radio" value="hole"> Hole <br>
-        <input name="type" type="radio" value="portal"> Portal <br>
-        <input name="type" type="radio" value="clip"> Clip
+        <label><input name="type" type="radio" value="random"> Random color </label><br>
+        <label><input name="type" type="radio" value="hole"> Hole </label><br>
+        <label><input name="type" type="radio" value="portal"> Portal </label><br>
+        <label><input name="type" type="radio" value="clip"> Clip </label><br>
+        <label><input name="type" type="radio" value="red"> Red </label><br>
+        <label><input name="type" type="radio" value="green"> Green </label><br>
+        <label><input name="type" type="radio" value="blue"> Blue </label><br>
+        <label><input name="type" type="radio" value="yellow"> Yellow </label><br>
       `;
 
       this._divEditor.append(div);
@@ -57,14 +64,14 @@ export class EditorDOM {
     return document.createElement("hr");
   }
 
-  getCurrentType(): keyof typeof nucleotide.NucleotideSignatures {
+  getCurrentSignature(): keyof typeof nucleotide.NucleotideSignatures {
     const radioButtons = Array.from(
       document.querySelectorAll("input[name='type'][type='radio']")
     ) as HTMLInputElement[];
     return (
       (Array.from(radioButtons).find((radioButton) => {
         return radioButton.checked;
-      }).value as keyof typeof nucleotide.NucleotideSignatures) ?? "random"
+      })?.value as keyof typeof nucleotide.NucleotideSignatures) ?? "random"
     );
   }
 
