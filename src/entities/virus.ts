@@ -122,15 +122,15 @@ export class Virus extends entity.CompositeEntity {
       this.angle = this.randomStartAngle;
     }
 
-    this._entityConfig.container.addChild(this._container);
+    this.level.foreContainer.addChild(this._container);
   }
 
-  protected _update() {
-    this._entityConfig.container.addChild(this._container);
-  }
+  // protected _update() {
+  //   this.level.foreContainer.addChild(this._container);
+  // }
 
   protected _teardown() {
-    this._entityConfig.container.removeChild(this._container);
+    this.level.foreContainer.removeChild(this._container);
   }
 
   moveToPosition(position: PIXI.IPointData): entity.EntitySequence {

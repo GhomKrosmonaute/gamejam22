@@ -411,7 +411,10 @@ export class Hook<
             new entity.WaitingEntity(delay),
             new entity.FunctionCallEntity(() => {
               if (this.options.entity instanceof popup.Popup) {
-                this.level.activate(this.options.entity);
+                this.level.activate(
+                  this.options.entity,
+                  this.level.foreContainer
+                );
               } else {
                 this._activateChildEntity(this.options.entity);
               }
@@ -438,7 +441,12 @@ export class Level extends entity.CompositeEntity {
   public disablingAnimations: Set<string> = new Set();
   public triggeredHooks: Set<string> = new Set();
   public fallingStopped = false;
+
   public container = new PIXI.Container();
+  public backContainer = new PIXI.Container();
+  public middleContainer = new PIXI.Container();
+  public foreContainer = new PIXI.Container();
+
   public backgroundCellDangerMask: PIXI.Sprite;
   public backgroundLayers: PIXI.Sprite[];
   public sequenceManager: sequence.SequenceManager;
@@ -509,8 +517,9 @@ export class Level extends entity.CompositeEntity {
     return this.options.variant;
   }
 
-  activate(entity: entity.Entity) {
-    if (!entity.isSetup) this._activateChildEntity(entity, this.config);
+  activate(entity: entity.Entity, container: PIXI.Container | null) {
+    if (!entity.isSetup)
+      this._activateChildEntity(entity, this.getConfig(container));
   }
 
   deactivate(entity: entity.Entity) {
@@ -542,10 +551,8 @@ export class Level extends entity.CompositeEntity {
     return this._entityConfig.minimap;
   }
 
-  get config(): entity.EntityConfig {
-    return entity.extendConfig({
-      container: this.container,
-    });
+  getConfig(container: PIXI.Container) {
+    return entity.extendConfig({ container });
   }
 
   get cursor(): PIXI.Point {
@@ -567,11 +574,17 @@ export class Level extends entity.CompositeEntity {
         this.options.hooks.map((h) => h.options.id)
       );
     this.options.hooks.forEach((hook) => {
-      this._activateChildEntity(hook, this.config);
+      this._activateChildEntity(hook);
     });
   }
 
   private _initBackground() {
+    this.container.addChild(
+      this.backContainer,
+      this.middleContainer,
+      this.foreContainer
+    );
+
     this.backgroundLayers = [];
     [
       "background.png",
@@ -597,49 +610,58 @@ export class Level extends entity.CompositeEntity {
           this,
           "images/background_cell_danger_mask.png"
         );
-        this.container.addChild(this.backgroundCellDangerMask);
+        this.backContainer.addChild(this.backgroundCellDangerMask);
         sprite.anchor.set(0, 1);
         sprite.position.y = crispr.height;
         sprite.mask = this.backgroundCellDangerMask;
       }
 
-      this.container.addChild(sprite);
+      this.backContainer.addChild(sprite);
     });
 
-    this.container.addChild(this.swimmingVirusesContainer);
+    this.backContainer.addChild(this.swimmingVirusesContainer);
   }
 
   private _initForeground() {
     const membrane = crispr.sprite(this, "images/membrane.png");
     membrane.position.set(0, 300);
-    this.container.addChild(membrane);
+    this.backContainer.addChild(membrane);
   }
 
   private _initPath() {
     this.path = new path.Path();
-    this._activateChildEntity(this.path, this.config);
+    this._activateChildEntity(this.path, this.getConfig(this.middleContainer));
   }
 
   private _initGrid() {
     this.grid = new grid.Grid();
-    this._activateChildEntity(this.grid, this.config);
+    this._activateChildEntity(this.grid, this.getConfig(this.middleContainer));
   }
 
   private _initSequences() {
     this.sequenceManager = new sequence.SequenceManager();
-    this._activateChildEntity(this.sequenceManager, this.config);
+    this._activateChildEntity(
+      this.sequenceManager,
+      this.getConfig(this.middleContainer)
+    );
   }
 
   private _initHairs() {
     this.hairManager = new hair.HairManager();
-    this._activateChildEntity(this.hairManager, this.config);
+    this._activateChildEntity(
+      this.hairManager,
+      this.getConfig(this.middleContainer)
+    );
   }
 
   private _initButton() {
     if (this.options.disableButton) return;
 
     this.actionButton = new hud.ActionButton();
-    this._activateChildEntity(this.actionButton, this.config);
+    this._activateChildEntity(
+      this.actionButton,
+      this.getConfig(this.middleContainer)
+    );
   }
 
   private _disableButton() {
@@ -657,7 +679,10 @@ export class Level extends entity.CompositeEntity {
     this.swapBonus = new bonuses.SwapBonus(this.bonusesManager);
     this.timeBonus = new bonuses.TimeBonus(this.bonusesManager);
 
-    this._activateChildEntity(this.bonusesManager, this.config);
+    this._activateChildEntity(
+      this.bonusesManager,
+      this.getConfig(this.middleContainer)
+    );
   }
 
   private _disableBonuses() {
@@ -670,7 +695,10 @@ export class Level extends entity.CompositeEntity {
   private _initRemainingMoves() {
     if (!this.options.remainingMoves) return;
     this.remainingMoves = new hud.RemainingMoves();
-    this._activateChildEntity(this.remainingMoves, this.config);
+    this._activateChildEntity(
+      this.remainingMoves,
+      this.getConfig(this.middleContainer)
+    );
   }
 
   private _disableRemainingMoves() {
@@ -684,7 +712,7 @@ export class Level extends entity.CompositeEntity {
 
     this.gauge = new hud.Gauge(this.options.gaugeRings.length);
 
-    this._activateChildEntity(this.gauge, this.config);
+    this._activateChildEntity(this.gauge, this.getConfig(this.middleContainer));
   }
 
   private _disableGauge() {
@@ -726,7 +754,6 @@ export class Level extends entity.CompositeEntity {
 
   _setup() {
     this.isInit = false;
-    this.container.sortableChildren = true;
     this._entityConfig.currentLevelHolder.level = this;
     this._entityConfig.container.addChild(this.container);
 
@@ -946,8 +973,11 @@ export class Level extends entity.CompositeEntity {
   }
 
   _teardown() {
+    this.backContainer.removeChildren();
+    this.middleContainer.removeChildren();
+    this.foreContainer.removeChildren();
     this.container.removeChildren();
-    this._entityConfig.container.removeChildren();
+    this._entityConfig.container.removeChild(this.container);
     this.disablingAnimations.clear();
     this.removeAllListeners();
 
@@ -1014,7 +1044,7 @@ export class Level extends entity.CompositeEntity {
     // grid rebuild
     if (options.resetGrid) {
       this.options.gridShape = options.gridShape;
-      this.activate(this.grid.reset());
+      this.activate(this.grid.reset(), null);
     }
 
     // Sequence manager
@@ -1068,7 +1098,7 @@ export class Level extends entity.CompositeEntity {
   }
 
   solution() {
-    this.activate(this.grid.applySolution());
+    this.activate(this.grid.applySolution(), null);
   }
 
   disablingAnimation(name: string, state: boolean) {

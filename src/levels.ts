@@ -113,7 +113,10 @@ export const levels = {
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
             if (context.isEnded && !context.finished)
-              context.activate(anim.title(context.container, "Go!"));
+              context.activate(
+                anim.title(context.container, "Go!"),
+                context.middleContainer
+              );
           }),
         }),
       ],
@@ -153,7 +156,8 @@ export const levels = {
                   minimizeOnClose: false,
                   coolDown: 2000,
                 },
-              })
+              }),
+              ctx.foreContainer
             );
           }),
         }),
@@ -263,7 +267,10 @@ export const levels = {
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
             if (context.isEnded && !context.finished)
-              context.activate(anim.title(context.container, "Go!"));
+              context.activate(
+                anim.title(context.container, "Go!"),
+                context.middleContainer
+              );
           }),
         }),
       ],
@@ -301,7 +308,8 @@ export const levels = {
                   new PIXI.Point(500, -2000)
                 );
               }),
-            ])
+            ]),
+            null
           ),
       ],
       hooks: [
@@ -310,7 +318,10 @@ export const levels = {
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
             if (context.isEnded && !context.finished)
-              context.activate(anim.title(context.container, "Go!"));
+              context.activate(
+                anim.title(context.container, "Go!"),
+                context.middleContainer
+              );
           }),
         }),
       ],
@@ -364,7 +375,8 @@ export const levels = {
         (context) => {
           context.options.fallingSpeed = 1.2;
           context.activate(
-            anim.title(context.container, "Speed 120%", 2000, (t) => t, 2)
+            anim.title(context.container, "Speed 120%", 2000, (t) => t, 2),
+            context.middleContainer
           );
         },
         (context) =>
@@ -376,7 +388,8 @@ export const levels = {
         (context) => {
           context.options.fallingSpeed = 1.3;
           context.activate(
-            anim.title(context.container, "Speed 130%", 2000, (t) => t, 2)
+            anim.title(context.container, "Speed 130%", 2000, (t) => t, 2),
+            context.middleContainer
           );
         },
       ],
@@ -424,7 +437,10 @@ export const levels = {
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
             if (context.isEnded && !context.finished)
-              context.activate(anim.title(context.container, "Go!"));
+              context.activate(
+                anim.title(context.container, "Go!"),
+                context.middleContainer
+              );
           }),
         }),
       ],
@@ -488,7 +504,8 @@ export const levels = {
                   logo: "images/icon_freeze.png",
                 },
               }),
-            ])
+            ]),
+            null
           ),
       ],
       hooks: [
@@ -509,7 +526,8 @@ export const levels = {
                   minimizeOnClose: false,
                   coolDown: 2000,
                 },
-              })
+              }),
+              context.foreContainer
             );
           }),
         }),
@@ -534,7 +552,10 @@ export const levels = {
           event: "injectedSequence",
           entity: new entity.FunctionCallEntity(() => {
             if (context.isEnded && !context.finished)
-              context.activate(anim.title(context.container, "Go!"));
+              context.activate(
+                anim.title(context.container, "Go!"),
+                context.middleContainer
+              );
           }),
         }),
       ],
@@ -574,7 +595,8 @@ export const levels = {
                   logoScale: 1.3,
                 },
               }),
-            ])
+            ]),
+            null
           ),
       ],
       hooks: [
@@ -599,7 +621,8 @@ export const levels = {
                   minimizeOnClose: false,
                   coolDown: 2000,
                 },
-              })
+              }),
+              context.foreContainer
             );
           }),
         }),
@@ -689,7 +712,8 @@ export const levels = {
                       from: { x: 562 + gridPos.x, y: 417 + gridPos.y },
                       to: { x: 321 + gridPos.x, y: 556 + gridPos.y },
                       duration: 2000,
-                    })
+                    }),
+                    context.middleContainer
                   );
                 }),
               }),
@@ -726,7 +750,8 @@ export const levels = {
                                 logoScale: 1.7,
                                 logoPosition: { x: 0, y: -200 },
                               },
-                            })
+                            }),
+                            context.foreContainer
                           );
                         }),
                       ]),
@@ -796,7 +821,8 @@ export const levels = {
                                     to: { x: buttonPos.x, y: buttonPos.y },
                                     duration: 2000,
                                   }),
-                                ])
+                                ]),
+                                null
                               );
                             }),
                           }),
@@ -829,7 +855,8 @@ export const levels = {
                                       minimizeOnClose: false,
                                       coolDown: 2000,
                                     },
-                                  })
+                                  }),
+                                  context.foreContainer
                                 );
                               }),
                             ]),
@@ -898,7 +925,8 @@ export const levels = {
                                                 anim.title(
                                                   context.container,
                                                   "Go!"
-                                                )
+                                                ),
+                                                context.middleContainer
                                               );
                                               context.disablingAnimation(
                                                 "tutorial",
@@ -906,7 +934,8 @@ export const levels = {
                                               );
                                             },
                                           },
-                                        })
+                                        }),
+                                        context.foreContainer
                                       );
                                     }),
                                   ]),
@@ -965,7 +994,7 @@ export const levels = {
 
           n.color = info.color;
 
-          ctx.activate(n.switchTypeAnimation(info.type, 300));
+          ctx.activate(n.switchTypeAnimation(info.type, 300), null);
 
           return true;
         },

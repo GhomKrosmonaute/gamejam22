@@ -115,7 +115,8 @@ export class TimeBonus extends Bonus {
           this.level.fallingStopped = false;
           this.end();
         }),
-      ])
+      ]),
+      null
     );
   }
 
@@ -174,7 +175,8 @@ export class SwapBonus extends Bonus {
               new entity.FunctionCallEntity(() => {
                 this.level.disablingAnimation(this.name, false);
               }),
-            ])
+            ]),
+            null
           );
           this.end();
         }

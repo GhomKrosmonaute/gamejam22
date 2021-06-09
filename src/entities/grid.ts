@@ -279,7 +279,7 @@ export class Grid extends entity.CompositeEntity {
           else this.level.path.add(n);
         },
         callback: () => {
-          this.level.activate(this.level.attemptCrunch());
+          this.level.activate(this.level.attemptCrunch(), null);
         },
       }),
     ]);
