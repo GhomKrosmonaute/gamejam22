@@ -155,38 +155,39 @@ export class SwapBonus extends Bonus {
       return this.abort();
 
     this.isUpdateDisabled = true;
-    this.level.grid.swap(a, b, false);
-    this.level.disablingAnimation(this.name, true);
-    this._activateChildEntity(
-      anim.swap(
-        a,
-        b,
-        crispUtil.proportion(
-          crispUtil.dist(b.position, a.position),
-          0,
-          1000,
-          100,
-          500,
-          true
-        ),
-        easing.easeInBack,
-        () => {
-          this.level.activate(
-            new entity.EntitySequence([
-              new entity.ParallelEntity([
-                anim.bubble(a.shakeContainer, 1.2, 150),
-                anim.bubble(b.shakeContainer, 1.2, 150),
-              ]),
-              new entity.FunctionCallEntity(() => {
-                this.level.disablingAnimation(this.name, false);
-              }),
-            ]),
-            null
-          );
-          this.end();
-        }
-      )
-    );
+    this.level.grid.swap(a, b, true);
+    this.end();
+    // this.level.disablingAnimation(this.name, true);
+    // this._activateChildEntity(
+    //   anim.swap(
+    //     a,
+    //     b,
+    //     crispUtil.proportion(
+    //       crispUtil.dist(b.position, a.position),
+    //       0,
+    //       1000,
+    //       100,
+    //       500,
+    //       true
+    //     ),
+    //     easing.easeInBack,
+    //     () => {
+    //       this.level.activate(
+    //         new entity.EntitySequence([
+    //           new entity.ParallelEntity([
+    //             anim.bubble(a.shakeContainer, 1.2, 150),
+    //             anim.bubble(b.shakeContainer, 1.2, 150),
+    //           ]),
+    //           new entity.FunctionCallEntity(() => {
+    //             this.level.disablingAnimation(this.name, false);
+    //           }),
+    //         ]),
+    //         null
+    //       );
+    //       this.end();
+    //     }
+    //   )
+    // );
 
     this._entityConfig.fxMachine.play("bonus_swap");
   }

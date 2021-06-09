@@ -173,9 +173,7 @@ export abstract class Popup extends entity.CompositeEntity {
             }
           }
 
-          this._entityConfig.container.addChild(
-            this.entityConfigBackgroundContainer
-          );
+          this.level.container.addChild(this.entityConfigBackgroundContainer);
 
           // background of body
           if (this.options.withBackground) {
@@ -223,7 +221,7 @@ export abstract class Popup extends entity.CompositeEntity {
             this.body.addChild(this.logo);
           }
 
-          this._entityConfig.container.addChild(this.container);
+          this.level.container.addChild(this.container);
 
           this.onSetup();
 
@@ -313,10 +311,8 @@ export abstract class Popup extends entity.CompositeEntity {
     this.level.disablingAnimation(this.id, false);
     this.body.removeChildren();
     this.container.removeChildren();
-    this._entityConfig.container.removeChild(this.container);
-    this._entityConfig.container.removeChild(
-      this.entityConfigBackgroundContainer
-    );
+    this.level.container.removeChild(this.container);
+    this.level.container.removeChild(this.entityConfigBackgroundContainer);
     this._height = 0;
     this._width = 0;
   }
@@ -403,9 +399,6 @@ export abstract class Popup extends entity.CompositeEntity {
           this.emit("closed");
           this.level.emitLevelEvent("closedPopup", this);
           this._transition = entity.makeTransition();
-          this._entityConfig.container.removeChild(
-            this.entityConfigBackgroundContainer
-          );
         }),
         new tween.Tween({
           duration: this.options.animationDuration,
