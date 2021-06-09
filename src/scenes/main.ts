@@ -13,6 +13,8 @@ import * as popup from "../entities/popup";
 import * as anim from "../animations";
 import * as crispr from "../crispr";
 
+import * as game from "../game";
+
 export class Main extends entity.CompositeEntity {
   static savedScroll = -9999999;
   static lastLevel: levels.LevelName = null;
@@ -249,7 +251,10 @@ export class Main extends entity.CompositeEntity {
       this._on(
         levelSprite,
         "pointertap",
-        () => (this._transition = entity.makeTransition("start"))
+        () => {
+          
+          this._transition = entity.makeTransition("video")
+        }
       );
 
       this.buttons.addChild(levelSprite);
