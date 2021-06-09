@@ -229,15 +229,17 @@ export class Nucleotide extends entity.CompositeEntity {
 
   switchTypeAnimation(
     type?: keyof typeof NucleotideTypeSprite,
+    duration?: number,
     callback?: () => unknown
   ) {
+    const halfDuration = duration === undefined ? undefined : duration / 2;
     return new entity.EntitySequence([
-      this.turnAnimation(false),
+      this.turnAnimation(false, halfDuration),
       new entity.FunctionCallEntity(() => {
         this.switchType(type);
         callback?.();
       }),
-      this.turnAnimation(true),
+      this.turnAnimation(true, halfDuration),
     ]);
   }
 

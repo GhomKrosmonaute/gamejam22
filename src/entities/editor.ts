@@ -29,32 +29,43 @@ export class EditorDOM {
     this._divEditor.append(this.separator);
 
     {
-      const div = document.createElement("div");
+      const flex = document.createElement("div");
 
-      div.innerHTML = `
-        <label><input name="type" type="radio" value="random"> Random color </label><br>
-        <label><input name="type" type="radio" value="hole"> Hole </label><br>
-        <label><input name="type" type="radio" value="portal"> Portal </label><br>
-        <label><input name="type" type="radio" value="clip"> Clip </label><br>
-        <label><input name="type" type="radio" value="red"> Red </label><br>
-        <label><input name="type" type="radio" value="green"> Green </label><br>
-        <label><input name="type" type="radio" value="blue"> Blue </label><br>
-        <label><input name="type" type="radio" value="yellow"> Yellow </label><br>
-      `;
+      flex.style.display = "flex";
+      flex.style.width = "100vw";
 
-      this._divEditor.append(div);
-    }
+      {
+        const radios = document.createElement("div");
 
-    this._divEditor.append(this.separator);
+        radios.style.width = "40vh";
 
-    {
-      let gridTextArea = document.createElement("textarea");
-      gridTextArea.id = "gridTextArea";
-      gridTextArea.name = "gridTextArea";
-      gridTextArea.rows = 25;
-      gridTextArea.cols = 70;
-      gridTextArea.disabled = true;
-      this._divEditor.append(gridTextArea);
+        radios.innerHTML = `
+          <label><input name="type" type="radio" value="random"> Random color </label><br>
+          <label><input name="type" type="radio" value="hole"> Hole </label><br>
+          <label><input name="type" type="radio" value="portal"> Portal </label><br>
+          <label><input name="type" type="radio" value="clip"> Clip </label><br>
+          <label><input name="type" type="radio" value="joker"> Joker </label><br>
+          <label><input name="type" type="radio" value="red"> Red </label><br>
+          <label><input name="type" type="radio" value="green"> Green </label><br>
+          <label><input name="type" type="radio" value="blue"> Blue </label><br>
+          <label><input name="type" type="radio" value="yellow"> Yellow </label><br>
+        `;
+
+        flex.append(radios);
+      }
+
+      {
+        let output = document.createElement("textarea");
+
+        output.id = "gridTextArea";
+        output.name = "gridTextArea";
+        output.disabled = true;
+        output.cols = 50;
+
+        flex.append(output);
+      }
+
+      this._divEditor.append(flex);
     }
 
     document.body.append(this._divEditor);
@@ -75,11 +86,11 @@ export class EditorDOM {
     );
   }
 
-  ShowArrays(
+  refreshOutput(
     gridShape: grid.GridArrayShape<keyof typeof nucleotide.NucleotideSignatures>
   ) {
     this._divEditor.querySelector("textarea").innerHTML = JSON.stringify(
       gridShape
-    );
+    ).replace(/"hole"/g, "null");
   }
 }

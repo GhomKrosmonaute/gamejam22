@@ -933,7 +933,7 @@ export const levels = {
 
       const editorGridShape: grid.GridArrayShape<
         keyof typeof nucleotide.NucleotideSignatures
-      > = new Array(6);
+      > = new Array(7);
 
       for (let i = 0; i < editorGridShape.length; i++) {
         editorGridShape[i] = new Array(7).fill("hole");
@@ -957,6 +957,8 @@ export const levels = {
 
           editorGridShape[pos.y][pos.x] = sign;
 
+          editorDOM.refreshOutput(editorGridShape);
+
           const info = nucleotide.Nucleotide.fromSignature(
             nucleotide.NucleotideSignatures[sign]
           );
@@ -965,7 +967,7 @@ export const levels = {
 
           n.color = info.color;
 
-          ctx.activate(n.switchTypeAnimation(info.type));
+          ctx.activate(n.switchTypeAnimation(info.type, 300));
 
           return true;
         },
@@ -980,7 +982,7 @@ export const levels = {
         console.log(type, reloadedGridHook.options.id);
         if (type !== reloadedGridHook.options.id) return false;
 
-        editorDOM.ShowArrays(editorGridShape);
+        editorDOM.refreshOutput(editorGridShape);
 
         return true;
       };
@@ -1006,12 +1008,13 @@ export const levels = {
     }),
 };
 
+if (!crispr.inDebugMode()) delete levels.Editor;
+
 export const levelNames = Object.keys(levels);
 export type LevelName = keyof Levels;
 export type Levels = typeof levels;
 
 export const sections = {
-  Editor: [levels.Editor],
   Intro: [levels.Tutorial],
   Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
   Medium: [
