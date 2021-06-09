@@ -177,6 +177,19 @@ export const levels = {
         }),
       ],
     })),
+  Fabric: () =>
+    new l.Level("Fabric", () => ({
+      forceMatching: false,
+      gridShape: [
+        ["green", null, null, "blue", "blue", null, "red"],
+        [null, "green", "green", "portal", "red", "red", null],
+        ["blue", "clip", "red", "green", "green", "clip", "red"],
+        ["red", "red", "green", "joker", "red", "red", "blue"],
+        [null, "clip", "red", "green", "green", "clip", null],
+        ["red", "red", "blue", "portal", null, "green", "green"],
+        [null, null, null, "blue", null, null, null],
+      ],
+    })),
   // Timed: () =>
   //   new l.Level("Timed", (ctx) => {
   //     ctx.playTime = 0;
@@ -1080,7 +1093,7 @@ export const sections = {
     levels["Chrono\nPortal"],
     levels["Medium\nBoss"],
   ],
-  Hard: [levels.Caribbean, levels.Broth, levels["Big\nBoss"]],
+  Hard: [levels.Fabric, levels.Caribbean, levels.Broth, levels["Big\nBoss"]],
 };
 
 export type SectionName = keyof typeof sections;
