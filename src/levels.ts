@@ -346,6 +346,21 @@ export const levels = {
       gridShape: grid.makeGrid(grid.gridMakerPresets.fourIslands),
       sequenceLength: 5,
     })),
+  Butterfly: () =>
+    new l.Level("Butterfly", () => ({
+      forceMatching: true,
+      sequenceLength: 7,
+      crispyBonusRate: 0.1,
+      gridShape: [
+        [null, null, null, null, null, null, null],
+        [null, "blue", "blue", null, "yellow", "yellow", null],
+        [null, "blue", "blue", "portal", "yellow", "yellow", null],
+        [null, "portal", "green", "clip", "red", "portal", null],
+        [null, "green", "green", "portal", "red", "red", null],
+        [null, "green", null, null, null, "red", null],
+        [null, null, null, null, null, null, null],
+      ],
+    })),
   "Two Islands": () =>
     new l.Level("Two Islands", (context) => ({
       gridShape: grid.makeGrid(grid.gridMakerPresets.twoIslands),
@@ -1060,6 +1075,7 @@ export const sections = {
   Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
   Medium: [
     levels["Two Islands"],
+    levels.Butterfly,
     levels["Four\nIslands"],
     levels["Chrono\nPortal"],
     levels["Medium\nBoss"],
