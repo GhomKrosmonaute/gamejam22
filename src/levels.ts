@@ -121,6 +121,20 @@ export const levels = {
         }),
       ],
     })),
+  Broth: () =>
+    new l.Level("Broth", (ctx) => ({
+      sequenceLength: 8,
+      forceMatching: false,
+      gridShape: [
+        [null, null, "random", "clip", "random", null, null],
+        ["random", "portal", "red", "random", "joker", "random", "random"],
+        ["random", "joker", "blue", "green", "blue", "portal", "random"],
+        ["random", "red", "green", "clip", "green", "red", "random"],
+        ["random", "portal", "joker", "blue", "red", "joker", "random"],
+        [null, "random", "random", "random", "random", "portal", null],
+        [null, null, null, "clip", null, null, null],
+      ],
+    })),
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
       gridShape: grid.makeGrid({
@@ -161,6 +175,19 @@ export const levels = {
             );
           }),
         }),
+      ],
+    })),
+  Fabric: () =>
+    new l.Level("Fabric", () => ({
+      forceMatching: false,
+      gridShape: [
+        ["green", null, null, "blue", "blue", null, "red"],
+        [null, "green", "green", "portal", "red", "red", null],
+        ["blue", "clip", "red", "green", "green", "clip", "red"],
+        ["red", "red", "green", "joker", "red", "red", "blue"],
+        [null, "clip", "red", "green", "green", "clip", null],
+        ["red", "red", "blue", "portal", null, "green", "green"],
+        [null, null, null, "blue", null, null, null],
       ],
     })),
   // Timed: () =>
@@ -331,6 +358,21 @@ export const levels = {
       forceMatching: true,
       gridShape: grid.makeGrid(grid.gridMakerPresets.fourIslands),
       sequenceLength: 5,
+    })),
+  Butterfly: () =>
+    new l.Level("Butterfly", () => ({
+      forceMatching: true,
+      sequenceLength: 7,
+      crispyBonusRate: 0.1,
+      gridShape: [
+        [null, null, null, null, null, null, null],
+        [null, "blue", "blue", null, "yellow", "yellow", null],
+        [null, "blue", "blue", "portal", "yellow", "yellow", null],
+        [null, "portal", "green", "clip", "red", "portal", null],
+        [null, "green", "green", "portal", "red", "red", null],
+        [null, "green", null, null, null, "red", null],
+        [null, null, null, null, null, null, null],
+      ],
     })),
   "Two Islands": () =>
     new l.Level("Two Islands", (context) => ({
@@ -1046,11 +1088,12 @@ export const sections = {
   Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
   Medium: [
     levels["Two Islands"],
+    levels.Butterfly,
     levels["Four\nIslands"],
     levels["Chrono\nPortal"],
     levels["Medium\nBoss"],
   ],
-  Hard: [levels.Caribbean, levels["Big\nBoss"]],
+  Hard: [levels.Fabric, levels.Caribbean, levels.Broth, levels["Big\nBoss"]],
 };
 
 export type SectionName = keyof typeof sections;
