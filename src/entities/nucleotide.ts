@@ -328,14 +328,9 @@ export class Nucleotide extends entity.CompositeEntity {
 
     // joker
     {
-      // this._jokerAnimatedSpriteEntity = util.makeAnimatedSprite(
-      //   this._entityConfig.app.loader.resources[`images/joker.json`]
-      // );
-
       this._jokerAnimatedSpriteEntity = util.makeAnimatedSprite(
-        this._entityConfig.app.loader.resources[`images/nucleotide_blue.json`]
+        this._entityConfig.app.loader.resources[`images/joker.json`]
       );
-      this._jokerAnimatedSpriteEntity.sprite.tint = 0xdc09ff;
 
       this.jokerSprite.anchor.set(0.5);
       this.jokerSprite.loop = true;

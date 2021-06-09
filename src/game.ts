@@ -101,7 +101,7 @@ const graphicalAssets = [
   "images/crispy_x5.png",
 
   "images/finger.png",
-
+  `images/joker.json`,
   "images/hole.png",
   "images/bubble.png",
   "images/clip.png",

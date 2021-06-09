@@ -963,8 +963,6 @@ export const levels = {
             nucleotide.NucleotideSignatures[sign]
           );
 
-          // ctx.emitLevelEvent("triggerHook", "reload grid");
-
           n.color = info.color;
 
           ctx.activate(n.switchTypeAnimation(info.type, 300));
