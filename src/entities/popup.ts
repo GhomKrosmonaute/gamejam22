@@ -61,7 +61,7 @@ export const defaultPopupOptions: PopupOptions = {
   width: crispr.width * 0.8, // 864
   height: crispr.height * 0.7, // 1344
   adjustHeight: true,
-  animationDuration: 600,
+  animationDuration: 200,
   onClose: () => null,
 };
 
