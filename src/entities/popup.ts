@@ -132,19 +132,22 @@ export abstract class Popup extends entity.CompositeEntity {
       Popup.minimized.add(this);
     }
 
-    this.level.disablingAnimation(this.id, true);
-
     this._activateChildEntity(
       new entity.EntitySequence([
         new entity.FunctionalEntity({
           requestTransition: () => {
             return (
               !this.level.disablingAnimations.has("sequence.down") &&
-              !this.level.disablingAnimations.has("path.crunch")
+              !this.level.disablingAnimations.has("path.crunch") &&
+              ![...this.level.disablingAnimations].some((text) =>
+                text.includes("popup")
+              )
             );
           },
         }),
         new entity.FunctionCallEntity(() => {
+          this.level.disablingAnimation(this.id, true);
+
           // background of minimized
           if (this.options.minimizeOnClose) {
             this.minimizedBackground = crispr.sprite(
