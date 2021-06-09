@@ -9,6 +9,7 @@ import * as anim from "../animations";
 import * as crispr from "../crispr";
 
 import * as level from "../scenes/level";
+import * as metrics from "../metrics";
 
 export function makeCross(radius: number): PIXI.Graphics {
   return new PIXI.Graphics()
@@ -39,6 +40,7 @@ export interface PopupOptions {
   height: number;
   width: number;
   animationDuration: number;
+  withBlackBackground: boolean;
   onClose: (popup: Popup) => void;
 }
 
@@ -53,6 +55,7 @@ export const defaultPopupOptions: PopupOptions = {
   minimizeOnClose: false,
   withBackground: false,
   withClosureCross: true,
+  withBlackBackground: false,
   closeOnBackgroundClick: false,
   closeOnBodyClick: false,
   width: crispr.width * 0.8, // 864
@@ -93,8 +96,9 @@ export abstract class Popup extends entity.CompositeEntity {
   public body: PIXI.Container;
   public background?: PIXI.Graphics;
   public bodyBackground?: PIXI.Sprite;
-  public bodyBackgroundBis?: PIXI.Sprite;
   public minimizedBackground?: PIXI.Sprite;
+
+  public entityConfigBackgroundContainer: PIXI.Container;
 
   public logo?: PIXI.Sprite;
 
@@ -156,18 +160,37 @@ export abstract class Popup extends entity.CompositeEntity {
             this.container.addChildAt(this.minimizedBackground, 0);
           }
 
+          this.entityConfigBackgroundContainer = new PIXI.Container();
+
+          if (this.options.withBlackBackground) {
+            if (this.level.options.mustBeHiddenOnPause) {
+              const blackBackground = new PIXI.Graphics()
+                .beginFill()
+                .drawRect(0, 0, crispr.width, crispr.height)
+                .endFill();
+
+              this.entityConfigBackgroundContainer.addChild(blackBackground);
+            }
+          }
+
+          this._entityConfig.container.addChild(
+            this.entityConfigBackgroundContainer
+          );
+
           // background of body
           if (this.options.withBackground) {
-            this.bodyBackgroundBis = crispr.sprite(
+            const bodyBackgroundBis = crispr.sprite(
               this,
               "images/popup_background_bis.png"
             );
+
+            this.entityConfigBackgroundContainer.addChild(bodyBackgroundBis);
+
             this.bodyBackground = crispr.sprite(
               this,
               "images/popup_background.png"
             );
 
-            this._entityConfig.container.addChild(this.bodyBackgroundBis);
             this.body.addChild(this.bodyBackground);
 
             this.bodyBackground.width = this.width;
@@ -228,7 +251,7 @@ export abstract class Popup extends entity.CompositeEntity {
                   }),
                   new entity.EntitySequence([
                     new entity.WaitingEntity(
-                      crispr.debug ? 0 : this.options.coolDown ?? 0
+                      crispr.inDebugMode() ? 0 : this.options.coolDown ?? 0
                     ),
                     new entity.FunctionCallEntity(() => {
                       // use transparent background as closure button
@@ -291,7 +314,9 @@ export abstract class Popup extends entity.CompositeEntity {
     this.body.removeChildren();
     this.container.removeChildren();
     this._entityConfig.container.removeChild(this.container);
-    this._entityConfig.container.removeChild(this.bodyBackgroundBis);
+    this._entityConfig.container.removeChild(
+      this.entityConfigBackgroundContainer
+    );
     this._height = 0;
     this._width = 0;
   }
@@ -306,7 +331,7 @@ export abstract class Popup extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get center(): PIXI.Point {
@@ -357,7 +382,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
   defaultClosure = () => {
     if (
-      !crispr.debug &&
+      !crispr.inDebugMode() &&
       this.options.coolDown &&
       Date.now() < this._setupAt + this.options.coolDown
     )
@@ -378,7 +403,9 @@ export abstract class Popup extends entity.CompositeEntity {
           this.emit("closed");
           this.level.emitLevelEvent("closedPopup", this);
           this._transition = entity.makeTransition();
-          this._entityConfig.container.removeChild(this.bodyBackgroundBis);
+          this._entityConfig.container.removeChild(
+            this.entityConfigBackgroundContainer
+          );
         }),
         new tween.Tween({
           duration: this.options.animationDuration,
@@ -419,7 +446,7 @@ export abstract class Popup extends entity.CompositeEntity {
 
       if (this.logo) this.logo.visible = true;
 
-      this.bodyBackgroundBis.visible = false;
+      this.entityConfigBackgroundContainer.visible = false;
 
       this._once(this.minimizedBackground, "pointerup", () => {
         this.minimize();
@@ -497,7 +524,7 @@ export abstract class Popup extends entity.CompositeEntity {
       this.minimizedBackground.visible = false;
       this.bodyBackground.interactive = false;
       this.bodyBackground.buttonMode = false;
-      this.bodyBackgroundBis.visible = true;
+      this.entityConfigBackgroundContainer.visible = true;
 
       Popup.minimized.forEach((popup) => {
         if (popup.minimized) popup.container.visible = false;
@@ -646,7 +673,7 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
       withBackground: true,
       withClosureCross: false,
       closeOnBackgroundClick: true,
-      onClose: (popup) => popup.level.exit(true),
+      onClose: (popup) => popup.level.exit(),
     });
 
     this._once(this, "opened", () => {
@@ -675,16 +702,18 @@ export abstract class EndOfLevelPopup extends ChecksPopup {
 }
 
 export class FailedLevelPopup extends EndOfLevelPopup {
-  constructor() {
-    super();
-    this.options.onClose = (popup) => popup.level.exit();
-  }
-
   onSetup() {
     Popup.cleanUpMinimized();
     // add title
     this.setTitle("Failed");
     this.addCheckRows();
+
+    const results = this.level.checkAndReturnsResults();
+    metrics.logEvent("level_end", {
+      level_name: this.level.name,
+      success: false,
+      results,
+    });
   }
 }
 
@@ -728,10 +757,10 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
     // add score
     if (!this.level.options.disableScore) {
       const score = crispr.makeText(
-        `Score: ${this.level.score} pts (${crispr.proportion(
-          this.level.score,
+        `Score: ${this.level.crispies} pts (${crispr.proportion(
+          this.level.crispies,
           0,
-          crispr.scrap(this.level.options.score.max, this.level),
+          crispr.scrap(this.level.options.gaugeOptions.final, this.level),
           0,
           100,
           true
@@ -752,7 +781,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
       this._activateChildEntity(
         new tween.Tween({
           from: 0,
-          to: this.level.score,
+          to: this.level.crispies,
           easing: easing.easeInQuad,
           duration: 1000,
           onUpdate: (value) =>
@@ -760,7 +789,7 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
               crispr.proportion(
                 value,
                 0,
-                crispr.scrap(this.level.options.score.max, this.level),
+                crispr.scrap(this.level.options.gaugeOptions.final, this.level),
                 0,
                 100,
                 true
@@ -771,6 +800,14 @@ export class TerminatedLevelPopup extends EndOfLevelPopup {
     }
 
     this.addCheckRows();
+
+    metrics.logEvent("level_end", {
+      level_name: this.level.name,
+      success: true,
+      results,
+    });
+
+    this.level.minimap.saveResults(this.level);
   }
 
   protected _playSound() {
@@ -798,6 +835,7 @@ export class TutorialPopup extends Popup {
     super({
       minimizeOnClose: true,
       withBackground: true,
+      withBlackBackground: true,
       closeOnBackgroundClick: true,
       adjustHeight: true,
       ...(_options.popupOptions ?? {}),
@@ -868,6 +906,7 @@ export class StatePopup extends ChecksPopup {
     super({
       closeOnBackgroundClick: true,
       withBackground: true,
+      withBlackBackground: false,
       adjustHeight: true,
       from: new PIXI.Point(200, 100),
     });
@@ -883,9 +922,7 @@ export class StatePopup extends ChecksPopup {
     text.position.y = 100;
 
     const score = crispr.makeText(
-      `Score: ${Math.floor(this.level.options.score.get(this.level))} / ${
-        this.level.options.score.max
-      } pts`,
+      crispr.scrap(this.level.options.endConditionText, this.level),
       {
         fontSize: 100,
         fill: 0xffffff,
@@ -895,6 +932,8 @@ export class StatePopup extends ChecksPopup {
     score.position.x = this.center.x;
     score.position.y = 75;
 
-    this.addRow(text, 200).addRow(score, 150).addCheckRows();
+    this.addRow(text, 300)
+      .addRow(score, 100 * score.text.split("\n").length)
+      .addCheckRows();
   }
 }

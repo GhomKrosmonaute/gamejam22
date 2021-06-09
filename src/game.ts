@@ -3,18 +3,39 @@ import * as PIXI from "pixi.js";
 import * as booyah from "booyah/src/booyah";
 import * as audio from "booyah/src/audio";
 import * as entity from "booyah/src/entity";
-
-import * as minimap from "./scenes/minimap";
+import * as narration from "booyah/src/narration";
 
 import * as crispr from "./crispr";
 import * as levels from "./levels";
+import * as metrics from "./metrics";
+import * as writeUs from "./scenes/writeUs";
 
-const main = new minimap.Minimap();
+import * as _main from "./scenes/main";
+import * as menu from "./scenes/menu";
 
-const gameStates = {
-  start: main,
+const main = new _main.Main();
+
+const introVideoScene = new narration.VideoScene({
+  video: "intro",
+  videoOptions: { scale: 2 },
+  music: "intro",
+  musicVolume: 2,
+  narration: "intro",
+  skipButtonOptions: {
+    position: { x: 150, y: 150 },
+  },
+});
+
+const gameStates: { [k: string]: entity.EntityResolvable } = {
+  start: introVideoScene,
   default: main,
+  writeUs: new writeUs.WriteUsPopup(),
   ...levels.levels,
+};
+
+const gameTransitions = {
+  start: entity.makeTransition("default"),
+  writeUs: entity.makeTransition("default"),
 };
 
 const graphicalAssets = [
@@ -46,6 +67,9 @@ const graphicalAssets = [
   "images/minimap_virus_3.png",
   "images/minimap_virus_4.png",
   "images/test_preview.png",
+  "images/minimap_write_us.png",
+  "images/minimap_watch_trailer.png",
+  "images/minimap_want_more_levels.png",
 
   "images/menu_home_button.png",
   "images/menu_music_range_full.png",
@@ -76,13 +100,16 @@ const graphicalAssets = [
   "images/crispy_x4.png",
   "images/crispy_x5.png",
 
+  "images/finger.png",
+
   "images/hole.png",
   "images/bubble.png",
-  "images/clip_top.png",
-  "images/clip_bottom.png",
+  "images/clip.png",
+  "images/clip_sequence.png",
+  "images/clip_grid.png",
 
-  "images/nucleotide_glow.png",
-  "images/nucleotide_bright.png",
+  "images/nucleotide_glow_sequence.png",
+  "images/nucleotide_glow_grid.png",
   "images/nucleotide_gold_border.png",
 
   "images/particle.png",
@@ -124,6 +151,7 @@ const graphicalAssets = [
   "images/cellule_background.png",
 
   // animated sprites
+  "images/nucleotide_joker.json",
   "images/nucleotide_red.json",
   "images/nucleotide_blue.json",
   "images/nucleotide_green.json",
@@ -198,7 +226,23 @@ const fxAssets = [
   "tile_clips",
 ];
 
-const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen"];
+const videoAssets = ["intro"];
+
+const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen", "intro"];
+
+const jsonAssets = [{ key: "subtitles", url: "text/subtitles_en.json" }];
+
+const subtitleNarratorOptions = {
+  position: {
+    x: crispr.width / 2,
+    y: crispr.height - 300,
+  },
+  textStyle: {
+    fontFamily: "Optimus",
+    fontSize: 80,
+    wordWrapWidth: crispr.width - 100,
+  },
+};
 
 const entityInstallers: ((
   rootConfig: entity.EntityConfig,
@@ -206,23 +250,29 @@ const entityInstallers: ((
 ) => unknown)[] = [
   audio.installJukebox,
   audio.installFxMachine,
-  // booyah.makeInstallMenu({
-  //   menuButtonPosition: new PIXI.Point(crispr.width - 111, 106),
-  // }),
+  narration.makeInstallSubtitleNarrator(subtitleNarratorOptions),
+  levels.makeInstallCurrentLevelHolder(),
+  menu.makeInstallMenu(),
 ];
+
+metrics.init();
 
 booyah.go({
   states: gameStates,
+  transitions: gameTransitions,
   entityInstallers,
   screenSize: new PIXI.Point(crispr.width, crispr.height),
   graphicalAssets,
+  videoAssets,
   musicAssets,
   fontAssets,
   fxAssets,
+  jsonAssets,
   splashScreen: "images/titlescreen_background.png",
   graphics: {
     //menu: "images/hud_menu_button.png",
     play: "images/titlescreen_play_button.png",
+    skip: "images/hud_action_button.png",
   },
   loadingGauge: {
     position: {

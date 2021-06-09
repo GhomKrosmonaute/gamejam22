@@ -1,4 +1,3 @@
-import * as _ from "underscore";
 import * as PIXI from "pixi.js";
 
 import * as entity from "booyah/src/entity";
@@ -23,29 +22,30 @@ export function opposedIndexOf(neighborIndex: NeighborIndex): NeighborIndex {
 export const colCount = 7;
 export const rowCount = 7;
 
-export type GridPreset<T = true> = ((T | null)[] | null)[];
+export type GridArrayShape<T = true> = ((T | null)[] | null)[];
 
-export type GridArrowShape = (x: number, y: number) => boolean;
+export type GridFilter = (x: number, y: number) => boolean;
 
-export type GridPresetInput = GridPreset<nucleotide.ColorName | "?" | "h">;
-
-export interface GridShapeOptions {
-  portals?: PIXI.IPointData[] | number;
-  clips?: PIXI.IPointData[] | number;
-  shape: GridPresetInput | GridArrowShape;
-}
-
-export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
-  mini: (x: number, y: number) =>
-    x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0),
-  medium: (x: number, y: number) =>
-    x < 1 ||
-    x > 5 ||
-    y < 1 ||
-    y > 5 ||
-    (x === 1 && y === 1) ||
-    (x === 5 && y === 1) ||
-    (x !== 3 && x > 0 && x < 6 && y === 5),
+export const gridMakerPresets: { [k: string]: GridMakerOptions } = {
+  full: {
+    filter: (x, y) => y < 6 || x % 2 !== 0,
+  },
+  mini: {
+    filter: (x, y) =>
+      !(x < 2 || x > 4 || y < 2 || y > 4 || (y > 3 && x % 2 === 0)),
+  },
+  medium: {
+    filter: (x, y) =>
+      !(
+        x < 1 ||
+        x > 5 ||
+        y < 1 ||
+        y > 5 ||
+        (x === 1 && y === 1) ||
+        (x === 5 && y === 1) ||
+        (x !== 3 && x > 0 && x < 6 && y === 5)
+      ),
+  },
   fourIslands: {
     portals: [
       { x: 1, y: 1 },
@@ -53,34 +53,130 @@ export const gridShapes: Record<string, GridArrowShape | GridShapeOptions> = {
       { x: 1, y: 5 },
       { x: 5, y: 5 },
     ],
-    shape: (x: number, y: number) =>
-      (x > 2 || y < 4 || y > 6) &&
-      (x < 4 || y < 4 || y > 6) &&
-      (x > 2 || y > 2 || (y === 2 && (x === 0 || x === 2))) &&
-      (x < 4 || y > 2 || (y === 2 && (x === 4 || x === 6))),
+    clips: [
+      { x: 1, y: 3 },
+      { x: 5, y: 3 },
+      { x: 3, y: 1 },
+      { x: 3, y: 5 },
+    ],
+    filter: (x, y) =>
+      !(
+        (x > 2 || y < 4 || y > 6) &&
+        (x < 4 || y < 4 || y > 6) &&
+        (x > 2 || y > 2 || (y === 2 && (x === 0 || x === 2))) &&
+        (x < 4 || y > 2 || (y === 2 && (x === 4 || x === 6)))
+      ) &&
+      (y < 6 || x % 2 !== 0),
   },
-  littleBridge: (x: number, y: number) =>
-    (x > 2 || y < 1 || y > 5 || (y === 5 && (x === 0 || x === 2))) &&
-    (x !== 3 || y !== 3) &&
-    (x < 4 || y < 1 || y > 5 || (y === 5 && (x === 4 || x === 6))),
-  bowTie: (x: number, y: number) =>
-    y < 1 ||
-    y > 4 ||
-    (y === 4 && x > 1 && x < 5) ||
-    (y === 1 && x > 0 && x < 6) ||
-    (x === 3 && y === 2),
-  hole: (x: number, y: number) =>
-    (x > 1 && x < 5 && y > 1 && y < 5 && !(y === 4 && (x === 2 || x === 4))) ||
-    (y === 0 && (x < 2 || x > 4)) ||
-    (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5)),
-  hive: (x: number, y: number) => x % 2 !== 0 && y % 2 === 0,
+  littleBridge: {
+    filter: (x, y) =>
+      !(
+        (x > 2 || y < 1 || y > 5 || (y === 5 && (x === 0 || x === 2))) &&
+        (x !== 3 || y !== 3) &&
+        (x < 4 || y < 1 || y > 5 || (y === 5 && (x === 4 || x === 6)))
+      ),
+  },
+  twoIslands: {
+    filter: (x, y) =>
+      !(
+        (x > 2 || y < 1 || y > 5 || (y === 5 && (x === 0 || x === 2))) &&
+        (x !== 3 || y !== 3) &&
+        (x < 4 || y < 1 || y > 5 || (y === 5 && (x === 4 || x === 6)))
+      ),
+    clips: [{ x: 3, y: 3 }],
+    portals: [
+      { x: 1, y: 3 },
+      { x: 5, y: 3 },
+    ],
+  },
+  bowTie: {
+    filter: (x, y) =>
+      !(
+        y < 1 ||
+        y > 4 ||
+        (y === 4 && x > 1 && x < 5) ||
+        (y === 1 && x > 0 && x < 6) ||
+        (x === 3 && y === 2)
+      ),
+  },
+  hole: {
+    filter: (x, y) =>
+      !(
+        (x > 1 &&
+          x < 5 &&
+          y > 1 &&
+          y < 5 &&
+          !(y === 4 && (x === 2 || x === 4))) ||
+        (y === 0 && (x < 2 || x > 4)) ||
+        (y > 4 && (x > 4 || x < 2) && !((x === 1 || x === 5) && y === 5))
+      ),
+  },
+  hive: {
+    filter: (x, y) => !(x % 2 !== 0 && y % 2 === 0) && (y < 6 || x % 2 !== 0),
+  },
 };
 
-export type GridShape =
-  | "full"
-  | GridPresetInput
-  | GridArrowShape
-  | GridShapeOptions;
+export const madeGrids: {
+  [k: string]: GridArrayShape<keyof typeof nucleotide.NucleotideSignatures>;
+} = {
+  around: [
+    ["random", "random", "random", "portal", "random", "random", "random"],
+    ["random", "portal", null, "clip", null, "portal", "random"],
+    ["portal", null, null, null, null, null, "portal"],
+    ["random", null, null, null, null, null, "random"],
+    ["random", "random", "random", "clip", "random", "portal", "random"],
+    [null, "random", null, "portal", null, "random", null],
+  ],
+  bone: [
+    ["random", "random", "random", null, "random", "random", "random"],
+    ["random", "random", "random", null, null, "random", "random"],
+    [null, "random", "random", "random", "random", null, null],
+    ["random", null, null, "random", "random", "random", "random"],
+    ["random", "portal", "random", null, "random", "random", "random"],
+    [null, "random", null, null, null, "random", null],
+  ],
+  mediumPortal: [
+    [null, null, "random", null, "random", null, null],
+    ["random", "random", "random", null, "random", "random", "random"],
+    ["random", "clip", "portal", null, "portal", "clip", "random"],
+    ["random", "random", "random", null, "random", "random", "random"],
+    [null, "random", "random", null, "random", "random", null],
+    [null, null, null, null, null, null, null],
+  ],
+};
+
+export interface GridMakerOptions {
+  filter?: GridFilter;
+  portals?: PIXI.IPointData[];
+  jokers?: PIXI.IPointData[];
+  clips?: PIXI.IPointData[];
+}
+
+export function makeGrid(
+  options: GridMakerOptions
+): GridArrayShape<keyof typeof nucleotide.NucleotideSignatures> {
+  const shape: GridArrayShape<
+    keyof typeof nucleotide.NucleotideSignatures
+  > = [];
+
+  const filter = options.filter ?? (() => true);
+  const portals = options.portals ?? [];
+  const jokers = options.jokers ?? [];
+  const clips = options.clips ?? [];
+
+  for (let y = 0; y < colCount; y++) {
+    shape.push([]);
+    for (let x = 0; x < rowCount; x++) {
+      shape[y][x] = filter(x, y) ? "random" : null;
+    }
+  }
+
+  portals.forEach(({ x, y }) => (shape[y][x] = "portal"));
+  jokers.forEach(({ x, y }) => (shape[y][x] = "joker"));
+  clips.forEach(({ x, y }) => (shape[y][x] = "clip"));
+
+  return shape;
+}
 
 /** Represent the game nucleotides grid
  *
@@ -100,10 +196,12 @@ export class Grid extends entity.CompositeEntity {
   public lastHovered: nucleotide.Nucleotide | null;
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   _setup() {
+    this.level.disablingAnimation("grid._setup", true);
+
     this.container = new PIXI.Graphics();
     this.container
       .beginFill(0x000000, 0.001)
@@ -116,7 +214,7 @@ export class Grid extends entity.CompositeEntity {
     this._on(this.container, "pointerdown", this._onPointerDown);
     this._on(this.container, "pointermove", this._onPointerMove);
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       this._on(this, "drag", (n: nucleotide.Nucleotide) => {
         console.log(this.getGridPositionOf(n));
       });
@@ -128,10 +226,18 @@ export class Grid extends entity.CompositeEntity {
     this.nucleotideContainer.position.set(this.x, this.y);
     this.container.addChild(this.nucleotideContainer);
 
-    this.generateShape();
+    this._activateChildEntity(
+      new entity.EntitySequence([
+        this.generateShape(),
+        new entity.FunctionCallEntity(() => {
+          this.level.disablingAnimation("grid._setup", false);
+        }),
+      ])
+    );
 
     this._on(this, "pointerup", () => {
-      if (this.level.options.variant !== "zen") {
+      if (this.level.isDisablingAnimationInProgress) return;
+      if (this.level.options.crunchOnPointerUp) {
         const crunch = this.level.attemptCrunch();
         if (crunch) this._activateChildEntity(crunch);
       }
@@ -139,6 +245,9 @@ export class Grid extends entity.CompositeEntity {
   }
 
   _update() {
+    // if (!this.level.isDisablingAnimationInProgress)
+    //   this._activateChildEntity(this.fillHoles());
+
     if (!this.isPointerDown) return;
 
     const currentHovered = this.getHovered();
@@ -155,31 +264,13 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides = [];
   }
 
-  get shape(): (nucleotide.ColorName | "c")[][] {
-    const shape: (nucleotide.ColorName | "c")[][] = [];
-    for (let y = 0; y < colCount; y++) {
-      shape.push([]);
-      for (let x = 0; x < rowCount; x++) {
-        const n = this.getNucleotideFromGridPosition(new PIXI.Point(x, y));
-        if (n) {
-          if (n.type === "normal") {
-            shape[y][x] = n.colorName;
-          } else {
-            shape[y][x] = "c";
-          }
-        }
-      }
-    }
-    return shape;
-  }
-
   applySolution(): entity.EntityBase {
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.level.path.remove();
       }),
       anim.sequenced({
-        items: this.solution,
+        items: this.solution.slice(),
         timeBetween: 100,
         waitForAllSteps: true,
         onStep: (n, i) => {
@@ -193,19 +284,17 @@ export class Grid extends entity.CompositeEntity {
     ]);
   }
 
-  addNucleotide(x: number, y: number, color?: nucleotide.ColorName) {
-    const n = new nucleotide.Nucleotide(
-      this.level.options.nucleotideRadius,
-      "grid",
-      this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y)),
-      0,
-      color
-    );
-    n.floating.active.x = true;
-    n.floating.active.y = true;
-    n.floating.speed.set(1.4, 2);
-    n.floating.amplitude.set(0.3, 0.3);
-    n.type = "normal";
+  addNucleotide(
+    x: number,
+    y: number,
+    signature?: nucleotide.NucleotideSignatures
+  ) {
+    const n = new nucleotide.Nucleotide({
+      parent: "grid",
+      position: this.getAbsolutePositionFromGridPosition(new PIXI.Point(x, y)),
+      ...nucleotide.Nucleotide.fromSignature(signature),
+    });
+
     this._activateChildEntity(
       n,
       entity.extendConfig({
@@ -215,138 +304,42 @@ export class Grid extends entity.CompositeEntity {
     this.allNucleotides[y * colCount + x] = n;
   }
 
-  applyPresetClips() {
-    if (this.level.options.presetClips) {
-      this.clips.forEach((clip) => (clip.type = "normal"));
-      this.level.options.presetClips.forEach((row, y) => {
-        if (row.length > 0)
-          row.forEach((col, x) => {
-            if (col === true) {
-              const n = this.getNucleotideFromGridPosition(
-                new PIXI.Point(x, y)
-              );
-              n.type = "clip";
-            }
-          });
-      });
-    }
+  static forShape<T = nucleotide.NucleotideSignatures>(
+    shape: GridArrayShape<T>,
+    fn: (x: number, y: number, val: T) => unknown
+  ) {
+    shape.forEach((row, y) => {
+      if (row)
+        row.forEach((col, x) => {
+          if (col) {
+            fn(x, y, col);
+          }
+        });
+    });
+  }
+
+  static fromShape<T = nucleotide.NucleotideSignatures>(
+    shape: GridArrayShape<T>,
+    x: number,
+    y: number
+  ): T {
+    return shape[y][x];
   }
 
   generateShape() {
     this.allNucleotides.length = colCount * rowCount;
-    debugger;
+
     // colors and shape
-    const shape = this.level.options.gridShape;
-    if (Array.isArray(shape)) {
-      // preset grid colors and shape
-      shape.forEach((row, y) => {
-        if (row)
-          row.forEach((col, x) => {
-            if (col) {
-              if (col === "?" || col === "h") {
-                this.addNucleotide(x, y);
-                if (col === "h") {
-                  const n = this.getNucleotideFromGridPosition(
-                    new PIXI.Point(x, y)
-                  );
-                  n.stayMissing = true;
-                }
-              } else this.addNucleotide(x, y, col);
-            }
-          });
-      });
-    } else if (typeof shape === "string" || typeof shape === "function") {
-      // preset shape
-      if (shape !== "full") {
-        if (typeof shape === "string") {
-          const resolvedShape = gridShapes[shape];
-          if (typeof resolvedShape === "function") {
-            for (let x = 0; x < colCount; x++) {
-              for (let y = 0; y < rowCount; y++) {
-                if (resolvedShape(x, y)) continue;
-                if (x % 2 === 0 && y === rowCount - 1) continue;
-                this.addNucleotide(x, y);
-              }
-            }
-          } else {
-            const sub = resolvedShape.shape;
-            if (typeof sub === "function") {
-              for (let x = 0; x < colCount; x++) {
-                for (let y = 0; y < rowCount; y++) {
-                  if (sub(x, y)) continue;
-                  if (x % 2 === 0 && y === rowCount - 1) continue;
-                  this.addNucleotide(x, y);
-                }
-              }
-            } else {
-              sub.forEach((row, y) => {
-                if (row)
-                  row.forEach((col, x) => {
-                    if (!col) return;
-                    if (col === "?" || col === "h") {
-                      this.addNucleotide(x, y);
-                      if (col === "h") {
-                        const n = this.getNucleotideFromGridPosition(
-                          new PIXI.Point(x, y)
-                        );
-                        n.stayMissing = true;
-                      }
-                    } else this.addNucleotide(x, y, col);
-                  });
-              });
-            }
-          }
-        } else if (typeof shape === "function") {
-          for (let x = 0; x < colCount; x++) {
-            for (let y = 0; y < rowCount; y++) {
-              if (shape(x, y)) continue;
-              if (x % 2 === 0 && y === rowCount - 1) continue;
-              this.addNucleotide(x, y);
-            }
-          }
-        }
-      }
-    } else {
-      const sub = shape.shape;
-      if (typeof sub === "function") return;
-      sub.forEach((row, y) => {
-        if (row)
-          row.forEach((col, x) => {
-            if (!col) return;
-            if (col === "?" || col === "h") {
-              this.addNucleotide(x, y);
-              if (col === "h") {
-                const n = this.getNucleotideFromGridPosition(
-                  new PIXI.Point(x, y)
-                );
-                n.stayMissing = true;
-              }
-            } else this.addNucleotide(x, y, col);
-          });
-      });
-    }
+    Grid.forShape(this.level.options.gridShape, this.addNucleotide.bind(this));
 
-    // preset scissors
-    this.applyPresetClips();
-
-    // finalize
-    this.allNucleotides.forEach((n) => {
-      if (!n) return;
-      if (n.stayMissing) n.state = "missing";
-      else n.state = "present";
-    });
-    this.addSpecifics(
-      this.allNucleotides,
-      this.level.options.portalsCount,
-      "portal"
-    );
-    this.addSpecifics(
-      this.allNucleotides,
-      this.level.options.clipCount,
-      "clip"
-    );
-    this.presents.forEach((n) => {
-      n.activateNode();
+    // generate
+    return anim.sequenced({
+      items: this.regenerateFromShape(this.allNucleotides.filter((n) => !!n)),
+      timeBetween: 50,
+      waitForAllSteps: true,
+      onStep: (item) => {
+        return item.switchTypeAnimation(item.type);
+      },
     });
   }
 
@@ -357,11 +350,11 @@ export class Grid extends entity.CompositeEntity {
 
     this.allNucleotides = [];
 
-    this.generateShape();
-
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("--> DONE", "grid.reset()");
     }
+
+    return this.generateShape();
   }
 
   private _onPointerDown(e: PIXI.InteractionEvent) {
@@ -409,100 +402,69 @@ export class Grid extends entity.CompositeEntity {
     return this.allNucleotides.filter((n) => n !== undefined);
   }
 
-  get presents(): nucleotide.Nucleotide[] {
-    return this.allNucleotides.filter((n) => n.state === "present");
+  getNucleotidesByType(
+    type: nucleotide.NucleotideType
+  ): nucleotide.Nucleotide[] {
+    return this.allNucleotides.filter((n) => n?.type === type);
   }
 
   get clips(): nucleotide.Nucleotide[] {
-    return this.allNucleotides.filter((n) => n?.type === "clip");
+    return this.getNucleotidesByType("clip");
   }
 
   get portals(): nucleotide.Nucleotide[] {
-    return this.allNucleotides.filter((n) => n?.type === "portal");
+    return this.getNucleotidesByType("portal");
   }
 
-  addSpecifics(
-    among: (nucleotide.Nucleotide | undefined)[],
-    count: number,
-    type: nucleotide.NucleotideType
-  ) {
-    let countOption: number = null;
-    const shape = this.level.options.gridShape;
-    if (typeof shape === "string") {
-      if (shape in gridShapes) {
-        const resolvableOptions = gridShapes[shape];
-
-        if (typeof resolvableOptions !== "function") {
-          const val = resolvableOptions[(type + "s") as "portals" | "clips"];
-
-          if (val !== undefined) {
-            if (typeof val === "number") {
-              countOption = val;
-            } else {
-              return val.forEach(({ x, y }) => {
-                const n = this.getNucleotideFromGridPosition(
-                  new PIXI.Point(x, y)
-                );
-                if (n) n.type = type;
-              });
-            }
-          }
-        }
-      }
-    } else if (!Array.isArray(shape) && typeof shape !== "function") {
-      const val = shape[(type + "s") as "portals" | "clips"];
-      if (val !== undefined) {
-        if (typeof val === "number") {
-          countOption = val;
-        } else {
-          return val.forEach(({ x, y }) => {
-            const n = this.getNucleotideFromGridPosition(new PIXI.Point(x, y));
-            if (n) n.type = type;
-          });
-        }
-      }
-    }
-
-    if ((countOption ?? count) === 0) return;
-
-    const safe = this.nucleotides.filter((n) => n.state !== "inactive");
-    if (safe.length === 0) return;
-
-    const normals = among.filter(
-      (n) =>
-        n &&
-        n.type === "normal" &&
-        n.state !== "missing" &&
-        n.state !== "inactive"
-    );
-    const neededCount =
-      (countOption ?? count) - safe.filter((n) => n.type === type).length;
-
-    // si le nombre de normaux est insuffisant (presque jamais)
-    if (normals.length <= neededCount) {
-      // change tous les normaux en specifics
-      normals.forEach((n) => (n.type = type));
-    } else {
-      _.shuffle(normals)
-        .slice(0, neededCount)
-        .forEach((n) => (n.type = type));
-    }
+  get jokers(): nucleotide.Nucleotide[] {
+    return this.getNucleotidesByType("joker");
   }
 
-  isOnEvenCol(n: nucleotide.Nucleotide): boolean {
+  get holes(): nucleotide.Nucleotide[] {
+    return this.getNucleotidesByType("hole");
+  }
+
+  get normals(): nucleotide.Nucleotide[] {
+    return this.getNucleotidesByType("normal");
+  }
+
+  regenerateFromShape(among: nucleotide.Nucleotide[]) {
+    return among.map((n) => {
+      const gridPosition = this.getGridPositionOf(n);
+      const signatureName = Grid.fromShape(
+        this.level.options.gridShape,
+        gridPosition.x,
+        gridPosition.y
+      );
+      const signature = nucleotide.NucleotideSignatures[signatureName];
+      const info = nucleotide.Nucleotide.fromSignature(signature);
+      n.type = info.type;
+      n.color = info.color;
+      return n;
+    });
+  }
+
+  isOnEvenCol(n: nucleotide.Nucleotide): boolean | null {
     const position = this.getGridPositionOf(n);
     if (!position) return null;
     return position.x % 2 === 0;
   }
 
-  getForcedMatchingPath(givenLength: number): {
-    colors: nucleotide.ColorName[];
+  getForcedMatchingPath(
+    givenLength: number
+  ): {
+    colors: nucleotide.NucleotideSignatures[];
     nucleotides: nucleotide.Nucleotide[];
   } {
+    if (this.nucleotides.length === 0) throw new Error("The grid is empty!");
+
+    if (!this.level.options.disableClips && this.clips.length === 0)
+      throw new Error("clips are enabled and grid not includes any clip!");
+
     let security = 5000;
 
     let output: {
-      colors: nucleotide.ColorName[];
+      colors: nucleotide.NucleotideSignatures[];
       nucleotides: nucleotide.Nucleotide[];
     } = null;
 
@@ -511,16 +473,16 @@ export class Grid extends entity.CompositeEntity {
       type: nucleotide.NucleotideType = "normal",
       not = false
     ): boolean => {
-      return (
-        (not ? n.type !== type : n.type === type) && n.state !== "inactive"
-      );
+      return (not ? n.type !== type : n.type === type) && n.active;
     };
 
     const islands = this.getIslands();
 
     while (output === null) {
       const island = crispr.random(
-        islands.filter((island) => island.some((n) => n.type === "clip"))
+        this.level.options.disableClips
+          ? islands
+          : islands.filter((island) => island.some((n) => n.type === "clip"))
       );
 
       if (!island) continue;
@@ -530,7 +492,7 @@ export class Grid extends entity.CompositeEntity {
         : Math.min(givenLength, island.length);
 
       const passed: {
-        colors: nucleotide.ColorName[];
+        colors: nucleotide.NucleotideSignatures[];
         nucleotides: nucleotide.Nucleotide[];
       } = {
         colors: [],
@@ -542,7 +504,8 @@ export class Grid extends entity.CompositeEntity {
       const addAndFocus = (n: nucleotide.Nucleotide) => {
         current = n;
         passed.nucleotides.push(n);
-        if (is(current)) passed.colors.push(n.colorName);
+        if (is(current))
+          passed.colors.push(nucleotide.NucleotideSignatures[n.color]);
       };
 
       // get all color-based nucleotides
@@ -552,7 +515,13 @@ export class Grid extends entity.CompositeEntity {
       if (normals.length < length) length = normals.length;
 
       // chose an entry point
-      addAndFocus(crispr.random(island.filter((n) => is(n, "clip"))));
+      addAndFocus(
+        crispr.random(
+          island.filter((n) => {
+            return is(n, "clip", this.level.options.disableClips);
+          })
+        )
+      );
 
       // while path is not full
       while (true) {
@@ -592,7 +561,7 @@ export class Grid extends entity.CompositeEntity {
           // if path is full
           if (passed.colors.length >= length) {
             if (
-              this.level.options.clipCount === 0 ||
+              this.level.options.disableClips ||
               passed.nucleotides.filter((n) => is(n, "clip")).length > 0
             ) {
               // return it
@@ -647,8 +616,8 @@ export class Grid extends entity.CompositeEntity {
   }
 
   getNucleotideFromGridPosition(
-    gridPos: PIXI.Point
-  ): nucleotide.Nucleotide | null {
+    gridPos: PIXI.IPointData
+  ): nucleotide.Nucleotide | undefined {
     return this.allNucleotides[gridPos.y * colCount + gridPos.x];
   }
 
@@ -678,10 +647,14 @@ export class Grid extends entity.CompositeEntity {
   // }
 
   getAbsolutePositionFromGridPosition(gridPos: PIXI.Point): PIXI.Point {
-    const { width, height, dist } =
-      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-        this.level.options.nucleotideRadius
-      );
+    const {
+      width,
+      height,
+      dist,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      nucleotide.nucleotideRadius.grid
+    );
+
     const x = width / 2 + gridPos.x * dist.x;
     const y =
       gridPos.y * height -
@@ -723,49 +696,32 @@ export class Grid extends entity.CompositeEntity {
     return false;
   }
 
-  slide(neighborIndex: NeighborIndex) {
-    const opposedNeighborIndex = opposedIndexOf(neighborIndex);
-    const oldHoles = this.nucleotides.filter((n) => n.state === "missing");
-    for (const nucleotide of this.nucleotides) {
-      if (nucleotide.state === "missing") {
-        this.generateNucleotide(nucleotide);
-        this.recursiveSwap(nucleotide, opposedNeighborIndex);
-      }
-    }
-
-    this.addSpecifics(oldHoles, this.level.options.portalsCount, "portal");
-    (() => this.addSpecifics(oldHoles, this.level.options.clipCount, "clip"))();
-    // this.refresh();
-  }
-
   pointTo(n: nucleotide.Nucleotide, index: NeighborIndex | -1) {
     if (index !== -1) {
-      n.pathArrow.angle = index * (360 / 6);
-      n.pathArrow.visible = true;
-      n.pathArrow.play();
-      n.level.path.container.addChildAt(n.pathArrow, 0);
+      n.pathArrowSprite.angle = index * (360 / 6);
+      n.pathArrowSprite.visible = true;
+      n.pathArrowSprite.play();
+      n.level.path.container.addChildAt(n.pathArrowSprite, 0);
     } else {
-      n.pathArrow.visible = false;
-      n.pathArrow.stop();
-      n.level.path.container.removeChild(n.pathArrow);
+      n.pathArrowSprite.visible = false;
+      n.pathArrowSprite.stop();
+      n.level.path.container.removeChild(n.pathArrowSprite);
     }
   }
 
-  fillHoles(): nucleotide.Nucleotide[] {
-    // todo: use changeState(): entity.Sequence instead of state accessor and returns it
+  fillHoles() {
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        if (this.holes.length > 0) this._entityConfig.fxMachine.play("spawn");
+      }),
+      () => this.refreshTypeOf(this.regenerateFromShape(this.holes)),
+    ]);
+  }
 
-    const holes = this.nucleotides.filter((n) => n.state === "missing");
-    for (const nucleotide of holes) {
-      this.generateNucleotide(nucleotide);
-    }
-    this.addSpecifics(holes, this.level.options.portalsCount, "portal");
-    (() => this.addSpecifics(holes, this.level.options.clipCount, "clip"))();
-
-    holes.forEach((n) => (n.state = "present"));
-
-    this._entityConfig.fxMachine.play("spawn");
-
-    return holes;
+  refreshTypeOf(targets: nucleotide.Nucleotide[]) {
+    return new entity.ParallelEntity(
+      targets.map((n) => n.switchTypeAnimation(n.type))
+    );
   }
 
   swap(
@@ -838,25 +794,6 @@ export class Grid extends entity.CompositeEntity {
     return [neighbor, ...this.getNeighborsInLine(neighbor, neighborIndex)];
   }
 
-  getStarBranches(n: nucleotide.Nucleotide): nucleotide.Nucleotide[][] {
-    const branches: nucleotide.Nucleotide[][] = [];
-    for (let i = 0; i < 6; i++) {
-      branches.push(this.getNeighborsInLine(n, i as NeighborIndex));
-    }
-    return branches;
-  }
-
-  getStarStages(n: nucleotide.Nucleotide): nucleotide.Nucleotide[][] {
-    const stages: nucleotide.Nucleotide[][] = [];
-    const branches = this.getStarBranches(n);
-    let index = 0;
-    while (branches.some((b, i) => b.length > stages.length)) {
-      stages.push([...branches.map((b) => b[index]).filter((n) => n)]);
-      index++;
-    }
-    return stages;
-  }
-
   /** @returns {number} - -1 if is not a neighbor or the neighbor index */
   getNeighborIndex(
     n: nucleotide.Nucleotide,
@@ -905,42 +842,5 @@ export class Grid extends entity.CompositeEntity {
         break;
     }
     return gridPos;
-  }
-
-  containsHoles(): boolean {
-    return this.nucleotides.some((n) => n.state === "missing");
-  }
-
-  /**
-   * Regenerate a certain number of nucleotides
-   */
-  // regenerate(n: number, filter: (n: nucleotide.Nucleotide) => boolean): void {
-  //   // todo: use changeState(): entity.Sequence instead of state accessor and returns it
-  //
-  //   // Pick a certain number of non-infected nucleotides
-  //   // @ts-ignore
-  //   const nucleotides: nucleotide.Nucleotide[] = _.chain(this.nucleotides)
-  //     // @ts-ignore
-  //     .filter(filter)
-  //     .shuffle()
-  //     .take(n)
-  //     .value();
-  //
-  //   // Make them disappear
-  //   nucleotides.forEach((n) => {
-  //     n.state = "missing";
-  //     this.generateNucleotide(n);
-  //   });
-  //
-  //   this.addSpecifics(nucleotides, this.level.options.portalsCount, "portal");
-  //   (() =>
-  //     this.addSpecifics(nucleotides, this.level.options.clipCount, "clip"))();
-  //
-  //   nucleotides.forEach((n) => (n.state = "present"));
-  // }
-
-  generateNucleotide(nucleotide: nucleotide.Nucleotide) {
-    nucleotide.type = "normal";
-    nucleotide.generateColor();
   }
 }

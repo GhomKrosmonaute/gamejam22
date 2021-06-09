@@ -10,16 +10,39 @@ import * as crispr from "../crispr";
 import * as anim from "../animations";
 
 import * as nucleotide from "./nucleotide";
-import * as path from "./path";
 import * as virus from "./virus";
 
 import * as level from "../scenes/level";
+
+export interface SequenceMatchingOptions {
+  sens?: "toRight" | "toLeft";
+  sticky?: "left" | "right" | "borders";
+  minLength: number | ((ctx: level.Level) => number);
+}
+
+export const sequenceMatchingOptions: {
+  [k in level.LevelVariant]: SequenceMatchingOptions;
+} = {
+  zen: {
+    minLength: 3,
+  },
+  fall: {
+    minLength: (ctx) => ctx.sequenceManager.first.baseLength,
+    sticky: "right",
+    sens: "toRight",
+  },
+  turn: {
+    minLength: (ctx) => ctx.sequenceManager.first.baseLength,
+    sticky: "right",
+    sens: "toRight",
+  },
+};
 
 export class SequenceAdjustment extends entity.CompositeEntity {
   private readonly disablingAnimation = "adjustSequences";
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   adjust() {
@@ -100,6 +123,10 @@ export class SequenceManager extends entity.CompositeEntity {
   public container = new PIXI.Container();
   public adjustment = new SequenceAdjustment();
 
+  get first(): Sequence | null {
+    return [...this.sequences][0] ?? null;
+  }
+
   _setup() {
     this.container = new PIXI.Container();
     this._entityConfig.container.addChild(this.container);
@@ -122,7 +149,7 @@ export class SequenceManager extends entity.CompositeEntity {
 
     this.generateFirstSequences();
 
-    if (crispr.debug) {
+    if (crispr.inDebugMode()) {
       console.log("--> DONE", "sequenceManager.reset()");
     }
   }
@@ -138,57 +165,21 @@ export class SequenceManager extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get viruses(): virus.Virus[] {
     return [...this.sequences].map((s) => s.virus).filter((v) => v.isSetup);
   }
 
-  get sequenceCountLimit(): number {
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.sequenceCountLimit
-    )
-      return crispr.scrap(
-        this.level.variant.sequenceCountLimit,
-        this.level,
-        this
-      );
-    switch (this.level.options.variant) {
-      case "turn":
-        return 3;
-      case "fall":
-      case "zen":
-        return 1;
-    }
-  }
+  set(colors: (keyof typeof nucleotide.NucleotideSignatures)[]) {
+    if (this.sequenceCount > 0) return;
+    const {
+      width: nucleotideWidth,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      nucleotide.nucleotideRadius.sequence
+    );
 
-  private _pickSequenceLength(): number {
-    if (this.level.options.sequenceLength !== null)
-      return this.level.options.sequenceLength;
-
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.sequenceLength
-    )
-      return crispr.scrap(this.level.variant.sequenceLength, this.level, this);
-
-    switch (this.level.options.variant) {
-      case "turn":
-        return crispr.random(4, 7);
-      case "fall":
-        return crispr.random(3, 5);
-      case "zen":
-        return 13;
-    }
-  }
-
-  set(colors: nucleotide.ColorName[]) {
-    const { width: nucleotideWidth } =
-      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-        this.level.options.sequenceNucleotideRadius
-      );
     const sequence = new Sequence(
       colors,
       new PIXI.Point(
@@ -206,12 +197,14 @@ export class SequenceManager extends entity.CompositeEntity {
     this.adjustment.adjust();
   }
 
-  add(length?: number) {
-    length = length ?? this._pickSequenceLength();
-    const { width: nucleotideWidth } =
-      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-        this.level.options.sequenceNucleotideRadius
-      );
+  add(length = crispr.scrap(this.level.options.sequenceLength, this.level)) {
+    if (this.sequenceCount > 0) return;
+    const {
+      width: nucleotideWidth,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      nucleotide.nucleotideRadius.sequence
+    );
+
     const sequence = new Sequence(
       length,
       new PIXI.Point(
@@ -227,95 +220,6 @@ export class SequenceManager extends entity.CompositeEntity {
     );
     this.sequences.add(sequence);
     this.adjustment.adjust();
-  }
-
-  /** remove all validated sequences */
-  crunch(_path: path.Path | undefined): entity.Entity | void {
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.onSequenceManagerCrunched
-    )
-      return this.level.variant.onSequenceManagerCrunched(this);
-
-    if (_path && this.matchesSequence(_path) !== true) return;
-
-    const sequence = [...this.sequences][0];
-
-    const signature = _path ? _path.signature : sequence.toString();
-    const removedSequences: Sequence[] = [];
-    let partialCrunch = false;
-
-    if (this.level.options.variant === "zen") {
-      if (sequence.validate(signature, "partial")) {
-        sequence.deactivateSegment(_path.signature);
-
-        partialCrunch = true;
-
-        if (sequence.isInactive()) {
-          removedSequences.push(sequence);
-        }
-      }
-    } else if (this.level.options.canCrunchParts) {
-      removedSequences.push(sequence);
-    } else if (sequence.validate(signature)) {
-      partialCrunch = true;
-
-      removedSequences.push(sequence);
-    }
-
-    // for (const s of this.sequences) {
-    //   if (this.level.options.variant === "zen") {
-    //     if (s.validate(signature, "partial")) {
-    //       s.deactivateSegment(_path.signature);
-
-    //       partialCrunch = true;
-
-    //       if (s.isInactive()) {
-    //         removedSequences.push(s);
-    //       }
-    //     }
-    //   } else if (s.validate(signature)) {
-    //     partialCrunch = true;
-
-    //     removedSequences.push(s);
-    //   }
-    // }
-
-    const context: entity.Entity[] = [];
-
-    if (removedSequences.length > 0 || partialCrunch) {
-      this.level.path.crunchCountBeforeSequenceDown++;
-
-      if (crispr.debug) {
-        console.log(
-          "updated",
-          "crunchCountBeforeSequenceDown",
-          this.level.path.crunchCountBeforeSequenceDown
-        );
-      }
-
-      for (const s of removedSequences) {
-        context.push(
-          new entity.FunctionCallEntity(() => {
-            this.emit("crunch", s);
-          }),
-          this.removeSequence(!this.level.options.disableScore, false, s)
-        );
-      }
-    }
-
-    // if (crunched) path.items.forEach((n) => (n.state = "missing"));
-
-    context.push(
-      new entity.FunctionCallEntity(() => {
-        this.adjustment.adjust();
-        if (partialCrunch) {
-          this.level.emitLevelEvent("partialCrunched");
-        }
-      })
-    );
-
-    return new entity.EntitySequence(context);
   }
 
   removeSequence(
@@ -372,71 +276,22 @@ export class SequenceManager extends entity.CompositeEntity {
     );
   }
 
-  matchesSequence(_path: path.Path): path.PathState {
-    // TODO: perhaps this should only work if one and only one sequence matches?
-    if (
-      typeof this.level.variant === "object" &&
-      this.level.variant.onSequenceManagerMatchPath
-    )
-      return this.level.variant.onSequenceManagerMatchPath(this.level, _path);
-
-    if (this.level.options.variant === "zen") {
-      return (
-        (_path.length > 2 &&
-          [...this.sequences].some((s) =>
-            s.validate(_path.signature, "partial")
-          )) ||
-        "no match"
-      );
-    } else if (this.level.options.canCrunchParts) {
-      const options = this.level.options.canCrunchParts;
-      const sequenceLength = [...this.sequences][0].baseLength;
-
-      for (const possiblePart of options.possibleParts.sort((a, b) => {
-        const lengthA = crispr.resolvePossiblePartLength(
-          a.length,
-          sequenceLength
-        );
-        const lengthB = crispr.resolvePossiblePartLength(
-          b.length,
-          sequenceLength
-        );
-        return lengthA - lengthB;
-      })) {
-        const length = crispr.resolvePossiblePartLength(
-          possiblePart.length,
-          sequenceLength
-        );
-
-        if (
-          _path.length === length &&
-          [...this.sequences][0].validate(_path.signature, "partial", options)
-        )
-          return true;
-      }
-
-      return "no match";
-    } else {
-      if (
-        ![...this.sequences].some((s) => s.validate(_path.signature, "full"))
-      ) {
-        return "no match";
-      }
-      if (this.level.options.clipCount > 0 && !_path.correctlyContainsClips()) {
-        return "missing clips";
-      }
-      return true;
-    }
-  }
-
-  updateHighlighting(_path: path.Path): void {
-    const signature = _path.signature;
-    this.sequences.forEach((s) => s.highlightSegment(signature));
+  updateHighlighting(
+    options: SequenceMatchingOptions = sequenceMatchingOptions[
+      this.level.variant
+    ]
+  ): void {
+    this.sequences.forEach((s) => s.highlightSegment(options));
   }
 
   get sequenceCount(): number {
     return this.sequences.size;
   }
+}
+
+export interface SequenceScoring {
+  multiplier: number;
+  nucleotides: nucleotide.NucleotideJSON[];
 }
 
 /**
@@ -447,9 +302,15 @@ export class Sequence extends entity.CompositeEntity {
   public nucleotides: nucleotide.Nucleotide[] = [];
   public container = new PIXI.Container();
   public virus?: virus.Virus;
+  public scoring: SequenceScoring = {
+    multiplier: 1,
+    nucleotides: [],
+  };
 
   constructor(
-    public readonly base: number | nucleotide.ColorName[],
+    public readonly base:
+      | number
+      | (keyof typeof nucleotide.NucleotideSignatures)[],
     private readonly basePosition: PIXI.Point
   ) {
     super();
@@ -458,14 +319,14 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   get level(): level.Level {
-    return this._entityConfig.level;
+    return this._entityConfig.currentLevelHolder.level;
   }
 
   get maxActiveLength(): number {
     const activeLength: number[] = [0];
     let nbr = 0;
     for (const n of this.nucleotides) {
-      if (n.state !== "inactive") {
+      if (n.active) {
         nbr++;
       } else {
         nbr = 0;
@@ -482,9 +343,11 @@ export class Sequence extends entity.CompositeEntity {
 
     const requestTransition = () =>
       this.virus.isSetup &&
+      !this.level.finished &&
       this.level.isInit &&
       !this.level.isEnded &&
       !this.level.disablingAnimations.has("preventVirus") &&
+      !this.level.disablingAnimations.has("grid._setup") &&
       ![...this.level.disablingAnimations].some((name) =>
         name.startsWith("popup")
       );
@@ -496,9 +359,8 @@ export class Sequence extends entity.CompositeEntity {
       }),
       this.virus.come(),
       new entity.FunctionalEntity({ requestTransition }),
-      new entity.FunctionCallEntity(() => this._initNucleotides()),
       this.virus.stingIn(),
-      new entity.WaitingEntity(1000),
+      () => this._initNucleotides(),
       this.virus.stingOut(),
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("sequence._initVirus", false);
@@ -509,26 +371,40 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _initNucleotides() {
-    const { width, height } =
-      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-        this.level.options.sequenceNucleotideRadius
-      );
+    const {
+      width,
+      height,
+    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+      nucleotide.nucleotideRadius.sequence
+    );
 
-    let forcedSequence: nucleotide.ColorName[] = [];
+    let forcedSequence: nucleotide.NucleotideSignatures[] = [];
 
     this.level.grid.solution = [];
 
     if (Array.isArray(this.base)) {
-      forcedSequence = this.base.slice(0);
+      forcedSequence = this.base.map(
+        (sign) => nucleotide.NucleotideSignatures[sign]
+      );
     } else if (this.level.options.forceMatching) {
       const forcedMatching = this.level.grid.getForcedMatchingPath(
         this.baseLength
       );
       forcedSequence = forcedMatching.colors;
       this.level.grid.solution = forcedMatching.nucleotides;
+    } else {
+      forcedSequence = new Array(this.baseLength).fill(
+        nucleotide.NucleotideSignatures.random
+      );
     }
 
-    for (let i = -1; i < this.baseLength; i++) {
+    for (
+      let i = this.level.options.disableClips ? 0 : -1;
+      i < this.baseLength;
+      i++
+    ) {
+      if (forcedSequence.length > 0 && !forcedSequence[i] && i > -1) continue;
+
       const position = new PIXI.Point();
 
       if (
@@ -554,13 +430,14 @@ export class Sequence extends entity.CompositeEntity {
         position.y = crispr.approximate(0, height * 0.05);
       }
 
-      const n = new nucleotide.Nucleotide(
-        this.level.options.sequenceNucleotideRadius,
-        "sequence",
+      const n = new nucleotide.Nucleotide({
+        parent: "sequence",
         position,
-        i === -1 ? 0 : Math.random(),
-        forcedSequence[i]
-      );
+        rotation: i === -1 ? 0 : Math.random(),
+        ...nucleotide.Nucleotide.fromSignature(forcedSequence[i]),
+      });
+
+      n.container.scale.set(0);
 
       if (i === -1) n.type = "clip";
 
@@ -581,69 +458,76 @@ export class Sequence extends entity.CompositeEntity {
         })
       );
 
-      n.state = "present";
-
-      if (this.level.options.canCrunchParts) {
-        const options = this.level.options.canCrunchParts;
-        for (const possiblePart of options.possibleParts.sort((a, b) => {
-          const lengthA = crispr.resolvePossiblePartLength(
-            a.length,
-            this.baseLength
-          );
-          const lengthB = crispr.resolvePossiblePartLength(
-            b.length,
-            this.baseLength
-          );
-          return lengthA - lengthB;
-        })) {
-          const length = crispr.resolvePossiblePartLength(
-            possiblePart.length,
-            this.baseLength
-          );
-
-          if (n.glowColor === null && i + 1 < length) {
-            n.glowColor = possiblePart.glowColor;
-          }
-        }
-      }
-
       this.nucleotides.push(n);
     }
 
-    if (this.virus) {
-      this._activateChildEntity(
-        anim.sequenced({
-          items: this.nucleotides,
-          waitForAllSteps: true,
-          timeBetween: 250,
-          delay: 500,
-          onStep: (n, index) => {
-            const position = new PIXI.Point(
-              index * width * 0.8,
-              crispr.approximate(0, height * 0.05)
-            );
-            return anim.move(
+    return anim.sequenced({
+      items: this.nucleotides,
+      waitForAllSteps: true,
+      timeBetween: 100,
+      onStep: (n, index) => {
+        if (this.virus) {
+          const position = new PIXI.Point(
+            index * width * 0.8,
+            crispr.approximate(0, height * 0.05)
+          );
+          return new entity.ParallelEntity([
+            anim.move(
               n.position,
               n.position.clone(),
               position,
               1000,
               easing.easeOutCubic
-            );
-          },
-        })
-      );
-    }
+            ),
+            n.switchTypeAnimation(n.type),
+            // new tween.Tween({
+            //   from: 0,
+            //   to: n.scale,
+            //   duration: 1000,
+            //   easing: easing.easeInOutQuint,
+            //   onUpdate: (value) => n.container.scale.set(value),
+            // }),
+          ]);
+        } else {
+          return n.switchTypeAnimation(n.type);
+          // return new tween.Tween({
+          //   from: 0,
+          //   to: n.scale,
+          //   duration: 1000,
+          //   easing: easing.easeInOutQuint,
+          //   onUpdate: (value) => n.container.scale.set(value),
+          // });
+        }
+      },
+    });
   }
 
   _setup() {
     this.container.interactive = true;
 
     this._on(this.container, "pointerup", () => {
-      this._entityConfig.level.sequenceManager.emit("click", this);
+      this._entityConfig.currentLevelHolder.level.sequenceManager.emit(
+        "click",
+        this
+      );
     });
 
-    if (this.level.options.variant === "zen") {
-      this._initNucleotides();
+    if (this.level.options.disableViruses) {
+      this._activateChildEntity(
+        new entity.EntitySequence([
+          new entity.FunctionalEntity({
+            requestTransition: () =>
+              !this.level.finished &&
+              this.level.isInit &&
+              !this.level.isEnded &&
+              !this.level.disablingAnimations.has("grid._setup") &&
+              ![...this.level.disablingAnimations].some((name) =>
+                name.startsWith("popup")
+              ),
+          }),
+          () => this._initNucleotides(),
+        ])
+      );
     } else {
       this._activateChildEntity(this._initVirus());
     }
@@ -658,296 +542,420 @@ export class Sequence extends entity.CompositeEntity {
     this._entityConfig.container.removeChild(this.container);
   }
 
-  down(addScore: boolean, notACrunchResult = false) {
-    let isLong: boolean,
-      fully: boolean,
-      shots: number,
-      scoreAnimationFinished = !addScore,
-      length: number;
-
-    const pathSignature = this.level.path.signature;
-    const pathItems = this.level.path.items.map((n) => n.toJSON());
-    const allDownNucleotides = pathItems; //[...this.nucleotides, ...pathItems];
-    const multiplier = allDownNucleotides.reduce(
-      (accumulator, n) => accumulator * n.crispyMultiplier,
-      1
+  resolveScoring(): number {
+    return (
+      this.scoring.nucleotides.length *
+      this.scoring.multiplier *
+      this.level.options.baseCrispyGain
     );
+  }
 
+  resetScoring() {
+    this.scoring = {
+      multiplier: 1,
+      nucleotides: [],
+    };
+  }
+
+  addScoring(nucleotides: nucleotide.NucleotideJSON[]) {
+    if (
+      nucleotides.filter((n) => n.type !== "portal").length === this.baseLength
+    ) {
+      this.level.oneShotSequence = true;
+    }
+    this.scoring.multiplier +=
+      nucleotides.reduce((acc, val) => acc + (val.crispyMultiplier - 1), 1) - 1;
+    this.scoring.nucleotides.push(...nucleotides);
+  }
+
+  applyScoring(duration = 1500) {
+    const addedScore = this.resolveScoring();
+    return new tween.Tween({
+      duration,
+      from: this.level.crispies,
+      to: this.level.crispies + addedScore,
+      easing: easing.easeInOutCubic,
+      onUpdate: (value) => {
+        this.level.crispies = value;
+      },
+      onTeardown: () => {
+        this.resetScoring();
+      },
+    });
+  }
+
+  displayScoring(): entity.EntitySequence {
+    let scoring: SequenceScoring, scoringText: PIXI.Text, total: number;
+    return new entity.EntitySequence([
+      new entity.FunctionCallEntity(() => {
+        scoring = this.scoring;
+        total = this.resolveScoring();
+
+        scoringText = crispr.makeText(
+          `${this.level.options.baseCrispyGain} x ${scoring.nucleotides.length}`,
+          {
+            fontFamily: "Waffle Crisp",
+            fill: crispr.yellow,
+            fontSize: 80,
+            stroke: 0x000000,
+            strokeThickness: 4,
+          }
+        );
+
+        scoringText.anchor.set(0.5);
+        scoringText.alpha = 0;
+        scoringText.position.x = crispr.width / 2 - this.container.position.x;
+
+        this.container.addChild(scoringText);
+      }),
+      new entity.ParallelEntity([
+        () =>
+          anim.move(
+            scoringText.position,
+            scoringText.position.clone(),
+            new PIXI.Point(
+              scoringText.position.x,
+              scoringText.position.y - 100
+            ),
+            1000,
+            easing.easeOutBounce
+          ),
+        new tween.Tween({
+          from: 0,
+          to: 1,
+          duration: 1000,
+          easing: easing.easeInOutQuart,
+          onUpdate: (value) => (scoringText.alpha = value),
+        }),
+      ]),
+      () =>
+        scoring.multiplier > 1
+          ? anim.bubble(scoringText, 1.5, 500, {
+              onTop: () => {
+                scoringText.text = `${
+                  this.level.options.baseCrispyGain * scoring.nucleotides.length
+                } x ${scoring.multiplier}`;
+              },
+            })
+          : new entity.FunctionCallEntity(() => null),
+      () =>
+        new entity.ParallelEntity([
+          new entity.FunctionCallEntity(() => {
+            this.level.screenShake(8, 1.05, 1000);
+            this._entityConfig.fxMachine.play("score_ring");
+          }),
+          new tween.Tween({
+            from: this.level.options.baseCrispyGain,
+            to: total,
+            onUpdate: (value) => {
+              scoringText.text = String(Math.round(value));
+              scoringText.style.fontSize = scoringText.style.fontSize + 2;
+            },
+            easing: easing.easeInCubic,
+            duration: 1000,
+          }),
+          anim.bubble(scoringText, 1.25, 1000, {
+            onTop: () => {
+              //this.level.screenShake(5, 1.05, 100);
+            },
+          }),
+        ]),
+      () =>
+        anim.bubble(scoringText, 1.25, 200, {
+          onTop: () => {
+            scoringText.text = String(total);
+          },
+        }),
+      () => anim.down(scoringText, 500, scoringText.scale.x),
+      new entity.FunctionCallEntity(() => {
+        this.container.removeChild(scoringText);
+      }),
+    ]);
+  }
+
+  down(addScore: boolean, notACrunchResult = false) {
+    let startedAt: number;
     return new entity.EntitySequence([
       new entity.FunctionCallEntity(() => {
         this.level.disablingAnimation("sequence.down", true);
-        this.level.sequenceWasCrunched = true;
-        this.level.crunchedSequenceCount++;
-
-        if (crispr.debug) {
-          console.log(
-            "updated",
-            "crunchedSequenceCount",
-            this.level.crunchedSequenceCount
-          );
-        }
-
-        isLong = this.level.options.variant === "zen";
-        fully = this.nucleotides.every((n) => n.state === "inactive");
-        shots = this.level.path.crunchCountBeforeSequenceDown;
-        length = allDownNucleotides.length;
-
-        if (isLong && fully && shots === 1) {
-          this.level.oneShotLongSequence = true;
-
-          if (crispr.debug) {
-            console.log(
-              "updated",
-              "oneShotLongSequence",
-              this.level.oneShotLongSequence
-            );
-          }
-        }
-
-        this.level.path.crunchCountBeforeSequenceDown = 0;
+        startedAt = Date.now();
       }),
       new entity.FunctionalEntity({
         requestTransition: () => {
           return (
+            Date.now() > startedAt + 3000 ||
             notACrunchResult ||
             this.level.disablingAnimations.has("path.crunch.down")
           );
         },
       }),
+      anim.sequenced({
+        items: this.nucleotides.slice(),
+        timeBetween: 50,
+        waitForAllSteps: true,
+        onStep: (item) => {
+          item.highlighted = false;
+          return anim.down(item.container, 500, item.scale);
+        },
+      }),
+      addScore
+        ? new entity.EntitySequence([
+            this.displayScoring(),
+            this.applyScoring(),
+          ])
+        : new entity.FunctionCallEntity(() => null),
       new entity.FunctionCallEntity(() => {
-        if (addScore) {
-          const text = crispr.makeText(
-            `${this.level.options.baseCrispyGain} x ${length}`,
-            {
-              fontFamily: "Waffle Crisp",
-              fill: crispr.yellow,
-              fontSize: 80,
-              stroke: fully ? "#ffa200" : "#000000",
-              strokeThickness: 4,
-            }
-          );
+        const end = () => {
+          //if (this.virus?.isSetup) this.level.deactivate(this.virus);
+          this.level.disablingAnimation("path.crunch.down", false);
+          this.level.disablingAnimation("sequence.down", false);
+          this.level.emitLevelEvent("sequenceDown");
+          this.level.sequenceManager.adjustment.adjust();
+          this._transition = entity.makeTransition();
+        };
 
-          text.anchor.set(0.5);
-          text.alpha = 0;
-          text.position.x = crispr.width / 2 - this.container.position.x;
-
-          this.container.addChild(text);
-
-          this.level.activate(
+        if (this.virus && this.virus.isSetup) {
+          this._activateChildEntity(
             new entity.EntitySequence([
               new entity.ParallelEntity([
-                () =>
-                  anim.move(
-                    text.position,
-                    text.position.clone(),
-                    new PIXI.Point(text.position.x, text.position.y - 100),
-                    1000,
-                    easing.easeOutBounce
-                  ),
-                new tween.Tween({
-                  from: 0,
-                  to: 1,
-                  duration: 1000,
-                  easing: easing.easeInOutQuart,
-                  onUpdate: (value) => (text.alpha = value),
+                new entity.FunctionCallEntity(() => {
+                  this.level.activate(
+                    addScore ? this.virus.kill() : this.virus.leave()
+                  );
                 }),
+                new entity.WaitingEntity(1000),
               ]),
-              () =>
-                anim.bubble(text, 1.5, 500, {
-                  onTop: () => {
-                    text.text = `${
-                      this.level.options.baseCrispyGain * length
-                    } x ${multiplier}`;
-                  },
-                }),
-              () =>
-                new entity.ParallelEntity([
-                  new entity.FunctionCallEntity(() => {
-                    this.level.screenShake(10, 1.2, 1000);
-                  }),
-                  new tween.Tween({
-                    from: this.level.options.baseCrispyGain,
-                    to: this.level.options.baseCrispyGain * length * multiplier,
-                    onUpdate: (value) => {
-                      text.text = String(Math.round(value));
-                    },
-                    easing: easing.easeInCubic,
-                    duration: 1000,
-                  }),
-                  anim.bubble(text, 1.25, 1000, {
-                    onTop: () => {
-                      this.level.screenShake(10, 1.2, 100);
-                    },
-                  }),
-                ]),
-              () =>
-                anim.bubble(text, 1.25, 200, {
-                  onTop: () => {
-                    text.text = String(
-                      this.level.options.baseCrispyGain * length * multiplier
-                    );
-                  },
-                  onTeardown: () => {
-                    this.level.activate(
-                      anim.down(
-                        text,
-                        500,
-                        text.scale.x,
-                        () => (scoreAnimationFinished = true)
-                      )
-                    );
-                  },
-                }),
+              new entity.FunctionCallEntity(end),
             ])
           );
+        } else {
+          end();
         }
       }),
-      new entity.FunctionalEntity({
-        requestTransition: () => scoreAnimationFinished,
-      }),
-      () =>
-        anim.sequenced({
-          items: this.nucleotides,
-          timeBetween: 50,
-          waitForAllSteps: true,
-          onStep: (n, index, all, finish) => {
-            n.shakes.removeShake("highlight");
-
-            this._playNote(index);
-
-            let score = this.level.options.baseCrispyGain;
-
-            score *= multiplier;
-
-            // if (crispr.debug) {
-            //   console.log("Multiplier:", multiplier, "Score:", score);
-            // }
-
-            // if (isLong) {
-            //   if (n.state !== "inactive") {
-            //     score *= -1;
-            //   } else if (fully) {
-            //     score *= 2;
-            //   }
-            // }
-
-            if (addScore && pathSignature.length >= index) {
-              this.level.score += score;
-            }
-
-            this._activateChildEntity(
-              new entity.EntitySequence([
-                // new tween.Tween({
-                //   from: n.position.y,
-                //   to: n.position.y + 30,
-                //   onUpdate: (v) => n.position.y = v,
-                //   duration: 250
-                // }),
-                anim.down(n.sprite, 500, 1, finish),
-              ])
-            );
-          },
-          callback: () => {
-            const end = () => {
-              this.level.disablingAnimation("path.crunch.down", false);
-              this.level.disablingAnimation("sequence.down", false);
-              this.level.emitLevelEvent("sequenceDown");
-              this.level.sequenceManager.adjustment.adjust();
-              this._transition = entity.makeTransition();
-            };
-
-            if (this.virus && this.virus.isSetup) {
-              this._activateChildEntity(
-                new entity.EntitySequence([
-                  new entity.ParallelEntity([
-                    new entity.FunctionCallEntity(() => {
-                      this.level.activate(
-                        addScore ? this.virus.kill() : this.virus.leave()
-                      );
-                    }),
-                    new entity.WaitingEntity(1000),
-                  ]),
-                  new entity.FunctionCallEntity(end),
-                ])
-              );
-            } else {
-              end();
-            }
-          },
-        }),
     ]);
   }
 
   validate(
-    signature: string,
-    validationMethod: "full" | "partial" = "full",
-    options?: { fromLeft?: boolean; fromRight?: boolean }
+    options: SequenceMatchingOptions = sequenceMatchingOptions[
+      this.level.variant
+    ]
   ): boolean {
-    const sequenceSignature = this.toString();
-    if (validationMethod === "full") {
-      return (
-        signature === sequenceSignature ||
-        signature === util.reverseString(sequenceSignature)
-      );
+    const signatures = this.level.resolveSignatures();
+
+    if (!signatures) return false;
+
+    const { pathSignature, sequenceSignature } = signatures;
+
+    if (pathSignature.length < crispr.scrap(options.minLength, this.level))
+      return false;
+
+    if (options.sticky !== "borders") {
+      const method = options.sticky
+        ? options.sticky === "left"
+          ? "startsWith"
+          : "endsWith"
+        : "includes";
+
+      if (options.sens) {
+        if (options.sens === "toRight") {
+          return sequenceSignature[method](pathSignature);
+        } else {
+          return sequenceSignature[method](util.reverseString(pathSignature));
+        }
+      } else {
+        return (
+          sequenceSignature[method](pathSignature) ||
+          sequenceSignature[method](util.reverseString(pathSignature))
+        );
+      }
     } else {
-      return (
-        sequenceSignature.includes(signature) ||
-        (options?.fromLeft && sequenceSignature.startsWith(signature)) ||
-        (options?.fromRight && sequenceSignature.endsWith(signature))
-      );
+      if (options.sens) {
+        if (options.sens === "toRight") {
+          return sequenceSignature === pathSignature;
+        } else {
+          return sequenceSignature === util.reverseString(pathSignature);
+        }
+      } else {
+        return (
+          sequenceSignature === pathSignature ||
+          sequenceSignature === util.reverseString(pathSignature)
+        );
+      }
+    }
+  }
+
+  getMatchingSegment(
+    options: SequenceMatchingOptions = sequenceMatchingOptions[
+      this.level.variant
+    ]
+  ): nucleotide.Nucleotide[] | null {
+    const signatures = this.level.resolveSignatures();
+
+    if (!signatures) return null;
+
+    const { pathSignature, sequenceSignature } = signatures;
+
+    if (pathSignature.length < crispr.scrap(options.minLength, this.level))
+      return null;
+
+    if (options.sticky !== "borders") {
+      if (options.sticky) {
+        if (options.sticky === "right") {
+          if (options.sens) {
+            if (options.sens === "toRight") {
+              return sequenceSignature.endsWith(pathSignature)
+                ? this.nucleotides
+                    .slice()
+                    .reverse()
+                    .slice(0, pathSignature.length)
+                : null;
+            } else {
+              return sequenceSignature.endsWith(
+                util.reverseString(pathSignature)
+              )
+                ? this.nucleotides
+                    .slice()
+                    .reverse()
+                    .slice(0, pathSignature.length)
+                : null;
+            }
+          } else {
+            return sequenceSignature.endsWith(pathSignature) ||
+              sequenceSignature.endsWith(util.reverseString(pathSignature))
+              ? this.nucleotides
+                  .slice()
+                  .reverse()
+                  .slice(0, pathSignature.length)
+              : null;
+          }
+        } else {
+          if (options.sens) {
+            if (options.sens === "toRight") {
+              return sequenceSignature.startsWith(pathSignature)
+                ? this.nucleotides.slice(0, pathSignature.length)
+                : null;
+            } else {
+              return sequenceSignature.startsWith(
+                util.reverseString(pathSignature)
+              )
+                ? this.nucleotides.slice(0, pathSignature.length)
+                : null;
+            }
+          } else {
+            return sequenceSignature.startsWith(pathSignature) ||
+              sequenceSignature.startsWith(util.reverseString(pathSignature))
+              ? this.nucleotides.slice(0, pathSignature.length)
+              : null;
+          }
+        }
+      } else {
+        // partial
+        if (options.sens) {
+          let index: number;
+          if (options.sens === "toRight") {
+            index = sequenceSignature.indexOf(pathSignature);
+          } else {
+            index = sequenceSignature.indexOf(
+              util.reverseString(pathSignature)
+            );
+          }
+          return index > -1
+            ? this.nucleotides.slice(index, index + pathSignature.length)
+            : null;
+        } else {
+          let index = sequenceSignature.indexOf(pathSignature);
+          if (index === -1) {
+            index = sequenceSignature.indexOf(
+              util.reverseString(pathSignature)
+            );
+          }
+          return index > -1
+            ? this.nucleotides.slice(index, index + pathSignature.length)
+            : null;
+        }
+      }
+    } else {
+      // full
+      if (options.sens) {
+        if (options.sens === "toRight") {
+          return sequenceSignature === pathSignature ? this.nucleotides : null;
+        } else {
+          return sequenceSignature === util.reverseString(pathSignature)
+            ? this.nucleotides
+            : null;
+        }
+      } else {
+        return sequenceSignature === pathSignature ||
+          sequenceSignature === util.reverseString(pathSignature)
+          ? this.nucleotides
+          : null;
+      }
     }
   }
 
   /**
    * Make the nucleotides that match the signature inactive
-   * @param signature
+   * @param options
    */
-  deactivateSegment(signature: string): boolean {
-    const segment = this.getMatchingSegment(signature);
+  deactivateSegmentAnimation(
+    options: SequenceMatchingOptions = sequenceMatchingOptions[
+      this.level.variant
+    ]
+  ) {
+    const segment = this.getMatchingSegment(options);
 
-    if (!segment) return false;
+    if (!segment) return new entity.FunctionCallEntity(() => null);
 
-    segment.forEach((n) => (n.state = "inactive"));
-
-    return true;
+    return anim.sequenced({
+      items: segment,
+      timeBetween: 200,
+      waitForAllSteps: true,
+      onStep: (n) => n.turnAnimation(false),
+    });
   }
 
-  highlightSegment(signature: string = ""): void {
-    const segment = this.getMatchingSegment(signature);
+  /**
+   * Make the nucleotides that match the signature inactive
+   * @param options
+   */
+  getSequenceWithDeactivatedSegment(
+    options: SequenceMatchingOptions = sequenceMatchingOptions[
+      this.level.variant
+    ]
+  ) {
+    const segment = this.getMatchingSegment(options);
 
-    for (const n of this.nucleotides) {
-      n.isHighlighted = segment && segment.includes(n);
-    }
+    if (!segment) return this;
+
+    segment.forEach((n) => n.turn(false));
+
+    return this;
   }
 
-  getMatchingSegment(signature: string): nucleotide.Nucleotide[] | null {
-    // Try forwards
-    let sequenceSignature = this.toString();
-    let index = sequenceSignature.indexOf(signature);
-    if (index !== -1) {
-      return util.subarray(this.nucleotides.slice(1), index, signature.length);
-    }
+  highlightSegment(
+    options: SequenceMatchingOptions = sequenceMatchingOptions[
+      this.level.variant
+    ]
+  ): void {
+    const segment = this.getMatchingSegment({
+      ...options,
+      minLength: 1,
+      sticky: undefined,
+    });
 
-    // Try backwards
-    sequenceSignature = util.reverseString(sequenceSignature);
-    index = sequenceSignature.indexOf(signature);
-    if (index !== -1) {
-      return util.subarray(
-        this.nucleotides.slice(1),
-        sequenceSignature.length - 1 - index,
-        signature.length * -1
-      );
-    }
-
-    return null;
+    for (const n of this.nucleotides)
+      n.highlighted = segment?.includes(n) ?? false;
   }
 
-  isInactive(): boolean {
-    return !this.nucleotides.some((n) => n.state !== "inactive");
+  isFullInactive(): boolean {
+    return this.nucleotides.every((n) => !n.active);
   }
 
+  /**
+   * Returns signature of sequence
+   */
   toString(): string {
-    return this.nucleotides.map((n) => n.toString()).join("");
+    return this.nucleotides.join("");
   }
 
   private _playNote(index: number) {

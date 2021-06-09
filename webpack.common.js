@@ -76,6 +76,14 @@ module.exports = {
           from: "audio",
           to: "audio",
         },
+        {
+          from: "video",
+          to: "video",
+        },
+        {
+          from: "text",
+          to: "text",
+        },
       ],
     }),
     // //opimize all image file
@@ -93,9 +101,21 @@ module.exports = {
 
     //copy html to dist and insert the js reference.
     new HtmlPlugin({
-      file: path.join(__dirname, "dist", "index.html"),
+      filename: path.join(__dirname, "dist", "index.html"),
       favicon: "./images/cellule.png",
       template: "./index.html",
+      templateParameters: {
+        date: new Date(),
+        commit: git.short(),
+        branch: git.branch(),
+      },
+    }),
+
+    // Copy "embed" version
+    new HtmlPlugin({
+      filename: path.join(__dirname, "dist", "embed.html"),
+      favicon: "./images/cellule.png",
+      template: "./embed.html",
       templateParameters: {
         date: new Date(),
         commit: git.short(),
