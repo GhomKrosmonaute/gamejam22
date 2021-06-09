@@ -121,6 +121,20 @@ export const levels = {
         }),
       ],
     })),
+  Broth: () =>
+    new l.Level("Broth", (ctx) => ({
+      sequenceLength: 8,
+      forceMatching: false,
+      gridShape: [
+        [null, null, "random", "clip", "random", null, null],
+        ["random", "portal", "red", "random", "joker", "random", "random"],
+        ["random", "joker", "blue", "green", "blue", "portal", "random"],
+        ["random", "red", "green", "clip", "green", "red", "random"],
+        ["random", "portal", "joker", "blue", "red", "joker", "random"],
+        [null, "random", "random", "random", "random", "portal", null],
+        [null, null, null, "clip", null, null, null],
+      ],
+    })),
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
       gridShape: grid.makeGrid({
@@ -1050,7 +1064,7 @@ export const sections = {
     levels["Chrono\nPortal"],
     levels["Medium\nBoss"],
   ],
-  Hard: [levels.Caribbean, levels["Big\nBoss"]],
+  Hard: [levels.Caribbean, levels.Broth, levels["Big\nBoss"]],
 };
 
 export type SectionName = keyof typeof sections;
