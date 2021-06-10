@@ -1,19 +1,23 @@
+import * as entity from "booyah/src/entity";
+
 import * as l from "../scenes/level";
 
 import * as grid from "./grid";
 import * as nucleotide from "./nucleotide";
 
-export class EditorDOM {
+export class EditorDOM extends entity.EntityBase {
   private get _divEditor(): HTMLDivElement {
     return document.getElementById("editor") as HTMLDivElement;
   }
 
   constructor(
-    level: l.Level,
+    public level: l.Level,
     public gridShape: grid.GridArrayShape<
       keyof typeof nucleotide.NucleotideSignatures
     >
   ) {
+    super();
+
     this._divEditor.innerHTML = "";
 
     this._divEditor.append(this.separator);
@@ -29,6 +33,21 @@ export class EditorDOM {
       };
 
       this._divEditor.append(reloadButton);
+    }
+
+    this._divEditor.append(this.separator);
+
+    {
+      const bigCheckbox = document.createElement("input");
+      bigCheckbox.setAttribute("type", "checkbox");
+      bigCheckbox.setAttribute("name", "bigCheckbox");
+      bigCheckbox.id = "bigCheckbox";
+
+      const bigCheckboxLabel = document.createElement("label");
+      bigCheckboxLabel.setAttribute("for", "bigCheckbox");
+      bigCheckboxLabel.innerHTML = "Big Brush";
+
+      this._divEditor.append(bigCheckbox, bigCheckboxLabel);
     }
 
     this._divEditor.append(this.separator);
@@ -72,22 +91,31 @@ export class EditorDOM {
         put.cols = 50;
 
         put.onblur = (event) => {
-          const value = (event.target as HTMLTextAreaElement).value;
-          let json: object;
+          const value = put.value;
+          let json: any;
 
           try {
-            json = JSON.parse(value);
+            json = JSON.parse(value.replace(/null/g, '"hole"'));
             warn.innerHTML = "";
           } catch (err) {
             warn.innerHTML = err.message;
             return;
           }
 
-          if (grid.isGridArrayShape(json)) {
-            this.gridShape = json;
-          } else {
-            warn.innerHTML += "<br><br>Invalid gridShape given.";
+          if (!grid.isGridArrayShape(json)) {
+            warn.innerHTML +=
+              (warn.innerHTML ? "<hr>" : "") + "Invalid gridShape given.";
+            return;
           }
+
+          while (json.length < 7) json.push(new Array(7).fill("hole"));
+          json[6] = json[6].map((val, i) => (i % 2 === 0 ? null : val));
+
+          this.gridShape = json;
+
+          this.refreshOutput();
+
+          this.level.emitLevelEvent("triggerHook", "reload grid", json);
         };
 
         flex.append(put, warn);
@@ -99,8 +127,35 @@ export class EditorDOM {
     document.body.append(this._divEditor);
   }
 
+  _setup() {}
+
+  _update() {
+    const hovered = this.level.grid.getHovered();
+
+    this.level.grid.nucleotides.forEach((n) => {
+      if (n) n.highlighted = false;
+    });
+
+    if (hovered) {
+      hovered.highlighted = true;
+      if (this.getBigCheckbox()) {
+        const neighbours = this.level.grid.getNeighbors(hovered);
+        neighbours.forEach((n) => {
+          if (n) n.highlighted = true;
+        });
+      }
+    }
+  }
+
   get separator(): HTMLElement {
     return document.createElement("hr");
+  }
+
+  getBigCheckbox(): boolean {
+    const bigCheckbox = document.querySelector<HTMLInputElement>(
+      "input[name='bigCheckbox'][type='checkbox']"
+    );
+    return bigCheckbox.checked;
   }
 
   getCurrentSignature(): keyof typeof nucleotide.NucleotideSignatures {
@@ -115,8 +170,14 @@ export class EditorDOM {
   }
 
   refreshOutput() {
-    this._divEditor.querySelector("textarea").innerHTML = JSON.stringify(
-      this.gridShape
-    ).replace(/"hole"/g, "null");
+    const put = this._divEditor.querySelector("textarea");
+
+    const displayedGridShape = JSON.stringify(this.gridShape).replace(
+      /"hole"/g,
+      "null"
+    );
+
+    put.innerHTML = displayedGridShape;
+    put.value = displayedGridShape;
   }
 }

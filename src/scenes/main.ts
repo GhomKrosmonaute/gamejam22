@@ -135,7 +135,9 @@ export class Main extends entity.CompositeEntity {
         levelSprite.addChild(circle);
       }
 
-      const text = crispr.makeText(levelName, {
+      const levelNameToShow =
+        levelName.length <= 11 ? levelName : levelName.replace(" ", "\n");
+      const text = crispr.makeText(levelNameToShow, {
         fontFamily: "Optimus",
         fill: crispr.yellow,
       });
