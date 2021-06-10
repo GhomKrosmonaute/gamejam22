@@ -5,7 +5,7 @@
   "main": "",
   "dependencies": {
     "@types/uuid": "^8.3.0",
-    "booyah": "play-curious/booyah#crispr-crunch",
+    "booyah": "git+https://github.com/play-curious/booyah.git#crispr-crunch",
     "csv-parse": "^4.4.1",
     "del": "^4.1.0",
     "firebase": "^8.6.1",
