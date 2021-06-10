@@ -1017,7 +1017,10 @@ export const levels = {
         else return val;
       });
 
-      const editorDOM: editor.EditorDOM = new editor.EditorDOM(ctx);
+      const editorDOM: editor.EditorDOM = new editor.EditorDOM(
+        ctx,
+        editorGridShape
+      );
 
       const updatedNucleotideHook = new l.Hook({
         id: "update cell",
@@ -1026,9 +1029,8 @@ export const levels = {
           const pos = ctx.grid.getGridPositionOf(n);
           const sign = editorDOM.getCurrentSignature();
 
-          editorGridShape[pos.y][pos.x] = sign;
-
-          editorDOM.refreshOutput(editorGridShape);
+          editorDOM.gridShape[pos.y][pos.x] = sign;
+          editorDOM.refreshOutput();
 
           const info = nucleotide.Nucleotide.fromSignature(
             nucleotide.NucleotideSignatures[sign]
@@ -1051,13 +1053,13 @@ export const levels = {
         console.log(type, reloadedGridHook.options.id);
         if (type !== reloadedGridHook.options.id) return false;
 
-        editorDOM.refreshOutput(editorGridShape);
+        editorDOM.refreshOutput();
 
         return true;
       };
 
       reloadedGridHook.options.reset = {
-        gridShape: editorGridShape,
+        gridShape: editorDOM.gridShape,
         resetGrid: true,
         hooks: [updatedNucleotideHook, reloadedGridHook],
       };
@@ -1066,7 +1068,7 @@ export const levels = {
         variant: "turn",
         minStarNeeded: 3,
         forceMatching: false,
-        gridShape: reloadedGridHook.options.reset.gridShape,
+        gridShape: editorDOM.gridShape,
         clipCount: 0,
         sequenceLength: -1,
         disableButton: true,

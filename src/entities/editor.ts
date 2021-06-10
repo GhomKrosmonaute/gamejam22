@@ -8,7 +8,12 @@ export class EditorDOM {
     return document.getElementById("editor") as HTMLDivElement;
   }
 
-  constructor(level: l.Level) {
+  constructor(
+    level: l.Level,
+    public gridShape: grid.GridArrayShape<
+      keyof typeof nucleotide.NucleotideSignatures
+    >
+  ) {
     this._divEditor.innerHTML = "";
 
     this._divEditor.append(this.separator);
@@ -55,14 +60,37 @@ export class EditorDOM {
       }
 
       {
-        let output = document.createElement("textarea");
+        const put = document.createElement("textarea");
+        const warn = document.createElement("div");
 
-        output.id = "gridTextArea";
-        output.name = "gridTextArea";
-        output.disabled = true;
-        output.cols = 50;
+        warn.style.padding = "20px";
+        warn.style.fontSize = "20px";
+        warn.style.color = "red";
 
-        flex.append(output);
+        put.id = "gridTextArea";
+        put.name = "gridTextArea";
+        put.cols = 50;
+
+        put.onblur = (event) => {
+          const value = (event.target as HTMLTextAreaElement).value;
+          let json: object;
+
+          try {
+            json = JSON.parse(value);
+            warn.innerHTML = "";
+          } catch (err) {
+            warn.innerHTML = err.message;
+            return;
+          }
+
+          if (grid.isGridArrayShape(json)) {
+            this.gridShape = json;
+          } else {
+            warn.innerHTML += "<br><br>Invalid gridShape given.";
+          }
+        };
+
+        flex.append(put, warn);
       }
 
       this._divEditor.append(flex);
@@ -86,11 +114,9 @@ export class EditorDOM {
     );
   }
 
-  refreshOutput(
-    gridShape: grid.GridArrayShape<keyof typeof nucleotide.NucleotideSignatures>
-  ) {
+  refreshOutput() {
     this._divEditor.querySelector("textarea").innerHTML = JSON.stringify(
-      gridShape
+      this.gridShape
     ).replace(/"hole"/g, "null");
   }
 }
