@@ -171,6 +171,14 @@ export class Path extends entity.CompositeEntity {
         return false;
     }
 
+    // Block extra path
+    const segment = this.level.sequenceManager.first.getMatchingSegment();
+    if (
+      segment &&
+      segment.length === this.level.sequenceManager.first.nucleotides.length
+    )
+      return false;
+
     // Add to the path
     this.items.push(n);
     this._playNote();
