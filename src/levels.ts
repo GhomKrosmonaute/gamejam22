@@ -15,6 +15,7 @@ import * as l from "./scenes/level";
 
 import * as anim from "./animations";
 import * as crispr from "./crispr";
+import { init } from "./metrics";
 
 declare var level: l.Level;
 
@@ -1135,6 +1136,26 @@ export const levels = {
 
           ctx.activate(n.switchTypeAnimation(info.type, 300), null);
 
+          if(editorDOM.getBigCheckbox()){
+            const neighbours = ctx.grid.getNeighbors(n);
+            neighbours.forEach((neigh) => {
+              if(neigh){
+                const neighPos = ctx.grid.getGridPositionOf(neigh);
+                editorGridShape[neighPos.y][neighPos.x] = sign;
+                
+                editorDOM.refreshOutput(editorGridShape);
+
+                const info = nucleotide.Nucleotide.fromSignature(
+                  nucleotide.NucleotideSignatures[sign]
+                );
+                
+                neigh.color = info.color;
+
+                ctx.activate(neigh.switchTypeAnimation(info.type, 300), null);
+              }
+            })
+          }
+
           return true;
         },
       });
@@ -1169,7 +1190,13 @@ export const levels = {
         disableButton: true,
         disableBonuses: true,
         disableGauge: true,
-        hooks: [updatedNucleotideHook, reloadedGridHook],
+        hooks: [updatedNucleotideHook, reloadedGridHook,
+          new l.Hook({
+            id: "activate editor",
+            once: true,
+            event: "init",
+            entity: new entity.FunctionCallEntity(() => ctx.activate(editorDOM, null))
+        })],
       };
     }),
 };

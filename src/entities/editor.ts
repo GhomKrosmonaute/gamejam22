@@ -1,14 +1,20 @@
+import * as entity from "booyah/src/entity";
+
 import * as l from "../scenes/level";
 
 import * as grid from "./grid";
 import * as nucleotide from "./nucleotide";
 
-export class EditorDOM {
+export class EditorDOM extends entity.EntityBase {
+  _level: l.Level;
+
   private get _divEditor(): HTMLDivElement {
     return document.getElementById("editor") as HTMLDivElement;
   }
 
   constructor(level: l.Level) {
+    super()
+    this._level = level;
     this._divEditor.innerHTML = "";
 
     this._divEditor.append(this.separator);
@@ -24,6 +30,21 @@ export class EditorDOM {
       };
 
       this._divEditor.append(reloadButton);
+    }
+
+    this._divEditor.append(this.separator);
+
+    {
+      const bigCheckbox = document.createElement("input");
+      bigCheckbox.setAttribute("type", "checkbox");
+      bigCheckbox.setAttribute("name", "bigCheckbox");
+      bigCheckbox.id = "bigCheckbox";
+
+      const bigCheckboxLabel = document.createElement("label");
+      bigCheckboxLabel.setAttribute("for", "bigCheckbox");
+      bigCheckboxLabel.innerHTML = "Big Brush";
+
+      this._divEditor.append(bigCheckbox, bigCheckboxLabel);
     }
 
     this._divEditor.append(this.separator);
@@ -71,8 +92,35 @@ export class EditorDOM {
     document.body.append(this._divEditor);
   }
 
+  _setup(){
+    
+  }
+
+  _update(){
+    const hovered = this._level.grid.getHovered();
+
+    this._level.grid.nucleotides.forEach((n) => {
+      if(n) n.highlighted = false;
+    })
+
+    if(hovered){
+      hovered.highlighted = true;
+      if(this.getBigCheckbox()){
+        const neighbours = this._level.grid.getNeighbors(hovered);
+        neighbours.forEach((n) => {
+          if(n) n.highlighted = true;
+        })
+      }
+    } 
+  }
+
   get separator(): HTMLElement {
     return document.createElement("hr");
+  }
+
+  getBigCheckbox(): boolean {
+    const bigCheckbox = document.querySelector<HTMLInputElement>("input[name='bigCheckbox'][type='checkbox']");
+    return bigCheckbox.checked;
   }
 
   getCurrentSignature(): keyof typeof nucleotide.NucleotideSignatures {
