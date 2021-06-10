@@ -358,7 +358,6 @@ export class Sequence extends entity.CompositeEntity {
         this.level.disablingAnimation("sequence._initVirus", true);
       }),
       this.virus.come(),
-      new entity.FunctionalEntity({ requestTransition }),
       this.virus.stingIn(),
       () => this._initNucleotides(),
       this.virus.stingOut(),
