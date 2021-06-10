@@ -139,7 +139,7 @@ export function positionAlongMembrane(
 }
 
 export function makeText(
-  text: string = "",
+  text: string | number | boolean = "",
   options?: Partial<
     PIXI.TextStyle & { fontFamily: game.FontFamily | string | string[] }
   >
@@ -150,7 +150,7 @@ export function makeText(
     align: "center",
   };
   const pixiText = new PIXI.Text(
-    text,
+    String(text),
     options
       ? {
           ...defaultConfig,

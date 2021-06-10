@@ -28,15 +28,19 @@ const introVideoScene = new narration.VideoScene({
 
 const gameStates: { [k: string]: entity.EntityResolvable } = {
   start: introVideoScene,
+  video: introVideoScene,
   default: main,
   writeUs: new writeUs.WriteUsPopup(),
   ...levels.levels,
 };
 
 const gameTransitions = {
-  start: entity.makeTransition("default"),
-  writeUs: entity.makeTransition("default"),
+  // start: entity.makeTransition("default"),
+  // writeUs: entity.makeTransition("default"),
 };
+
+if (localStorage.getItem("video-once")) gameStates.start = main;
+localStorage.setItem("video-once", "true");
 
 const graphicalAssets = [
   "images/titlescreen_background.png",
@@ -136,6 +140,8 @@ const graphicalAssets = [
   "images/icon_infection.png",
   "images/icon_scissors.png",
   "images/icon_timed.png",
+
+  "images/star.png",
 
   "images/reward_stars_0.png",
   "images/reward_stars_1.png",

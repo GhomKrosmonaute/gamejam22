@@ -24,6 +24,25 @@ export const rowCount = 7;
 
 export type GridArrayShape<T = true> = ((T | null)[] | null)[];
 
+export function isGridArrayShape(
+  object: object
+): object is GridArrayShape<keyof typeof nucleotide.NucleotideSignatures> {
+  return (
+    Array.isArray(object) &&
+    object.every((row) => {
+      return (
+        Array.isArray(row) &&
+        row.every((val) => {
+          return (
+            (val === null || typeof val === "string") &&
+            Object.keys(nucleotide.NucleotideSignatures).includes(val)
+          );
+        })
+      );
+    })
+  );
+}
+
 export type GridFilter = (x: number, y: number) => boolean;
 
 export const gridMakerPresets: { [k: string]: GridMakerOptions } = {
@@ -197,6 +216,20 @@ export class Grid extends entity.CompositeEntity {
 
   get level(): level.Level {
     return this._entityConfig.currentLevelHolder.level;
+  }
+
+  get presentColors(): nucleotide.NucleotideSignatures[] {
+    const colors: nucleotide.NucleotideSignatures[] = [];
+    Object.entries(nucleotide.NucleotideColorLetters).forEach(([key]) => {
+      if (this.normals.some((n) => n.color === key)) {
+        colors.push(
+          nucleotide.NucleotideSignatures[
+            key as keyof typeof nucleotide.NucleotideSignatures
+          ]
+        );
+      }
+    });
+    return colors;
   }
 
   _setup() {

@@ -10,6 +10,7 @@ import * as crispr from "../crispr";
 import * as anim from "../animations";
 
 import * as nucleotide from "./nucleotide";
+import { NucleotideSignatures } from "./nucleotide";
 import * as virus from "./virus";
 
 import * as level from "../scenes/level";
@@ -429,11 +430,21 @@ export class Sequence extends entity.CompositeEntity {
         position.y = crispr.approximate(0, height * 0.05);
       }
 
+      let signature: nucleotide.NucleotideSignatures = forcedSequence[i];
+
+      if (forcedSequence[i] === NucleotideSignatures.random) {
+        const presentColors = this.level.grid.presentColors;
+        if (presentColors.length < 4) {
+          signature =
+            presentColors[Math.floor(Math.random() * presentColors.length)];
+        }
+      }
+
       const n = new nucleotide.Nucleotide({
         parent: "sequence",
         position,
         rotation: i === -1 ? 0 : Math.random(),
-        ...nucleotide.Nucleotide.fromSignature(forcedSequence[i]),
+        ...nucleotide.Nucleotide.fromSignature(signature),
       });
 
       n.container.scale.set(0);

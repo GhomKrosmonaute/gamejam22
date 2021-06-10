@@ -9,14 +9,12 @@ import * as levels from "../levels";
 import * as level from "./level";
 
 import * as popup from "../entities/popup";
+import * as _player from "../entities/player";
 
 import * as anim from "../animations";
 import * as crispr from "../crispr";
 
 export class Main extends entity.CompositeEntity {
-  static savedScroll = -9999999;
-  static lastLevel: levels.LevelName = null;
-
   private container: PIXI.Container;
   private background: PIXI.Sprite;
   private buttons: PIXI.Container;
@@ -26,6 +24,8 @@ export class Main extends entity.CompositeEntity {
   private scrollBox: scroll.Scrollbox;
 
   protected _setup() {
+    let player = _player.getPlayer();
+
     this._entityConfig.jukebox.play("menu");
 
     this.links = new PIXI.Graphics();
@@ -127,7 +127,7 @@ export class Main extends entity.CompositeEntity {
         levelSprite.addChild(text);
       }
 
-      if (levelName === Main.lastLevel) {
+      if (levelName === player.lastLevel) {
         const circle = new PIXI.Graphics()
           .lineStyle(10, crispr.yellowNumber)
           .drawCircle(0, 25, 165);
@@ -135,7 +135,9 @@ export class Main extends entity.CompositeEntity {
         levelSprite.addChild(circle);
       }
 
-      const text = crispr.makeText(levelName, {
+      const levelNameToShow =
+        levelName.length <= 11 ? levelName : levelName.replace(" ", "\n");
+      const text = crispr.makeText(levelNameToShow, {
         fontFamily: "Optimus",
         fill: crispr.yellow,
       });
@@ -158,8 +160,10 @@ export class Main extends entity.CompositeEntity {
       this._on(levelSprite, "pointertap", () => {
         this._entityConfig.fxMachine.play("validate");
 
-        Main.savedScroll = this.scrollBox.currentScroll.y;
-        Main.lastLevel = levelName as levels.LevelName;
+        player = _player.updatePlayer({
+          lastScroll: this.scrollBox.currentScroll.y,
+          lastLevel: levelName as levels.LevelName,
+        });
 
         this._activateChildEntity(
           new tween.Tween({
@@ -246,11 +250,9 @@ export class Main extends entity.CompositeEntity {
       levelSprite.interactive = true;
       levelSprite.buttonMode = true;
 
-      this._on(
-        levelSprite,
-        "pointertap",
-        () => (this._transition = entity.makeTransition("start"))
-      );
+      this._on(levelSprite, "pointertap", () => {
+        this._transition = entity.makeTransition("video");
+      });
 
       this.buttons.addChild(levelSprite);
     }
@@ -268,8 +270,48 @@ export class Main extends entity.CompositeEntity {
         container: this.container,
       })
     );
-    this.scrollBox.scrollTo(new PIXI.Point(0, Main.savedScroll));
+    this.scrollBox.scrollTo(new PIXI.Point(0, player.lastScroll));
     this.scrollBox.refresh();
+
+    // player stats
+    {
+      const playerContainer = new PIXI.Container();
+
+      const crispyLogo = crispr.sprite(this, "images/crispy.png", (it) => {
+        it.scale.set(0.6);
+        it.anchor.set(0.5, 0);
+      });
+      const starLogo = crispr.sprite(this, "images/star.png", (it) => {
+        it.scale.set(0.2);
+        it.anchor.set(0.5, 0);
+        it.position.y = 70;
+      });
+
+      const textStyle: Partial<PIXI.TextStyle> = {
+        align: "left",
+        fill: crispr.yellow,
+        fontSize: 48,
+      };
+
+      const crispyCountText = crispr.makeText(player.crispies, textStyle);
+      const starCountText = crispr.makeText(starCount, textStyle);
+
+      crispyCountText.anchor.set(0);
+      crispyCountText.position.x = 45;
+      starCountText.anchor.set(0);
+      starCountText.position.set(45, 70);
+
+      playerContainer.addChild(
+        crispyLogo,
+        crispyCountText,
+        starLogo,
+        starCountText
+      );
+
+      playerContainer.position.set(50, 20);
+
+      this.container.addChild(playerContainer);
+    }
 
     this._entityConfig.container.addChild(this.container);
     this._entityConfig.minimap = this;
@@ -334,6 +376,10 @@ export class Main extends entity.CompositeEntity {
   }
 
   public saveResults(l: level.Level) {
+    const player = _player.getPlayer();
+    _player.updatePlayer({
+      crispies: player.crispies + l.crispies,
+    });
     const results = l.checkAndReturnsResults();
     let oldResults: level.LevelResults;
     const data = localStorage.getItem(l.name);

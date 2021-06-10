@@ -15,6 +15,7 @@ import * as l from "./scenes/level";
 
 import * as anim from "./animations";
 import * as crispr from "./crispr";
+import { init } from "./metrics";
 
 declare var level: l.Level;
 
@@ -44,8 +45,8 @@ export function makeInstallCurrentLevelHolder() {
 
 export const levels = {
   // Hard
-  "Big\nBoss": () =>
-    new l.Level("Big\nBoss", (context) => ({
+  "Big Boss": () =>
+    new l.Level("Big Boss", (context) => ({
       gridShape: grid.makeGrid({
         ...grid.gridMakerPresets.full,
         portals: [
@@ -121,6 +122,34 @@ export const levels = {
         }),
       ],
     })),
+  "Big Around": () =>
+    new l.Level("Big Around", (context) => ({
+      gridShape: [
+        ["random", "random", "random", "random", "random", "random", "random"],
+        ["random", "random", null, "portal", null, "random", "random"],
+        ["random", null, "random", "random", "random", null, "random"],
+        ["random", "portal", "random", "clip", "random", "portal", "random"],
+        ["random", null, null, "random", null, null, "random"],
+        ["random", "random", "random", "portal", "random", "random", "random"],
+        [null, "random", null, "random", null, "random", null],
+      ],
+      forceMatching: true,
+      sequenceLength: 8,
+    })),
+  Broth: () =>
+    new l.Level("Broth", (ctx) => ({
+      sequenceLength: 8,
+      forceMatching: false,
+      gridShape: [
+        [null, null, "random", "clip", "random", null, null],
+        ["random", "portal", "red", "random", "joker", "random", "random"],
+        ["random", "joker", "blue", "green", "blue", "portal", "random"],
+        ["random", "red", "green", "clip", "green", "red", "random"],
+        ["random", "portal", "joker", "blue", "red", "joker", "random"],
+        [null, "random", "random", "random", "random", "portal", null],
+        [null, null, null, "clip", null, null, null],
+      ],
+    })),
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
       gridShape: grid.makeGrid({
@@ -161,6 +190,33 @@ export const levels = {
             );
           }),
         }),
+      ],
+    })),
+  Croissant: () =>
+    new l.Level("Croissant", (context) => ({
+      gridShape: [
+        [null, null, "random", "random", "random", null, null],
+        ["random", "random", "random", "clip", "random", "joker", "portal"],
+        ["random", "random", "random", "random", null, null, null],
+        ["random", "random", "random", null, "random", "random", "portal"],
+        ["random", "clip", "random", null, "portal", "joker", "random"],
+        [null, "random", "joker", null, null, "random", null],
+        [null, null, null, "portal", null, null, null],
+      ],
+      forceMatching: true,
+      sequenceLength: 9,
+    })),
+  Fabric: () =>
+    new l.Level("Fabric", () => ({
+      forceMatching: false,
+      gridShape: [
+        ["green", null, null, "blue", "blue", null, "red"],
+        [null, "green", "green", "portal", "red", "red", null],
+        ["blue", "clip", "red", "green", "green", "clip", "red"],
+        ["red", "red", "green", "joker", "red", "red", "blue"],
+        [null, "clip", "red", "green", "green", "clip", null],
+        ["red", "red", "blue", "portal", null, "green", "green"],
+        [null, null, null, "blue", null, null, null],
       ],
     })),
   // Timed: () =>
@@ -206,8 +262,8 @@ export const levels = {
   //   }),
 
   // Medium
-  "Medium\nBoss": () =>
-    new l.Level("Medium\nBoss", (context) => ({
+  "Medium Boss": () =>
+    new l.Level("Medium Boss", (context) => ({
       virus: "big",
       variant: "turn",
       fallingSpeed: 1,
@@ -275,8 +331,77 @@ export const levels = {
         }),
       ],
     })),
-  "Chrono\nPortal": () =>
-    new l.Level("Chrono\nPortal", (context) => ({
+  LadyBug: () =>
+    new l.Level("LadyBug", (context) => ({
+      gridShape: [
+        ["portal", "random", "random", null, "random", "random", "portal"],
+        [null, "random", "random", "random", "random", "random", null],
+        ["random", null, "random", "random", "random", null, "random"],
+        ["random", "random", "random", "clip", "random", "random", "random"],
+        [null, null, "random", "random", "random", null, null],
+        ["portal", "random", "random", "random", "random", "random", "portal"],
+        [null, "random", null, null, null, "random", null],
+      ],
+      forceMatching: true,
+      sequenceLength: 6,
+    })),
+  Around: () =>
+    new l.Level("Around", (context) => ({
+      gridShape: [
+        ["random", "random", "random", "portal", "random", "random", "random"],
+        ["random", "random", "random", "clip", "random", "random", "random"],
+        ["portal", null, null, null, null, null, "portal"],
+        ["random", null, "random", null, "random", null, "random"],
+        ["random", "random", "random", "clip", "random", "random", "random"],
+        [null, "random", null, "portal", null, "random", null],
+        [null, null, null, null, null, null, null],
+      ],
+      forceMatching: true,
+      sequenceLength: 7,
+    })),
+  "Classic Portal": () =>
+    new l.Level("Classic Portal", (context) => ({
+      gridShape: [
+        [null, null, "random", null, "random", null, null],
+        ["random", "random", "random", null, "random", "random", "random"],
+        ["random", "portal", "random", null, "random", "clip", "random"],
+        ["random", "random", "random", null, "random", "random", "random"],
+        ["random", "clip", "random", null, "random", "portal", "random"],
+        [null, "random", "random", null, "random", "random", null],
+        [null, null, null, null, null, null, null],
+      ],
+      forceMatching: true,
+      sequenceLength: 8,
+    })),
+  Claw: () =>
+    new l.Level("Claw", (context) => ({
+      gridShape: [
+        ["random", "random", "random", null, "random", "random", "random"],
+        ["random", "portal", "random", null, null, "portal", "random"],
+        ["random", "clip", "random", "random", "random", null, null],
+        [null, "random", "random", "clip", "random", "random", "random"],
+        ["random", null, null, "random", "random", "clip", "random"],
+        ["random", "portal", "random", null, "random", "portal", "random"],
+        [null, "random", null, null, null, "random", null],
+      ],
+      forceMatching: true,
+      sequenceLength: 6,
+    })),
+  Bean: () =>
+    new l.Level("Bean", (context) => ({
+      gridShape: [
+        [null, null, null, null, null, null, null],
+        ["random", "random", "random", null, "random", "random", "random"],
+        ["portal", "random", "clip", "random", "portal", "random", "clip"],
+        ["random", "random", "random", "random", "random", "random", "random"],
+        [null, "random", null, null, null, "random", null],
+        [null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null],
+      ],
+      forceMatching: true,
+    })),
+  "Chrono Portal": () =>
+    new l.Level("Chrono Portal", (context) => ({
       variant: "fall",
       gridShape: grid.makeGrid({
         ...grid.gridMakerPresets.medium,
@@ -326,11 +451,26 @@ export const levels = {
         }),
       ],
     })),
-  "Four\nIslands": () =>
-    new l.Level("Four\nIslands", (context) => ({
+  "Four Islands": () =>
+    new l.Level("Four Islands", (context) => ({
       forceMatching: true,
       gridShape: grid.makeGrid(grid.gridMakerPresets.fourIslands),
       sequenceLength: 5,
+    })),
+  Butterfly: () =>
+    new l.Level("Butterfly", () => ({
+      forceMatching: true,
+      sequenceLength: 7,
+      crispyBonusRate: 0.1,
+      gridShape: [
+        [null, null, null, null, null, null, null],
+        [null, "blue", "blue", null, "yellow", "yellow", null],
+        [null, "blue", "blue", "portal", "yellow", "yellow", null],
+        [null, "portal", "green", "clip", "red", "portal", null],
+        [null, "green", "green", "portal", "red", "red", null],
+        [null, "green", null, null, null, "red", null],
+        [null, null, null, null, null, null, null],
+      ],
     })),
   "Two Islands": () =>
     new l.Level("Two Islands", (context) => ({
@@ -975,7 +1115,12 @@ export const levels = {
         else return val;
       });
 
-      const editorDOM: editor.EditorDOM = new editor.EditorDOM(ctx);
+      const editorDOM: editor.EditorDOM = new editor.EditorDOM(
+        ctx,
+        editorGridShape
+      );
+
+      editorDOM.refreshOutput();
 
       const updatedNucleotideHook = new l.Hook({
         id: "update cell",
@@ -984,9 +1129,7 @@ export const levels = {
           const pos = ctx.grid.getGridPositionOf(n);
           const sign = editorDOM.getCurrentSignature();
 
-          editorGridShape[pos.y][pos.x] = sign;
-
-          editorDOM.refreshOutput(editorGridShape);
+          editorDOM.gridShape[pos.y][pos.x] = sign;
 
           const info = nucleotide.Nucleotide.fromSignature(
             nucleotide.NucleotideSignatures[sign]
@@ -995,6 +1138,27 @@ export const levels = {
           n.color = info.color;
 
           ctx.activate(n.switchTypeAnimation(info.type, 300), null);
+
+          if (editorDOM.getBigCheckbox()) {
+            const neighbours = ctx.grid.getNeighbors(n);
+            neighbours.forEach((neigh) => {
+              if (neigh) {
+                const neighPos = ctx.grid.getGridPositionOf(neigh);
+
+                editorDOM.gridShape[neighPos.y][neighPos.x] = sign;
+
+                const info = nucleotide.Nucleotide.fromSignature(
+                  nucleotide.NucleotideSignatures[sign]
+                );
+
+                neigh.color = info.color;
+
+                ctx.activate(neigh.switchTypeAnimation(info.type, 300), null);
+              }
+            });
+          }
+
+          editorDOM.refreshOutput();
 
           return true;
         },
@@ -1005,32 +1169,50 @@ export const levels = {
         event: "triggerHook",
       });
 
-      reloadedGridHook.options.filter = (type) => {
-        console.log(type, reloadedGridHook.options.id);
-        if (type !== reloadedGridHook.options.id) return false;
-
-        editorDOM.refreshOutput(editorGridShape);
-
-        return true;
-      };
-
       reloadedGridHook.options.reset = {
-        gridShape: editorGridShape,
+        gridShape: editorDOM.gridShape,
         resetGrid: true,
         hooks: [updatedNucleotideHook, reloadedGridHook],
+      };
+
+      reloadedGridHook.options.filter = (
+        id: string,
+        gridShape: grid.GridArrayShape<
+          keyof typeof nucleotide.NucleotideSignatures
+        >
+      ) => {
+        if (id !== reloadedGridHook.options.id) return false;
+
+        reloadedGridHook.options.reset = {
+          ...reloadedGridHook.options.reset,
+          gridShape,
+        };
+
+        return true;
       };
 
       return {
         variant: "turn",
         minStarNeeded: 3,
         forceMatching: false,
-        gridShape: reloadedGridHook.options.reset.gridShape,
+        gridShape: editorDOM.gridShape,
         clipCount: 0,
         sequenceLength: -1,
         disableButton: true,
         disableBonuses: true,
         disableGauge: true,
-        hooks: [updatedNucleotideHook, reloadedGridHook],
+        hooks: [
+          updatedNucleotideHook,
+          reloadedGridHook,
+          new l.Hook({
+            id: "activate editor",
+            once: true,
+            event: "init",
+            entity: new entity.FunctionCallEntity(() =>
+              ctx.activate(editorDOM, null)
+            ),
+          }),
+        ],
       };
     }),
 };
@@ -1046,11 +1228,24 @@ export const sections = {
   Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
   Medium: [
     levels["Two Islands"],
-    levels["Four\nIslands"],
-    levels["Chrono\nPortal"],
-    levels["Medium\nBoss"],
+    levels.Butterfly,
+    levels["Four Islands"],
+    levels["Chrono Portal"],
+    levels.Bean,
+    levels.Claw,
+    levels["Classic Portal"],
+    levels.Around,
+    levels.LadyBug,
+    levels["Medium Boss"],
   ],
-  Hard: [levels.Caribbean, levels["Big\nBoss"]],
+  Hard: [
+    levels.Fabric,
+    levels.Croissant,
+    levels.Caribbean,
+    levels.Broth,
+    levels["Big Around"],
+    levels["Big Boss"],
+  ],
 };
 
 export type SectionName = keyof typeof sections;
