@@ -39,7 +39,7 @@ const gameTransitions = {
   // writeUs: entity.makeTransition("default"),
 };
 
-if(localStorage.getItem("video-once")) gameStates.start = main;
+if (localStorage.getItem("video-once")) gameStates.start = main;
 localStorage.setItem("video-once", "true");
 
 const graphicalAssets = [
@@ -140,6 +140,8 @@ const graphicalAssets = [
   "images/icon_infection.png",
   "images/icon_scissors.png",
   "images/icon_timed.png",
+
+  "images/star.png",
 
   "images/reward_stars_0.png",
   "images/reward_stars_1.png",
