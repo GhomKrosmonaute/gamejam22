@@ -431,8 +431,7 @@ export class Sequence extends entity.CompositeEntity {
         position.y = crispr.approximate(0, height * 0.05);
       }
 
-      let signature: nucleotide.NucleotideSignatures =
-        NucleotideSignatures.random;
+      let signature: nucleotide.NucleotideSignatures = forcedSequence[i];
 
       if (forcedSequence[i] === NucleotideSignatures.random) {
         const presentColors = this.level.grid.presentColors;

@@ -374,6 +374,10 @@ export class Main extends entity.CompositeEntity {
   }
 
   public saveResults(l: level.Level) {
+    const player = _player.getPlayer();
+    _player.updatePlayer({
+      crispies: player.crispies + l.crispies,
+    });
     const results = l.checkAndReturnsResults();
     let oldResults: level.LevelResults;
     const data = localStorage.getItem(l.name);
