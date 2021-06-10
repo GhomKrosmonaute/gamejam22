@@ -155,9 +155,8 @@ export interface GridMakerOptions {
 export function makeGrid(
   options: GridMakerOptions
 ): GridArrayShape<keyof typeof nucleotide.NucleotideSignatures> {
-  const shape: GridArrayShape<
-    keyof typeof nucleotide.NucleotideSignatures
-  > = [];
+  const shape: GridArrayShape<keyof typeof nucleotide.NucleotideSignatures> =
+    [];
 
   const filter = options.filter ?? (() => true);
   const portals = options.portals ?? [];
@@ -451,9 +450,7 @@ export class Grid extends entity.CompositeEntity {
     return position.x % 2 === 0;
   }
 
-  getForcedMatchingPath(
-    givenLength: number
-  ): {
+  getForcedMatchingPath(givenLength: number): {
     colors: nucleotide.NucleotideSignatures[];
     nucleotides: nucleotide.Nucleotide[];
   } {
@@ -648,13 +645,10 @@ export class Grid extends entity.CompositeEntity {
   // }
 
   getAbsolutePositionFromGridPosition(gridPos: PIXI.Point): PIXI.Point {
-    const {
-      width,
-      height,
-      dist,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      nucleotide.nucleotideRadius.grid
-    );
+    const { width, height, dist } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        nucleotide.nucleotideRadius.grid
+      );
 
     const x = width / 2 + gridPos.x * dist.x;
     const y =

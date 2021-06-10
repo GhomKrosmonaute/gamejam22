@@ -137,7 +137,9 @@ export class Main extends entity.CompositeEntity {
         levelSprite.addChild(circle);
       }
 
-      const text = crispr.makeText(levelName, {
+      const levelNameToShow =
+        levelName.length <= 11 ? levelName : levelName.replace(" ", "\n");
+      const text = crispr.makeText(levelNameToShow, {
         fontFamily: "Optimus",
         fill: crispr.yellow,
       });
@@ -248,14 +250,9 @@ export class Main extends entity.CompositeEntity {
       levelSprite.interactive = true;
       levelSprite.buttonMode = true;
 
-      this._on(
-        levelSprite,
-        "pointertap",
-        () => {
-          
-          this._transition = entity.makeTransition("video")
-        }
-      );
+      this._on(levelSprite, "pointertap", () => {
+        this._transition = entity.makeTransition("video");
+      });
 
       this.buttons.addChild(levelSprite);
     }

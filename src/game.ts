@@ -39,7 +39,7 @@ const gameTransitions = {
   // writeUs: entity.makeTransition("default"),
 };
 
-if(localStorage.getItem("video-once")) gameStates.start = main;
+if (localStorage.getItem("video-once")) gameStates.start = main;
 localStorage.setItem("video-once", "true");
 
 const graphicalAssets = [

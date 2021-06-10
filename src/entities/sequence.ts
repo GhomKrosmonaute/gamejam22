@@ -174,11 +174,10 @@ export class SequenceManager extends entity.CompositeEntity {
 
   set(colors: (keyof typeof nucleotide.NucleotideSignatures)[]) {
     if (this.sequenceCount > 0) return;
-    const {
-      width: nucleotideWidth,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      nucleotide.nucleotideRadius.sequence
-    );
+    const { width: nucleotideWidth } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        nucleotide.nucleotideRadius.sequence
+      );
 
     const sequence = new Sequence(
       colors,
@@ -199,11 +198,10 @@ export class SequenceManager extends entity.CompositeEntity {
 
   add(length = crispr.scrap(this.level.options.sequenceLength, this.level)) {
     if (this.sequenceCount > 0) return;
-    const {
-      width: nucleotideWidth,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      nucleotide.nucleotideRadius.sequence
-    );
+    const { width: nucleotideWidth } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        nucleotide.nucleotideRadius.sequence
+      );
 
     const sequence = new Sequence(
       length,
@@ -371,12 +369,10 @@ export class Sequence extends entity.CompositeEntity {
   }
 
   _initNucleotides() {
-    const {
-      width,
-      height,
-    } = nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
-      nucleotide.nucleotideRadius.sequence
-    );
+    const { width, height } =
+      nucleotide.Nucleotide.getNucleotideDimensionsByRadius(
+        nucleotide.nucleotideRadius.sequence
+      );
 
     let forcedSequence: nucleotide.NucleotideSignatures[] = [];
 
@@ -563,9 +559,12 @@ export class Sequence extends entity.CompositeEntity {
     ) {
       this.level.oneShotSequence = true;
     }
-    this.scoring.multiplier =
-      nucleotides.reduce((acc, val) => acc += val.crispyMultiplier > 1 ? val.crispyMultiplier : 0, 0);
-    if(this.scoring.multiplier === 0) this.scoring.multiplier = 1;
+    this.scoring.multiplier = nucleotides.reduce(
+      (acc, val) =>
+        (acc += val.crispyMultiplier > 1 ? val.crispyMultiplier : 0),
+      0
+    );
+    if (this.scoring.multiplier === 0) this.scoring.multiplier = 1;
     this.scoring.nucleotides.push(...nucleotides);
   }
 

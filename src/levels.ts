@@ -44,8 +44,8 @@ export function makeInstallCurrentLevelHolder() {
 
 export const levels = {
   // Hard
-  "Big\nBoss": () =>
-    new l.Level("Big\nBoss", (context) => ({
+  "Big Boss": () =>
+    new l.Level("Big Boss", (context) => ({
       gridShape: grid.makeGrid({
         ...grid.gridMakerPresets.full,
         portals: [
@@ -121,6 +121,20 @@ export const levels = {
         }),
       ],
     })),
+  "Big Around": () =>
+    new l.Level("Big Around", (context) => ({
+      gridShape: [
+        ["random", "random", "random", "random", "random", "random", "random"],
+        ["random", "random", null, "portal", null, "random", "random"],
+        ["random", null, "random", "random", "random", null, "random"],
+        ["random", "portal", "random", "clip", "random", "portal", "random"],
+        ["random", null, null, "random", null, null, "random"],
+        ["random", "random", "random", "portal", "random", "random", "random"],
+        [null, "random", null, "random", null, "random", null],
+      ],
+      forceMatching: true,
+      sequenceLength: 8,
+    })),
   Caribbean: () =>
     new l.Level("Caribbean", (ctx) => ({
       gridShape: grid.makeGrid({
@@ -162,6 +176,20 @@ export const levels = {
           }),
         }),
       ],
+    })),
+  Croissant: () =>
+    new l.Level("Croissant", (context) => ({
+      gridShape: [
+        [null, null, "random", "random", "random", null, null],
+        ["random", "random", "random", "clip", "random", "joker", "portal"],
+        ["random", "random", "random", "random", null, null, null],
+        ["random", "random", "random", null, "random", "random", "portal"],
+        ["random", "clip", "random", null, "portal", "joker", "random"],
+        [null, "random", "joker", null, null, "random", null],
+        [null, null, null, "portal", null, null, null],
+      ],
+      forceMatching: true,
+      sequenceLength: 9,
     })),
   // Timed: () =>
   //   new l.Level("Timed", (ctx) => {
@@ -206,8 +234,8 @@ export const levels = {
   //   }),
 
   // Medium
-  "Medium\nBoss": () =>
-    new l.Level("Medium\nBoss", (context) => ({
+  "Medium Boss": () =>
+    new l.Level("Medium Boss", (context) => ({
       virus: "big",
       variant: "turn",
       fallingSpeed: 1,
@@ -275,8 +303,77 @@ export const levels = {
         }),
       ],
     })),
-  "Chrono\nPortal": () =>
-    new l.Level("Chrono\nPortal", (context) => ({
+  LadyBug: () =>
+    new l.Level("LadyBug", (context) => ({
+      gridShape: [
+        ["portal", "random", "random", null, "random", "random", "portal"],
+        [null, "random", "random", "random", "random", "random", null],
+        ["random", null, "random", "random", "random", null, "random"],
+        ["random", "random", "random", "clip", "random", "random", "random"],
+        [null, null, "random", "random", "random", null, null],
+        ["portal", "random", "random", "random", "random", "random", "portal"],
+        [null, "random", null, null, null, "random", null],
+      ],
+      forceMatching: true,
+      sequenceLength: 6,
+    })),
+  Around: () =>
+    new l.Level("Around", (context) => ({
+      gridShape: [
+        ["random", "random", "random", "portal", "random", "random", "random"],
+        ["random", "random", "random", "clip", "random", "random", "random"],
+        ["portal", null, null, null, null, null, "portal"],
+        ["random", null, "random", null, "random", null, "random"],
+        ["random", "random", "random", "clip", "random", "random", "random"],
+        [null, "random", null, "portal", null, "random", null],
+        [null, null, null, null, null, null, null],
+      ],
+      forceMatching: true,
+      sequenceLength: 7,
+    })),
+  "Classic Portal": () =>
+    new l.Level("Classic Portal", (context) => ({
+      gridShape: [
+        [null, null, "random", null, "random", null, null],
+        ["random", "random", "random", null, "random", "random", "random"],
+        ["random", "portal", "random", null, "random", "clip", "random"],
+        ["random", "random", "random", null, "random", "random", "random"],
+        ["random", "clip", "random", null, "random", "portal", "random"],
+        [null, "random", "random", null, "random", "random", null],
+        [null, null, null, null, null, null, null],
+      ],
+      forceMatching: true,
+      sequenceLength: 8,
+    })),
+  Claw: () =>
+    new l.Level("Claw", (context) => ({
+      gridShape: [
+        ["random", "random", "random", null, "random", "random", "random"],
+        ["random", "portal", "random", null, null, "portal", "random"],
+        ["random", "clip", "random", "random", "random", null, null],
+        [null, "random", "random", "clip", "random", "random", "random"],
+        ["random", null, null, "random", "random", "clip", "random"],
+        ["random", "portal", "random", null, "random", "portal", "random"],
+        [null, "random", null, null, null, "random", null],
+      ],
+      forceMatching: true,
+      sequenceLength: 6,
+    })),
+  Bean: () =>
+    new l.Level("Bean", (context) => ({
+      gridShape: [
+        [null, null, null, null, null, null, null],
+        ["random", "random", "random", null, "random", "random", "random"],
+        ["portal", "random", "clip", "random", "portal", "random", "clip"],
+        ["random", "random", "random", "random", "random", "random", "random"],
+        [null, "random", null, null, null, "random", null],
+        [null, null, null, null, null, null, null],
+        [null, null, null, null, null, null, null],
+      ],
+      forceMatching: true,
+    })),
+  "Chrono Portal": () =>
+    new l.Level("Chrono Portal", (context) => ({
       variant: "fall",
       gridShape: grid.makeGrid({
         ...grid.gridMakerPresets.medium,
@@ -326,8 +423,8 @@ export const levels = {
         }),
       ],
     })),
-  "Four\nIslands": () =>
-    new l.Level("Four\nIslands", (context) => ({
+  "Four Islands": () =>
+    new l.Level("Four Islands", (context) => ({
       forceMatching: true,
       gridShape: grid.makeGrid(grid.gridMakerPresets.fourIslands),
       sequenceLength: 5,
@@ -1046,11 +1143,21 @@ export const sections = {
   Easy: [levels.Classic, levels.Chrono, levels.Zen, levels.Boss],
   Medium: [
     levels["Two Islands"],
-    levels["Four\nIslands"],
-    levels["Chrono\nPortal"],
-    levels["Medium\nBoss"],
+    levels["Four Islands"],
+    levels["Chrono Portal"],
+    levels.Bean,
+    levels.Claw,
+    levels["Classic Portal"],
+    levels.Around,
+    levels.LadyBug,
+    levels["Medium Boss"],
   ],
-  Hard: [levels.Caribbean, levels["Big\nBoss"]],
+  Hard: [
+    levels.Croissant,
+    levels.Caribbean,
+    levels["Big Around"],
+    levels["Big Boss"],
+  ],
 };
 
 export type SectionName = keyof typeof sections;

@@ -365,8 +365,9 @@ export class Menu extends entity.CompositeEntity {
   }
 
   private _onOpen() {
-    this.blackBackground.visible = !!this._entityConfig.currentLevelHolder.level
-      ?.options.mustBeHiddenOnPause;
+    this.blackBackground.visible =
+      !!this._entityConfig.currentLevelHolder.level?.options
+        .mustBeHiddenOnPause;
     this.homeButton.visible = !!this._entityConfig.currentLevelHolder.level;
   }
 
