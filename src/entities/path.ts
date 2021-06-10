@@ -91,7 +91,12 @@ export class Path extends entity.CompositeEntity {
   }
 
   startAt(n: nucleotide.Nucleotide): boolean {
-    if (n.type === "hole" || this.level.isDisablingAnimationInProgress)
+    if (this.level.isDisablingAnimationInProgress) return false;
+
+    if (
+      n.type === "hole" ||
+      (!this.level.options.disableClips && n.type !== "clip")
+    )
       return false;
 
     // check the cancellation & cancel to previous nucleotide

@@ -563,9 +563,12 @@ export class Sequence extends entity.CompositeEntity {
     ) {
       this.level.oneShotSequence = true;
     }
-    this.scoring.multiplier =
-      nucleotides.reduce((acc, val) => acc += val.crispyMultiplier > 1 ? val.crispyMultiplier : 0, 0);
-    if(this.scoring.multiplier === 0) this.scoring.multiplier = 1;
+    this.scoring.multiplier = nucleotides.reduce(
+      (acc, val) =>
+        (acc += val.crispyMultiplier > 1 ? val.crispyMultiplier : 0),
+      0
+    );
+    if (this.scoring.multiplier === 0) this.scoring.multiplier = 1;
     this.scoring.nucleotides.push(...nucleotides);
   }
 
