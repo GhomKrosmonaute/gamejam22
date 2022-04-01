@@ -1,14 +1,12 @@
 {
-  "name": "crispr-crunch",
+  "name": "gamejam22",
   "version": "0.0.1",
   "description": "Just another Booyah game",
   "main": "",
   "dependencies": {
     "@types/uuid": "^8.3.0",
-    "booyah": "git+https://github.com/play-curious/booyah.git#crispr-crunch",
-    "csv-parse": "^4.4.1",
+    "booyah": "git+https://github.com/play-curious/booyah.git",
     "del": "^4.1.0",
-    "firebase": "^8.6.1",
     "gulp": "^4.0.0",
     "gulp-cli": "^2.0.1",
     "gulp-concat": "^2.6.1",

@@ -102,7 +102,6 @@ module.exports = {
     //copy html to dist and insert the js reference.
     new HtmlPlugin({
       filename: path.join(__dirname, "dist", "index.html"),
-      favicon: "./images/cellule.png",
       template: "./index.html",
       templateParameters: {
         date: new Date(),
@@ -114,7 +113,6 @@ module.exports = {
     // Copy "embed" version
     new HtmlPlugin({
       filename: path.join(__dirname, "dist", "embed.html"),
-      favicon: "./images/cellule.png",
       template: "./embed.html",
       templateParameters: {
         date: new Date(),
