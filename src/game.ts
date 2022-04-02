@@ -4,10 +4,10 @@ import * as booyah from "booyah/src/booyah";
 import * as audio from "booyah/src/audio";
 import * as entity from "booyah/src/entity";
 
-import { Test } from "./levels/test";
+import { Monitor } from "./monitor";
 
 const gameStates: { [k: string]: entity.EntityResolvable } = {
-  start: new Test(),
+  start: new Monitor(),
 };
 
 const gameTransitions = {
@@ -15,7 +15,22 @@ const gameTransitions = {
   // writeUs: entity.makeTransition("default"),
 };
 
-const graphicalAssets: string[] = [];
+const graphicalAssets: string[] = [
+  "images/chapeau.webp",
+  "images/character.json",
+  "images/Grapin.png",
+  "images/Immage_scene_arbre_demande_de_laide.png",
+  "images/Immage_scene_arbre_soigner_et_aidant_le_hero.png",
+  "images/Montre_2.png",
+  "images/pipe.png",
+  "images/Pistolet_stick.png",
+  "images/Plan_appart_inspecteur_1.png",
+  "images/Plan_maison_1.png",
+  "images/Plan_ou_on_trouve_la_montre.png",
+  "images/Plan_ou_on_trouve_la_montre_monde_vert.png",
+  "images/Plan_ou_on_trouve_la_montre_monde_vert_porte_ouverte.png",
+  "images/dring.png",
+];
 
 const fontAssets: FontFamily[] = [
   "Alien League",
@@ -29,13 +44,9 @@ export type FontFamily =
   | "Waffle Crisp"
   | "Optimus";
 
-const fxAssets: string[] = [];
+const fxAssets: string[] = ["bwa", "dring"];
 
-const videoAssets = ["intro"];
-
-const musicAssets = ["menu", "time_challenge", "turn_by_turn", "zen", "intro"];
-
-const jsonAssets = [{ key: "subtitles", url: "text/subtitles_en.json" }];
+const musicAssets: string[] = [];
 
 const entityInstallers: ((
   rootConfig: entity.EntityConfig,
@@ -48,20 +59,14 @@ booyah.go({
   entityInstallers,
   screenSize: new PIXI.Point(1920, 1080),
   graphicalAssets,
-  videoAssets,
   musicAssets,
   fontAssets,
   fxAssets,
-  jsonAssets,
   loadingGauge: {
     position: {
       x: 1920 / 2,
-      y: 1080 * 0.7,
+      y: 1080 / 2,
     },
-    scale: 3,
+    scale: 2,
   },
 });
-
-let mainDiv = document.createElement("div");
-mainDiv.id = "editor";
-document.body.append(mainDiv);
