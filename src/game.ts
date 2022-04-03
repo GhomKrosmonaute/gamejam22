@@ -46,7 +46,7 @@ export type FontFamily =
 
 const fxAssets: string[] = ["bwa", "dring"];
 
-const musicAssets: string[] = [];
+const musicAssets: string[] = ["gamejam22"];
 
 const entityInstallers: ((
   rootConfig: entity.EntityConfig,

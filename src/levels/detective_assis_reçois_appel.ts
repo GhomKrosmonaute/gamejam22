@@ -5,7 +5,7 @@ import {
   WaitingEntity,
 } from "booyah/src/entity";
 import { Container, Sprite, Text } from "pixi.js";
-import { Detective_se_leve_et_marche } from "./detective_se_level_et_marche";
+import { Detective_se_leve_et_marche } from "./detective_se_leve_et_marche";
 
 export class Detective_assis_recois_appel extends CompositeEntity {
   container: Container;
@@ -56,6 +56,8 @@ export class Detective_assis_recois_appel extends CompositeEntity {
   }
 
   start() {
+    this._entityConfig.jukebox.play("gamejam22");
+
     const dring = new Sprite(
       this._entityConfig.app.loader.resources["images/dring.png"].texture
     );
@@ -79,10 +81,10 @@ export class Detective_assis_recois_appel extends CompositeEntity {
         }),
         new WaitingEntity(2000),
         new FunctionCallEntity(() => {
-          text.text = "Inspecteur Manstik à l'appareil?";
+          text.text = "Inspecteur Manstik de Racoon city a l'appareil";
           this.container.addChild(text);
         }),
-        new WaitingEntity(2000),
+        new WaitingEntity(4000),
         new FunctionCallEntity(() => {
           this.container.removeChild(text);
         }),
@@ -97,7 +99,7 @@ export class Detective_assis_recois_appel extends CompositeEntity {
             "Très bien je vais enquêter sur cette soi disante disparition mystérieuse.";
           this.container.addChild(text);
         }),
-        new WaitingEntity(4000),
+        new WaitingEntity(5000),
         new FunctionCallEntity(() => {
           this.container.removeChild(text);
         }),

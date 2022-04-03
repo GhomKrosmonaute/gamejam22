@@ -3,10 +3,13 @@ import {
   EntitySequence,
   extendConfig,
   FunctionCallEntity,
+  WaitingEntity,
+  ParallelEntity,
 } from "booyah/src/entity";
 import { Container, Sprite } from "pixi.js";
 import { Character } from "../character";
 import { Tween } from "booyah/src/tween";
+import { Detective_trouve_la_montre } from "./detective_trouve_la_montre";
 
 export class Detective_passe_dans_le_salon extends CompositeEntity {
   container: Container;
@@ -48,18 +51,26 @@ export class Detective_passe_dans_le_salon extends CompositeEntity {
 
   start() {
     this._activateChildEntity(
-      new EntitySequence([
-        new Tween({
-          from: 2020,
-          to: -100,
-          duration: 3000,
-          onUpdate: (value) => {
-            this.character.container.position.x = value;
-          },
-        }),
-        new FunctionCallEntity(() => {
-          this._entityConfig.monitor.switch();
-        }),
+      new ParallelEntity([
+        new EntitySequence([
+          new WaitingEntity(1000),
+          () => this.character.turn(),
+          new WaitingEntity(1000),
+          () => this.character.turn(),
+        ]),
+        new EntitySequence([
+          new Tween({
+            from: 2020,
+            to: -100,
+            duration: 3000,
+            onUpdate: (value) => {
+              this.character.container.position.x = value;
+            },
+          }),
+          new FunctionCallEntity(() => {
+            this._entityConfig.monitor.switch(new Detective_trouve_la_montre());
+          }),
+        ]),
       ])
     );
   }
