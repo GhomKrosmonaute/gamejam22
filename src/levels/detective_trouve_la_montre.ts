@@ -82,7 +82,7 @@ export class Detective_trouve_la_montre extends CompositeEntity {
         new FunctionCallEntity(() => {
           this.character.getItem();
           this.container.removeChild(this.background);
-          this.container.addChild(this.background2);
+          this.container.addChildAt(this.background2, 0);
         }),
         new WaitingEntity(1000),
       ])
